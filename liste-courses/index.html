@@ -112,6 +112,11 @@
     .sdot.wait{background:var(--hi);animation:pulse 1s infinite}
     .sdot.err{background:var(--red)}
     @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.4)}}
+
+    .btn-home{display:none;align-items:center;justify-content:center;width:32px;height:32px;
+      border-radius:8px;border:1px solid var(--border);background:var(--bg3);
+      color:var(--dim);font-size:15px;text-decoration:none;transition:background var(--tr);flex-shrink:0}
+    .btn-home:active{background:var(--accentLight)}
     .icon-btn{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 9px;
       color:var(--dim);cursor:pointer;font-size:15px;line-height:1;transition:background var(--tr)}
     .icon-btn:active{background:var(--accentLight)}
@@ -374,6 +379,7 @@
     <div class="h-top">
       <span class="app-title">🛒 Mes Courses</span>
       <div class="h-right">
+        <a class="btn-home" id="homeBtn" href="../index.html" title="Accueil">⌂</a>
         <div class="sync-pill" id="syncPill" onclick="openSyncPanel()">
           <div class="sdot" id="sdot"></div>
           <span id="slabel">Local</span>
@@ -1546,6 +1552,16 @@ function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg
 
 /* ════════ KEYBOARD & PWA ════════════════════════════════════════════════════ */
 document.getElementById('addInput').addEventListener('keydown',e=>{ if(e.key==='Enter') addItem(); });
+// Show home button only when running as installed PWA
+(function() {
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+    || window.navigator.standalone === true;
+  if (isStandalone) {
+    const btn = document.getElementById('homeBtn');
+    if (btn) btn.style.display = 'flex';
+  }
+})();
+
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 
 init();

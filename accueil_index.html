@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0d0d14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Mes Applications</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d14;
+    --bg2: #13131e;
+    --surface: #1a1a28;
+    --surface2: #22223a;
+    --border: rgba(255,255,255,0.06);
+    --text: #f2f2fa;
+    --text2: #8888aa;
+    --text3: #44445a;
+    --gold: #f0c060;
+    --gold2: #c89030;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    min-height: 100dvh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* ── Noise grain overlay ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.6;
+  }
+
+  /* ── Large ambient glow ── */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -20vh;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80vw;
+    height: 60vh;
+    background: radial-gradient(ellipse, rgba(240,192,96,0.07) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  #app {
+    position: relative;
+    z-index: 1;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    padding: calc(var(--safe-top) + 48px) 24px calc(var(--safe-bottom) + 48px);
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  /* ── Header ── */
+  .site-header {
+    margin-bottom: 52px;
+    animation: fadeDown 0.6s ease both;
+  }
+
+  .site-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 12px;
+    opacity: 0.8;
+  }
+
+  .site-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(36px, 10vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -1px;
+    color: var(--text);
+  }
+
+  .site-title em {
+    font-style: italic;
+    color: var(--gold);
+  }
+
+  .site-subtitle {
+    margin-top: 14px;
+    font-size: 14px;
+    color: var(--text2);
+    line-height: 1.6;
+    font-weight: 300;
+    max-width: 300px;
+  }
+
+  /* ── Divider ── */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, var(--gold2), transparent);
+    margin-bottom: 36px;
+    opacity: 0.3;
+    animation: fadeDown 0.6s 0.1s ease both;
+  }
+
+  /* ── Section label ── */
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 16px;
+    animation: fadeDown 0.5s 0.2s ease both;
+  }
+
+  /* ── App grid ── */
+  .app-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* ── App card ── */
+  .app-card {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 18px 20px;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    animation: fadeUp 0.5s ease both;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .app-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .app-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(240,192,96,0.25);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 0 1px rgba(240,192,96,0.08);
+    background: var(--surface2);
+  }
+
+  .app-card:active {
+    transform: scale(0.98) translateY(0);
+  }
+
+  /* Accent line at top of card */
+  .app-card-accent {
+    position: absolute;
+    top: 0; left: 20px; right: 20px;
+    height: 1px;
+    border-radius: 0 0 1px 1px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .app-card:hover .app-card-accent { opacity: 1; }
+
+  /* Icon */
+  .app-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    flex-shrink: 0;
+    position: relative;
+    transition: transform 0.2s;
+  }
+  .app-card:hover .app-icon { transform: scale(1.06) rotate(-2deg); }
+
+  /* App info */
+  .app-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .app-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    letter-spacing: -0.3px;
+    margin-bottom: 4px;
+    line-height: 1.2;
+  }
+
+  .app-desc {
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.5;
+    font-weight: 300;
+  }
+
+  .app-tags {
+    display: flex;
+    gap: 5px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+
+  .app-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 5px;
+    background: rgba(255,255,255,0.05);
+    color: var(--text3);
+    border: 1px solid rgba(255,255,255,0.05);
+  }
+
+  /* Arrow */
+  .app-arrow {
+    color: var(--text3);
+    font-size: 18px;
+    flex-shrink: 0;
+    transition: transform 0.2s, color 0.2s;
+  }
+  .app-card:hover .app-arrow {
+    transform: translateX(3px);
+    color: var(--gold);
+  }
+
+  /* Status dot */
+  .app-status {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #3ddc84;
+    box-shadow: 0 0 8px rgba(61,220,132,0.5);
+  }
+  .app-status.coming-soon {
+    background: var(--text3);
+    box-shadow: none;
+  }
+
+  /* ── Coming soon card ── */
+  .app-card.coming-soon {
+    opacity: 0.45;
+    cursor: default;
+    pointer-events: none;
+  }
+
+  /* ── Footer ── */
+  .site-footer {
+    margin-top: auto;
+    padding-top: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    animation: fadeUp 0.5s 0.5s ease both;
+  }
+
+  .footer-text {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 1px;
+  }
+
+  .footer-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .footer-count::before {
+    content: '';
+    width: 24px;
+    height: 1px;
+    background: var(--text3);
+  }
+
+  /* ── Animations ── */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Stagger cards */
+  .app-card:nth-child(1) { animation-delay: 0.25s; }
+  .app-card:nth-child(2) { animation-delay: 0.35s; }
+  .app-card:nth-child(3) { animation-delay: 0.45s; }
+  .app-card:nth-child(4) { animation-delay: 0.55s; }
+  .app-card:nth-child(5) { animation-delay: 0.65s; }
+
+  /* ── Specific app icon colors ── */
+  .icon-lockertrack {
+    background: linear-gradient(135deg, #1a2a3a, #0d1e2e);
+    box-shadow: 0 4px 16px rgba(0,184,160,0.2);
+  }
+
+  .icon-listecourses {
+    background: linear-gradient(135deg, #1a2e1a, #0d200d);
+    box-shadow: 0 4px 16px rgba(61,220,100,0.2);
+  }
+
+  .icon-placeholder {
+    background: linear-gradient(135deg, var(--surface2), var(--surface));
+    border: 1px dashed var(--text3);
+  }
+
+  /* Hover glow per app */
+  .app-card[data-app="lockertrack"]:hover {
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 0 1px rgba(0,184,160,0.15), 0 0 40px rgba(0,184,160,0.05);
+  }
+  .app-card[data-app="listecourses"]:hover {
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 0 1px rgba(61,220,100,0.15), 0 0 40px rgba(61,220,100,0.05);
+  }
+  .app-card-accent.teal  { background: linear-gradient(90deg, rgba(0,184,160,0.8), transparent); }
+  .app-card-accent.green { background: linear-gradient(90deg, rgba(61,220,100,0.8), transparent); }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="site-eyebrow">Mes applications</div>
+    <h1 class="site-title">Mon<br><em>espace</em><br>digital</h1>
+    <p class="site-subtitle">Toutes mes applications personnelles, accessibles depuis n'importe quel appareil.</p>
+  </header>
+
+  <div class="divider"></div>
+
+  <!-- Apps -->
+  <div class="section-label">Applications disponibles</div>
+
+  <div class="app-grid" id="appGrid">
+
+    <!-- LockerTrack -->
+    <a class="app-card" href="locker-tracker/index.html" data-app="lockertrack">
+      <div class="app-card-accent teal"></div>
+      <div class="app-status"></div>
+      <div class="app-icon icon-lockertrack">📦</div>
+      <div class="app-info">
+        <div class="app-name">LockerTrack</div>
+        <div class="app-desc">Gérez vos colis en attente dans les lockers. Sync Gmail, codes de retrait, QR codes.</div>
+        <div class="app-tags">
+          <span class="app-tag">PWA</span>
+          <span class="app-tag">Gmail</span>
+          <span class="app-tag">Lockers</span>
+        </div>
+      </div>
+      <div class="app-arrow">›</div>
+    </a>
+
+    <!-- ListeCourses -->
+    <a class="app-card" href="liste-courses/index.html" data-app="listecourses">
+      <div class="app-card-accent green"></div>
+      <div class="app-status"></div>
+      <div class="app-icon icon-listecourses">🛒</div>
+      <div class="app-info">
+        <div class="app-name">ListeCourses</div>
+        <div class="app-desc">Gérez vos listes de courses, organisez par catégories, partagez avec votre foyer.</div>
+        <div class="app-tags">
+          <span class="app-tag">PWA</span>
+          <span class="app-tag">Courses</span>
+          <span class="app-tag">Partage</span>
+        </div>
+      </div>
+      <div class="app-arrow">›</div>
+    </a>
+
+    <!-- Placeholder -->
+    <div class="app-card coming-soon">
+      <div class="app-status coming-soon"></div>
+      <div class="app-icon icon-placeholder">＋</div>
+      <div class="app-info">
+        <div class="app-name" style="color:var(--text3)">Prochaine app</div>
+        <div class="app-desc">Une nouvelle application sera ajoutée ici.</div>
+        <div class="app-tags">
+          <span class="app-tag">Bientôt</span>
+        </div>
+      </div>
+      <div class="app-arrow" style="opacity:0.3">›</div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <span class="footer-text">© 2026</span>
+    <span class="footer-count" id="appCount">1 app active</span>
+  </footer>
+
+</div>
+
+<script>
+  // Count active apps
+  const active = document.querySelectorAll('.app-card:not(.coming-soon)').length;
+  document.getElementById('appCount').textContent = `${active} app${active > 1 ? 's' : ''} active${active > 1 ? 's' : ''}`;
+</script>
+</body>
+</html>

@@ -117,6 +117,22 @@
     .logo-text { display: none; }
     .btn-select { font-size: 11px; padding: 5px 8px; }
   }
+
+  /* Home button */
+  .btn-home {
+    width: 34px; height: 34px;
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text2);
+    font-size: 15px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+  .btn-home:active { transform: scale(0.93); background: var(--bg3); }
   .btn-icon {
     width: 38px; height: 38px;
     border-radius: 10px;
@@ -869,6 +885,7 @@
         <span class="logo-text">LockerTrack</span>
       </div>
       <div class="header-actions">
+        <a class="btn-home" id="homeBtn" href="../index.html" title="Accueil" style="display:none">⌂</a>
         <button class="btn-icon" onclick="openSearch()" title="Rechercher">🔍</button>
         <button class="btn-select" id="selectModeBtn" onclick="toggleSelectMode()">Sélectionner</button>
         <button class="btn-icon primary" onclick="syncAll()" title="Synchroniser" id="syncBtn">⟳</button>
@@ -1025,10 +1042,48 @@
           </div>
         </div>
 
-        <div style="background:rgba(255,209,102,0.07);border:1px solid rgba(255,209,102,0.2);border-radius:12px;padding:14px;">
-          <p style="font-size:12px;color:var(--accent3);line-height:1.6;">
-            💬 <strong>SMS :</strong> L'accès SMS nécessite l'app Android native (APK). En attendant, les codes SMS peuvent être saisis manuellement via le bouton <strong>＋</strong>.
-          </p>
+        <!-- ── SMS Section ── -->
+        <div class="section-label" style="margin-top:16px;">SMS transporteurs</div>
+
+        <div class="account-card" id="smsCard">
+          <div class="account-header">
+            <div class="account-avatar" style="background:linear-gradient(135deg,#e0a800,#ff6b35);font-size:22px;">💬</div>
+            <div class="account-info">
+              <h3 id="smsTitle">SMS Android</h3>
+              <p id="smsStatus">Vérification…</p>
+            </div>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <button class="sync-btn" id="smsSyncBtn" onclick="syncSMS()" style="display:none">
+                <span>⟳</span> Sync
+              </button>
+            </div>
+          </div>
+
+          <!-- Bridge disponible : bouton sync -->
+          <div id="smsBridgeUI" style="display:none">
+            <div style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.5;">
+              LockerTrack peut lire vos SMS transporteurs pour détecter automatiquement les colis, codes et statuts.
+            </div>
+            <button class="btn-submit" style="margin-top:0;" onclick="requestSMSPermissionAndSync()">
+              📱 Autoriser et synchroniser les SMS
+            </button>
+            <div id="smsSyncResult" style="display:none;margin-top:10px;padding:10px;background:rgba(0,184,160,0.06);border-radius:8px;font-size:12px;color:var(--text2);"></div>
+            <div class="last-sync" id="lastSyncSMS">Jamais synchronisé</div>
+          </div>
+
+          <!-- Fallback : saisie manuelle -->
+          <div id="smsManualUI" style="display:none">
+            <div style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.5;">
+              Collez ici un SMS reçu d'un transporteur pour en extraire automatiquement les informations.
+            </div>
+            <textarea id="smsManualInput"
+              style="width:100%;min-height:90px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px;font-size:12px;font-family:'Space Mono',monospace;color:var(--text);resize:vertical;outline:none;"
+              placeholder="Collez votre SMS ici…&#10;Ex: Chronopost : votre colis PP123456789FR est disponible au relais..."></textarea>
+            <button class="btn-submit" style="margin-top:8px;" onclick="parseSMSManual()">
+              🔍 Analyser ce SMS
+            </button>
+            <div id="smsManualResult" style="display:none;margin-top:10px;padding:10px;background:rgba(0,184,160,0.06);border-radius:8px;font-size:12px;color:var(--text2);"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -2862,6 +2917,16 @@ document.getElementById('syncFreq').value = appData.settings.syncFreq;
 
 // Init OAuth UI
 updateClientIdStatus();
+
+// Show home button only when running as installed PWA
+(function() {
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+    || window.navigator.standalone === true;
+  if (isStandalone) {
+    const btn = document.getElementById('homeBtn');
+    if (btn) btn.style.display = 'flex';
+  }
+})();
 
 // Service Worker
 if ('serviceWorker' in navigator) {

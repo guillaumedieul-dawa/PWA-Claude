@@ -2863,19 +2863,9 @@ updateClientIdStatus();
 // Service Worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    // Register inline SW
-    const swCode = `
-      const CACHE = 'lockertrack-v1';
-      self.addEventListener('install', e => {
-        e.waitUntil(caches.open(CACHE).then(c => c.addAll(['/'])));
-      });
-      self.addEventListener('fetch', e => {
-        e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
-      });
-    `;
-    const blob = new Blob([swCode], { type: 'application/javascript' });
-    const swUrl = URL.createObjectURL(blob);
-    navigator.serviceWorker.register(swUrl).catch(() => {});
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('SW enregistré, scope:', reg.scope))
+      .catch(err => console.warn('SW échec:', err));
   });
 }
 

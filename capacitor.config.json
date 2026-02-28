@@ -1,0 +1,29 @@
+{
+  "appId": "com.mesapps.lockertrack",
+  "appName": "LockerTrack",
+  "webDir": "locker-tracker",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https",
+    "cleartext": false
+  },
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#f4f4f0",
+    "overrideUserAgent": "LockerTrack/1.0 Android",
+    "appendUserAgent": "LockerTrackApp"
+  },
+  "plugins": {
+    "StatusBar": {
+      "style": "LIGHT",
+      "backgroundColor": "#f4f4f0",
+      "overlaysWebView": false
+    },
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "backgroundColor": "#f4f4f0",
+      "androidSplashResourceName": "splash",
+      "showSpinner": false
+    }
+  }
+}

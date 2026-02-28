@@ -1,0 +1,156 @@
+name: Build LockerTrack APK
+
+# Se déclenche à chaque push sur main, ou manuellement
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version de l APK (ex: 1.0.1)'
+        required: false
+        default: '1.0.0'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+    # ── 1. Récupérer le code ────────────────────────────────────────────────
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # ── 2. Node.js pour Capacitor CLI ───────────────────────────────────────
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    # ── 3. Java pour Android SDK ────────────────────────────────────────────
+    - name: Setup Java 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    # ── 4. Android SDK ──────────────────────────────────────────────────────
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Install Android Build Tools
+      run: |
+        sdkmanager "build-tools;34.0.0" "platforms;android-34" "platform-tools"
+
+    # ── 5. Installer les dépendances npm ────────────────────────────────────
+    - name: Install dependencies
+      run: npm ci
+
+    # ── 6. Copier le SMS bridge dans le webDir ──────────────────────────────
+    - name: Copy SMS bridge
+      run: |
+        cp locker-tracker/sms-bridge.js locker-tracker/sms-bridge.js || true
+
+    # ── 7. Synchroniser Capacitor → Android ─────────────────────────────────
+    - name: Capacitor sync
+      run: |
+        npx cap sync android
+        echo "✓ Capacitor sync terminé"
+
+    # ── 8. Remplacer AndroidManifest avec nos permissions ───────────────────
+    - name: Patch AndroidManifest
+      run: |
+        cp android/app/src/main/AndroidManifest.xml \
+           android/app/src/main/AndroidManifest.xml.bak || true
+        # Vérifier que READ_SMS est bien présent
+        if ! grep -q "READ_SMS" android/app/src/main/AndroidManifest.xml; then
+          echo "⚠️ READ_SMS manquant — injection manuelle"
+          sed -i 's|<uses-permission android:name="android.permission.INTERNET"/>|<uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.READ_SMS"/>\n    <uses-permission android:name="android.permission.RECEIVE_SMS"/>|' \
+            android/app/src/main/AndroidManifest.xml
+        fi
+        echo "✓ Manifest OK"
+        grep "permission" android/app/src/main/AndroidManifest.xml
+
+    # ── 9. Rendre gradlew exécutable ────────────────────────────────────────
+    - name: Make gradlew executable
+      run: chmod +x android/gradlew
+
+    # ── 10. Build APK debug (sans keystore requis) ───────────────────────────
+    - name: Build APK debug
+      working-directory: android
+      run: |
+        ./gradlew assembleDebug \
+          --no-daemon \
+          --stacktrace \
+          -Pandroid.builder.sdkDownload=false
+        echo "✓ Build APK debug terminé"
+
+    # ── 11. Build APK release signé (si keystore configuré) ─────────────────
+    - name: Build APK release (si keystore configuré)
+      working-directory: android
+      if: ${{ secrets.KEYSTORE_BASE64 != '' }}
+      run: |
+        # Décoder le keystore depuis les secrets GitHub
+        echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > app/lockertrack.jks
+
+        ./gradlew assembleRelease \
+          --no-daemon \
+          -Pandroid.injected.signing.store.file=$(pwd)/app/lockertrack.jks \
+          -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_PASSWORD }} \
+          -Pandroid.injected.signing.key.alias=${{ secrets.KEY_ALIAS }} \
+          -Pandroid.injected.signing.key.password=${{ secrets.KEY_PASSWORD }}
+        echo "✓ Build APK release signé"
+
+    # ── 12. Renommer et lister les APK produits ──────────────────────────────
+    - name: List and rename APKs
+      run: |
+        echo "=== APK produits ==="
+        find android -name "*.apk" -type f | while read f; do
+          size=$(du -sh "$f" | cut -f1)
+          echo "  $f ($size)"
+        done
+
+        # Copier l'APK debug avec un nom lisible
+        DEBUG_APK=$(find android -name "*debug*.apk" | head -1)
+        if [ -n "$DEBUG_APK" ]; then
+          cp "$DEBUG_APK" LockerTrack-debug.apk
+          echo "✓ LockerTrack-debug.apk copié"
+        fi
+
+        # APK release si disponible
+        RELEASE_APK=$(find android -name "*release*.apk" | head -1)
+        if [ -n "$RELEASE_APK" ]; then
+          cp "$RELEASE_APK" LockerTrack-release.apk
+          echo "✓ LockerTrack-release.apk copié"
+        fi
+
+    # ── 13. Upload des APK comme Artifacts ──────────────────────────────────
+    - name: Upload APK debug
+      uses: actions/upload-artifact@v4
+      with:
+        name: LockerTrack-debug-${{ github.run_number }}
+        path: LockerTrack-debug.apk
+        retention-days: 30
+
+    - name: Upload APK release
+      if: ${{ hashFiles('LockerTrack-release.apk') != '' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: LockerTrack-release-${{ github.run_number }}
+        path: LockerTrack-release.apk
+        retention-days: 90
+
+    # ── 14. Résumé dans l'interface GitHub ──────────────────────────────────
+    - name: Build summary
+      run: |
+        echo "## ✅ Build réussi" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Fichier | Taille |" >> $GITHUB_STEP_SUMMARY
+        echo "|---------|--------|" >> $GITHUB_STEP_SUMMARY
+        find . -name "*.apk" -maxdepth 1 | while read f; do
+          size=$(du -sh "$f" | cut -f1)
+          echo "| \`$(basename $f)\` | $size |" >> $GITHUB_STEP_SUMMARY
+        done
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "Téléchargez l'APK dans l'onglet **Artifacts** ci-dessus." >> $GITHUB_STEP_SUMMARY

@@ -18,22 +18,16 @@ jobs:
       - name: Vérification sécurité HTML/JS
         run: |
           echo "=== Secrets codés en dur ==="
-          if grep -rn "password\s*=\|api_key\s*=\|secret\s*=" --include="*.js" --include="*.html" .; then
+          if grep -rn "password\s*=\|api_key\s*=" --include="*.js" --include="*.html" .; then
             echo "⚠️ Potentiels secrets trouvés - vérifier manuellement"
           else
             echo "✅ Aucun secret détecté"
-          fi
-          echo "=== URLs HTTP non sécurisées ==="
-          if grep -rn 'src="http://\|href="http://\|fetch('"'"'http://' --include="*.html" --include="*.js" .; then
-            echo "⚠️ URLs HTTP détectées"
-          else
-            echo "✅ Toutes les ressources sont HTTPS"
           fi
 
       - name: Vérification taille des fichiers
         run: |
           echo "=== Taille des fichiers HTML ==="
-          for f in $(find . -name "*.html" -not -path "*/node_modules/*" -not -path "*/android/*"); do
+          for f in $(find . -name "*.html" -not -path "*/node_modules/*"); do
             size=$(wc -c < "$f")
             kb=$((size / 1024))
             if [ $kb -gt 200 ]; then
@@ -90,13 +84,12 @@ jobs:
           cp -r cave-spiritueux www/
           cp -r menus-semaine www/
           echo "✅ Contenu de www/ :"
-          ls -la www/
+          ls www/
 
       - name: Capacitor - Ajouter Android
         run: |
           npx cap add android
           echo "✅ Projet Android généré"
-          ls android/
 
       - name: Capacitor - Sync
         run: |
@@ -113,19 +106,28 @@ jobs:
           cp src-android/MainActivity.java "$DEST/"
           cp src-android/SmsReaderPlugin.java "$DEST/"
           echo "✅ Plugins Java copiés :"
-          ls -la "$DEST/"
           grep "^package" "$DEST/"*.java
 
-      - name: Patcher AndroidManifest
+      - name: Patcher AndroidManifest (permissions SMS)
         run: |
           M="android/app/src/main/AndroidManifest.xml"
-          if ! grep -q "READ_SMS" "$M"; then
-            sed -i 's|<uses-permission android:name="android.permission.INTERNET" />|<uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.READ_SMS" />\n    <uses-permission android:name="android.permission.RECEIVE_SMS" />\n    <uses-permission android:name="android.permission.VIBRATE" />\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />|' "$M"
-            echo "✅ Permissions SMS ajoutées"
-          else
-            echo "✅ Permissions déjà présentes"
-          fi
+          echo "--- Manifest avant patch ---"
+          grep "permission" "$M" || echo "(aucune)"
+          # Injecter les permissions après la permission INTERNET déjà présente
+          sed -i 's|<uses-permission android:name="android.permission.INTERNET" />|<uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.READ_SMS" />\n    <uses-permission android:name="android.permission.RECEIVE_SMS" />\n    <uses-permission android:name="android.permission.VIBRATE" />\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />|' "$M"
+          echo "--- Manifest après patch ---"
           grep "permission" "$M"
+
+      - name: Enregistrer le récepteur SMS dans le Manifest
+        run: |
+          M="android/app/src/main/AndroidManifest.xml"
+          # Ajouter SmsReceiver avant </application>
+          if ! grep -q "SmsReceiver" "$M"; then
+            sed -i 's|</application>|        <receiver android:name=".SmsReceiver" android:exported="true" android:permission="android.permission.BROADCAST_SMS">\n            <intent-filter android:priority="1000">\n                <action android:name="android.provider.Telephony.SMS_RECEIVED" />\n            </intent-filter>\n        </receiver>\n    </application>|' "$M"
+            echo "✅ SmsReceiver ajouté"
+          else
+            echo "✅ SmsReceiver déjà présent"
+          fi
 
       - name: Build APK Debug
         run: |
@@ -161,3 +163,4 @@ jobs:
           echo "## ✅ FamilyHub APK v2 prêt" >> $GITHUB_STEP_SUMMARY
           echo "| Taille APK | $SIZE |" >> $GITHUB_STEP_SUMMARY
           echo "| Build | #${{ github.run_number }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Commit | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY

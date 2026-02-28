@@ -2940,5 +2940,13 @@ if ('serviceWorker' in navigator) {
 // Initial render
 render();
 </script>
+  <!-- Capacitor runtime (présent uniquement dans l'APK) -->
+  <script>
+    // Polyfill Capacitor pour le mode PWA web
+    if (!window.Capacitor) {
+      window.Capacitor = { isNativePlatform: () => false, Plugins: {} };
+    }
+  </script>
+  <script src="sms-bridge.js"></script>
 </body>
 </html>

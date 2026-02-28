@@ -85,6 +85,21 @@ jobs:
           npm install --package-lock
           echo "✅ npm install terminé"
 
+      - name: Préparer le dossier www (webDir Capacitor)
+        run: |
+          mkdir -p www
+          cp index.html www/
+          cp manifest.json www/
+          cp sw.js www/
+          cp -r icons www/
+          cp -r locker-tracker www/
+          cp -r liste-courses www/
+          cp -r todo-partage www/
+          cp -r cave-spiritueux www/
+          cp -r menus-semaine www/
+          echo "✅ Contenu www/ :"
+          ls www/
+
       - name: Capacitor - Ajouter Android
         run: |
           npx cap add android || echo "Android déjà présent"

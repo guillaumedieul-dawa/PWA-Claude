@@ -1,8 +1,7 @@
 {
   "appId": "com.famille.dieulgandet",
   "appName": "FamilyHub",
-  "webDir": ".",
-  "bundledWebRuntime": false,
+  "webDir": "www",
   "server": {
     "androidScheme": "https",
     "cleartext": false

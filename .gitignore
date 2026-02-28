@@ -16,6 +16,9 @@ android/gradlew
 android/gradlew.bat
 android/local.properties
 
+# Dossier généré en CI par le workflow (copie de toutes les apps)
+www/
+
 # Capacitor
 .capacitor/
 

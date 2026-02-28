@@ -1,1 +1,1570 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no"/>
+  <meta name="theme-color" content="#e8f5f3"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="description" content="Liste de courses partagée — sync P2P"/>
+  <title>Ma Liste de Courses</title>
+  <link rel="apple-touch-icon" href="../icons/courses-192.svg">
+<meta name="apple-mobile-web-app-title" content="ListeCourses">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="./manifest.json"/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <!-- PeerJS : WebRTC P2P, serveur de signalement public gratuit, aucun compte -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.2/peerjs.min.js"></script>
+  <style>
+    :root{
+      /* ── Palette claire bleu-vert (consignes couleurs) ── */
+      --bg:#e8f5f3;          /* fond général : vert menthe très pâle */
+      --bg2:#ffffff;         /* header, barres : blanc pur */
+      --bg3:#f0faf8;         /* inputs, éléments secondaires */
+      --card:#ffffff;        /* cartes articles */
+      --accent:#1a9982;      /* vert-bleu principal */
+      --accent2:#137a68;     /* vert-bleu foncé (hover) */
+      --accentB:#1565c0;     /* bleu profond (dégradés) */
+      --accentLight:#d0f0eb; /* vert très clair (badges, fonds actifs) */
+      --hi:#f4a261;          /* orange chaud (highlight secondaire) */
+      --text:#1a2e2b;        /* texte principal : vert très foncé */
+      --dim:#4a7570;         /* texte secondaire */
+      --muted:#8ab5b0;       /* texte discret */
+      --border:#c8e8e3;      /* bordures */
+      --green:#1a9982;
+      --red:#e05252;
+      --r:16px;--rs:10px;--tr:.22s cubic-bezier(.4,0,.2,1);
+    }
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+    html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;overflow:hidden}
+    #app{display:flex;flex-direction:column;height:100dvh;max-width:480px;margin:0 auto;position:relative;overflow:hidden}
 
+    /* ── ONBOARDING ── */
+    .screen{position:fixed;inset:0;background:var(--bg);z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 22px;text-align:center;overflow-y:auto;background:linear-gradient(160deg,#e8f5f3 0%,#ddf0f7 100%)}
+    .screen.hidden{display:none}
+    .s-logo{font-size:58px;margin-bottom:12px}
+    .s-title{font-family:'Syne',sans-serif;font-weight:800;font-size:24px;margin-bottom:6px;
+      background:linear-gradient(135deg,var(--accentB) 0%,var(--accent) 100%);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .s-sub{color:var(--dim);font-size:13px;margin-bottom:24px;line-height:1.55}
+
+    .name-row{width:100%;max-width:340px;margin-bottom:22px;text-align:left}
+    .s-label{font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--accent);margin-bottom:6px;display:block}
+    .s-input{width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;
+      padding:13px 15px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;outline:none;transition:border-color var(--tr);box-shadow:0 1px 4px rgba(26,153,130,.08)}
+    .s-input:focus{border-color:var(--accent)}
+    .s-input::placeholder{color:var(--muted)}
+
+    .sync-choice{width:100%;max-width:340px;display:flex;flex-direction:column;gap:10px;margin-bottom:8px}
+    .choice-card{background:var(--bg2);border:2px solid var(--border);border-radius:var(--r);padding:16px 18px;
+      cursor:pointer;text-align:left;transition:all var(--tr);user-select:none;box-shadow:0 2px 8px rgba(26,153,130,.07)}
+    .choice-card:active,.choice-card.sel{border-color:var(--accent);background:var(--accentLight)}
+    .choice-icon{font-size:26px;margin-bottom:6px}
+    .choice-title{font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:3px}
+    .choice-desc{font-size:12px;color:var(--dim);line-height:1.45}
+
+    .btn-p{width:100%;max-width:340px;background:var(--accent);color:#fff;border:none;border-radius:12px;
+      padding:15px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;margin-top:6px;
+      transition:background var(--tr)}
+    .btn-p:active{background:var(--accent2)}
+    .btn-s{width:100%;max-width:340px;background:rgba(255,255,255,.06);color:var(--dim);border:none;
+      border-radius:12px;padding:13px;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;margin-top:8px}
+
+    /* ── SYNC SETUP SCREEN ── */
+    .sync-box{width:100%;max-width:340px}
+    .room-display{background:var(--accentLight);border:2px solid var(--accent);border-radius:var(--r);
+      padding:20px;text-align:center;margin-bottom:14px}
+    .room-code{font-family:'Syne',sans-serif;font-weight:800;font-size:38px;letter-spacing:8px;
+      color:var(--accent);margin-bottom:4px}
+    .room-hint{font-size:12px;color:var(--dim);line-height:1.4}
+    .peer-status{font-size:13px;color:var(--dim);text-align:center;margin-bottom:12px;
+      display:flex;align-items:center;justify-content:center;gap:6px}
+    .peer-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0}
+    .peer-dot.ok{background:var(--green);animation:blink 2s infinite}
+    @keyframes blink{0%,90%,100%{opacity:1}95%{opacity:.3}}
+
+    .divider{display:flex;align-items:center;gap:10px;margin:12px 0;width:100%;max-width:340px}
+    .divider hr{flex:1;border:none;border-top:1px solid var(--border)}
+    .divider span{font-size:12px;color:var(--muted)}
+
+    .join-row{display:flex;gap:8px;width:100%;max-width:340px}
+    .code-input{flex:1;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;
+      padding:13px 14px;color:var(--text);font-family:'Syne',sans-serif;font-size:22px;font-weight:700;
+      letter-spacing:5px;text-align:center;outline:none;text-transform:uppercase;
+      transition:border-color var(--tr)}
+    .code-input:focus{border-color:var(--accent)}
+    .code-input::placeholder{font-size:13px;letter-spacing:0;font-family:'DM Sans',sans-serif;font-weight:400;color:var(--muted)}
+    .btn-join{background:var(--accent);color:#fff;border:none;border-radius:12px;padding:13px 20px;
+      font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap}
+
+    /* ── HEADER ── */
+    header{background:var(--bg2);padding:12px 14px 9px;border-bottom:1px solid var(--border);flex-shrink:0;z-index:10;box-shadow:0 2px 8px rgba(26,101,192,.07)}
+    .h-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+    .app-title{font-family:'Syne',sans-serif;font-weight:800;font-size:19px;
+      background:linear-gradient(135deg,var(--accentB),var(--accent));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .h-right{display:flex;align-items:center;gap:7px}
+    .sync-pill{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;
+      color:var(--dim);background:var(--bg3);border:1px solid var(--border);padding:5px 10px;border-radius:20px;
+      cursor:pointer;user-select:none;transition:background var(--tr)}
+    .sync-pill:active{background:var(--accentLight)}
+    .sdot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0}
+    .sdot.conn{background:var(--green);animation:blink 2s infinite}
+    .sdot.wait{background:var(--hi);animation:pulse 1s infinite}
+    .sdot.err{background:var(--red)}
+    @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.4)}}
+
+    .btn-home{display:none;align-items:center;justify-content:center;width:32px;height:32px;
+      border-radius:8px;border:1px solid var(--border);background:var(--bg3);
+      color:var(--dim);font-size:15px;text-decoration:none;transition:background var(--tr);flex-shrink:0}
+    .btn-home:active{background:var(--accentLight)}
+    .icon-btn{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 9px;
+      color:var(--dim);cursor:pointer;font-size:15px;line-height:1;transition:background var(--tr)}
+    .icon-btn:active{background:var(--accentLight)}
+
+    /* ── TABS ── */
+    .tabs-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+    .tabs-wrap::-webkit-scrollbar{display:none}
+    .tabs{display:flex;gap:7px;padding:2px 2px 4px;width:max-content}
+    .tab{display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 12px;
+      border-radius:var(--rs);border:1.5px solid transparent;background:var(--bg3);
+      cursor:pointer;transition:all var(--tr);white-space:nowrap;user-select:none;position:relative}
+    .tab .ti{font-size:18px;line-height:1}
+    .tab .tl{font-size:10px;font-weight:600;color:var(--dim)}
+    .tab .tc{position:absolute;top:3px;right:3px;background:var(--red);color:#fff;font-size:9px;
+      font-weight:700;width:15px;height:15px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+    .tab.active{border-color:var(--accent);background:var(--accentLight)}
+    .tab.active .tl{color:var(--accent)}
+    .tab-add{background:rgba(26,153,130,.06);border:1.5px dashed rgba(26,153,130,.4)}
+
+    /* ── CONTENT ── */
+    .content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:13px;padding-bottom:86px}
+
+    /* ── ADD BAR ── */
+    .add-bar{position:absolute;bottom:0;left:0;right:0;background:var(--bg2);
+      border-top:1px solid var(--border);padding:10px 13px;
+      padding-bottom:calc(10px + env(safe-area-inset-bottom));
+      display:flex;gap:8px;align-items:center;z-index:20;box-shadow:0 -2px 12px rgba(26,153,130,.08)}
+    .add-input{flex:1;background:var(--bg3);border:1.5px solid var(--border);border-radius:12px;
+      padding:12px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;outline:none;
+      transition:border-color var(--tr)}
+    .add-input:focus{border-color:var(--accent)}
+    .add-input::placeholder{color:var(--muted)}
+    .qty-in{width:56px;background:var(--bg3);border:1.5px solid var(--border);border-radius:12px;
+      padding:12px 8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;
+      text-align:center;outline:none;transition:border-color var(--tr)}
+    .qty-in:focus{border-color:var(--accent)}
+    .add-btn{background:var(--accent);border:none;border-radius:12px;padding:12px 16px;
+      color:#fff;font-size:20px;cursor:pointer;line-height:1;transition:transform var(--tr),background var(--tr)}
+    .add-btn:active{transform:scale(.91);background:var(--accent2)}
+
+    /* ── ITEM CARD ── */
+    .items-list{display:flex;flex-direction:column;gap:8px}
+    .item-card{background:var(--card);border-radius:var(--r);padding:13px 13px;
+      display:flex;align-items:center;gap:11px;animation:si .24s ease;
+      border:1px solid var(--border);transition:opacity var(--tr);
+      box-shadow:0 2px 6px rgba(26,153,130,.06)}
+    @keyframes si{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+    .item-card.checked{opacity:.4}
+    .chk{width:26px;height:26px;border-radius:50%;border:2px solid var(--muted);flex-shrink:0;
+      cursor:pointer;display:flex;align-items:center;justify-content:center;
+      transition:all var(--tr);background:transparent}
+    .chk.done{background:var(--green);border-color:var(--green)}
+    .chk.done::after{content:'✓';color:#fff;font-size:13px;font-weight:700}
+    .item-info{flex:1;min-width:0}
+    .item-name{font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .item-card.checked .item-name{text-decoration:line-through}
+    .item-meta{display:flex;align-items:center;gap:7px;margin-top:2px}
+    .item-qty{font-size:12px;color:var(--accent);background:var(--accentLight);padding:2px 7px;border-radius:5px;font-weight:600}
+    .item-author{font-size:11px;color:var(--muted)}
+    .del-btn{background:rgba(224,82,82,.08);border:1px solid rgba(224,82,82,.15);border-radius:8px;padding:7px;
+      color:var(--muted);cursor:pointer;font-size:14px;line-height:1;transition:all var(--tr)}
+    .del-btn:active{background:rgba(224,82,82,.2);color:var(--red)}
+
+    /* ── STORE HEADER ── */
+    .store-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+    .store-title-row{display:flex;align-items:center;gap:8px}
+    .store-emoji{font-size:24px}
+    .store-name{font-family:'Syne',sans-serif;font-weight:700;font-size:18px}
+    .store-acts{display:flex;gap:6px;align-items:center}
+    .app-link{display:flex;align-items:center;gap:5px;background:rgba(21,101,192,.08);border:1px solid rgba(21,101,192,.2);
+      border-radius:9px;padding:7px 11px;color:var(--accentB);font-size:12px;font-weight:500;
+      cursor:pointer;text-decoration:none}
+    .prog-bar{height:4px;background:var(--border);border-radius:2px;margin-bottom:12px;overflow:hidden}
+    .prog-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accentB));
+      border-radius:2px;transition:width .4s ease}
+
+    /* ── TOOLBAR ── */
+    .toolbar{display:flex;align-items:center;gap:7px;margin-bottom:10px}
+    .f-btn{background:var(--bg2);border:1.5px solid var(--border);border-radius:7px;padding:5px 11px;
+      color:var(--dim);font-size:12px;font-weight:600;cursor:pointer;transition:all var(--tr)}
+    .f-btn.on{border-color:var(--accent);color:var(--accent);background:var(--accentLight)}
+    .clear-btn{margin-left:auto;background:rgba(224,82,82,.08);border:1.5px solid rgba(224,82,82,.25);
+      border-radius:7px;padding:5px 11px;color:var(--red);font-size:12px;font-weight:600;cursor:pointer}
+
+    /* ── EMPTY ── */
+    .empty{text-align:center;padding:50px 20px;color:var(--muted)}
+    .empty .ei{font-size:46px;margin-bottom:12px;opacity:.5}
+    .empty p{font-size:14px;line-height:1.6}
+
+    /* ── MODAL ── */
+    .modal-back{position:fixed;inset:0;background:rgba(26,46,43,.4);backdrop-filter:blur(8px);
+      z-index:100;display:flex;align-items:flex-end;animation:fi .2s ease}
+    .modal-back.hidden{display:none}
+    @keyframes fi{from{opacity:0}to{opacity:1}}
+    .modal{background:var(--bg2);border-radius:var(--r) var(--r) 0 0;padding:20px 17px;
+      padding-bottom:calc(20px + env(safe-area-inset-bottom));width:100%;max-height:80vh;
+      overflow-y:auto;animation:su .26s cubic-bezier(.4,0,.2,1);
+      box-shadow:0 -4px 24px rgba(26,153,130,.12)}
+    @keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}
+    .m-title{font-family:'Syne',sans-serif;font-weight:700;font-size:17px;margin-bottom:14px;color:var(--text)}
+    .m-field{margin-bottom:12px}
+    .m-lbl{font-size:11px;color:var(--dim);margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+    .m-in{width:100%;background:var(--bg3);border:1.5px solid var(--border);border-radius:11px;
+      padding:12px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none}
+    .m-in:focus{border-color:var(--accent)}
+    .emoji-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;margin-top:7px}
+    .e-btn{font-size:20px;background:var(--bg3);border:2px solid var(--border);border-radius:9px;
+      aspect-ratio:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--tr)}
+    .e-btn.sel{border-color:var(--accent);background:var(--accentLight)}
+    .m-acts{display:flex;gap:9px;margin-top:16px}
+    .m-btn-p{flex:1;background:var(--accent);color:#fff;border:none;border-radius:11px;padding:13px;
+      font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer}
+    .m-btn-s{flex:1;background:var(--bg3);color:var(--dim);border:1px solid var(--border);border-radius:11px;
+      padding:13px;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer}
+
+    /* ── SYNC PANEL (modal) ── */
+    .sync-info-row{display:flex;align-items:center;justify-content:space-between;
+      background:var(--accentLight);border:1px solid var(--accent);border-radius:var(--rs);padding:12px 14px;margin-bottom:10px}
+    .sync-info-label{font-size:12px;color:var(--dim)}
+    .sync-info-val{font-family:'Syne',sans-serif;font-weight:700;font-size:16px;letter-spacing:3px;color:var(--accent)}
+    .copy-btn{background:var(--accent);border:none;border-radius:8px;
+      padding:6px 12px;color:#fff;font-size:12px;cursor:pointer;font-weight:600}
+    .peers-list{font-size:13px;color:var(--dim);min-height:30px;margin-bottom:4px}
+    .peer-chip{display:inline-flex;align-items:center;gap:5px;background:var(--accentLight);
+      border:1px solid var(--accent);border-radius:20px;padding:3px 10px;margin:3px;font-size:12px;color:var(--accent);font-weight:600}
+
+    /* ── TOAST ── */
+    .toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(14px);
+      background:var(--text);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;
+      opacity:0;transition:all .26s ease;pointer-events:none;z-index:400;white-space:nowrap;
+      box-shadow:0 4px 16px rgba(26,46,43,.25)}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    /* ── LOYALTY / CLIENT CARD ── */
+    .store-card-banner{background:linear-gradient(120deg,var(--accentLight),#ddf0f7);
+      border:1.5px solid var(--border);border-radius:var(--r);padding:14px 16px;
+      margin-bottom:12px;cursor:pointer;transition:all var(--tr);position:relative;overflow:hidden}
+    .store-card-banner::before{content:'';position:absolute;top:-20px;right:-20px;width:80px;height:80px;
+      border-radius:50%;background:rgba(26,153,130,.1)}
+    .store-card-banner:active{background:var(--accentLight)}
+    .card-banner-row{display:flex;align-items:center;justify-content:space-between}
+    .card-banner-left{display:flex;align-items:center;gap:10px}
+    .card-banner-icon{font-size:22px}
+    .card-banner-label{font-size:13px;font-weight:600;color:var(--dim)}
+    .card-banner-val{font-family:'Syne',sans-serif;font-weight:700;font-size:12px;
+      color:var(--accent);letter-spacing:1px;margin-top:1px}
+    .card-banner-arrow{font-size:16px;color:var(--muted)}
+    .barcode-wrap{text-align:center;padding:10px 0 4px}
+    #barcodeCanvas{border-radius:8px;max-width:100%;height:70px}
+    .barcode-number{font-family:'Syne',sans-serif;font-weight:700;font-size:15px;
+      letter-spacing:3px;color:var(--text);margin-top:6px}
+    .cal-section{margin-bottom:12px}
+    .cal-row{display:flex;gap:8px;margin-bottom:8px}
+    .cal-input{flex:1;background:var(--bg3);border:1.5px solid var(--border);border-radius:11px;
+      padding:11px 13px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none}
+    .cal-input:focus{border-color:var(--accent)}
+    .cal-input[type=datetime-local]{color-scheme:light}
+    .cal-store-sel{width:100%;background:var(--bg3);border:1.5px solid var(--border);border-radius:11px;
+      padding:11px 13px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;
+      appearance:none;-webkit-appearance:none;cursor:pointer;margin-bottom:8px}
+    .cal-preview{background:var(--bg3);border:1px solid var(--border);border-radius:11px;
+      padding:12px 14px;font-size:13px;color:var(--dim);line-height:1.7;max-height:120px;overflow-y:auto}
+    .cal-preview strong{color:var(--text)}
+    .action-bar{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap}
+    .action-chip{display:flex;align-items:center;gap:5px;background:var(--bg2);
+      border:1.5px solid var(--border);border-radius:20px;padding:6px 13px;
+      font-size:12px;font-weight:600;color:var(--dim);cursor:pointer;transition:all var(--tr);white-space:nowrap}
+    .action-chip:active{background:var(--accentLight);border-color:var(--accent);color:var(--accent)}
+    .action-chip.cal{border-color:rgba(21,101,192,.3);color:var(--accentB);background:rgba(21,101,192,.06)}
+    .action-chip.cal:active{background:rgba(21,101,192,.15)}
+    /* ── GUEST / CONTACTS ── */
+    .guest-list{display:flex;flex-direction:column;gap:6px;margin-top:6px;max-height:180px;overflow-y:auto}
+    .guest-row{display:flex;align-items:center;gap:10px;background:var(--bg3);
+      border:1.5px solid var(--border);border-radius:11px;padding:10px 13px;cursor:pointer;
+      transition:all var(--tr);user-select:none}
+    .guest-row.sel{border-color:var(--accentB);background:rgba(21,101,192,.07)}
+    .guest-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;
+      justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;
+      background:linear-gradient(135deg,var(--accent),var(--accentB))}
+    .guest-info{flex:1;min-width:0}
+    .guest-name{font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .guest-email{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .guest-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--muted);
+      flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all var(--tr)}
+    .guest-row.sel .guest-check{background:var(--accentB);border-color:var(--accentB)}
+    .guest-row.sel .guest-check::after{content:'✓';color:#fff;font-size:11px;font-weight:700}
+    .guest-count-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(21,101,192,.1);
+      border:1px solid rgba(21,101,192,.25);border-radius:12px;padding:3px 10px;
+      font-size:12px;font-weight:600;color:var(--accentB);margin-top:6px}
+    .add-contact-row{display:flex;gap:7px;margin-top:8px}
+    .contact-empty{text-align:center;padding:18px;color:var(--muted);font-size:13px}
+    .contact-empty .ce-icon{font-size:32px;margin-bottom:8px;opacity:.4}
+    .del-contact-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;
+      padding:4px 6px;border-radius:6px;transition:all var(--tr);flex-shrink:0}
+    .del-contact-btn:active{background:rgba(224,82,82,.15);color:var(--red)}
+  </style>
+</head>
+<body>
+
+<!-- ══ ONBOARDING ═══════════════════════════════════════════════════════════ -->
+<div class="screen" id="screen1">
+  <div class="s-logo">🛒</div>
+  <h1 class="s-title">Ma Liste de Courses</h1>
+  <p class="s-sub">Application familiale partagée.<br>Sans compte, sans serveur.</p>
+
+  <div class="name-row">
+    <span class="s-label">Votre prénom</span>
+    <input class="s-input" id="nameIn" placeholder="ex : Marie" maxlength="20" autocomplete="given-name"/>
+  </div>
+
+  <div class="sync-choice">
+    <div class="choice-card sel" id="c-sync" onclick="pickMode('sync')">
+      <div class="choice-icon">📡</div>
+      <div class="choice-title">Liste partagée (sync P2P)</div>
+      <div class="choice-desc">Synchronisation en temps réel entre téléphones via un code à 6 chiffres. Sans compte ni serveur.</div>
+    </div>
+    <div class="choice-card" id="c-local" onclick="pickMode('local')">
+      <div class="choice-icon">📱</div>
+      <div class="choice-title">Liste personnelle (local)</div>
+      <div class="choice-desc">Données uniquement sur ce téléphone. Aucune connexion requise.</div>
+    </div>
+  </div>
+
+  <button class="btn-p" onclick="goNext()">Continuer →</button>
+</div>
+
+<!-- ══ SYNC SETUP ════════════════════════════════════════════════════════════ -->
+<div class="screen hidden" id="screen2">
+  <div class="s-logo">📡</div>
+  <h1 class="s-title">Synchronisation</h1>
+  <p class="s-sub">Créez un salon ou rejoignez-en un existant.<br>Partagez le code à votre famille.</p>
+
+  <div class="sync-box">
+    <!-- CREATE -->
+    <div class="room-display">
+      <div style="font-size:12px;color:var(--dim);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Votre code salon</div>
+      <div class="room-code" id="myCode">……</div>
+      <div class="room-hint">Partagez ce code avec les autres téléphones.<br>Ils entrent ce code ci-dessous pour rejoindre.</div>
+    </div>
+    <div class="peer-status" id="peerStatus">
+      <div class="peer-dot" id="peerDot"></div>
+      <span id="peerLabel">Connexion en cours…</span>
+    </div>
+    <button class="btn-p" style="margin-bottom:0" onclick="copyCode()">📋 Copier le code</button>
+
+    <div class="divider"><hr/><span>ou rejoindre un salon existant</span><hr/></div>
+
+    <div class="join-row">
+      <input class="code-input" id="joinCodeIn" placeholder="Code à 6 chiffres" maxlength="6" type="tel" inputmode="numeric"/>
+      <button class="btn-join" onclick="joinRoom()">Rejoindre</button>
+    </div>
+    <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px">Entrez le code affiché sur un autre téléphone déjà configuré</p>
+  </div>
+
+  <button class="btn-s" onclick="startWithoutSync()">Utiliser sans synchronisation →</button>
+</div>
+
+<!-- ══ APP ════════════════════════════════════════════════════════════════════ -->
+<div id="app">
+  <header>
+    <div class="h-top">
+      <span class="app-title">🛒 Mes Courses</span>
+      <div class="h-right">
+        <a class="btn-home" id="homeBtn" href="../index.html" title="Accueil">⌂</a>
+        <div class="sync-pill" id="syncPill" onclick="openSyncPanel()">
+          <div class="sdot" id="sdot"></div>
+          <span id="slabel">Local</span>
+        </div>
+        <button class="icon-btn" onclick="openStoreModal()" title="Nouveau magasin">＋</button>
+        <button class="icon-btn" onclick="openSettings()" title="Paramètres">⚙</button>
+      </div>
+    </div>
+    <div class="tabs-wrap"><div class="tabs" id="storeTabs"></div></div>
+  </header>
+
+  <div class="content" id="content"></div>
+
+  <div class="add-bar">
+    <input class="add-input" id="addInput" placeholder="Ajouter un article…" maxlength="80"/>
+    <input class="qty-in" id="addQty" type="text" placeholder="Qté" value="1" maxlength="6"/>
+    <button class="add-btn" onclick="addItem()">+</button>
+  </div>
+</div>
+
+<!-- ══ SYNC PANEL MODAL ══════════════════════════════════════════════════════ -->
+<div class="modal-back hidden" id="syncModal" onclick="closeSyncPanel(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="m-title">📡 Synchronisation P2P</div>
+    <div class="sync-info-row">
+      <div>
+        <div class="sync-info-label">Code de votre salon</div>
+        <div class="sync-info-val" id="panelCode">——</div>
+      </div>
+      <button class="copy-btn" onclick="copyCode()">Copier</button>
+    </div>
+    <div class="m-field">
+      <div class="m-lbl">Appareils connectés</div>
+      <div class="peers-list" id="peersList"><span style="color:var(--muted);font-size:13px">Aucun appareil connecté</span></div>
+    </div>
+    <div class="m-field">
+      <div class="m-lbl">Rejoindre un autre salon</div>
+      <div class="join-row" style="margin-top:6px">
+        <input class="code-input" id="panelJoinIn" placeholder="Code à 6 chiffres" maxlength="6" type="tel" inputmode="numeric"/>
+        <button class="btn-join" onclick="joinRoomPanel()">Rejoindre</button>
+      </div>
+    </div>
+    <div class="m-acts">
+      <button class="m-btn-s" onclick="closeSyncPanel()">Fermer</button>
+      <button class="m-btn-p" onclick="copyCode()">📋 Copier le code</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ STORE MODAL ════════════════════════════════════════════════════════════ -->
+<div class="modal-back hidden" id="storeModal" onclick="closeStoreModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="m-title" id="storeModalTitle">Nouveau magasin</div>
+    <div class="m-field">
+      <div class="m-lbl">Nom</div>
+      <input class="m-in" id="storeNameIn" placeholder="ex: Lidl, Décathlon…" maxlength="30"/>
+    </div>
+    <div class="m-field">
+      <div class="m-lbl">Icône</div>
+      <div class="emoji-grid" id="emojiGrid"></div>
+    </div>
+    <div class="m-field">
+      <div class="m-lbl">Lien application (optionnel)</div>
+      <input class="m-in" id="storeLinkIn" placeholder="ex: chronodrive:// ou https://…" maxlength="200"/>
+    </div>
+    <div class="m-acts">
+      <button class="m-btn-s" onclick="closeStoreModal()">Annuler</button>
+      <button class="m-btn-p" onclick="saveStore()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SETTINGS MODAL ════════════════════════════════════════════════════════ -->
+<div class="modal-back hidden" id="settingsModal" onclick="closeModal('settingsModal',event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="m-title">⚙ Paramètres</div>
+
+    <!-- Prénom -->
+    <div class="m-field">
+      <div class="m-lbl">Votre prénom</div>
+      <input class="m-in" id="settingsName" maxlength="20"/>
+    </div>
+
+    <!-- Sauvegarde / Restauration -->
+    <div style="border-top:1px solid var(--border);margin:14px 0 14px"></div>
+    <div class="m-lbl" style="margin-bottom:10px">💾 Sauvegarde &amp; restauration</div>
+
+    <!-- Export complet -->
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:10px">
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px">Exporter toutes les données</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.4">Articles, magasins, contacts, carte fidélité — télécharge un fichier <code style="background:var(--border);padding:1px 5px;border-radius:4px">.json</code></div>
+      <button class="m-btn-p" style="width:100%;padding:11px;font-size:13px" onclick="exportData()">⬇ Exporter (JSON)</button>
+    </div>
+
+    <!-- Import complet -->
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:10px">
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px">Importer des données</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.4">Restaure depuis un fichier exporté précédemment. Les données actuelles seront <strong style="color:var(--red)">remplacées</strong>.</div>
+      <label style="display:block;width:100%">
+        <input type="file" id="importFileIn" accept=".json" style="display:none" onchange="importData(event)"/>
+        <div class="m-btn-p" style="width:100%;padding:11px;font-size:13px;text-align:center;cursor:pointer;border-radius:11px;background:var(--accent)">⬆ Importer (JSON)</div>
+      </label>
+    </div>
+
+    <!-- Export contacts uniquement -->
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:4px">
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px">Transférer les contacts</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.4">Exporte uniquement le carnet de contacts pour le partager avec un autre téléphone.</div>
+      <div style="display:flex;gap:8px">
+        <button class="m-btn-p" style="flex:1;padding:10px;font-size:12px;background:rgba(21,101,192,.85)" onclick="exportContacts()">⬇ Exporter contacts</button>
+        <label style="flex:1">
+          <input type="file" id="importContactsIn" accept=".json" style="display:none" onchange="importContacts(event)"/>
+          <div class="m-btn-p" style="width:100%;padding:10px;font-size:12px;text-align:center;cursor:pointer;border-radius:11px;background:rgba(21,101,192,.85)">⬆ Importer contacts</div>
+        </label>
+      </div>
+    </div>
+
+    <div class="m-acts" style="margin-top:16px">
+      <button class="m-btn-s" onclick="closeModal('settingsModal')">Fermer</button>
+      <button class="m-btn-p" onclick="saveSettings()">Enregistrer le prénom</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ LOYALTY CARD MODAL (Super U) ══════════════════════════════════════════ -->
+<div class="modal-back hidden" id="loyaltyModal" onclick="closeModal('loyaltyModal',event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="m-title">🏷️ Carte de fidélité Super U</div>
+    <div class="m-field" id="barcodeSection" style="display:none">
+      <div class="barcode-wrap">
+        <canvas id="barcodeCanvas"></canvas>
+        <div class="barcode-number" id="barcodeNumber"></div>
+      </div>
+    </div>
+    <div class="m-field" id="loyaltyInputSection">
+      <div class="m-lbl">Numéro de carte (code-barres)</div>
+      <input class="m-in" id="loyaltyCodeIn" placeholder="ex : 0123456789012" maxlength="20" type="tel" inputmode="numeric"
+        style="font-family:'Syne',sans-serif;letter-spacing:3px;font-size:16px;text-align:center"/>
+      <p style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center">Entrez le numéro au dos de votre carte Super U</p>
+    </div>
+    <div class="m-acts">
+      <button class="m-btn-s" onclick="closeModal('loyaltyModal')">Fermer</button>
+      <button class="m-btn-p" id="loyaltySaveBtn" onclick="saveLoyaltyCode()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CHRONO CLIENT CODE MODAL ═════════════════════════════════════════════ -->
+<div class="modal-back hidden" id="chronoModal" onclick="closeModal('chronoModal',event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="m-title">🚗 Code client Chronodrive</div>
+    <div class="m-field">
+      <div class="m-lbl">Votre code client</div>
+      <input class="m-in" id="chronoCodeIn" placeholder="ex : CD-123456" maxlength="20"
+        style="font-family:'Syne',sans-serif;letter-spacing:2px;font-size:16px;text-align:center"/>
+      <p style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center">Visible dans votre espace Chronodrive → Mon compte</p>
+    </div>
+    <div class="m-field" id="chronoDisplaySection" style="display:none">
+      <div style="background:var(--accentLight);border:2px solid var(--accent);border-radius:var(--r);padding:18px;text-align:center">
+        <div style="font-size:11px;color:var(--dim);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Code client enregistré</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:24px;letter-spacing:4px;color:var(--accent)" id="chronoCodeDisplay"></div>
+      </div>
+    </div>
+    <div class="m-acts">
+      <button class="m-btn-s" onclick="closeModal('chronoModal')">Fermer</button>
+      <button class="m-btn-p" onclick="saveChronoCode()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CALENDAR INVITE MODAL ═════════════════════════════════════════════════ -->
+<div class="modal-back hidden" id="calModal" onclick="closeModal('calModal',event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="m-title">📅 Planifier les courses</div>
+    <div class="cal-section">
+
+      <div class="m-lbl" style="margin-bottom:6px">Magasin</div>
+      <select class="cal-store-sel" id="calStoreSelect" onchange="updateCalPreview()"></select>
+
+      <div class="m-lbl" style="margin-bottom:6px">Date et heure</div>
+      <div class="cal-row">
+        <input class="cal-input" id="calDateIn" type="datetime-local" onchange="updateCalPreview()"/>
+      </div>
+
+      <div class="m-lbl" style="margin-bottom:6px">Durée estimée</div>
+      <div class="cal-row">
+        <select class="cal-input" id="calDuration" onchange="updateCalPreview()" style="cursor:pointer;appearance:none">
+          <option value="30">30 min</option>
+          <option value="45">45 min</option>
+          <option value="60" selected>1h</option>
+          <option value="90">1h30</option>
+          <option value="120">2h</option>
+        </select>
+      </div>
+
+      <!-- ── INVITÉS ── -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div class="m-lbl" style="margin-bottom:0">Invités</div>
+        <button onclick="openContactsModal()" style="background:none;border:none;color:var(--accentB);font-size:12px;font-weight:600;cursor:pointer;padding:2px 6px">
+          + Gérer les contacts
+        </button>
+      </div>
+      <div id="calGuestList" class="guest-list">
+        <!-- rempli dynamiquement -->
+      </div>
+      <div id="calGuestBadge" style="display:none">
+        <div class="guest-count-badge">
+          <span>✉️</span><span id="calGuestCountLabel">0 invité(s) sélectionné(s)</span>
+        </div>
+      </div>
+
+      <div class="m-lbl" style="margin-top:12px;margin-bottom:6px">Aperçu de la liste</div>
+      <div class="cal-preview" id="calPreview">Sélectionnez un magasin pour voir les articles…</div>
+    </div>
+
+    <p style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:14px;margin-top:10px;line-height:1.5">
+      Ouvre Google Agenda avec la liste et les invités pré-remplis
+    </p>
+    <div class="m-acts">
+      <button class="m-btn-s" onclick="closeModal('calModal')">Annuler</button>
+      <button class="m-btn-p" onclick="sendCalInvite()" style="background:var(--accentB)">📅 Ouvrir Google Agenda</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CONTACTS MODAL ════════════════════════════════════════════════════════ -->
+<div class="modal-back hidden" id="contactsModal" onclick="closeModal('contactsModal',event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="m-title">👥 Carnet de contacts</div>
+    <div class="m-field">
+      <div class="m-lbl">Ajouter un contact</div>
+      <div class="add-contact-row">
+        <input class="m-in" id="contactNameIn" placeholder="Prénom" maxlength="30" style="flex:1"/>
+        <input class="m-in" id="contactEmailIn" placeholder="adresse@gmail.com" type="email" maxlength="80" style="flex:2"/>
+      </div>
+      <button class="m-btn-p" style="width:100%;margin-top:8px;padding:11px" onclick="addContact()">＋ Ajouter</button>
+    </div>
+    <div class="m-lbl" style="margin-bottom:8px">Contacts enregistrés</div>
+    <div id="contactsList"><!-- rempli dynamiquement --></div>
+    <div class="m-acts" style="margin-top:16px">
+      <button class="m-btn-p" onclick="closeModal('contactsModal');openCalModal(null,true)">← Retour à l'invitation</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ════════ CONSTANTS ════════════════════════════════════════════════════════ */
+const SK       = 'lc_v5';
+const USER_KEY = 'lc_user';
+const MODE_KEY = 'lc_mode';   // 'sync' | 'local'
+const ROOM_KEY = 'lc_room';   // code à 6 chiffres
+
+const EMOJIS=['🛒','🏪','💊','🥩','🥦','🧴','🧹','🛠️','🌿','🍷','🧁','🐾','👗','💻','🎮','📚','🏋️','🚗','🌸','🏡','🎁','🍞','🥐','☕','🧀','🥛','🧂','🫙','🧺','🪴'];
+
+const DEFAULT_STORES=[
+  {id:'s1',name:'Super U',     emoji:'🛒',link:''},
+  {id:'s2',name:'Chronodrive', emoji:'🚗',link:'chronodrive://'},
+  {id:'s3',name:'Pharmacie',   emoji:'💊',link:''},
+  {id:'s4',name:'Castorama',   emoji:'🛠️',link:''},
+  {id:'s5',name:'Natureo',     emoji:'🌿',link:''},
+];
+
+/* ════════ STATE ════════════════════════════════════════════════════════════ */
+let state={stores:DEFAULT_STORES,items:{},activeStore:'s1'};
+let username  = localStorage.getItem(USER_KEY)||'';
+let appMode   = localStorage.getItem(MODE_KEY)||'';   // 'sync'|'local'
+let myRoomCode= localStorage.getItem(ROOM_KEY)||'';
+let filterMode='all';
+let selEmoji  ='🛒';
+let editStoreId=null;
+
+/* ════════ P2P / PEERJS ════════════════════════════════════════════════════ */
+/*
+  Architecture :
+  - Chaque téléphone crée un Peer avec un ID = "lc-<code>"
+  - Le créateur du salon génère un code aléatoire à 6 chiffres
+  - Rejoindre = connecter son Peer à "lc-<code>"
+  - Chaque modification est broadcastée à tous les peers connectés (JSON)
+  - À la connexion, on échange l'état complet pour synchroniser
+*/
+let peer      = null;   // PeerJS instance
+let peers     = {};     // { peerId: DataConnection }
+
+function makePeerId(code){ return 'lc-cours-'+code; }
+
+function generateCode(){
+  return String(Math.floor(100000+Math.random()*900000));
+}
+
+function initPeer(code){
+  myRoomCode=code;
+  localStorage.setItem(ROOM_KEY,code);
+  document.getElementById('myCode').textContent=code;
+  document.getElementById('panelCode').textContent=code;
+
+  if(peer){ try{peer.destroy();}catch(e){} }
+  peers={};
+
+  peer=new Peer(makePeerId(code),{
+    // serveur de signalement public PeerJS (aucun compte requis)
+    host: '0.peerjs.com', port: 443, path: '/',
+    secure: true, debug: 0,
+    config:{iceServers:[
+      {urls:'stun:stun.l.google.com:19302'},
+      {urls:'stun:stun1.l.google.com:19302'},
+    ]}
+  });
+
+  peer.on('open', id=>{
+    setPeerUI('wait','En attente…');
+    console.log('Peer ouvert :', id);
+  });
+
+  peer.on('connection', conn=>{ setupConn(conn); });
+
+  peer.on('error', err=>{
+    console.warn('PeerJS error:',err.type, err);
+    if(err.type==='unavailable-id'){
+      // code déjà pris, rejoindre à la place
+      const newPeer=new Peer(makePeerId(generateCode()),{host:'0.peerjs.com',port:443,path:'/',secure:true,debug:0});
+      newPeer.on('open',()=>{ peer=newPeer; joinPeer(code); });
+    } else {
+      setPeerUI('err','Erreur réseau');
+    }
+  });
+}
+
+function joinPeer(targetCode){
+  if(!peer){ toast('Initialisation en cours…'); return; }
+  const conn=peer.connect(makePeerId(targetCode),{reliable:true,serialization:'json'});
+  setupConn(conn);
+}
+
+function setupConn(conn){
+  conn.on('open',()=>{
+    peers[conn.peer]=conn;
+    updatePeersUI();
+    setPeerUI('conn','Connecté');
+    // Envoyer mon état complet
+    conn.send({type:'full-state',data:{stores:state.stores,items:state.items},from:username});
+  });
+
+  conn.on('data', msg=>{
+    handleMsg(msg, conn);
+  });
+
+  conn.on('close',()=>{
+    delete peers[conn.peer];
+    updatePeersUI();
+    if(Object.keys(peers).length===0) setPeerUI('wait','En attente…');
+  });
+
+  conn.on('error', e=>{ console.warn('conn error',e); });
+}
+
+function handleMsg(msg, fromConn){
+  if(msg.type==='full-state'){
+    // Merge avec priorité au plus récent par item
+    state.stores = msg.data.stores && msg.data.stores.length ? msg.data.stores : state.stores;
+    state.items  = mergeItems(msg.data.items, state.items);
+    saveLocal(); render();
+    // Répondre avec notre état (pour sync bidirectionnelle)
+    fromConn.send({type:'full-state',data:{stores:state.stores,items:state.items},from:username});
+  } else if(msg.type==='delta'){
+    applyDelta(msg.delta);
+    saveLocal(); render();
+  }
+}
+
+function broadcast(msg){
+  Object.values(peers).forEach(c=>{ try{c.send(msg);}catch(e){} });
+}
+
+function broadcastDelta(delta){
+  broadcast({type:'delta', delta, from:username});
+}
+
+function mergeItems(remote={}, local={}){
+  const merged={};
+  const ids=new Set([...Object.keys(remote),...Object.keys(local)]);
+  for(const sid of ids){
+    const byId={};
+    for(const item of (remote[sid]||[])) byId[item.id]=item;
+    for(const item of (local[sid]||[])){
+      if(!byId[item.id]||(item.ts||0)>(byId[item.id].ts||0)) byId[item.id]=item;
+    }
+    merged[sid]=Object.values(byId).sort((a,b)=>(b.ts||0)-(a.ts||0));
+  }
+  return merged;
+}
+
+function applyDelta(delta){
+  if(delta.type==='add'){
+    if(!state.items[delta.storeId]) state.items[delta.storeId]=[];
+    const exists=state.items[delta.storeId].find(i=>i.id===delta.item.id);
+    if(!exists) state.items[delta.storeId].unshift(delta.item);
+  } else if(delta.type==='toggle'){
+    const item=(state.items[delta.storeId]||[]).find(i=>i.id===delta.id);
+    if(item&&(delta.ts||0)>=(item.ts||0)){item.checked=delta.checked;item.ts=delta.ts;}
+  } else if(delta.type==='delete'){
+    if(state.items[delta.storeId])
+      state.items[delta.storeId]=state.items[delta.storeId].filter(i=>i.id!==delta.id);
+  } else if(delta.type==='stores'){
+    state.stores=delta.stores;
+  } else if(delta.type==='clear-checked'){
+    if(state.items[delta.storeId])
+      state.items[delta.storeId]=state.items[delta.storeId].filter(i=>!i.checked);
+  }
+}
+
+/* ════════ PEER UI ══════════════════════════════════════════════════════════ */
+function setPeerUI(s,label){
+  document.getElementById('sdot').className='sdot '+s;
+  document.getElementById('slabel').textContent=label;
+  // screen2
+  const dot=document.getElementById('peerDot');
+  if(dot){ dot.className='peer-dot'+(s==='conn'?' ok':''); }
+  const lbl=document.getElementById('peerLabel');
+  if(lbl){ lbl.textContent = s==='conn'?`Connecté (${Object.keys(peers).length} appareil(s))`
+    : s==='wait'?'En attente d\'un autre appareil…'
+    : s==='err'?'Erreur — vérifiez votre connexion'
+    : label; }
+}
+
+function updatePeersUI(){
+  const el=document.getElementById('peersList');
+  if(!el) return;
+  const keys=Object.keys(peers);
+  if(keys.length===0){
+    el.innerHTML='<span style="color:var(--muted);font-size:13px">Aucun appareil connecté</span>';
+  } else {
+    el.innerHTML=keys.map(id=>`<span class="peer-chip">📱 ${id.replace('lc-cours-','')}</span>`).join('');
+  }
+  const n=keys.length;
+  setPeerUI(n>0?'conn':'wait', n>0?`${n} appareil(s) connecté(s)`:'En attente…');
+}
+
+/* ════════ ONBOARDING ═══════════════════════════════════════════════════════ */
+let chosenMode='sync';
+function pickMode(m){
+  chosenMode=m;
+  document.getElementById('c-sync').classList.toggle('sel',m==='sync');
+  document.getElementById('c-local').classList.toggle('sel',m==='local');
+}
+
+function goNext(){
+  const u=document.getElementById('nameIn').value.trim();
+  if(!u){toast('Entrez votre prénom');return;}
+  username=u; localStorage.setItem(USER_KEY,u);
+  if(chosenMode==='local'){
+    appMode='local'; localStorage.setItem(MODE_KEY,'local');
+    document.getElementById('screen1').classList.add('hidden');
+    loadLocal(); render(); setSyncUI_app('local');
+  } else {
+    appMode='sync'; localStorage.setItem(MODE_KEY,'sync');
+    document.getElementById('screen1').classList.add('hidden');
+    document.getElementById('screen2').classList.remove('hidden');
+    // générer un code et init peer
+    const code=generateCode();
+    initPeer(code);
+  }
+}
+
+function copyCode(){
+  const code=myRoomCode||document.getElementById('myCode').textContent;
+  navigator.clipboard?.writeText(code).then(()=>toast('Code copié ✓')).catch(()=>{
+    toast('Code : '+code);
+  });
+}
+
+function joinRoom(){
+  const code=document.getElementById('joinCodeIn').value.trim();
+  if(code.length!==6||isNaN(code)){toast('Code invalide (6 chiffres)');return;}
+  joinPeer(code);
+  toast('Connexion en cours…');
+}
+
+function joinRoomPanel(){
+  const code=document.getElementById('panelJoinIn').value.trim();
+  if(code.length!==6||isNaN(code)){toast('Code invalide (6 chiffres)');return;}
+  joinPeer(code);
+  closeModal('syncModal');
+  toast('Connexion en cours…');
+}
+
+function startWithoutSync(){
+  appMode='local'; localStorage.setItem(MODE_KEY,'local');
+  document.getElementById('screen2').classList.add('hidden');
+  loadLocal(); render(); setSyncUI_app('local');
+}
+
+function enterApp(){
+  document.getElementById('screen1').classList.add('hidden');
+  document.getElementById('screen2').classList.add('hidden');
+}
+
+function setSyncUI_app(s){
+  const dot=document.getElementById('sdot');
+  const lbl=document.getElementById('slabel');
+  if(s==='local'){ dot.className='sdot'; lbl.textContent='Local'; }
+  else if(s==='conn'){ dot.className='sdot conn'; lbl.textContent='Sync'; }
+  else if(s==='wait'){ dot.className='sdot wait'; lbl.textContent='En attente…'; }
+}
+
+// Bouton "Entrer dans l'app" depuis screen2 (click sur sync pill)
+document.getElementById('syncPill').addEventListener('click',()=>{
+  if(!document.getElementById('screen2').classList.contains('hidden')) return; // déjà affiché
+  openSyncPanel();
+});
+
+/* ════════ INIT ═════════════════════════════════════════════════════════════ */
+function init(){
+  if(!username||!appMode){
+    document.getElementById('screen1').classList.remove('hidden');
+    return;
+  }
+  document.getElementById('screen1').classList.add('hidden');
+  document.getElementById('screen2').classList.add('hidden');
+  loadLocal(); render();
+  if(appMode==='sync' && myRoomCode){
+    initPeer(myRoomCode);
+    setSyncUI_app('wait');
+  } else {
+    setSyncUI_app('local');
+  }
+}
+
+/* ════════ LOCAL STORAGE ════════════════════════════════════════════════════ */
+function loadLocal(){
+  try{const s=JSON.parse(localStorage.getItem(SK)||'null');if(s)state={...state,...s};}catch{}
+  if(!state.loyalty) state.loyalty={superU:'',chrono:''};
+}
+function saveLocal(){
+  localStorage.setItem(SK,JSON.stringify({stores:state.stores,items:state.items,loyalty:state.loyalty}));
+}
+
+/* ════════ LOYALTY — SUPER U ════════════════════════════════════════════════ */
+function openLoyaltyModal(){
+  const code=state.loyalty?.superU||'';
+  document.getElementById('loyaltyCodeIn').value=code;
+  const bsec=document.getElementById('barcodeSection');
+  const isec=document.getElementById('loyaltyInputSection');
+  const sbtn=document.getElementById('loyaltySaveBtn');
+  if(code){
+    bsec.style.display='block'; isec.style.display='block';
+    sbtn.textContent='Modifier';
+    drawBarcode(code);
+  } else {
+    bsec.style.display='none'; isec.style.display='block';
+    sbtn.textContent='Enregistrer';
+  }
+  document.getElementById('loyaltyModal').classList.remove('hidden');
+}
+
+function saveLoyaltyCode(){
+  const code=document.getElementById('loyaltyCodeIn').value.trim().replace(/\s/g,'');
+  if(!code){toast('Entrez un numéro de carte');return;}
+  if(!state.loyalty) state.loyalty={};
+  state.loyalty.superU=code;
+  saveLocal();
+  drawBarcode(code);
+  document.getElementById('barcodeSection').style.display='block';
+  document.getElementById('loyaltySaveBtn').textContent='Modifier';
+  renderContent();
+  toast('Carte enregistrée ✓');
+}
+
+function drawBarcode(code){
+  const canvas=document.getElementById('barcodeCanvas');
+  const ctx=canvas.getContext('2d');
+  const dpr=window.devicePixelRatio||1;
+  const W=Math.min(320, window.innerWidth-80), H=70;
+  canvas.width=W*dpr; canvas.height=H*dpr;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.scale(dpr,dpr);
+
+  // Fond blanc
+  ctx.fillStyle='#fff';
+  ctx.fillRect(0,0,W,H);
+
+  // Génération EAN/Code128 simplifié (barres visuelles)
+  ctx.fillStyle='#1a2e2b';
+  const digits=code.replace(/\D/g,'').padEnd(13,'0').slice(0,13);
+  const bars=encodeEAN13(digits);
+  const barW=W/bars.length;
+  bars.forEach((b,i)=>{
+    if(b) ctx.fillRect(i*barW,4,barW,H-8);
+  });
+
+  document.getElementById('barcodeNumber').textContent=
+    code.replace(/(.{4})/g,'$1 ').trim();
+}
+
+function encodeEAN13(digits){
+  // Encodage EAN-13 simplifié pour affichage visuel
+  const L=[
+    [0,0,0,1,1,0,1],[0,0,1,1,0,0,1],[0,0,1,0,0,1,1],[0,1,1,1,1,0,1],
+    [0,1,0,0,0,1,1],[0,1,1,0,0,0,1],[0,1,0,1,1,1,1],[0,1,1,1,0,1,1],
+    [0,1,1,0,1,1,1],[0,0,0,1,0,1,1]
+  ];
+  const G=L.map(b=>[...b].reverse());
+  const R=L.map(b=>b.map(x=>x^1));
+  const parity=[[0,0,0,0,0,0],[0,0,1,0,1,1],[0,0,1,1,0,1],[0,0,1,1,1,0],
+    [0,1,0,0,1,1],[0,1,1,0,0,1],[0,1,1,1,0,0],[0,1,0,1,0,1],
+    [0,1,0,1,1,0],[0,1,1,0,1,0]];
+  const d=digits.split('').map(Number);
+  const par=parity[d[0]];
+  let bars=[1,0,1]; // start
+  for(let i=0;i<6;i++) bars.push(...(par[i]?G[d[i+1]]:L[d[i+1]]));
+  bars.push(...[0,1,0,1,0]); // middle
+  for(let i=7;i<13;i++) bars.push(...R[d[i]]);
+  bars.push(...[1,0,1]); // end
+  return bars;
+}
+
+/* ════════ CHRONO CLIENT CODE ════════════════════════════════════════════════ */
+function openChronoModal(){
+  const code=state.loyalty?.chrono||'';
+  document.getElementById('chronoCodeIn').value=code;
+  const disp=document.getElementById('chronoDisplaySection');
+  const dispEl=document.getElementById('chronoCodeDisplay');
+  if(code){ disp.style.display='block'; dispEl.textContent=code; }
+  else { disp.style.display='none'; }
+  document.getElementById('chronoModal').classList.remove('hidden');
+}
+
+function saveChronoCode(){
+  const code=document.getElementById('chronoCodeIn').value.trim();
+  if(!code){toast('Entrez un code client');return;}
+  if(!state.loyalty) state.loyalty={};
+  state.loyalty.chrono=code;
+  saveLocal();
+  document.getElementById('chronoCodeDisplay').textContent=code;
+  document.getElementById('chronoDisplaySection').style.display='block';
+  renderContent();
+  toast('Code client enregistré ✓');
+}
+
+/* ════════ CONTACTS ═════════════════════════════════════════════════════════ */
+// contacts : [{id, name, email}]
+// Stockés dans localStorage séparément pour partage facile
+const CONTACTS_KEY = 'lc_contacts';
+
+function loadContacts(){
+  try{ return JSON.parse(localStorage.getItem(CONTACTS_KEY)||'[]'); } catch{ return []; }
+}
+function saveContacts(contacts){
+  localStorage.setItem(CONTACTS_KEY, JSON.stringify(contacts));
+}
+
+function openContactsModal(){
+  renderContactsList();
+  document.getElementById('contactsModal').classList.remove('hidden');
+}
+
+function renderContactsList(){
+  const contacts=loadContacts();
+  const el=document.getElementById('contactsList');
+  if(!contacts.length){
+    el.innerHTML=`<div class="contact-empty"><div class="ce-icon">👤</div>Aucun contact enregistré.<br>Ajoutez-en un ci-dessus.</div>`;
+    return;
+  }
+  el.innerHTML=contacts.map(c=>`
+    <div style="display:flex;align-items:center;gap:9px;padding:9px 12px;background:var(--bg3);
+      border:1px solid var(--border);border-radius:11px;margin-bottom:7px">
+      <div class="guest-avatar" style="font-size:13px">${getInitials(c.name)}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:600;color:var(--text)">${esc(c.name)}</div>
+        <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(c.email)}</div>
+      </div>
+      <button class="del-contact-btn" onclick="deleteContact('${c.id}')" title="Supprimer">🗑</button>
+    </div>`).join('');
+}
+
+function addContact(){
+  const name=document.getElementById('contactNameIn').value.trim();
+  const email=document.getElementById('contactEmailIn').value.trim();
+  if(!name){toast('Entrez un prénom');return;}
+  if(!email||!email.includes('@')){toast('Adresse e-mail invalide');return;}
+  const contacts=loadContacts();
+  if(contacts.find(c=>c.email.toLowerCase()===email.toLowerCase())){
+    toast('Ce contact existe déjà');return;
+  }
+  contacts.push({id:'c'+Date.now(), name, email});
+  saveContacts(contacts);
+  document.getElementById('contactNameIn').value='';
+  document.getElementById('contactEmailIn').value='';
+  renderContactsList();
+  renderCalGuestList(); // refresh the guest list in cal modal
+  toast('Contact ajouté ✓');
+}
+
+function deleteContact(id){
+  const contacts=loadContacts().filter(c=>c.id!==id);
+  saveContacts(contacts);
+  // Remove from selected guests if present
+  selectedGuests.delete(id);
+  renderContactsList();
+  renderCalGuestList();
+}
+
+function getInitials(name){
+  return name.trim().split(/\s+/).map(w=>w[0]).join('').toUpperCase().slice(0,2)||'?';
+}
+
+/* ════════ CALENDAR INVITE ══════════════════════════════════════════════════ */
+let selectedGuests = new Set(); // Set of contact ids
+
+function openCalModal(preSelectStoreId, keepState){
+  // Reset guests only on fresh open
+  if(!keepState) selectedGuests.clear();
+
+  // Remplir le select des magasins
+  const sel=document.getElementById('calStoreSelect');
+  if(preSelectStoreId!==null){
+    sel.innerHTML=state.stores.map(s=>
+      `<option value="${s.id}" ${s.id===preSelectStoreId?'selected':''}>${s.emoji} ${esc(s.name)}</option>`
+    ).join('');
+  }
+
+  // Date par défaut : demain à 10h (seulement si pas keepState)
+  if(!keepState){
+    const tomorrow=new Date(); tomorrow.setDate(tomorrow.getDate()+1);
+    tomorrow.setHours(10,0,0,0);
+    document.getElementById('calDateIn').value=toLocalDatetimeValue(tomorrow);
+  }
+
+  renderCalGuestList();
+  updateCalPreview();
+  document.getElementById('calModal').classList.remove('hidden');
+}
+
+function renderCalGuestList(){
+  const contacts=loadContacts();
+  const el=document.getElementById('calGuestList');
+  const badge=document.getElementById('calGuestBadge');
+  const countLbl=document.getElementById('calGuestCountLabel');
+
+  if(!contacts.length){
+    el.innerHTML=`<div class="contact-empty" style="padding:12px">
+      <div class="ce-icon" style="font-size:24px;margin-bottom:4px">👤</div>
+      Aucun contact — <span style="color:var(--accentB);cursor:pointer;font-weight:600" onclick="openContactsModal()">Ajouter des contacts</span>
+    </div>`;
+    badge.style.display='none';
+    return;
+  }
+
+  el.innerHTML=contacts.map(c=>{
+    const sel=selectedGuests.has(c.id);
+    return`<div class="guest-row ${sel?'sel':''}" onclick="toggleGuest('${c.id}')">
+      <div class="guest-avatar">${getInitials(c.name)}</div>
+      <div class="guest-info">
+        <div class="guest-name">${esc(c.name)}</div>
+        <div class="guest-email">${esc(c.email)}</div>
+      </div>
+      <div class="guest-check"></div>
+    </div>`;
+  }).join('');
+
+  const n=selectedGuests.size;
+  if(n>0){
+    badge.style.display='block';
+    countLbl.textContent=`${n} invité${n>1?'s':''} sélectionné${n>1?'s':''}`;
+  } else {
+    badge.style.display='none';
+  }
+}
+
+function toggleGuest(id){
+  if(selectedGuests.has(id)) selectedGuests.delete(id);
+  else selectedGuests.add(id);
+  renderCalGuestList();
+}
+
+function updateCalPreview(){
+  const sid=document.getElementById('calStoreSelect').value;
+  const store=state.stores.find(s=>s.id===sid);
+  const items=(state.items[sid]||[]).filter(i=>!i.checked);
+  const prev=document.getElementById('calPreview');
+  if(!items.length){
+    prev.innerHTML=`<em>Aucun article à acheter pour ${store?.name||'ce magasin'}</em>`;
+    return;
+  }
+  prev.innerHTML=`<strong>${store?.emoji} ${store?.name}</strong><br>`+
+    items.map(i=>`• ${i.name}${i.qty&&i.qty!=='1'?' ('+i.qty+')':''}`).join('<br>');
+}
+
+function sendCalInvite(){
+  const sid=document.getElementById('calStoreSelect').value;
+  const store=state.stores.find(s=>s.id===sid);
+  const dateVal=document.getElementById('calDateIn').value;
+  const duration=parseInt(document.getElementById('calDuration').value)||60;
+
+  if(!dateVal){toast('Choisissez une date et heure');return;}
+
+  const start=new Date(dateVal);
+  const end=new Date(start.getTime()+duration*60000);
+  const items=(state.items[sid]||[]).filter(i=>!i.checked);
+
+  // Description
+  let desc=`🛒 Courses — ${store?.name}\n\n`;
+  if(items.length){
+    desc+=items.map(i=>`☐ ${i.name}${i.qty&&i.qty!=='1'?' ('+i.qty+')':''}`).join('\n');
+  } else {
+    desc+='(Aucun article en attente)';
+  }
+  if(store?.id==='s1'&&state.loyalty?.superU) desc+=`\n\n🏷️ Carte fidélité : ${state.loyalty.superU}`;
+  if(store?.id==='s2'&&state.loyalty?.chrono) desc+=`\n\n🔑 Code client : ${state.loyalty.chrono}`;
+
+  // Format ICS datetime
+  const fmtDt=d=>`${d.getFullYear()}${p2(d.getMonth()+1)}${p2(d.getDate())}T${p2(d.getHours())}${p2(d.getMinutes())}00`;
+
+  // Invités sélectionnés
+  const contacts=loadContacts();
+  const guests=contacts.filter(c=>selectedGuests.has(c.id));
+  const guestEmails=guests.map(c=>c.email);
+
+  // Google Calendar URL
+  const params=new URLSearchParams({
+    action:'TEMPLATE',
+    text:`🛒 Courses — ${store?.name}`,
+    dates:`${fmtDt(start)}/${fmtDt(end)}`,
+    details:desc,
+    location:store?.name||'',
+  });
+
+  // add= permet d'ajouter des invités dans Google Agenda
+  guestEmails.forEach(email=>params.append('add',email));
+
+  const url=`https://calendar.google.com/calendar/render?${params.toString()}`;
+  window.open(url,'_blank');
+
+  closeModal('calModal');
+  const msg=guests.length
+    ? `Agenda ouvert — ${guests.length} invité(s) ajouté(s) ✓`
+    : 'Ouverture de Google Agenda…';
+  toast(msg);
+}
+
+function toLocalDatetimeValue(d){
+  const pad=n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function p2(n){return String(n).padStart(2,'0')}
+
+/* ════════ RENDER ════════════════════════════════════════════════════════════ */
+function render(){ renderTabs(); renderContent(); }
+
+function renderTabs(){
+  const el=document.getElementById('storeTabs'); el.innerHTML='';
+  state.stores.forEach(s=>{
+    const pending=(state.items[s.id]||[]).filter(i=>!i.checked).length;
+    const d=document.createElement('div');
+    d.className='tab'+(state.activeStore===s.id?' active':'');
+    d.onclick=()=>switchStore(s.id);
+    d.innerHTML=`<span class="ti">${s.emoji}</span><span class="tl">${s.name}</span>${pending>0?`<span class="tc">${pending}</span>`:''}`;
+    el.appendChild(d);
+  });
+}
+
+function renderContent(){
+  const store=state.stores.find(s=>s.id===state.activeStore); if(!store)return;
+  let items=state.items[state.activeStore]||[];
+  const total=items.length, checked=items.filter(i=>i.checked).length;
+  const pct=total>0?Math.round(checked/total*100):0;
+  if(filterMode==='pending') items=items.filter(i=>!i.checked);
+  else if(filterMode==='checked') items=items.filter(i=>i.checked);
+
+  const appBtn=store.link
+    ?`<a class="app-link" href="${esc(store.link)}" onclick="openAppLink(event,'${esc(store.link)}','${store.id==='s2'?'https://www.chronodrive.com':esc(store.link)}')">🔗 Ouvrir</a>`:'';
+
+  // ── Banière carte / code client ──
+  let specialBanner='';
+  if(store.id==='s1'){
+    const code=state.loyalty?.superU||'';
+    specialBanner=`<div class="store-card-banner" onclick="openLoyaltyModal()">
+      <div class="card-banner-row">
+        <div class="card-banner-left">
+          <span class="card-banner-icon">🏷️</span>
+          <div>
+            <div class="card-banner-label">Carte de fidélité Super U</div>
+            <div class="card-banner-val">${code?code.replace(/(.{4})/g,'$1 ').trim():'Appuyez pour enregistrer'}</div>
+          </div>
+        </div>
+        <span class="card-banner-arrow">${code?'▶':'＋'}</span>
+      </div>
+    </div>`;
+  } else if(store.id==='s2'){
+    const code=state.loyalty?.chrono||'';
+    specialBanner=`<div class="store-card-banner" onclick="openChronoModal()">
+      <div class="card-banner-row">
+        <div class="card-banner-left">
+          <span class="card-banner-icon">🔑</span>
+          <div>
+            <div class="card-banner-label">Code client Chronodrive</div>
+            <div class="card-banner-val">${code||'Appuyez pour enregistrer'}</div>
+          </div>
+        </div>
+        <span class="card-banner-arrow">${code?'▶':'＋'}</span>
+      </div>
+    </div>`;
+  }
+
+  document.getElementById('content').innerHTML=`
+    <div class="store-hdr">
+      <div class="store-title-row">
+        <span class="store-emoji">${store.emoji}</span>
+        <span class="store-name">${esc(store.name)}</span>
+      </div>
+      <div class="store-acts">
+        ${appBtn}
+        <button class="icon-btn" onclick="openStoreModal('${store.id}')" title="Modifier">✏️</button>
+      </div>
+    </div>
+    ${specialBanner}
+    <div class="action-bar">
+      <div class="action-chip cal" onclick="openCalModal('${store.id}')">📅 Planifier les courses</div>
+    </div>
+    ${total>0?`<div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>`:''}
+    <div class="toolbar">
+      <button class="f-btn ${filterMode==='all'?'on':''}" onclick="setFilter('all')">Tous</button>
+      <button class="f-btn ${filterMode==='pending'?'on':''}" onclick="setFilter('pending')">À acheter</button>
+      <button class="f-btn ${filterMode==='checked'?'on':''}" onclick="setFilter('checked')">Achetés</button>
+      ${checked>0?`<button class="clear-btn" onclick="clearChecked()">🗑 Achetés</button>`:''}
+    </div>
+    <div class="items-list">
+      ${items.length===0
+        ?`<div class="empty"><div class="ei">${filterMode==='pending'?'✅':'🛒'}</div><p>${filterMode==='pending'?'Tout est coché !<br>Bonne course 🎉':'Aucun article.<br>Ajoutez-en un ci-dessous.'}</p></div>`
+        :items.map(renderItem).join('')}
+    </div>`;
+}
+
+function renderItem(item){
+  return`<div class="item-card ${item.checked?'checked':''}" id="c-${item.id}">
+    <div class="chk ${item.checked?'done':''}" onclick="toggleItem('${item.id}')"></div>
+    <div class="item-info">
+      <div class="item-name">${esc(item.name)}</div>
+      <div class="item-meta">
+        ${item.qty&&item.qty!=='1'?`<span class="item-qty">${esc(item.qty)}</span>`:''}
+        <span class="item-author">par ${esc(item.author||'?')}</span>
+      </div>
+    </div>
+    <button class="del-btn" onclick="deleteItem('${item.id}')" title="Supprimer">🗑</button>
+  </div>`;
+}
+
+/* ════════ ACTIONS ══════════════════════════════════════════════════════════ */
+function switchStore(id){ state.activeStore=id; filterMode='all'; render();
+  setTimeout(()=>{ const i=state.stores.findIndex(s=>s.id===id);
+    document.querySelectorAll('.tab')[i]?.scrollIntoView({behavior:'smooth',inline:'center'}); },50); }
+
+function setFilter(m){ filterMode=m; renderContent(); }
+
+function addItem(){
+  const inp=document.getElementById('addInput'), qEl=document.getElementById('addQty');
+  const name=inp.value.trim(); if(!name){inp.focus();return;}
+  const item={id:'i'+Date.now()+Math.random().toString(36).slice(2,5),name,
+    qty:qEl.value.trim()||'1',checked:false,author:username||'Moi',ts:Date.now()};
+  if(!state.items[state.activeStore]) state.items[state.activeStore]=[];
+  state.items[state.activeStore].unshift(item);
+  inp.value=''; qEl.value='1'; inp.focus();
+  saveLocal(); renderContent();
+  broadcastDelta({type:'add',storeId:state.activeStore,item});
+  toast('Article ajouté ✓');
+}
+
+function toggleItem(id){
+  const item=(state.items[state.activeStore]||[]).find(i=>i.id===id); if(!item)return;
+  item.checked=!item.checked; item.ts=Date.now();
+  saveLocal(); renderContent();
+  broadcastDelta({type:'toggle',storeId:state.activeStore,id,checked:item.checked,ts:item.ts});
+}
+
+function deleteItem(id){
+  state.items[state.activeStore]=(state.items[state.activeStore]||[]).filter(i=>i.id!==id);
+  saveLocal(); renderContent();
+  broadcastDelta({type:'delete',storeId:state.activeStore,id});
+}
+
+function clearChecked(){
+  if(!confirm('Supprimer tous les articles cochés ?'))return;
+  state.items[state.activeStore]=(state.items[state.activeStore]||[]).filter(i=>!i.checked);
+  saveLocal(); render();
+  broadcastDelta({type:'clear-checked',storeId:state.activeStore});
+  toast('Articles achetés supprimés');
+}
+
+function openAppLink(e,appLink,webLink){
+  e.preventDefault(); window.location.href=appLink;
+  setTimeout(()=>window.open(webLink,'_blank'),1500);
+}
+
+/* ════════ STORE MODAL ══════════════════════════════════════════════════════ */
+function openStoreModal(sid){
+  editStoreId=sid||null;
+  const s=sid?state.stores.find(x=>x.id===sid):null;
+  document.getElementById('storeModalTitle').textContent=s?'Modifier le magasin':'Nouveau magasin';
+  document.getElementById('storeNameIn').value=s?.name||'';
+  document.getElementById('storeLinkIn').value=s?.link||'';
+  selEmoji=s?.emoji||'🛒';
+  document.getElementById('emojiGrid').innerHTML=EMOJIS.map(e=>`<button class="e-btn ${e===selEmoji?'sel':''}" onclick="pickEmoji('${e}')">${e}</button>`).join('');
+  document.getElementById('storeModal').classList.remove('hidden');
+}
+function pickEmoji(e){ selEmoji=e; document.querySelectorAll('.e-btn').forEach(b=>b.classList.toggle('sel',b.textContent===e)); }
+function closeStoreModal(e){ if(!e||e.target===document.getElementById('storeModal')) document.getElementById('storeModal').classList.add('hidden'); }
+function saveStore(){
+  const name=document.getElementById('storeNameIn').value.trim(); if(!name){toast('Entrez un nom');return;}
+  const link=document.getElementById('storeLinkIn').value.trim();
+  if(editStoreId){ const s=state.stores.find(x=>x.id===editStoreId); if(s){s.name=name;s.emoji=selEmoji;s.link=link;} }
+  else{ const id='s'+Date.now(); state.stores.push({id,name,emoji:selEmoji,link}); state.activeStore=id; }
+  document.getElementById('storeModal').classList.add('hidden');
+  saveLocal(); render();
+  broadcastDelta({type:'stores',stores:state.stores});
+}
+
+/* ════════ SETTINGS ═════════════════════════════════════════════════════════ */
+function openSettings(){
+  document.getElementById('settingsName').value=username;
+  document.getElementById('settingsModal').classList.remove('hidden');
+}
+function saveSettings(){
+  const u=document.getElementById('settingsName').value.trim(); if(!u){toast('Prénom requis');return;}
+  username=u; localStorage.setItem(USER_KEY,u);
+  closeModal('settingsModal'); toast('Sauvegardé ✓');
+}
+
+/* ════════ EXPORT / IMPORT ══════════════════════════════════════════════════ */
+
+// ── Export complet ──────────────────────────────────────────────────────────
+function exportData(){
+  const payload = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    exportedBy: username,
+    data: {
+      stores:   state.stores,
+      items:    state.items,
+      loyalty:  state.loyalty || {},
+      contacts: loadContacts(),
+    }
+  };
+  downloadJSON(payload, `liste-courses-${dateSlug()}.json`);
+  toast('Export téléchargé ✓');
+}
+
+// ── Import complet ──────────────────────────────────────────────────────────
+function importData(event){
+  const file = event.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      if(!parsed.data || !parsed.data.stores || !parsed.data.items)
+        throw new Error('Format invalide');
+
+      if(!confirm(`Importer les données de "${parsed.exportedBy || '?'}" (exportées le ${fmtDate(parsed.exportedAt)}) ?\n\nVos données actuelles seront remplacées.`))
+        return;
+
+      // Restaurer l'état
+      state.stores  = parsed.data.stores;
+      state.items   = parsed.data.items;
+      state.loyalty = parsed.data.loyalty || {};
+      if(!state.activeStore || !state.stores.find(s=>s.id===state.activeStore))
+        state.activeStore = state.stores[0]?.id || 's1';
+
+      saveLocal();
+
+      // Restaurer les contacts s'ils sont présents
+      if(parsed.data.contacts?.length){
+        saveContacts(parsed.data.contacts);
+      }
+
+      render();
+      closeModal('settingsModal');
+      toast(`Import réussi — ${parsed.data.stores.length} magasin(s) chargé(s) ✓`);
+    } catch(err) {
+      toast('❌ Fichier invalide ou corrompu');
+      console.error(err);
+    }
+    // Reset input pour permettre un 2e import
+    event.target.value='';
+  };
+  reader.readAsText(file);
+}
+
+// ── Export contacts uniquement ───────────────────────────────────────────────
+function exportContacts(){
+  const contacts = loadContacts();
+  if(!contacts.length){ toast('Aucun contact à exporter'); return; }
+  const payload = {
+    version: 1,
+    type: 'contacts',
+    exportedAt: new Date().toISOString(),
+    exportedBy: username,
+    contacts,
+  };
+  downloadJSON(payload, `contacts-courses-${dateSlug()}.json`);
+  toast(`${contacts.length} contact(s) exporté(s) ✓`);
+}
+
+// ── Import contacts uniquement ───────────────────────────────────────────────
+function importContacts(event){
+  const file = event.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      const incoming = parsed.contacts || (Array.isArray(parsed) ? parsed : null);
+      if(!incoming?.length) throw new Error('Aucun contact trouvé');
+
+      const existing = loadContacts();
+      let added = 0, skipped = 0;
+
+      for(const c of incoming){
+        if(!c.name || !c.email) continue;
+        const dup = existing.find(x=>x.email.toLowerCase()===c.email.toLowerCase());
+        if(dup){ skipped++; continue; }
+        existing.push({ id:'c'+Date.now()+Math.random().toString(36).slice(2,5), name:c.name, email:c.email });
+        added++;
+      }
+
+      saveContacts(existing);
+      closeModal('settingsModal');
+      toast(`${added} contact(s) importé(s)${skipped?`, ${skipped} doublon(s) ignoré(s)`:''} ✓`);
+    } catch(err) {
+      toast('❌ Fichier contacts invalide');
+      console.error(err);
+    }
+    event.target.value='';
+  };
+  reader.readAsText(file);
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function downloadJSON(obj, filename){
+  const blob = new Blob([JSON.stringify(obj, null, 2)], {type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href=url; a.download=filename; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+}
+
+function dateSlug(){
+  const d=new Date();
+  return `${d.getFullYear()}${p2(d.getMonth()+1)}${p2(d.getDate())}`;
+}
+
+function fmtDate(iso){
+  if(!iso) return '?';
+  try{
+    const d=new Date(iso);
+    return `${p2(d.getDate())}/${p2(d.getMonth()+1)}/${d.getFullYear()} ${p2(d.getHours())}h${p2(d.getMinutes())}`;
+  }catch{ return iso; }
+}
+
+
+function openSyncPanel(){
+  document.getElementById('panelCode').textContent=myRoomCode||'—';
+  updatePeersUI();
+  document.getElementById('syncModal').classList.remove('hidden');
+}
+function closeSyncPanel(e){ if(!e||e.target===document.getElementById('syncModal')) document.getElementById('syncModal').classList.add('hidden'); }
+
+/* ════════ UTILS ════════════════════════════════════════════════════════════ */
+function closeModal(id,e){ if(!e||e.target===document.getElementById(id)) document.getElementById(id).classList.add('hidden'); }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2600); }
+
+/* ════════ KEYBOARD & PWA ════════════════════════════════════════════════════ */
+document.getElementById('addInput').addEventListener('keydown',e=>{ if(e.key==='Enter') addItem(); });
+// Show home button only when running as installed PWA
+(function() {
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+    || window.navigator.standalone === true;
+  if (isStandalone) {
+    const btn = document.getElementById('homeBtn');
+    if (btn) btn.style.display = 'flex';
+  }
+})();
+
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+
+init();
+</script>
+</body>
+</html>

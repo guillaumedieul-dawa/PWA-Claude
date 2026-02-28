@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#080f14">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#e8f4f0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Famille Dieul-Gandet</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #080f14;
+    --bg2:       #0d1820;
+    --surface:   #111e2a;
+    --surface2:  #172636;
+    --border:    rgba(0,200,160,0.12);
+    --border2:   rgba(0,200,160,0.25);
+    --text:      #d8eee8;
+    --text2:     #6a9e90;
+    --text3:     #2a5045;
+    --teal:      #00c8a0;
+    --teal2:     #00a882;
+    --blue:      #0088cc;
+    --blue2:     #0066aa;
+    --green:     #22dd88;
+    --amber:     #ffaa22;
+    --red:       #ff4455;
+    --safe-top:  env(safe-area-inset-top, 0px);
+    --safe-bot:  env(safe-area-inset-bottom, 0px);
+  }
+  [data-theme="light"] {
+    --bg:        #e8f4f0;
+    --bg2:       #d4ebe3;
+    --surface:   #c8e0d8;
+    --surface2:  #b8d4cc;
+    --border:    rgba(0,120,100,0.15);
+    --border2:   rgba(0,120,100,0.30);
+    --text:      #0a2820;
+    --text2:     #2a6050;
+    --text3:     #88b8a8;
+    --teal:      #007a60;
+    --teal2:     #005a44;
+    --blue:      #005599;
+    --blue2:     #004477;
+    --green:     #116644;
+    --amber:     #995500;
+    --red:       #cc1122;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    min-height: 100dvh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    overflow-x: hidden;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none; z-index: 0;
+    opacity: 0.4;
+  }
+
+  /* Glow orb */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -10vh; left: 20%;
+    width: 60vw; height: 50vh;
+    background: radial-gradient(ellipse, rgba(0,200,160,0.08) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+
+  #app {
+    position: relative; z-index: 1;
+    min-height: 100dvh;
+    display: flex; flex-direction: column;
+    padding: calc(var(--safe-top) + 20px) 20px calc(var(--safe-bot) + 32px);
+    max-width: 480px; margin: 0 auto;
+  }
+
+  /* ── Header ── */
+  .header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    margin-bottom: 40px;
+    animation: fadeDown 0.5s ease both;
+  }
+  .header-left {}
+  .eyebrow {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--teal); opacity: 0.8; margin-bottom: 6px;
+  }
+  .title {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: clamp(28px, 8vw, 40px);
+    font-weight: 700; line-height: 1.1;
+    letter-spacing: 1px; text-transform: uppercase;
+  }
+  .title span { color: var(--teal); }
+  .subtitle {
+    font-size: 13px; color: var(--text2); margin-top: 6px; font-weight: 500;
+  }
+
+  .header-actions { display: flex; gap: 8px; margin-top: 4px; }
+  .btn-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    border: 1px solid var(--border2);
+    background: var(--surface);
+    color: var(--text2); font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-icon:active { transform: scale(0.9); }
+
+  /* ── User chip ── */
+  .user-bar {
+    display: flex; gap: 8px; margin-bottom: 28px;
+    animation: fadeUp 0.5s 0.1s ease both;
+  }
+  .user-chip {
+    flex: 1; display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s;
+    position: relative; overflow: hidden;
+  }
+  .user-chip.active { border-color: var(--teal); }
+  .user-chip.active::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(0,200,160,0.08), transparent);
+  }
+  .user-avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; flex-shrink: 0;
+    font-family: 'Josefin Sans', sans-serif;
+  }
+  .avatar-g { background: linear-gradient(135deg, var(--blue), var(--teal)); color: var(--bg); }
+  .avatar-m { background: linear-gradient(135deg, var(--green), var(--blue)); color: var(--bg); }
+  .user-name { font-size: 12px; line-height: 1.3; }
+  .user-name strong { display: block; color: var(--text); font-size: 13px; }
+  .user-status { margin-left: auto; width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+
+  /* ── Section ── */
+  .section-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--text3); margin-bottom: 12px;
+  }
+
+  /* ── App Grid ── */
+  .apps-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .app-card {
+    position: relative; overflow: hidden;
+    padding: 18px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    text-decoration: none; color: var(--text);
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation: fadeUp 0.5s ease both;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .app-card:hover { transform: translateY(-3px); border-color: var(--border2); }
+  .app-card:active { transform: scale(0.96); }
+
+  .app-card.full { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 16px; padding: 16px 20px; }
+
+  /* Colored accent bar */
+  .app-card::before {
+    content: ''; position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .app-card:hover::before { opacity: 1; }
+  .card-teal::before  { background: linear-gradient(90deg, var(--teal), var(--blue)); }
+  .card-blue::before  { background: linear-gradient(90deg, var(--blue), var(--teal)); }
+  .card-green::before { background: linear-gradient(90deg, var(--green), var(--teal)); }
+  .card-amber::before { background: linear-gradient(90deg, var(--amber), var(--green)); }
+  .card-red::before   { background: linear-gradient(90deg, var(--red), var(--amber)); }
+
+  .app-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+    transition: transform 0.2s;
+  }
+  .app-card:hover .app-icon { transform: scale(1.08) rotate(-3deg); }
+
+  .icon-teal  { background: linear-gradient(135deg, rgba(0,200,160,0.2), rgba(0,136,204,0.1)); border: 1px solid rgba(0,200,160,0.2); }
+  .icon-blue  { background: linear-gradient(135deg, rgba(0,136,204,0.2), rgba(0,200,160,0.1)); border: 1px solid rgba(0,136,204,0.2); }
+  .icon-green { background: linear-gradient(135deg, rgba(34,221,136,0.2), rgba(0,200,160,0.1)); border: 1px solid rgba(34,221,136,0.2); }
+  .icon-amber { background: linear-gradient(135deg, rgba(255,170,34,0.2), rgba(34,221,136,0.1)); border: 1px solid rgba(255,170,34,0.2); }
+  .icon-red   { background: linear-gradient(135deg, rgba(255,68,85,0.15), rgba(255,170,34,0.1)); border: 1px solid rgba(255,68,85,0.2); }
+
+  .app-info { flex: 1; }
+  .app-name {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 15px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; margin-bottom: 3px;
+  }
+  .app-desc { font-size: 12px; color: var(--text2); font-weight: 500; line-height: 1.4; }
+
+  .app-badge {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px; padding: 2px 8px;
+    border-radius: 20px; font-weight: 400;
+    display: inline-block; margin-top: 6px;
+  }
+  .badge-teal  { background: rgba(0,200,160,0.1);  color: var(--teal); border: 1px solid rgba(0,200,160,0.2); }
+  .badge-blue  { background: rgba(0,136,204,0.1);  color: var(--blue); border: 1px solid rgba(0,136,204,0.2); }
+  .badge-green { background: rgba(34,221,136,0.1); color: var(--green); border: 1px solid rgba(34,221,136,0.2); }
+  .badge-amber { background: rgba(255,170,34,0.1); color: var(--amber); border: 1px solid rgba(255,170,34,0.2); }
+  .badge-red   { background: rgba(255,68,85,0.1);  color: var(--red);   border: 1px solid rgba(255,68,85,0.2); }
+
+  .app-arrow { color: var(--text3); font-size: 14px; flex-shrink: 0; transition: transform 0.2s; }
+  .app-card:hover .app-arrow { transform: translateX(3px); }
+
+  /* Animation delays */
+  .app-card:nth-child(1) { animation-delay: 0.15s; }
+  .app-card:nth-child(2) { animation-delay: 0.2s; }
+  .app-card:nth-child(3) { animation-delay: 0.25s; }
+  .app-card:nth-child(4) { animation-delay: 0.3s; }
+  .app-card:nth-child(5) { animation-delay: 0.35s; }
+
+  /* ── Footer ── */
+  .footer {
+    margin-top: auto; padding-top: 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-top: 1px solid var(--border);
+    animation: fadeUp 0.5s 0.4s ease both;
+  }
+  .footer-info {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px; color: var(--text3); letter-spacing: 1px;
+  }
+  .version-chip {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px; color: var(--teal);
+    border: 1px solid rgba(0,200,160,0.2);
+    padding: 3px 10px; border-radius: 20px;
+  }
+
+  /* ── Sync status ── */
+  .sync-bar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 28px;
+    font-size: 12px; color: var(--text2);
+    animation: fadeUp 0.5s 0.2s ease both;
+  }
+  .sync-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; animation: pulse 2s infinite; }
+  .sync-time { margin-left: auto; font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--text3); }
+
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+  @keyframes fadeDown { from { opacity:0; transform:translateY(-16px); } to { opacity:1; transform:none; } }
+  @keyframes fadeUp   { from { opacity:0; transform:translateY(16px);  } to { opacity:1; transform:none; } }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <div class="eyebrow">// espace.familial.v2</div>
+      <h1 class="title">Dieul<br><span>Gandet</span></h1>
+      <p class="subtitle">Hub familial · 5 applications</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-icon" id="themeToggle" title="Mode jour/nuit" onclick="toggleTheme()">🌙</button>
+    </div>
+  </div>
+
+  <!-- Users -->
+  <div class="user-bar">
+    <div class="user-chip active" id="chip-g">
+      <div class="user-avatar avatar-g">GD</div>
+      <div class="user-name"><strong>Guillaume</strong>Dieul</div>
+      <div class="user-status"></div>
+    </div>
+    <div class="user-chip" id="chip-m">
+      <div class="user-avatar avatar-m">MG</div>
+      <div class="user-name"><strong>Michèle</strong>Grassiot Gandet</div>
+      <div class="user-status" style="background:var(--teal)"></div>
+    </div>
+  </div>
+
+  <!-- Sync bar -->
+  <div class="sync-bar">
+    <div class="sync-dot"></div>
+    <span>Données synchronisées</span>
+    <span class="sync-time" id="syncTime">—</span>
+  </div>
+
+  <!-- Apps -->
+  <div class="section-label">// applications</div>
+
+  <div class="apps-grid">
+    <a class="app-card card-teal" href="locker-tracker/index.html">
+      <div class="app-icon icon-teal">📦</div>
+      <div class="app-info">
+        <div class="app-name">Colis</div>
+        <div class="app-desc">Suivi livraisons & consignes</div>
+        <div class="app-badge badge-teal">SMS · Gmail</div>
+      </div>
+    </a>
+
+    <a class="app-card card-green" href="liste-courses/index.html">
+      <div class="app-icon icon-green">🛒</div>
+      <div class="app-info">
+        <div class="app-name">Courses</div>
+        <div class="app-desc">Liste de courses partagée</div>
+        <div class="app-badge badge-green">Sync P2P</div>
+      </div>
+    </a>
+
+    <a class="app-card card-blue" href="todo-partage/index.html">
+      <div class="app-icon icon-blue">✅</div>
+      <div class="app-info">
+        <div class="app-name">To-do</div>
+        <div class="app-desc">Tâches familiales partagées</div>
+        <div class="app-badge badge-blue">Partagé</div>
+      </div>
+    </a>
+
+    <a class="app-card card-amber" href="cave-spiritueux/index.html">
+      <div class="app-icon icon-amber">🍷</div>
+      <div class="app-info">
+        <div class="app-name">Cave</div>
+        <div class="app-desc">Vins, rhums & whiskies</div>
+        <div class="app-badge badge-amber">Inventaire</div>
+      </div>
+    </a>
+
+    <a class="app-card card-green full" href="menus-semaine/index.html">
+      <div class="app-icon icon-green">🍽️</div>
+      <div class="app-info">
+        <div class="app-name">Menus</div>
+        <div class="app-desc">Planification des repas de la semaine et du mois</div>
+        <div class="app-badge badge-green">Semaine · Mois</div>
+      </div>
+      <div class="app-arrow">›</div>
+    </a>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="footer-info">21 rue du Beauregard · Pierrelaye</div>
+    <div class="version-chip">v2.0</div>
+  </div>
+
+</div>
+
+<script>
+  // Theme from system
+  function applyTheme() {
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const stored = localStorage.getItem('theme');
+    const theme = stored || (prefersDark ? 'dark' : 'light');
+    document.documentElement.dataset.theme = theme;
+    document.getElementById('themeToggle').textContent = theme === 'dark' ? '🌙' : '☀️';
+  }
+  function toggleTheme() {
+    const current = document.documentElement.dataset.theme;
+    const next = current === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('theme', next);
+    applyTheme();
+  }
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    if (!localStorage.getItem('theme')) applyTheme();
+  });
+  applyTheme();
+
+  // Sync time
+  const now = new Date();
+  document.getElementById('syncTime').textContent =
+    now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+</script>
+</body>
+</html>

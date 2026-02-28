@@ -1,0 +1,19 @@
+{
+  "name": "Famille Dieul-Gandet",
+  "short_name": "FamilyHub",
+  "description": "Hub familial — 5 applications partagées",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#080f14",
+  "theme_color": "#00c8a0",
+  "lang": "fr",
+  "icons": [
+    { "src": "../icons/home-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "../icons/home-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "screenshots": [
+    { "src": "../icons/screenshot-home-narrow.svg", "sizes": "540x720", "type": "image/svg+xml", "form_factor": "narrow" },
+    { "src": "../icons/screenshot-home-wide.svg",   "sizes": "720x540", "type": "image/svg+xml", "form_factor": "wide" }
+  ]
+}

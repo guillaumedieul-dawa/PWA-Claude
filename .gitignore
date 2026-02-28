@@ -1,22 +1,11 @@
 # Dépendances Node
 node_modules/
 
-# Lock file généré en CI — ne pas versionner
-package-lock.json
+# Dossier Android entièrement généré par Capacitor en CI
+# Ne jamais versionner — généré par : npx cap add android
+android/
 
-# Dossier Android GÉNÉRÉ par Capacitor (npx cap add android)
-# Seul android/app/src/main/AndroidManifest.xml est versionné
-android/app/build/
-android/app/src/main/assets/
-android/app/src/main/java/com/
-android/.gradle/
-android/build/
-android/gradle/
-android/gradlew
-android/gradlew.bat
-android/local.properties
-
-# Dossier généré en CI par le workflow (copie de toutes les apps)
+# Dossier www/ généré en CI (copie de toutes les apps)
 www/
 
 # Capacitor

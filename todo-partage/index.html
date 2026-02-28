@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#080f14">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#e8f4f0">
+<meta name="description" content="To-do liste familiale partagée — Dieul-Gandet">
+<title>To-Do Familial</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#080f14;--bg2:#0d1820;--surface:#111e2a;--surface2:#172636;
+    --border:rgba(0,140,220,0.12);--border2:rgba(0,140,220,0.3);
+    --text:#d0e8f8;--text2:#5a8ab0;--text3:#1a3a50;
+    --blue:#0088cc;--blue2:#0066aa;--teal:#00c0e0;--green:#22dd88;
+    --amber:#ffaa22;--red:#ff4455;
+    --safe-top:env(safe-area-inset-top,0px);--safe-bot:env(safe-area-inset-bottom,0px);
+  }
+  [data-theme="light"] {
+    --bg:#e4f0f8;--bg2:#d0e4f0;--surface:#c0d8ec;--surface2:#b0cce0;
+    --border:rgba(0,80,160,0.15);--border2:rgba(0,80,160,0.3);
+    --text:#04202e;--text2:#1a5a7a;--text3:#88b8cc;
+    --blue:#005599;--teal:#007a99;--green:#116644;--amber:#995500;--red:#cc1122;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{min-height:100dvh;background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;overflow-x:hidden;transition:background 0.3s,color 0.3s}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;opacity:0.4}
+  body::after{content:'';position:fixed;top:-10vh;right:10%;width:50vw;height:40vh;background:radial-gradient(ellipse,rgba(0,136,204,0.08) 0%,transparent 70%);pointer-events:none;z-index:0}
+  #app{position:relative;z-index:1;min-height:100dvh;display:flex;flex-direction:column;padding:calc(var(--safe-top) + 16px) 16px calc(var(--safe-bot) + 80px);max-width:480px;margin:0 auto}
+
+  /* Header */
+  .top-bar{display:flex;align-items:center;gap:12px;margin-bottom:24px;animation:fadeDown 0.4s ease both}
+  .btn-home{width:36px;height:36px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;text-decoration:none;flex-shrink:0}
+  .btn-home:active{transform:scale(0.9)}
+  .top-title{flex:1}
+  .top-eyebrow{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--blue);opacity:0.8}
+  .top-name{font-family:'Josefin Sans',sans-serif;font-size:20px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+  .btn-icon{width:36px;height:36px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s}
+  .btn-icon:active{transform:scale(0.9)}
+
+  /* Stats */
+  .stats-row{display:flex;gap:8px;margin-bottom:20px;animation:fadeUp 0.4s 0.1s ease both}
+  .stat-chip{flex:1;text-align:center;padding:10px 8px;background:var(--surface);border:1px solid var(--border);border-radius:10px}
+  .stat-num{font-family:'Josefin Sans',sans-serif;font-size:22px;font-weight:700}
+  .stat-label{font-family:'Share Tech Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--text2);display:block;margin-top:2px}
+  .num-blue{color:var(--blue)} .num-amber{color:var(--amber)} .num-green{color:var(--green)}
+
+  /* Filters */
+  .filter-tabs{display:flex;gap:6px;margin-bottom:16px;overflow-x:auto;scrollbar-width:none;animation:fadeUp 0.4s 0.15s ease both}
+  .filter-tabs::-webkit-scrollbar{display:none}
+  .ftab{flex-shrink:0;padding:6px 16px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2);transition:all 0.2s;font-family:'Share Tech Mono',monospace;letter-spacing:1px}
+  .ftab.active{background:var(--blue);border-color:var(--blue);color:#fff}
+  .ftab:active{transform:scale(0.95)}
+
+  /* User tabs */
+  .user-tabs{display:flex;gap:6px;margin-bottom:20px;animation:fadeUp 0.4s 0.2s ease both}
+  .utab{flex:1;padding:8px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2);transition:all 0.2s;text-align:center;font-family:'Josefin Sans',sans-serif;letter-spacing:1px}
+  .utab.active{border-color:var(--blue);color:var(--blue);background:rgba(0,136,204,0.08)}
+  .utab:active{transform:scale(0.95)}
+
+  /* Todo list */
+  .todo-list{display:flex;flex-direction:column;gap:8px;animation:fadeUp 0.4s 0.25s ease both}
+  .todo-item{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;transition:all 0.2s;cursor:pointer}
+  .todo-item.done{opacity:0.5}
+  .todo-item:active{transform:scale(0.98)}
+  .todo-check{width:22px;height:22px;border-radius:6px;border:1.5px solid var(--border2);background:var(--bg);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all 0.2s}
+  .todo-item.done .todo-check{background:var(--green);border-color:var(--green);color:var(--bg)}
+  .todo-body{flex:1;min-width:0}
+  .todo-text{font-size:14px;font-weight:600;line-height:1.3}
+  .todo-item.done .todo-text{text-decoration:line-through;color:var(--text2)}
+  .todo-meta{display:flex;align-items:center;gap:8px;margin-top:4px}
+  .todo-tag{font-family:'Share Tech Mono',monospace;font-size:9px;padding:2px 8px;border-radius:20px;letter-spacing:1px}
+  .tag-maison{background:rgba(0,192,224,0.1);color:var(--teal);border:1px solid rgba(0,192,224,0.2)}
+  .tag-courses{background:rgba(34,221,136,0.1);color:var(--green);border:1px solid rgba(34,221,136,0.2)}
+  .tag-admin{background:rgba(255,170,34,0.1);color:var(--amber);border:1px solid rgba(255,170,34,0.2)}
+  .tag-perso{background:rgba(0,136,204,0.1);color:var(--blue);border:1px solid rgba(0,136,204,0.2)}
+  .todo-date{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text3);margin-left:auto}
+  .todo-assigned{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;font-family:'Josefin Sans',sans-serif}
+  .ag{background:linear-gradient(135deg,var(--blue),var(--teal));color:#fff}
+  .am{background:linear-gradient(135deg,var(--green),var(--blue));color:#fff}
+  .ab{background:linear-gradient(135deg,var(--teal),var(--green));color:#fff}
+
+  /* Priority */
+  .priority-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .p-high{background:var(--red)} .p-med{background:var(--amber)} .p-low{background:var(--green)}
+
+  /* Empty state */
+  .empty{text-align:center;padding:40px 20px;color:var(--text3)}
+  .empty-icon{font-size:40px;margin-bottom:12px}
+  .empty-text{font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:2px}
+
+  /* FAB */
+  .fab{position:fixed;bottom:calc(var(--safe-bot) + 20px);right:20px;width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,var(--blue),var(--teal));border:none;color:#fff;font-size:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 24px rgba(0,136,204,0.4);transition:all 0.2s;z-index:100}
+  .fab:active{transform:scale(0.9)}
+
+  /* Modal */
+  .modal-back{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:flex-end;padding:0;opacity:0;pointer-events:none;transition:opacity 0.3s}
+  .modal-back.open{opacity:1;pointer-events:all}
+  .modal{width:100%;max-width:480px;margin:0 auto;background:var(--bg2);border-radius:20px 20px 0 0;padding:24px 20px calc(var(--safe-bot) + 24px);transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.34,1.1,0.64,1)}
+  .modal-back.open .modal{transform:translateY(0)}
+  .modal-title{font-family:'Josefin Sans',sans-serif;font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:20px}
+  .form-row{margin-bottom:16px}
+  .form-label{font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text2);margin-bottom:6px;display:block}
+  .form-input{width:100%;padding:12px 14px;background:var(--surface);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:600;outline:none;transition:border-color 0.2s}
+  .form-input:focus{border-color:var(--blue)}
+  .form-select{appearance:none;cursor:pointer}
+  .form-row-split{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+  .btn-submit{width:100%;padding:14px;background:linear-gradient(135deg,var(--blue),var(--teal));border:none;border-radius:12px;color:#fff;font-family:'Josefin Sans',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:2px;cursor:pointer;transition:all 0.2s;margin-top:8px}
+  .btn-submit:active{transform:scale(0.97)}
+  .btn-cancel{width:100%;padding:12px;background:transparent;border:1px solid var(--border2);border-radius:12px;color:var(--text2);font-family:'Josefin Sans',sans-serif;font-size:14px;cursor:pointer;margin-top:8px}
+
+  /* Swipe delete hint */
+  .todo-delete{margin-left:4px;width:28px;height:28px;border-radius:8px;background:rgba(255,68,85,0.1);border:1px solid rgba(255,68,85,0.2);color:var(--red);font-size:13px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;opacity:0;transition:opacity 0.2s}
+  .todo-item:hover .todo-delete{opacity:1}
+
+  @keyframes fadeDown{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  @keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.3)}100%{transform:scale(1)}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="top-bar">
+    <a href="../index.html" class="btn-home">🏠</a>
+    <div class="top-title">
+      <div class="top-eyebrow">// todo.familial</div>
+      <div class="top-name">To-Do Partagé</div>
+    </div>
+    <button class="btn-icon" onclick="toggleTheme()" title="Thème">🌙</button>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-chip"><div class="stat-num num-blue" id="stat-total">0</div><span class="stat-label">Total</span></div>
+    <div class="stat-chip"><div class="stat-num num-amber" id="stat-todo">0</div><span class="stat-label">À faire</span></div>
+    <div class="stat-chip"><div class="stat-num num-green" id="stat-done">0</div><span class="stat-label">Faites</span></div>
+  </div>
+
+  <div class="filter-tabs" id="filterTabs">
+    <div class="ftab active" onclick="setFilter('all', this)">TOUT</div>
+    <div class="ftab" onclick="setFilter('pending', this)">À FAIRE</div>
+    <div class="ftab" onclick="setFilter('done', this)">FAITES</div>
+    <div class="ftab" onclick="setFilter('maison', this)">MAISON</div>
+    <div class="ftab" onclick="setFilter('admin', this)">ADMIN</div>
+    <div class="ftab" onclick="setFilter('courses', this)">COURSES</div>
+    <div class="ftab" onclick="setFilter('perso', this)">PERSO</div>
+  </div>
+
+  <div class="user-tabs">
+    <div class="utab active" id="utab-all" onclick="setUser('all', this)">👥 TOUS</div>
+    <div class="utab" id="utab-guillaume" onclick="setUser('g', this)">GD Guillaume</div>
+    <div class="utab" id="utab-michele" onclick="setUser('m', this)">MG Michèle</div>
+  </div>
+
+  <div class="todo-list" id="todoList"></div>
+  <div class="empty hidden" id="emptyState">
+    <div class="empty-icon">✅</div>
+    <div class="empty-text">// aucune tâche ici</div>
+  </div>
+</div>
+
+<button class="fab" onclick="openModal()" title="Ajouter une tâche">+</button>
+
+<div class="modal-back" id="modalBack" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-title">Nouvelle tâche</div>
+    <div class="form-row">
+      <label class="form-label">Tâche</label>
+      <input class="form-input" id="inputText" placeholder="Description de la tâche..." type="text">
+    </div>
+    <div class="form-row-split">
+      <div>
+        <label class="form-label">Catégorie</label>
+        <select class="form-input form-select" id="inputTag">
+          <option value="maison">🏠 Maison</option>
+          <option value="courses">🛒 Courses</option>
+          <option value="admin">📋 Admin</option>
+          <option value="perso">⭐ Perso</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Priorité</label>
+        <select class="form-input form-select" id="inputPriority">
+          <option value="med">Normale</option>
+          <option value="high">Haute !</option>
+          <option value="low">Basse</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row-split">
+      <div>
+        <label class="form-label">Assignée à</label>
+        <select class="form-input form-select" id="inputUser">
+          <option value="both">👥 Tous deux</option>
+          <option value="g">Guillaume</option>
+          <option value="m">Michèle</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Échéance</label>
+        <input class="form-input" id="inputDate" type="date">
+      </div>
+    </div>
+    <button class="btn-submit" onclick="addTodo()">Ajouter la tâche</button>
+    <button class="btn-cancel" onclick="closeModal()">Annuler</button>
+  </div>
+</div>
+
+<script>
+// ── Theme ──
+function applyTheme() {
+  const pref = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const t = localStorage.getItem('theme') || (pref ? 'dark' : 'light');
+  document.documentElement.dataset.theme = t;
+  document.querySelectorAll('.btn-icon').forEach(b => { if(b.title==='Thème') b.textContent = t==='dark'?'🌙':'☀️'; });
+}
+function toggleTheme() {
+  const c = document.documentElement.dataset.theme;
+  localStorage.setItem('theme', c==='dark'?'light':'dark');
+  applyTheme();
+}
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if(!localStorage.getItem('theme')) applyTheme(); });
+applyTheme();
+
+// ── Data ──
+let todos = JSON.parse(localStorage.getItem('todos_v2') || '[]');
+let filter = 'all', userFilter = 'all';
+
+if(todos.length === 0) {
+  todos = [
+    { id:1, text:'Faire les courses pour la semaine', tag:'courses', priority:'high', user:'both', date:'2026-03-02', done:false, createdAt:Date.now() },
+    { id:2, text:'Payer la facture EDF', tag:'admin', priority:'med', user:'g', date:'2026-03-05', done:false, createdAt:Date.now() },
+    { id:3, text:'Réserver restaurant anniversaire', tag:'perso', priority:'high', user:'m', date:'2026-03-15', done:false, createdAt:Date.now() },
+    { id:4, text:'Sortir les poubelles', tag:'maison', priority:'low', user:'both', date:'', done:true, createdAt:Date.now() },
+  ];
+  save();
+}
+
+function save() {
+  localStorage.setItem('todos_v2', JSON.stringify(todos));
+  renderStats();
+  renderList();
+}
+
+function renderStats() {
+  const total = todos.length;
+  const done = todos.filter(t=>t.done).length;
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-todo').textContent = total - done;
+  document.getElementById('stat-done').textContent = done;
+}
+
+function setFilter(f, el) {
+  filter = f;
+  document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderList();
+}
+
+function setUser(u, el) {
+  userFilter = u;
+  document.querySelectorAll('.utab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderList();
+}
+
+function renderList() {
+  const list = document.getElementById('todoList');
+  const empty = document.getElementById('emptyState');
+
+  let filtered = todos.filter(t => {
+    if(filter === 'pending' && t.done) return false;
+    if(filter === 'done' && !t.done) return false;
+    if(['maison','courses','admin','perso'].includes(filter) && t.tag !== filter) return false;
+    if(userFilter === 'g' && t.user !== 'g' && t.user !== 'both') return false;
+    if(userFilter === 'm' && t.user !== 'm' && t.user !== 'both') return false;
+    return true;
+  });
+
+  // Sort: priority high first, then pending first
+  filtered.sort((a,b) => {
+    if(a.done !== b.done) return a.done ? 1 : -1;
+    const pOrder = {high:0, med:1, low:2};
+    return (pOrder[a.priority]||1) - (pOrder[b.priority]||1);
+  });
+
+  if(filtered.length === 0) {
+    list.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+
+  const tagClass = { maison:'tag-maison', courses:'tag-courses', admin:'tag-admin', perso:'tag-perso' };
+  const tagLabel = { maison:'🏠 Maison', courses:'🛒 Courses', admin:'📋 Admin', perso:'⭐ Perso' };
+  const userLabel = { g:'GD', m:'MG', both:'G+M' };
+  const userClass = { g:'ag', m:'am', both:'ab' };
+  const pClass = { high:'p-high', med:'p-med', low:'p-low' };
+
+  list.innerHTML = filtered.map(t => `
+    <div class="todo-item${t.done?' done':''}" onclick="toggleDone(${t.id})" id="ti-${t.id}">
+      <div class="priority-dot ${pClass[t.priority]||'p-med'}"></div>
+      <div class="todo-check">${t.done?'✓':''}</div>
+      <div class="todo-body">
+        <div class="todo-text">${escHtml(t.text)}</div>
+        <div class="todo-meta">
+          <span class="todo-tag ${tagClass[t.tag]||''}">${tagLabel[t.tag]||t.tag}</span>
+          ${t.date?`<span class="todo-date">${formatDate(t.date)}</span>`:''}
+        </div>
+      </div>
+      <div class="todo-assigned ${userClass[t.user]||'ab'}">${userLabel[t.user]||t.user}</div>
+      <div class="todo-delete" onclick="deleteTodo(event,${t.id})">🗑</div>
+    </div>
+  `).join('');
+}
+
+function toggleDone(id) {
+  const t = todos.find(x=>x.id===id);
+  if(!t) return;
+  t.done = !t.done;
+  const el = document.getElementById('ti-'+id);
+  if(el) { el.style.animation='pop 0.2s ease'; setTimeout(()=>{ el.style.animation=''; },200); }
+  save();
+}
+
+function deleteTodo(e, id) {
+  e.stopPropagation();
+  todos = todos.filter(x=>x.id!==id);
+  save();
+}
+
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function formatDate(d) {
+  if(!d) return '';
+  const dt = new Date(d+'T00:00:00');
+  return dt.toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+}
+
+// ── Modal ──
+function openModal() {
+  document.getElementById('inputDate').value = '';
+  document.getElementById('inputText').value = '';
+  document.getElementById('modalBack').classList.add('open');
+  setTimeout(()=>document.getElementById('inputText').focus(), 350);
+}
+function closeModal() { document.getElementById('modalBack').classList.remove('open'); }
+function closeModalOutside(e) { if(e.target === document.getElementById('modalBack')) closeModal(); }
+
+function addTodo() {
+  const text = document.getElementById('inputText').value.trim();
+  if(!text) return;
+  todos.push({
+    id: Date.now(),
+    text,
+    tag: document.getElementById('inputTag').value,
+    priority: document.getElementById('inputPriority').value,
+    user: document.getElementById('inputUser').value,
+    date: document.getElementById('inputDate').value,
+    done: false,
+    createdAt: Date.now()
+  });
+  closeModal();
+  save();
+}
+
+// Enter key
+document.addEventListener('keydown', e => {
+  if(e.key === 'Enter' && document.getElementById('modalBack').classList.contains('open')) addTodo();
+  if(e.key === 'Escape') closeModal();
+});
+
+renderStats();
+renderList();
+</script>
+</body>
+</html>

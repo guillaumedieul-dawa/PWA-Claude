@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#060e10">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#e4f4e8">
+<meta name="description" content="Planification menus semaine et mois — Famille Dieul-Gandet">
+<title>Menus de la Semaine</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#060e10;--bg2:#0a1418;--surface:#0e1c20;--surface2:#142428;
+    --border:rgba(34,180,100,0.12);--border2:rgba(34,180,100,0.3);
+    --text:#cceedd;--text2:#3a8060;--text3:#1a3a2a;
+    --green:#22b464;--green2:#1a8a4c;--teal:#00c0a0;--blue:#0088cc;
+    --amber:#ee9922;--red:#dd3344;--purple:#9966cc;
+    --safe-top:env(safe-area-inset-top,0px);--safe-bot:env(safe-area-inset-bottom,0px);
+  }
+  [data-theme="light"] {
+    --bg:#e4f4e8;--bg2:#d0ecda;--surface:#c0e0cc;--surface2:#b0d4bc;
+    --border:rgba(0,120,60,0.15);--border2:rgba(0,120,60,0.3);
+    --text:#022210;--text2:#1a6040;--text3:#88c0a0;
+    --green:#0a7040;--green2:#085830;--teal:#006a50;--blue:#005599;
+    --amber:#885500;--red:#991122;--purple:#662288;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{min-height:100dvh;background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;overflow-x:hidden;transition:background 0.3s,color 0.3s}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;opacity:0.35}
+  body::after{content:'';position:fixed;top:-5vh;left:5%;width:50vw;height:40vh;background:radial-gradient(ellipse,rgba(34,180,100,0.07) 0%,transparent 70%);pointer-events:none;z-index:0}
+  #app{position:relative;z-index:1;min-height:100dvh;display:flex;flex-direction:column;padding:calc(var(--safe-top)+16px) 16px calc(var(--safe-bot)+80px);max-width:480px;margin:0 auto}
+
+  .top-bar{display:flex;align-items:center;gap:12px;margin-bottom:20px;animation:fadeDown 0.4s ease both}
+  .btn-home{width:36px;height:36px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;text-decoration:none;flex-shrink:0}
+  .btn-home:active{transform:scale(0.9)}
+  .top-title{flex:1}
+  .top-eyebrow{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--green);opacity:0.8}
+  .top-name{font-family:'Josefin Sans',sans-serif;font-size:20px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+  .btn-icon{width:36px;height:36px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s}
+
+  /* Week nav */
+  .week-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:12px;animation:fadeUp 0.4s 0.1s ease both}
+  .week-label{font-family:'Josefin Sans',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+  .week-sub{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text2);margin-top:2px;letter-spacing:2px}
+  .nav-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--border2);background:var(--bg);color:var(--text2);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s}
+  .nav-btn:active{transform:scale(0.9);background:var(--green);color:#fff;border-color:var(--green)}
+
+  /* View mode */
+  .view-tabs{display:flex;gap:6px;margin-bottom:16px;animation:fadeUp 0.4s 0.15s ease both}
+  .vtab{flex:1;padding:8px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2);transition:all 0.2s;text-align:center;font-family:'Share Tech Mono',monospace;letter-spacing:1px}
+  .vtab.active{border-color:var(--green);color:var(--green);background:rgba(34,180,100,0.08)}
+
+  /* Day cards */
+  .days-list{display:flex;flex-direction:column;gap:8px;animation:fadeUp 0.4s 0.2s ease both}
+  .day-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:all 0.2s}
+  .day-card.today{border-color:var(--green)}
+  .day-header{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;transition:background 0.2s}
+  .day-header:active{background:var(--surface2)}
+  .day-name{font-family:'Josefin Sans',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:1px;flex:1}
+  .day-date-badge{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text2);letter-spacing:1px}
+  .day-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .day-card.today .day-dot{background:var(--green);animation:pulse 2s infinite}
+  .day-chevron{color:var(--text3);font-size:12px;transition:transform 0.2s;flex-shrink:0}
+  .day-card.open .day-chevron{transform:rotate(90deg)}
+
+  .day-meals{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 10px 12px;display:none}
+  .day-card.open .day-meals{display:grid}
+
+  .meal-slot{padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:10px;cursor:pointer;min-height:60px;transition:all 0.2s}
+  .meal-slot:hover{border-color:var(--border2)}
+  .meal-slot.has-meal{border-color:rgba(34,180,100,0.2)}
+  .meal-slot-label{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:5px}
+  .meal-name{font-size:13px;font-weight:600;line-height:1.3;color:var(--text)}
+  .meal-empty{font-size:11px;color:var(--text3);font-style:italic}
+  .meal-icon{font-size:14px;margin-right:4px}
+  .meal-tag-chip{font-family:'Share Tech Mono',monospace;font-size:8px;padding:1px 5px;border-radius:10px;margin-top:4px;display:inline-block}
+  .mt-veggie{background:rgba(34,180,100,0.12);color:var(--green);border:1px solid rgba(34,180,100,0.2)}
+  .mt-viande{background:rgba(220,50,70,0.1);color:var(--red);border:1px solid rgba(220,50,70,0.2)}
+  .mt-poisson{background:rgba(0,136,204,0.1);color:var(--blue);border:1px solid rgba(0,136,204,0.2)}
+  .mt-rapide{background:rgba(238,153,34,0.1);color:var(--amber);border:1px solid rgba(238,153,34,0.2)}
+
+  /* Suggestions */
+  .suggest-bar{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:4px 0;margin-bottom:12px;animation:fadeUp 0.4s 0.25s ease both}
+  .suggest-bar::-webkit-scrollbar{display:none}
+  .suggest-pill{flex-shrink:0;padding:6px 14px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2);transition:all 0.2s;font-family:'Share Tech Mono',monospace;letter-spacing:1px}
+  .suggest-pill:active{transform:scale(0.95);background:var(--green);color:#fff;border-color:var(--green)}
+
+  .fab{position:fixed;bottom:calc(var(--safe-bot)+20px);right:20px;width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,var(--green),var(--teal));border:none;color:#fff;font-size:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 24px rgba(34,180,100,0.4);transition:all 0.2s;z-index:100}
+  .fab:active{transform:scale(0.9)}
+
+  /* Modal */
+  .modal-back{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity 0.3s}
+  .modal-back.open{opacity:1;pointer-events:all}
+  .modal{width:100%;max-width:480px;margin:0 auto;background:var(--bg2);border-radius:20px 20px 0 0;padding:24px 20px calc(var(--safe-bot)+24px);transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.34,1.1,0.64,1)}
+  .modal-back.open .modal{transform:translateY(0)}
+  .modal-title{font-family:'Josefin Sans',sans-serif;font-size:17px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;color:var(--green)}
+  .modal-sub{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text2);letter-spacing:2px;margin-bottom:18px}
+  .form-row{margin-bottom:14px}
+  .form-label{font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text2);margin-bottom:5px;display:block}
+  .form-input{width:100%;padding:11px 14px;background:var(--surface);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:600;outline:none;transition:border-color 0.2s}
+  .form-input:focus{border-color:var(--green)}
+  .form-select{appearance:none;cursor:pointer}
+  .form-row-split{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+  .btn-submit{width:100%;padding:14px;background:linear-gradient(135deg,var(--green),var(--teal));border:none;border-radius:12px;color:#fff;font-family:'Josefin Sans',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:2px;cursor:pointer;transition:all 0.2s;margin-top:8px}
+  .btn-submit:active{transform:scale(0.97)}
+  .btn-cancel{width:100%;padding:12px;background:transparent;border:1px solid var(--border2);border-radius:12px;color:var(--text2);font-family:'Josefin Sans',sans-serif;font-size:14px;cursor:pointer;margin-top:8px}
+  .btn-clear{width:100%;padding:10px;background:rgba(220,50,70,0.06);border:1px solid rgba(220,50,70,0.2);border-radius:10px;color:var(--red);font-family:'Josefin Sans',sans-serif;font-size:13px;cursor:pointer;margin-top:6px}
+
+  /* Suggestion chips in modal */
+  .suggestions-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .sug-chip{padding:5px 12px;border-radius:20px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2);transition:all 0.15s;font-weight:600}
+  .sug-chip:active{background:var(--green);color:#fff;border-color:var(--green);transform:scale(0.95)}
+
+  .hidden{display:none}
+  @keyframes fadeDown{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="top-bar">
+    <a href="../index.html" class="btn-home">🏠</a>
+    <div class="top-title">
+      <div class="top-eyebrow">// menus.familiaux</div>
+      <div class="top-name">Menus de la Semaine</div>
+    </div>
+    <button class="btn-icon" onclick="toggleTheme()">🌙</button>
+  </div>
+
+  <div class="week-nav">
+    <button class="nav-btn" onclick="changeWeek(-1)">‹</button>
+    <div>
+      <div class="week-label" id="weekLabel">Semaine 10</div>
+      <div class="week-sub" id="weekSub">3 – 9 mars 2026</div>
+    </div>
+    <button class="nav-btn" onclick="changeWeek(1)">›</button>
+  </div>
+
+  <div class="view-tabs">
+    <div class="vtab active" id="vtab-week" onclick="setView('week',this)">SEMAINE</div>
+    <div class="vtab" id="vtab-month" onclick="setView('month',this)">MOIS</div>
+  </div>
+
+  <div class="suggest-bar">
+    <div class="suggest-pill" onclick="autoFill()">✨ Suggestions auto</div>
+    <div class="suggest-pill" onclick="clearWeek()">🗑 Effacer semaine</div>
+    <div class="suggest-pill" onclick="generateShoppingList()">🛒 Liste de courses</div>
+  </div>
+
+  <div class="days-list" id="daysList"></div>
+  <div id="monthView" class="hidden"></div>
+</div>
+
+<button class="fab" onclick="/* open via day click */">🍽️</button>
+
+<div class="modal-back" id="modalBack" onclick="closeModalOut(event)">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">Repas du Lundi</div>
+    <div class="modal-sub" id="modalSub">MIDI</div>
+    <div class="form-row">
+      <label class="form-label">Nom du plat</label>
+      <input class="form-input" id="iMeal" placeholder="Ex: Poulet rôti, Pasta carbonara..." type="text">
+    </div>
+    <div class="form-row-split">
+      <div>
+        <label class="form-label">Type</label>
+        <select class="form-input form-select" id="iType">
+          <option value="viande">🥩 Viande</option>
+          <option value="poisson">🐟 Poisson</option>
+          <option value="veggie">🥦 Végétarien</option>
+          <option value="rapide">⚡ Rapide</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Icône</label>
+        <input class="form-input" id="iIcon" placeholder="🍝" style="font-size:20px;text-align:center" type="text" maxlength="2">
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Suggestions rapides</label>
+      <div class="suggestions-grid" id="suggGrid"></div>
+    </div>
+    <button class="btn-submit" onclick="saveMeal()">Enregistrer</button>
+    <button class="btn-clear" onclick="clearMeal()">Effacer ce repas</button>
+    <button class="btn-cancel" onclick="closeModal()">Annuler</button>
+  </div>
+</div>
+
+<script>
+function applyTheme(){const p=window.matchMedia('(prefers-color-scheme: dark)').matches;const t=localStorage.getItem('theme')||(p?'dark':'light');document.documentElement.dataset.theme=t;document.querySelectorAll('.btn-icon').forEach(b=>{b.textContent=t==='dark'?'🌙':'☀️'})}
+function toggleTheme(){const c=document.documentElement.dataset.theme;localStorage.setItem('theme',c==='dark'?'light':'dark');applyTheme()}
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(!localStorage.getItem('theme'))applyTheme()});
+applyTheme();
+
+const DAYS=['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+const SLOTS=['midi','soir'];
+const SUGGESTIONS_BY_TYPE={
+  viande:['Poulet rôti','Bœuf bourguignon','Côtes de porc','Steak frites','Poulet curry','Escalopes milanaises'],
+  poisson:['Saumon au four','Cabillaud citron','Crevettes sautées','Brandade de morue','Filets de sole'],
+  veggie:['Risotto champignons','Quiche lorraine','Omelette','Soupe de légumes','Gratin dauphinois','Ratatouille'],
+  rapide:['Pâtes bolognaise','Pizza maison','Croque-monsieur','Salade composée','Tartines garnies']
+};
+
+let weekOffset = 0;
+let menus = JSON.parse(localStorage.getItem('menus_v2') || '{}');
+let currentEdit = null;
+let view = 'week';
+
+function getWeekKey(offset=weekOffset){
+  const d=new Date();d.setDate(d.getDate()-d.getDay()+1+(offset*7));
+  return d.getFullYear()+'W'+(getISOWeek(d));
+}
+function getISOWeek(d){const t=new Date(d.valueOf());t.setDate(t.getDate()-((t.getDay()+6)%7)+3);const f=new Date(t.getFullYear(),0,4);return 1+Math.round((t-f)/604800000)}
+function getWeekDates(offset=weekOffset){
+  const d=new Date();d.setDate(d.getDate()-d.getDay()+1+(offset*7));
+  return DAYS.map((_,i)=>{const dd=new Date(d);dd.setDate(d.getDate()+i);return dd});
+}
+
+function updateWeekLabel(){
+  const dates=getWeekDates();
+  const wk=getISOWeek(dates[0]);
+  document.getElementById('weekLabel').textContent='Semaine '+wk;
+  const start=dates[0].toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+  const end=dates[6].toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'});
+  document.getElementById('weekSub').textContent=start+' – '+end;
+}
+
+function changeWeek(delta){weekOffset+=delta;updateWeekLabel();renderDays()}
+
+function setView(v,el){
+  view=v;
+  document.querySelectorAll('.vtab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('daysList').classList.toggle('hidden',v!=='week');
+  document.getElementById('monthView').classList.toggle('hidden',v!=='month');
+  if(v==='month')renderMonth();
+}
+
+function getMenu(dayIdx,slot){
+  const wk=getWeekKey();
+  return (menus[wk]&&menus[wk][dayIdx]&&menus[wk][dayIdx][slot])||null;
+}
+function setMenu(dayIdx,slot,data){
+  const wk=getWeekKey();
+  if(!menus[wk])menus[wk]={};
+  if(!menus[wk][dayIdx])menus[wk][dayIdx]={};
+  menus[wk][dayIdx][slot]=data;
+  localStorage.setItem('menus_v2',JSON.stringify(menus));
+}
+function delMenu(dayIdx,slot){
+  const wk=getWeekKey();
+  if(menus[wk]&&menus[wk][dayIdx])menus[wk][dayIdx][slot]=null;
+  localStorage.setItem('menus_v2',JSON.stringify(menus));
+}
+
+const typeLabels={viande:'🥩 Viande',poisson:'🐟 Poisson',veggie:'🥦 Veggie',rapide:'⚡ Rapide'};
+const typeClass={viande:'mt-viande',poisson:'mt-poisson',veggie:'mt-veggie',rapide:'mt-rapide'};
+
+function isToday(d){const t=new Date();return d.getDate()===t.getDate()&&d.getMonth()===t.getMonth()&&d.getFullYear()===t.getFullYear()}
+
+function renderDays(){
+  const dates=getWeekDates();
+  const list=document.getElementById('daysList');
+  list.innerHTML=dates.map((d,i)=>{
+    const today=isToday(d);
+    const dateFmt=d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+    const slots=SLOTS.map(s=>{
+      const m=getMenu(i,s);
+      return `<div class="meal-slot${m?' has-meal':''}" onclick="openModal(${i},'${s}')">
+        <div class="meal-slot-label">${s.toUpperCase()}</div>
+        ${m?`<div class="meal-name">${m.icon||'🍽️'} ${escH(m.name)}</div><div class="meal-tag-chip ${typeClass[m.type]||''}">${typeLabels[m.type]||''}</div>`:`<div class="meal-empty">+ Ajouter</div>`}
+      </div>`;
+    }).join('');
+    return `<div class="day-card${today?' today':''}" id="dc-${i}">
+      <div class="day-header" onclick="toggleDay(${i})">
+        <div class="day-dot"></div>
+        <div class="day-name">${DAYS[i]}</div>
+        <div class="day-date-badge">${dateFmt}</div>
+        <div class="day-chevron">›</div>
+      </div>
+      <div class="day-meals">${slots}</div>
+    </div>`;
+  }).join('');
+  // Auto-open today
+  const todayIdx=dates.findIndex(d=>isToday(d));
+  if(todayIdx>=0)document.getElementById('dc-'+todayIdx)?.classList.add('open');
+}
+
+function toggleDay(i){
+  const el=document.getElementById('dc-'+i);
+  el?.classList.toggle('open');
+}
+
+function renderMonth(){
+  const mv=document.getElementById('monthView');
+  mv.innerHTML='<div style="text-align:center;padding:30px;color:var(--text3);font-family:Share Tech Mono,monospace;font-size:11px;letter-spacing:2px">// Vue mensuelle - prochainement</div>';
+}
+
+function openModal(dayIdx,slot){
+  currentEdit={dayIdx,slot};
+  const m=getMenu(dayIdx,slot);
+  document.getElementById('modalTitle').textContent=`Repas du ${DAYS[dayIdx]}`;
+  document.getElementById('modalSub').textContent=slot.toUpperCase();
+  document.getElementById('iMeal').value=m?m.name:'';
+  document.getElementById('iType').value=m?m.type:'viande';
+  document.getElementById('iIcon').value=m?m.icon:'';
+  updateSuggestions(m?m.type:'viande');
+  document.getElementById('iType').onchange=()=>updateSuggestions(document.getElementById('iType').value);
+  document.getElementById('modalBack').classList.add('open');
+  setTimeout(()=>document.getElementById('iMeal').focus(),350);
+}
+
+function updateSuggestions(type){
+  const grid=document.getElementById('suggGrid');
+  const sugg=SUGGESTIONS_BY_TYPE[type]||[];
+  grid.innerHTML=sugg.map(s=>`<div class="sug-chip" onclick="document.getElementById('iMeal').value='${s}'">${s}</div>`).join('');
+}
+
+function saveMeal(){
+  if(!currentEdit)return;
+  const name=document.getElementById('iMeal').value.trim();
+  if(!name){clearMeal();return}
+  setMenu(currentEdit.dayIdx,currentEdit.slot,{
+    name,
+    type:document.getElementById('iType').value,
+    icon:document.getElementById('iIcon').value||'🍽️'
+  });
+  closeModal();
+  renderDays();
+}
+
+function clearMeal(){
+  if(!currentEdit)return;
+  delMenu(currentEdit.dayIdx,currentEdit.slot);
+  closeModal();
+  renderDays();
+}
+
+function closeModal(){document.getElementById('modalBack').classList.remove('open');currentEdit=null}
+function closeModalOut(e){if(e.target===document.getElementById('modalBack'))closeModal()}
+
+function clearWeek(){
+  if(!confirm('Effacer tous les menus de cette semaine ?'))return;
+  const wk=getWeekKey();
+  delete menus[wk];
+  localStorage.setItem('menus_v2',JSON.stringify(menus));
+  renderDays();
+}
+
+function autoFill(){
+  const dates=getWeekDates();
+  const types=['viande','poisson','veggie','viande','poisson','veggie','rapide'];
+  dates.forEach((_,i)=>{
+    SLOTS.forEach(s=>{
+      if(!getMenu(i,s)){
+        const type=types[(i+SLOTS.indexOf(s))%types.length];
+        const opts=SUGGESTIONS_BY_TYPE[type];
+        const pick=opts[Math.floor(Math.random()*opts.length)];
+        setMenu(i,s,{name:pick,type,icon:'🍽️'});
+      }
+    });
+  });
+  renderDays();
+}
+
+function generateShoppingList(){
+  const dates=getWeekDates();
+  let items=[];
+  dates.forEach((_,i)=>SLOTS.forEach(s=>{const m=getMenu(i,s);if(m)items.push(`${DAYS[i]} ${s}: ${m.name}`)}));
+  if(!items.length){alert('Aucun repas planifié cette semaine.');return}
+  alert('Repas planifiés :\n\n'+items.join('\n')+'\n\nOuvrez l\'app Courses pour créer votre liste!');
+}
+
+function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+
+updateWeekLabel();
+renderDays();
+</script>
+</body>
+</html>

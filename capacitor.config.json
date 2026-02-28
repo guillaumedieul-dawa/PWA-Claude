@@ -1,7 +1,7 @@
 {
-  "appId": "com.mesapps.lockertrack",
-  "appName": "LockerTrack",
-  "webDir": "locker-tracker",
+  "appId": "com.famille.dieulgandet",
+  "appName": "FamilyHub",
+  "webDir": ".",
   "bundledWebRuntime": false,
   "server": {
     "androidScheme": "https",
@@ -9,21 +9,26 @@
   },
   "android": {
     "allowMixedContent": false,
-    "backgroundColor": "#f4f4f0",
-    "overrideUserAgent": "LockerTrack/1.0 Android",
-    "appendUserAgent": "LockerTrackApp"
+    "backgroundColor": "#080f14",
+    "overrideUserAgent": "FamilyHub/2.0 Android",
+    "appendUserAgent": "FamilyHubApp"
   },
   "plugins": {
     "StatusBar": {
-      "style": "LIGHT",
-      "backgroundColor": "#f4f4f0",
+      "style": "DARK",
+      "backgroundColor": "#080f14",
       "overlaysWebView": false
     },
     "SplashScreen": {
-      "launchShowDuration": 1500,
-      "backgroundColor": "#f4f4f0",
+      "launchShowDuration": 1200,
+      "backgroundColor": "#080f14",
       "androidSplashResourceName": "splash",
       "showSpinner": false
+    },
+    "Keyboard": {
+      "resize": "body",
+      "style": "dark",
+      "resizeOnFullScreen": true
     }
   }
 }

@@ -1,17 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.mesapps.lockertrack">
+    package="com.famille.dieulgandet">
 
     <!-- ── Réseau ── -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
 
     <!-- ── SMS ── -->
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
 
+    <!-- ── Stockage (Android < 13) ── -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
+    <!-- ── Notifications ── -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
     <!-- ── Vibration (retours haptiques) ── -->
     <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!-- ── Wake lock (sync background) ── -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
         android:allowBackup="true"
@@ -22,9 +34,10 @@
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="false"
         android:hardwareAccelerated="true"
-        android:networkSecurityConfig="@xml/network_security_config">
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:requestLegacyExternalStorage="false">
 
-        <!-- Activité principale -->
+        <!-- ── Activité principale ── -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -39,7 +52,7 @@
 
         </activity>
 
-        <!-- Récepteur SMS pour détecter les nouveaux SMS transporteurs -->
+        <!-- ── Récepteur SMS (colis/suivi) ── -->
         <receiver
             android:name=".SmsReceiver"
             android:exported="true"

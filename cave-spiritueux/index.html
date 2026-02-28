@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0e0a04">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f8f0e4">
+<meta name="description" content="Cave à vins, rhums et whiskies — Famille Dieul-Gandet">
+<title>Cave & Spiritueux</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0e0a04;--bg2:#16100a;--surface:#1e1608;--surface2:#26200f;
+    --border:rgba(220,160,40,0.12);--border2:rgba(220,160,40,0.3);
+    --text:#f0e4c8;--text2:#907838;--text3:#3a2e14;
+    --amber:#e8a020;--gold:#f0c840;--teal:#00c0a0;--green:#66cc66;--red:#cc3344;--blue:#4488cc;
+    --safe-top:env(safe-area-inset-top,0px);--safe-bot:env(safe-area-inset-bottom,0px);
+  }
+  [data-theme="light"] {
+    --bg:#f8f0e4;--bg2:#efe4d0;--surface:#e4d4b8;--surface2:#d8c8a0;
+    --border:rgba(120,80,0,0.15);--border2:rgba(120,80,0,0.3);
+    --text:#2a1800;--text2:#6a4800;--text3:#c0a060;
+    --amber:#995500;--gold:#7a6000;--teal:#006a50;--green:#336622;--red:#991122;--blue:#224488;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{min-height:100dvh;background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;overflow-x:hidden;transition:background 0.3s,color 0.3s}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;opacity:0.3}
+  body::after{content:'';position:fixed;bottom:-10vh;right:-10%;width:60vw;height:50vh;background:radial-gradient(ellipse,rgba(220,160,40,0.07) 0%,transparent 70%);pointer-events:none;z-index:0}
+  #app{position:relative;z-index:1;min-height:100dvh;display:flex;flex-direction:column;padding:calc(var(--safe-top)+16px) 16px calc(var(--safe-bot)+80px);max-width:480px;margin:0 auto}
+
+  .top-bar{display:flex;align-items:center;gap:12px;margin-bottom:20px;animation:fadeDown 0.4s ease both}
+  .btn-home{width:36px;height:36px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;text-decoration:none;flex-shrink:0}
+  .btn-home:active{transform:scale(0.9)}
+  .top-title{flex:1}
+  .top-eyebrow{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--amber);opacity:0.8}
+  .top-name{font-family:'Josefin Sans',sans-serif;font-size:20px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+  .btn-icon{width:36px;height:36px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s}
+  .btn-icon:active{transform:scale(0.9)}
+
+  /* Category tabs */
+  .cat-tabs{display:flex;gap:6px;margin-bottom:16px;animation:fadeUp 0.4s 0.1s ease both}
+  .ctab{flex:1;padding:10px 6px;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2);transition:all 0.2s;text-align:center;font-family:'Josefin Sans',sans-serif;letter-spacing:0.5px;display:flex;flex-direction:column;align-items:center;gap:3px}
+  .ctab span{font-family:'Share Tech Mono',monospace;font-size:16px;font-weight:400}
+  .ctab.active{border-color:var(--amber);color:var(--amber);background:rgba(232,160,32,0.08)}
+  .ctab:active{transform:scale(0.95)}
+
+  /* Stats */
+  .stats-row{display:flex;gap:8px;margin-bottom:20px;animation:fadeUp 0.4s 0.15s ease both}
+  .stat-chip{flex:1;text-align:center;padding:10px 6px;background:var(--surface);border:1px solid var(--border);border-radius:10px}
+  .stat-num{font-family:'Josefin Sans',sans-serif;font-size:20px;font-weight:700;color:var(--amber)}
+  .stat-label{font-family:'Share Tech Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text2);display:block;margin-top:2px}
+
+  /* Bottle list */
+  .bottle-list{display:flex;flex-direction:column;gap:10px;animation:fadeUp 0.4s 0.2s ease both}
+  .bottle-card{display:flex;align-items:center;gap:12px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:14px;transition:all 0.2s;cursor:pointer}
+  .bottle-card:active{transform:scale(0.98)}
+  .bottle-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;border:1px solid var(--border2);background:var(--surface2)}
+  .bottle-info{flex:1;min-width:0}
+  .bottle-name{font-family:'Josefin Sans',sans-serif;font-size:15px;font-weight:700;letter-spacing:0.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bottle-sub{font-size:12px;color:var(--text2);margin-top:2px}
+  .bottle-meta{display:flex;align-items:center;gap:6px;margin-top:6px}
+  .bottle-tag{font-family:'Share Tech Mono',monospace;font-size:9px;padding:2px 8px;border-radius:20px;letter-spacing:1px}
+  .tag-vin{background:rgba(204,51,68,0.12);color:var(--red);border:1px solid rgba(204,51,68,0.2)}
+  .tag-rhum{background:rgba(232,160,32,0.12);color:var(--amber);border:1px solid rgba(232,160,32,0.2)}
+  .tag-whisky{background:rgba(240,200,64,0.12);color:var(--gold);border:1px solid rgba(240,200,64,0.2)}
+  .tag-champagne{background:rgba(102,204,102,0.12);color:var(--green);border:1px solid rgba(102,204,102,0.2)}
+  .tag-autre{background:rgba(68,136,204,0.12);color:var(--blue);border:1px solid rgba(68,136,204,0.2)}
+  .bottle-year{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3)}
+  .bottle-qty{font-family:'Josefin Sans',sans-serif;font-size:18px;font-weight:700;color:var(--amber);flex-shrink:0;min-width:28px;text-align:center}
+  .qty-controls{display:flex;flex-direction:column;gap:3px;flex-shrink:0}
+  .qty-btn{width:24px;height:20px;border-radius:4px;border:1px solid var(--border2);background:var(--bg);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;line-height:1}
+  .qty-btn:active{background:var(--amber);color:var(--bg);border-color:var(--amber)}
+  .bottle-delete{margin-left:4px;width:28px;height:28px;border-radius:8px;background:rgba(204,51,68,0.08);border:1px solid rgba(204,51,68,0.2);color:var(--red);font-size:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;opacity:0;transition:opacity 0.2s}
+  .bottle-card:hover .bottle-delete{opacity:1}
+
+  /* Rating */
+  .bottle-rating{font-size:11px;color:var(--gold);letter-spacing:1px}
+
+  /* empty */
+  .empty{text-align:center;padding:40px;color:var(--text3)}
+  .empty-icon{font-size:40px;margin-bottom:12px}
+  .empty-text{font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:2px}
+
+  /* FAB */
+  .fab{position:fixed;bottom:calc(var(--safe-bot)+20px);right:20px;width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,var(--amber),var(--gold));border:none;color:var(--bg);font-size:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 24px rgba(220,160,40,0.4);transition:all 0.2s;z-index:100}
+  .fab:active{transform:scale(0.9)}
+
+  /* Modal */
+  .modal-back{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity 0.3s}
+  .modal-back.open{opacity:1;pointer-events:all}
+  .modal{width:100%;max-width:480px;margin:0 auto;background:var(--bg2);border-radius:20px 20px 0 0;padding:24px 20px calc(var(--safe-bot)+24px);transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.34,1.1,0.64,1)}
+  .modal-back.open .modal{transform:translateY(0)}
+  .modal-title{font-family:'Josefin Sans',sans-serif;font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:20px;color:var(--amber)}
+  .form-row{margin-bottom:14px}
+  .form-label{font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text2);margin-bottom:5px;display:block}
+  .form-input{width:100%;padding:11px 14px;background:var(--surface);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:600;outline:none;transition:border-color 0.2s}
+  .form-input:focus{border-color:var(--amber)}
+  .form-select{appearance:none;cursor:pointer}
+  .form-row-split{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+  .btn-submit{width:100%;padding:14px;background:linear-gradient(135deg,var(--amber),var(--gold));border:none;border-radius:12px;color:var(--bg);font-family:'Josefin Sans',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:2px;cursor:pointer;transition:all 0.2s;margin-top:8px}
+  .btn-submit:active{transform:scale(0.97)}
+  .btn-cancel{width:100%;padding:12px;background:transparent;border:1px solid var(--border2);border-radius:12px;color:var(--text2);font-family:'Josefin Sans',sans-serif;font-size:14px;cursor:pointer;margin-top:8px}
+
+  .hidden{display:none}
+  @keyframes fadeDown{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="top-bar">
+    <a href="../index.html" class="btn-home">🏠</a>
+    <div class="top-title">
+      <div class="top-eyebrow">// cave.spiritueux</div>
+      <div class="top-name">Cave & Spiritueux</div>
+    </div>
+    <button class="btn-icon" onclick="toggleTheme()">🌙</button>
+  </div>
+
+  <div class="cat-tabs">
+    <div class="ctab active" onclick="setCat('all',this)"><span>🍾</span>TOUT</div>
+    <div class="ctab" onclick="setCat('vin',this)"><span>🍷</span>VINS</div>
+    <div class="ctab" onclick="setCat('rhum',this)"><span>🥃</span>RHUMS</div>
+    <div class="ctab" onclick="setCat('whisky',this)"><span>🥃</span>WHISKY</div>
+    <div class="ctab" onclick="setCat('champagne',this)"><span>🥂</span>BULLES</div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-chip"><div class="stat-num" id="stat-refs">0</div><span class="stat-label">Références</span></div>
+    <div class="stat-chip"><div class="stat-num" id="stat-bts">0</div><span class="stat-label">Bouteilles</span></div>
+    <div class="stat-chip"><div class="stat-num" id="stat-val">0</div><span class="stat-label">Valeur ~€</span></div>
+  </div>
+
+  <div class="bottle-list" id="bottleList"></div>
+  <div class="empty hidden" id="emptyState">
+    <div class="empty-icon">🍾</div>
+    <div class="empty-text">// cave vide</div>
+  </div>
+</div>
+
+<button class="fab" onclick="openModal()">+</button>
+
+<div class="modal-back" id="modalBack" onclick="closeModalOut(event)">
+  <div class="modal">
+    <div class="modal-title">Ajouter une bouteille</div>
+    <div class="form-row">
+      <label class="form-label">Nom / Domaine</label>
+      <input class="form-input" id="iName" placeholder="Ex: Château Margaux, Havana Club 7..." type="text">
+    </div>
+    <div class="form-row-split">
+      <div>
+        <label class="form-label">Catégorie</label>
+        <select class="form-input form-select" id="iCat">
+          <option value="vin">🍷 Vin</option>
+          <option value="rhum">🥃 Rhum</option>
+          <option value="whisky">🥃 Whisky</option>
+          <option value="champagne">🥂 Bulles</option>
+          <option value="autre">🍶 Autre</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Année / Âge</label>
+        <input class="form-input" id="iYear" placeholder="2018 / 12 ans" type="text">
+      </div>
+    </div>
+    <div class="form-row-split">
+      <div>
+        <label class="form-label">Quantité</label>
+        <input class="form-input" id="iQty" type="number" min="1" value="1">
+      </div>
+      <div>
+        <label class="form-label">Prix ~€</label>
+        <input class="form-input" id="iPrice" type="number" min="0" placeholder="0">
+      </div>
+    </div>
+    <div class="form-row-split">
+      <div>
+        <label class="form-label">Appellation / Origine</label>
+        <input class="form-input" id="iOrigin" placeholder="Bordeaux, Martinique...">
+      </div>
+      <div>
+        <label class="form-label">Note /5</label>
+        <select class="form-input form-select" id="iRating">
+          <option value="0">—</option>
+          <option value="1">★</option>
+          <option value="2">★★</option>
+          <option value="3">★★★</option>
+          <option value="4">★★★★</option>
+          <option value="5">★★★★★</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn-submit" onclick="addBottle()">Ajouter à la cave</button>
+    <button class="btn-cancel" onclick="closeModal()">Annuler</button>
+  </div>
+</div>
+
+<script>
+function applyTheme(){const p=window.matchMedia('(prefers-color-scheme: dark)').matches;const t=localStorage.getItem('theme')||(p?'dark':'light');document.documentElement.dataset.theme=t;document.querySelectorAll('.btn-icon').forEach(b=>{b.textContent=t==='dark'?'🌙':'☀️'})}
+function toggleTheme(){const c=document.documentElement.dataset.theme;localStorage.setItem('theme',c==='dark'?'light':'dark');applyTheme()}
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(!localStorage.getItem('theme'))applyTheme()});
+applyTheme();
+
+let bottles = JSON.parse(localStorage.getItem('cave_v2') || '[]');
+let currentCat = 'all';
+
+if(bottles.length === 0) {
+  bottles = [
+    {id:1,name:'Château Léoville Barton',cat:'vin',year:'2016',qty:3,price:45,origin:'Saint-Julien',rating:4},
+    {id:2,name:'Côtes du Rhône La Nerthe',cat:'vin',year:'2019',qty:6,price:18,origin:'Châteauneuf-du-Pape',rating:3},
+    {id:3,name:'Havana Club Selección de Maestros',cat:'rhum',year:'7 ans',qty:2,price:35,origin:'Cuba',rating:4},
+    {id:4,name:'Diplomático Reserva Exclusiva',cat:'rhum',year:'12 ans',qty:1,price:42,origin:'Venezuela',rating:5},
+    {id:5,name:'Glenfiddich 15',cat:'whisky',year:'15 ans',qty:1,price:55,origin:'Speyside',rating:4},
+    {id:6,name:'Moët & Chandon Impérial',cat:'champagne',year:'NM',qty:2,price:38,origin:'Champagne',rating:3},
+  ];
+  save();
+}
+
+const catIcons = {vin:'🍷',rhum:'🥃',whisky:'🥃',champagne:'🥂',autre:'🍶'};
+
+function setCat(c,el){
+  currentCat=c;
+  document.querySelectorAll('.ctab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderList();
+}
+
+function save(){localStorage.setItem('cave_v2',JSON.stringify(bottles));renderStats();renderList()}
+
+function renderStats(){
+  const filtered=currentCat==='all'?bottles:bottles.filter(b=>b.cat===currentCat);
+  document.getElementById('stat-refs').textContent=filtered.length;
+  document.getElementById('stat-bts').textContent=filtered.reduce((s,b)=>s+(b.qty||0),0);
+  document.getElementById('stat-val').textContent=filtered.reduce((s,b)=>s+(b.qty||0)*(b.price||0),0);
+}
+
+function renderList(){
+  renderStats();
+  const list=document.getElementById('bottleList');
+  const empty=document.getElementById('emptyState');
+  const filtered=currentCat==='all'?[...bottles]:bottles.filter(b=>b.cat===currentCat);
+  if(filtered.length===0){list.innerHTML='';empty.classList.remove('hidden');return}
+  empty.classList.add('hidden');
+  list.innerHTML=filtered.map(b=>`
+    <div class="bottle-card" id="bc-${b.id}">
+      <div class="bottle-icon">${catIcons[b.cat]||'🍶'}</div>
+      <div class="bottle-info">
+        <div class="bottle-name">${escH(b.name)}</div>
+        <div class="bottle-sub">${escH(b.origin||'')}${b.year?' · '+escH(b.year):''}</div>
+        <div class="bottle-meta">
+          <span class="bottle-tag tag-${b.cat}">${b.cat.toUpperCase()}</span>
+          ${b.price?`<span class="bottle-year">${b.price}€/btl</span>`:''}
+          ${b.rating?`<span class="bottle-rating">${'★'.repeat(b.rating)}</span>`:''}
+        </div>
+      </div>
+      <div class="qty-controls">
+        <button class="qty-btn" onclick="changeQty(event,${b.id},1)">+</button>
+        <div class="bottle-qty">${b.qty}</div>
+        <button class="qty-btn" onclick="changeQty(event,${b.id},-1)">−</button>
+      </div>
+      <div class="bottle-delete" onclick="deleteBottle(event,${b.id})">🗑</div>
+    </div>
+  `).join('');
+}
+
+function changeQty(e,id,delta){
+  e.stopPropagation();
+  const b=bottles.find(x=>x.id===id);
+  if(!b)return;
+  b.qty=Math.max(0,b.qty+delta);
+  if(b.qty===0 && confirm('Retirer cette bouteille de la cave ?')) {
+    bottles=bottles.filter(x=>x.id!==id);
+  }
+  save();
+}
+
+function deleteBottle(e,id){e.stopPropagation();bottles=bottles.filter(x=>x.id!==id);save()}
+
+function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+function openModal(){document.getElementById('iName').value='';document.getElementById('modalBack').classList.add('open');setTimeout(()=>document.getElementById('iName').focus(),350)}
+function closeModal(){document.getElementById('modalBack').classList.remove('open')}
+function closeModalOut(e){if(e.target===document.getElementById('modalBack'))closeModal()}
+
+function addBottle(){
+  const name=document.getElementById('iName').value.trim();
+  if(!name)return;
+  bottles.push({
+    id:Date.now(),
+    name,
+    cat:document.getElementById('iCat').value,
+    year:document.getElementById('iYear').value,
+    qty:parseInt(document.getElementById('iQty').value)||1,
+    price:parseFloat(document.getElementById('iPrice').value)||0,
+    origin:document.getElementById('iOrigin').value,
+    rating:parseInt(document.getElementById('iRating').value)||0
+  });
+  closeModal();
+  save();
+}
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+renderStats();
+renderList();
+</script>
+</body>
+</html>

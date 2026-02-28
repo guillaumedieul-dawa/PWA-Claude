@@ -101,18 +101,11 @@ function parseSMStoPackage(sms) {
 // ═══════════════════════════════════════════
 
 async function readSMSNative() {
-  // Import dynamique du plugin Capacitor SMS
-  const { CapacitorSMS } = await import('./node_modules/capacitor-sms/dist/esm/index.js')
-    .catch(() => null);
-
-  if (!CapacitorSMS) {
-    // Fallback : essai via l'API Capacitor globale
-    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SMS) {
-      return window.Capacitor.Plugins.SMS;
-    }
-    throw new Error('Plugin SMS non disponible');
-  }
-  return CapacitorSMS;
+  // Plugin Java natif enregistré dans MainActivity.java
+  // Accessible via window.Capacitor.Plugins.SmsReader (sans dépendance npm)
+  const plugin = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SmsReader;
+  if (!plugin) throw new Error('Plugin SmsReader non disponible');
+  return plugin;
 }
 
 async function requestSMSPermissionAndSync() {
@@ -145,14 +138,9 @@ async function requestSMSPermissionAndSync() {
 
     const smsPlugin = await readSMSNative();
 
-    // L'API varie selon le plugin — on essaie les deux formes
-    if (smsPlugin.getSMS) {
-      const result = await smsPlugin.getSMS({ indexFrom: 0, indexTo: 500 });
-      messages = result.messages || result || [];
-    } else if (smsPlugin.getMessages) {
-      const result = await smsPlugin.getMessages({ folder: 'inbox', filter: { minDate: since } });
-      messages = result.messages || [];
-    }
+    // Appel du plugin Java natif SmsReaderPlugin.getSMS()
+    const result = await smsPlugin.getSMS({ days: 90 });
+    messages = result.messages || [];
 
     // Filtrage par date et mots-clés
     const relevant = messages.filter(m => {

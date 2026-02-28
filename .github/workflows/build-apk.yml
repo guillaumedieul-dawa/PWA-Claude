@@ -35,25 +35,35 @@ jobs:
     - name: Install Android build tools
       run: sdkmanager "build-tools;34.0.0" "platforms;android-34" "platform-tools"
 
-    # ── 5. npm install ───────────────────────────────────────────────────────
+    # ── 5. npm install (Capacitor core uniquement) ───────────────────────────
     - name: Install npm dependencies
       run: npm install
 
-    # ── 6. Capacitor sync ───────────────────────────────────────────────────
+    # ── 6. Capacitor sync ────────────────────────────────────────────────────
     - name: Capacitor sync
       run: npx cap sync android
 
-    # ── 7. Patch AndroidManifest (permissions SMS) ───────────────────────────
+    # ── 7. Copier le plugin SMS Java natif ───────────────────────────────────
+    - name: Copy native SMS plugin
+      run: |
+        JAVA_DIR="android/app/src/main/java/com/mesapps/lockertrack"
+        mkdir -p "$JAVA_DIR"
+        cp android/app/src/main/java/com/mesapps/lockertrack/SmsReaderPlugin.java "$JAVA_DIR/" 2>/dev/null || true
+        cp android/app/src/main/java/com/mesapps/lockertrack/MainActivity.java    "$JAVA_DIR/" 2>/dev/null || true
+        echo "Fichiers Java présents :"
+        ls -la "$JAVA_DIR/"
+
+    # ── 8. Patch AndroidManifest (permissions SMS) ───────────────────────────
     - name: Patch AndroidManifest
       run: |
         MANIFEST="android/app/src/main/AndroidManifest.xml"
         if ! grep -q "READ_SMS" "$MANIFEST"; then
           sed -i 's|<uses-permission android:name="android.permission.INTERNET"/>|<uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.READ_SMS"/>\n    <uses-permission android:name="android.permission.RECEIVE_SMS"/>|' "$MANIFEST"
         fi
-        echo "Permissions présentes :"
+        echo "Permissions :"
         grep "permission" "$MANIFEST"
 
-    # ── 8. Build APK debug ───────────────────────────────────────────────────
+    # ── 9. Build APK debug ───────────────────────────────────────────────────
     - name: Make gradlew executable
       run: chmod +x android/gradlew
 
@@ -61,14 +71,13 @@ jobs:
       working-directory: android
       run: ./gradlew assembleDebug --no-daemon --stacktrace
 
-    # ── 9. Renommer l'APK ────────────────────────────────────────────────────
+    # ── 10. Upload Artifact ──────────────────────────────────────────────────
     - name: Rename APK
       run: |
         APK=$(find android -name "*debug*.apk" | head -1)
         cp "$APK" LockerTrack-debug.apk
-        echo "APK : $(du -sh LockerTrack-debug.apk)"
+        echo "Taille : $(du -sh LockerTrack-debug.apk | cut -f1)"
 
-    # ── 10. Upload Artifact ──────────────────────────────────────────────────
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
@@ -76,11 +85,8 @@ jobs:
         path: LockerTrack-debug.apk
         retention-days: 30
 
-    # ── 11. Résumé ───────────────────────────────────────────────────────────
     - name: Summary
       run: |
         SIZE=$(du -sh LockerTrack-debug.apk | cut -f1)
-        echo "## ✅ APK généré avec succès" >> $GITHUB_STEP_SUMMARY
-        echo "**Fichier :** \`LockerTrack-debug.apk\` ($SIZE)" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "Téléchargez l'APK dans la section **Artifacts** en bas de cette page." >> $GITHUB_STEP_SUMMARY
+        echo "## ✅ APK prêt — $SIZE" >> $GITHUB_STEP_SUMMARY
+        echo "Téléchargez l'APK dans **Artifacts** ci-dessus." >> $GITHUB_STEP_SUMMARY

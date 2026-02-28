@@ -8,6 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
+
   security-check:
     name: Sécurité & Qualité du code
     runs-on: ubuntu-latest
@@ -16,36 +17,27 @@ jobs:
 
       - name: Vérification sécurité HTML/JS
         run: |
-          echo "=== Vérification fichiers sensibles ==="
-          # Vérifier absence de secrets codés en dur
-          if grep -r "password\|api_key\|secret\|token" --include="*.js" --include="*.html" .; then
+          echo "=== Secrets codés en dur ==="
+          if grep -rn "password\s*=\|api_key\s*=\|secret\s*=" --include="*.js" --include="*.html" .; then
             echo "⚠️ Potentiels secrets trouvés - vérifier manuellement"
           else
             echo "✅ Aucun secret détecté"
           fi
-
-          # Vérifier Content Security Policy dans les HTML
-          echo "=== Vérification CSP ==="
-          for f in $(find . -name "index.html" -not -path "*/node_modules/*" -not -path "*/android/*"); do
-            echo "Fichier: $f"
-          done
-
-          # Vérifier HTTPs / pas de cleartext
-          echo "=== Vérification cleartext ==="
-          if grep -r "http://" --include="*.html" --include="*.js" . | grep -v "//schemas\|//www.w3\|localhost\|comment\|#"; then
-            echo "⚠️ URLs HTTP non-sécurisées détectées"
+          echo "=== URLs HTTP non sécurisées ==="
+          if grep -rn 'src="http://\|href="http://\|fetch('"'"'http://' --include="*.html" --include="*.js" .; then
+            echo "⚠️ URLs HTTP détectées"
           else
-            echo "✅ Toutes les URLs sont HTTPS"
+            echo "✅ Toutes les ressources sont HTTPS"
           fi
 
-      - name: Vérification performance estimée
+      - name: Vérification taille des fichiers
         run: |
           echo "=== Taille des fichiers HTML ==="
           for f in $(find . -name "*.html" -not -path "*/node_modules/*" -not -path "*/android/*"); do
             size=$(wc -c < "$f")
             kb=$((size / 1024))
             if [ $kb -gt 200 ]; then
-              echo "⚠️ $f — ${kb}KB (> 200KB, optimisation recommandée)"
+              echo "⚠️ $f — ${kb}KB (volumineux)"
             else
               echo "✅ $f — ${kb}KB"
             fi
@@ -82,10 +74,10 @@ jobs:
 
       - name: Installer dépendances npm
         run: |
-          npm install --package-lock
+          npm install
           echo "✅ npm install terminé"
 
-      - name: Préparer le dossier www (webDir Capacitor)
+      - name: Préparer www/ (webDir Capacitor)
         run: |
           mkdir -p www
           cp index.html www/
@@ -97,57 +89,60 @@ jobs:
           cp -r todo-partage www/
           cp -r cave-spiritueux www/
           cp -r menus-semaine www/
-          echo "✅ Contenu www/ :"
-          ls www/
+          echo "✅ Contenu de www/ :"
+          ls -la www/
 
       - name: Capacitor - Ajouter Android
         run: |
-          npx cap add android || echo "Android déjà présent"
+          npx cap add android
+          echo "✅ Projet Android généré"
+          ls android/
 
       - name: Capacitor - Sync
         run: |
           npx cap sync android
-          echo "✅ Capacitor sync terminé"
+          echo "✅ Sync terminé"
+
+      - name: Rendre gradlew exécutable
+        run: chmod +x android/gradlew
 
       - name: Copier les plugins Java natifs
         run: |
           DEST="android/app/src/main/java/com/famille/dieulgandet"
           mkdir -p "$DEST"
-          cp src-android/SmsReaderPlugin.java "$DEST/"
           cp src-android/MainActivity.java "$DEST/"
-          echo "✅ Plugins Java copiés dans $DEST"
-          ls "$DEST/"
+          cp src-android/SmsReaderPlugin.java "$DEST/"
+          echo "✅ Plugins Java copiés :"
+          ls -la "$DEST/"
+          grep "^package" "$DEST/"*.java
 
       - name: Patcher AndroidManifest
         run: |
           M="android/app/src/main/AndroidManifest.xml"
-          # Vérifier et patcher permissions SMS si nécessaire
           if ! grep -q "READ_SMS" "$M"; then
-            sed -i 's|android.permission.INTERNET\"/>|android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.READ_SMS"/>\n    <uses-permission android:name="android.permission.RECEIVE_SMS"/>|' "$M"
+            sed -i 's|<uses-permission android:name="android.permission.INTERNET" />|<uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.READ_SMS" />\n    <uses-permission android:name="android.permission.RECEIVE_SMS" />\n    <uses-permission android:name="android.permission.VIBRATE" />\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />|' "$M"
             echo "✅ Permissions SMS ajoutées"
           else
-            echo "✅ Permissions SMS déjà présentes"
+            echo "✅ Permissions déjà présentes"
           fi
           grep "permission" "$M"
 
       - name: Build APK Debug
         run: |
-          chmod +x android/gradlew
           cd android && ./gradlew assembleDebug \
             --no-daemon \
             --stacktrace \
-            --warning-mode=all \
-            -Dorg.gradle.jvmargs="-Xmx2g"
-          echo "✅ APK Debug compilé"
+            -Dorg.gradle.jvmargs="-Xmx2g -XX:MaxMetaspaceSize=512m"
+          echo "✅ Build Gradle terminé"
 
       - name: Vérification APK
         run: |
           APK="android/app/build/outputs/apk/debug/app-debug.apk"
           if [ -f "$APK" ]; then
             SIZE=$(du -sh "$APK" | cut -f1)
-            echo "✅ APK généré avec succès — Taille: $SIZE"
+            echo "✅ APK généré — Taille : $SIZE"
           else
-            echo "❌ APK non trouvé!"
+            echo "❌ APK introuvable"
             exit 1
           fi
 
@@ -159,22 +154,10 @@ jobs:
           retention-days: 30
 
       - name: Résumé GitHub
+        if: success()
         run: |
           APK="android/app/build/outputs/apk/debug/app-debug.apk"
           SIZE=$(du -sh "$APK" | cut -f1)
           echo "## ✅ FamilyHub APK v2 prêt" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Propriété | Valeur |" >> $GITHUB_STEP_SUMMARY
-          echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
           echo "| Taille APK | $SIZE |" >> $GITHUB_STEP_SUMMARY
-          echo "| Build # | ${{ github.run_number }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Commit | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "📦 Téléchargez l'APK dans l'onglet **Artifacts** ci-dessus." >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Applications incluses" >> $GITHUB_STEP_SUMMARY
-          echo "- 📦 Suivi Colis (SMS + Gmail)" >> $GITHUB_STEP_SUMMARY
-          echo "- 🛒 Liste de Courses (sync P2P)" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ To-Do Partagé (nouveau)" >> $GITHUB_STEP_SUMMARY
-          echo "- 🍷 Cave & Spiritueux (nouveau)" >> $GITHUB_STEP_SUMMARY
-          echo "- 🍽️ Menus de la Semaine (nouveau)" >> $GITHUB_STEP_SUMMARY
+          echo "| Build | #${{ github.run_number }} |" >> $GITHUB_STEP_SUMMARY

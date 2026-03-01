@@ -2,406 +2,288 @@
 <html lang="fr" data-theme="dark">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#080f14">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#060c12">
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#e8f4f0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FamilyHub">
 <title>Famille Dieul-Gandet</title>
 <link rel="manifest" href="./manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,300;0,400;0,600;0,700;1,300&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg:        #080f14;
-    --bg2:       #0d1820;
-    --surface:   #111e2a;
-    --surface2:  #172636;
-    --border:    rgba(0,200,160,0.12);
-    --border2:   rgba(0,200,160,0.25);
-    --text:      #d8eee8;
-    --text2:     #6a9e90;
-    --text3:     #2a5045;
-    --teal:      #00c8a0;
-    --teal2:     #00a882;
-    --blue:      #0088cc;
-    --blue2:     #0066aa;
-    --green:     #22dd88;
-    --amber:     #ffaa22;
-    --red:       #ff4455;
-    --safe-top:  env(safe-area-inset-top, 0px);
-    --safe-bot:  env(safe-area-inset-bottom, 0px);
-  }
-  [data-theme="light"] {
-    --bg:        #e8f4f0;
-    --bg2:       #d4ebe3;
-    --surface:   #c8e0d8;
-    --surface2:  #b8d4cc;
-    --border:    rgba(0,120,100,0.15);
-    --border2:   rgba(0,120,100,0.30);
-    --text:      #0a2820;
-    --text2:     #2a6050;
-    --text3:     #88b8a8;
-    --teal:      #007a60;
-    --teal2:     #005a44;
-    --blue:      #005599;
-    --blue2:     #004477;
-    --green:     #116644;
-    --amber:     #995500;
-    --red:       #cc1122;
-  }
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --bg:#060c12;--bg2:#0c1620;--surface:#101e2c;--surface2:#162438;
+  --border:rgba(0,210,170,0.1);--border2:rgba(0,210,170,0.25);
+  --text:#cce8e0;--text2:#5a9080;--text3:#1e4035;
+  --teal:#00d0a8;--blue:#0090d8;--green:#20e888;--amber:#ffb020;--red:#ff4060;--purple:#b080ff;
+  --safe-top:env(safe-area-inset-top,0px);--safe-bot:env(safe-area-inset-bottom,0px);
+}
+[data-theme="light"] {
+  --bg:#dff0ea;--bg2:#cce0d8;--surface:#bcd0c8;--surface2:#adc0b8;
+  --border:rgba(0,100,80,0.15);--border2:rgba(0,100,80,0.3);
+  --text:#052018;--text2:#1a5040;--text3:#80b0a0;
+  --teal:#007860;--blue:#005090;--green:#0e6040;--amber:#7a5000;--red:#bb1030;--purple:#6040bb;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{min-height:100dvh;background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;overflow-x:hidden;transition:background 0.4s,color 0.4s}
 
-  html, body {
-    min-height: 100dvh;
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Rajdhani', sans-serif;
-    overflow-x: hidden;
-    transition: background 0.3s, color 0.3s;
-  }
+/* Ambient bg */
+.bg-layer{position:fixed;inset:0;pointer-events:none;z-index:0}
+.bg-grid{position:absolute;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:44px 44px;opacity:0.5}
+.bg-orb1{position:absolute;top:-15%;left:-10%;width:70%;height:60%;background:radial-gradient(ellipse,rgba(0,208,168,0.07) 0%,transparent 65%)}
+.bg-orb2{position:absolute;bottom:-20%;right:-5%;width:60%;height:55%;background:radial-gradient(ellipse,rgba(0,144,216,0.06) 0%,transparent 65%)}
+[data-theme="light"] .bg-grid{opacity:0.3}
 
-  /* Grid background */
-  body::before {
-    content: '';
-    position: fixed; inset: 0;
-    background-image:
-      linear-gradient(var(--border) 1px, transparent 1px),
-      linear-gradient(90deg, var(--border) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events: none; z-index: 0;
-    opacity: 0.4;
-  }
+#app{position:relative;z-index:1;min-height:100dvh;display:flex;flex-direction:column;padding:calc(var(--safe-top)+20px) 20px calc(var(--safe-bot)+28px);max-width:520px;margin:0 auto}
 
-  /* Glow orb */
-  body::after {
-    content: '';
-    position: fixed;
-    top: -10vh; left: 20%;
-    width: 60vw; height: 50vh;
-    background: radial-gradient(ellipse, rgba(0,200,160,0.08) 0%, transparent 70%);
-    pointer-events: none; z-index: 0;
-  }
+/* ── Header ── */
+.header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:32px;animation:fadeDown 0.5s ease both}
+.eyebrow{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--teal);opacity:0.7;margin-bottom:8px}
+.title{font-family:'Josefin Sans',sans-serif;font-size:clamp(30px,9vw,44px);font-weight:700;line-height:1.0;letter-spacing:2px;text-transform:uppercase}
+.title em{font-style:italic;font-weight:300;color:var(--teal);letter-spacing:3px}
+.subtitle{font-size:12px;color:var(--text2);margin-top:8px;font-family:'Share Tech Mono',monospace;letter-spacing:1px}
+.header-actions{display:flex;gap:8px;padding-top:4px;flex-shrink:0}
+.btn-icon{width:38px;height:38px;border-radius:10px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-size:17px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s}
+.btn-icon:active{transform:scale(0.88)}
 
-  #app {
-    position: relative; z-index: 1;
-    min-height: 100dvh;
-    display: flex; flex-direction: column;
-    padding: calc(var(--safe-top) + 20px) 20px calc(var(--safe-bot) + 32px);
-    max-width: 480px; margin: 0 auto;
-  }
+/* ── Users ── */
+.user-bar{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px;animation:fadeUp 0.5s 0.08s ease both}
+.user-chip{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:14px;cursor:default;transition:all 0.3s;position:relative;overflow:hidden}
+.user-chip.active{border-color:var(--border2)}
+.user-chip.active::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,208,168,0.07),transparent);pointer-events:none}
+.user-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;font-family:'Josefin Sans',sans-serif;letter-spacing:0.5px}
+.av-g{background:linear-gradient(135deg,var(--teal),var(--blue));color:#fff}
+.av-m{background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff}
+.user-info{flex:1;min-width:0}
+.user-first{font-family:'Josefin Sans',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px}
+.user-last{font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.user-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.dot-g{background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse 2.5s infinite}
+.dot-m{background:var(--teal);box-shadow:0 0 6px var(--teal);animation:pulse 2.5s 1.2s infinite}
 
-  /* ── Header ── */
-  .header {
-    display: flex; align-items: flex-start; justify-content: space-between;
-    margin-bottom: 40px;
-    animation: fadeDown 0.5s ease both;
-  }
-  .header-left {}
-  .eyebrow {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
-    color: var(--teal); opacity: 0.8; margin-bottom: 6px;
-  }
-  .title {
-    font-family: 'Josefin Sans', sans-serif;
-    font-size: clamp(28px, 8vw, 40px);
-    font-weight: 700; line-height: 1.1;
-    letter-spacing: 1px; text-transform: uppercase;
-  }
-  .title span { color: var(--teal); }
-  .subtitle {
-    font-size: 13px; color: var(--text2); margin-top: 6px; font-weight: 500;
-  }
+/* ── Live stats ── */
+.stats-strip{display:flex;gap:6px;margin-bottom:24px;animation:fadeUp 0.5s 0.14s ease both}
+.stat-mini{flex:1;text-align:center;padding:10px 6px;background:var(--surface);border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:all 0.2s;text-decoration:none;color:var(--text)}
+.stat-mini:active{transform:scale(0.94)}
+.stat-n{font-family:'Josefin Sans',sans-serif;font-size:20px;font-weight:700}
+.stat-l{font-family:'Share Tech Mono',monospace;font-size:8px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text2);display:block;margin-top:2px}
+.n-teal{color:var(--teal)} .n-green{color:var(--green)} .n-amber{color:var(--amber)} .n-blue{color:var(--blue)}
 
-  .header-actions { display: flex; gap: 8px; margin-top: 4px; }
-  .btn-icon {
-    width: 36px; height: 36px;
-    border-radius: 8px;
-    border: 1px solid var(--border2);
-    background: var(--surface);
-    color: var(--text2); font-size: 16px;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; transition: all 0.2s;
-  }
-  .btn-icon:active { transform: scale(0.9); }
+/* ── Section ── */
+.sect-label{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-bottom:10px}
 
-  /* ── User chip ── */
-  .user-bar {
-    display: flex; gap: 8px; margin-bottom: 28px;
-    animation: fadeUp 0.5s 0.1s ease both;
-  }
-  .user-chip {
-    flex: 1; display: flex; align-items: center; gap: 10px;
-    padding: 10px 14px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    font-size: 13px; font-weight: 600;
-    cursor: pointer; transition: all 0.2s;
-    position: relative; overflow: hidden;
-  }
-  .user-chip.active { border-color: var(--teal); }
-  .user-chip.active::before {
-    content: ''; position: absolute; inset: 0;
-    background: linear-gradient(135deg, rgba(0,200,160,0.08), transparent);
-  }
-  .user-avatar {
-    width: 30px; height: 30px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 13px; font-weight: 700; flex-shrink: 0;
-    font-family: 'Josefin Sans', sans-serif;
-  }
-  .avatar-g { background: linear-gradient(135deg, var(--blue), var(--teal)); color: var(--bg); }
-  .avatar-m { background: linear-gradient(135deg, var(--green), var(--blue)); color: var(--bg); }
-  .user-name { font-size: 12px; line-height: 1.3; }
-  .user-name strong { display: block; color: var(--text); font-size: 13px; }
-  .user-status { margin-left: auto; width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+/* ── App Grid ── */
+.apps-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.app-card{position:relative;overflow:hidden;padding:18px 16px;background:var(--surface);border:1px solid var(--border);border-radius:18px;text-decoration:none;color:var(--text);cursor:pointer;transition:all 0.3s cubic-bezier(0.34,1.5,0.64,1);display:flex;flex-direction:column;gap:10px}
+.app-card:hover{transform:translateY(-4px) scale(1.01);border-color:var(--border2)}
+.app-card:active{transform:scale(0.96)}
+.app-card.wide{grid-column:1/-1;flex-direction:row;align-items:center;gap:16px;padding:16px 20px}
+.app-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;opacity:0;transition:opacity 0.3s}
+.app-card:hover::before{opacity:1}
+.c-teal::before{background:linear-gradient(90deg,var(--teal),var(--blue))}
+.c-green::before{background:linear-gradient(90deg,var(--green),var(--teal))}
+.c-blue::before{background:linear-gradient(90deg,var(--blue),var(--purple))}
+.c-amber::before{background:linear-gradient(90deg,var(--amber),var(--green))}
+.c-purple::before{background:linear-gradient(90deg,var(--purple),var(--blue))}
 
-  /* ── Section ── */
-  .section-label {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
-    color: var(--text3); margin-bottom: 12px;
-  }
+.app-icon{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;transition:transform 0.3s}
+.app-card:hover .app-icon{transform:scale(1.1) rotate(-4deg)}
+.i-teal{background:linear-gradient(135deg,rgba(0,208,168,0.18),rgba(0,144,216,0.08));border:1px solid rgba(0,208,168,0.18)}
+.i-green{background:linear-gradient(135deg,rgba(32,232,136,0.18),rgba(0,208,168,0.08));border:1px solid rgba(32,232,136,0.18)}
+.i-blue{background:linear-gradient(135deg,rgba(0,144,216,0.18),rgba(176,128,255,0.08));border:1px solid rgba(0,144,216,0.18)}
+.i-amber{background:linear-gradient(135deg,rgba(255,176,32,0.18),rgba(32,232,136,0.08));border:1px solid rgba(255,176,32,0.18)}
+.i-purple{background:linear-gradient(135deg,rgba(176,128,255,0.18),rgba(0,144,216,0.08));border:1px solid rgba(176,128,255,0.18)}
 
-  /* ── App Grid ── */
-  .apps-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 16px;
-  }
-  .app-card {
-    position: relative; overflow: hidden;
-    padding: 18px 16px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    text-decoration: none; color: var(--text);
-    cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-    animation: fadeUp 0.5s ease both;
-    display: flex; flex-direction: column; gap: 10px;
-  }
-  .app-card:hover { transform: translateY(-3px); border-color: var(--border2); }
-  .app-card:active { transform: scale(0.96); }
+.app-info{flex:1;min-width:0}
+.app-name{font-family:'Josefin Sans',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:3px}
+.app-desc{font-size:12px;color:var(--text2);line-height:1.4}
+.app-tag{display:inline-block;font-family:'Share Tech Mono',monospace;font-size:9px;padding:2px 8px;border-radius:10px;margin-top:5px;letter-spacing:0.5px}
+.t-teal{background:rgba(0,208,168,0.1);color:var(--teal);border:1px solid rgba(0,208,168,0.2)}
+.t-green{background:rgba(32,232,136,0.1);color:var(--green);border:1px solid rgba(32,232,136,0.2)}
+.t-blue{background:rgba(0,144,216,0.1);color:var(--blue);border:1px solid rgba(0,144,216,0.2)}
+.t-amber{background:rgba(255,176,32,0.1);color:var(--amber);border:1px solid rgba(255,176,32,0.2)}
+.t-purple{background:rgba(176,128,255,0.1);color:var(--purple);border:1px solid rgba(176,128,255,0.2)}
+.app-arrow{color:var(--text3);font-size:18px;flex-shrink:0;transition:transform 0.2s}
+.app-card:hover .app-arrow{transform:translateX(4px)}
 
-  .app-card.full { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 16px; padding: 16px 20px; }
+/* Stagger */
+.app-card:nth-child(1){animation:fadeUp 0.4s 0.18s ease both}
+.app-card:nth-child(2){animation:fadeUp 0.4s 0.23s ease both}
+.app-card:nth-child(3){animation:fadeUp 0.4s 0.28s ease both}
+.app-card:nth-child(4){animation:fadeUp 0.4s 0.33s ease both}
+.app-card:nth-child(5){animation:fadeUp 0.4s 0.38s ease both}
 
-  /* Colored accent bar */
-  .app-card::before {
-    content: ''; position: absolute;
-    top: 0; left: 0; right: 0; height: 2px;
-    opacity: 0; transition: opacity 0.2s;
-  }
-  .app-card:hover::before { opacity: 1; }
-  .card-teal::before  { background: linear-gradient(90deg, var(--teal), var(--blue)); }
-  .card-blue::before  { background: linear-gradient(90deg, var(--blue), var(--teal)); }
-  .card-green::before { background: linear-gradient(90deg, var(--green), var(--teal)); }
-  .card-amber::before { background: linear-gradient(90deg, var(--amber), var(--green)); }
-  .card-red::before   { background: linear-gradient(90deg, var(--red), var(--amber)); }
+/* ── Footer ── */
+.footer{margin-top:auto;padding-top:20px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);animation:fadeUp 0.4s 0.42s ease both}
+.footer-left{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:1px;line-height:1.7}
+.ver-chip{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--teal);border:1px solid rgba(0,208,168,0.2);padding:4px 10px;border-radius:20px;background:rgba(0,208,168,0.05)}
 
-  .app-icon {
-    width: 44px; height: 44px; border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 22px; flex-shrink: 0;
-    transition: transform 0.2s;
-  }
-  .app-card:hover .app-icon { transform: scale(1.08) rotate(-3deg); }
-
-  .icon-teal  { background: linear-gradient(135deg, rgba(0,200,160,0.2), rgba(0,136,204,0.1)); border: 1px solid rgba(0,200,160,0.2); }
-  .icon-blue  { background: linear-gradient(135deg, rgba(0,136,204,0.2), rgba(0,200,160,0.1)); border: 1px solid rgba(0,136,204,0.2); }
-  .icon-green { background: linear-gradient(135deg, rgba(34,221,136,0.2), rgba(0,200,160,0.1)); border: 1px solid rgba(34,221,136,0.2); }
-  .icon-amber { background: linear-gradient(135deg, rgba(255,170,34,0.2), rgba(34,221,136,0.1)); border: 1px solid rgba(255,170,34,0.2); }
-  .icon-red   { background: linear-gradient(135deg, rgba(255,68,85,0.15), rgba(255,170,34,0.1)); border: 1px solid rgba(255,68,85,0.2); }
-
-  .app-info { flex: 1; }
-  .app-name {
-    font-family: 'Josefin Sans', sans-serif;
-    font-size: 15px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.5px; margin-bottom: 3px;
-  }
-  .app-desc { font-size: 12px; color: var(--text2); font-weight: 500; line-height: 1.4; }
-
-  .app-badge {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px; padding: 2px 8px;
-    border-radius: 20px; font-weight: 400;
-    display: inline-block; margin-top: 6px;
-  }
-  .badge-teal  { background: rgba(0,200,160,0.1);  color: var(--teal); border: 1px solid rgba(0,200,160,0.2); }
-  .badge-blue  { background: rgba(0,136,204,0.1);  color: var(--blue); border: 1px solid rgba(0,136,204,0.2); }
-  .badge-green { background: rgba(34,221,136,0.1); color: var(--green); border: 1px solid rgba(34,221,136,0.2); }
-  .badge-amber { background: rgba(255,170,34,0.1); color: var(--amber); border: 1px solid rgba(255,170,34,0.2); }
-  .badge-red   { background: rgba(255,68,85,0.1);  color: var(--red);   border: 1px solid rgba(255,68,85,0.2); }
-
-  .app-arrow { color: var(--text3); font-size: 14px; flex-shrink: 0; transition: transform 0.2s; }
-  .app-card:hover .app-arrow { transform: translateX(3px); }
-
-  /* Animation delays */
-  .app-card:nth-child(1) { animation-delay: 0.15s; }
-  .app-card:nth-child(2) { animation-delay: 0.2s; }
-  .app-card:nth-child(3) { animation-delay: 0.25s; }
-  .app-card:nth-child(4) { animation-delay: 0.3s; }
-  .app-card:nth-child(5) { animation-delay: 0.35s; }
-
-  /* ── Footer ── */
-  .footer {
-    margin-top: auto; padding-top: 24px;
-    display: flex; align-items: center; justify-content: space-between;
-    border-top: 1px solid var(--border);
-    animation: fadeUp 0.5s 0.4s ease both;
-  }
-  .footer-info {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px; color: var(--text3); letter-spacing: 1px;
-  }
-  .version-chip {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px; color: var(--teal);
-    border: 1px solid rgba(0,200,160,0.2);
-    padding: 3px 10px; border-radius: 20px;
-  }
-
-  /* ── Sync status ── */
-  .sync-bar {
-    display: flex; align-items: center; gap: 8px;
-    padding: 10px 14px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    margin-bottom: 28px;
-    font-size: 12px; color: var(--text2);
-    animation: fadeUp 0.5s 0.2s ease both;
-  }
-  .sync-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; animation: pulse 2s infinite; }
-  .sync-time { margin-left: auto; font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--text3); }
-
-  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
-  @keyframes fadeDown { from { opacity:0; transform:translateY(-16px); } to { opacity:1; transform:none; } }
-  @keyframes fadeUp   { from { opacity:0; transform:translateY(16px);  } to { opacity:1; transform:none; } }
+@keyframes fadeDown{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:none}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
 </style>
 </head>
 <body>
+<div class="bg-layer"><div class="bg-grid"></div><div class="bg-orb1"></div><div class="bg-orb2"></div></div>
 <div id="app">
 
-  <!-- Header -->
   <div class="header">
-    <div class="header-left">
-      <div class="eyebrow">// espace.familial.v2</div>
-      <h1 class="title">Dieul<br><span>Gandet</span></h1>
-      <p class="subtitle">Hub familial · 5 applications</p>
+    <div>
+      <div class="eyebrow">// espace.familial · pierrelaye</div>
+      <h1 class="title">Dieul<br><em>Gandet</em></h1>
+      <div class="subtitle">hub · 5 applications</div>
     </div>
     <div class="header-actions">
-      <button class="btn-icon" id="themeToggle" title="Mode jour/nuit" onclick="toggleTheme()">🌙</button>
+      <button class="btn-icon" id="themeBtn" onclick="toggleTheme()" title="Thème">🌙</button>
     </div>
   </div>
 
-  <!-- Users -->
   <div class="user-bar">
-    <div class="user-chip active" id="chip-g">
-      <div class="user-avatar avatar-g">GD</div>
-      <div class="user-name"><strong>Guillaume</strong>Dieul</div>
-      <div class="user-status"></div>
+    <div class="user-chip active">
+      <div class="user-avatar av-g">GD</div>
+      <div class="user-info">
+        <div class="user-first">Guillaume</div>
+        <div class="user-last">Dieul</div>
+      </div>
+      <div class="user-dot dot-g"></div>
     </div>
-    <div class="user-chip" id="chip-m">
-      <div class="user-avatar avatar-m">MG</div>
-      <div class="user-name"><strong>Michèle</strong>Grassiot Gandet</div>
-      <div class="user-status" style="background:var(--teal)"></div>
+    <div class="user-chip">
+      <div class="user-avatar av-m">MG</div>
+      <div class="user-info">
+        <div class="user-first">Michèle</div>
+        <div class="user-last">Grassiot Gandet</div>
+      </div>
+      <div class="user-dot dot-m"></div>
     </div>
   </div>
 
-  <!-- Sync bar -->
-  <div class="sync-bar">
-    <div class="sync-dot"></div>
-    <span>Données synchronisées</span>
-    <span class="sync-time" id="syncTime">—</span>
+  <!-- Stats dynamiques depuis localStorage -->
+  <div class="stats-strip">
+    <a class="stat-mini" href="locker-tracker/index.html">
+      <div class="stat-n n-teal" id="statColis">—</div>
+      <span class="stat-l">Colis</span>
+    </a>
+    <a class="stat-mini" href="liste-courses/index.html">
+      <div class="stat-n n-green" id="statCourses">—</div>
+      <span class="stat-l">Courses</span>
+    </a>
+    <a class="stat-mini" href="todo-partage/index.html">
+      <div class="stat-n n-amber" id="statTodos">—</div>
+      <span class="stat-l">Tâches</span>
+    </a>
+    <a class="stat-mini" href="cave-spiritueux/index.html">
+      <div class="stat-n n-blue" id="statCave">—</div>
+      <span class="stat-l">Cave</span>
+    </a>
   </div>
 
-  <!-- Apps -->
-  <div class="section-label">// applications</div>
+  <div class="sect-label">// applications</div>
 
   <div class="apps-grid">
-    <a class="app-card card-teal" href="locker-tracker/index.html">
-      <div class="app-icon icon-teal">📦</div>
+    <a class="app-card c-teal" href="locker-tracker/index.html">
+      <div class="app-icon i-teal">📦</div>
       <div class="app-info">
         <div class="app-name">Colis</div>
         <div class="app-desc">Suivi livraisons & consignes</div>
-        <div class="app-badge badge-teal">SMS · Gmail</div>
+        <span class="app-tag t-teal">SMS · Gmail</span>
       </div>
     </a>
 
-    <a class="app-card card-green" href="liste-courses/index.html">
-      <div class="app-icon icon-green">🛒</div>
+    <a class="app-card c-green" href="liste-courses/index.html">
+      <div class="app-icon i-green">🛒</div>
       <div class="app-info">
         <div class="app-name">Courses</div>
-        <div class="app-desc">Liste de courses partagée</div>
-        <div class="app-badge badge-green">Sync P2P</div>
+        <div class="app-desc">Liste partagée en temps réel</div>
+        <span class="app-tag t-green">Sync P2P</span>
       </div>
     </a>
 
-    <a class="app-card card-blue" href="todo-partage/index.html">
-      <div class="app-icon icon-blue">✅</div>
+    <a class="app-card c-blue" href="todo-partage/index.html">
+      <div class="app-icon i-blue">✅</div>
       <div class="app-info">
-        <div class="app-name">To-do</div>
+        <div class="app-name">To-Do</div>
         <div class="app-desc">Tâches familiales partagées</div>
-        <div class="app-badge badge-blue">Partagé</div>
+        <span class="app-tag t-blue">Partagé</span>
       </div>
     </a>
 
-    <a class="app-card card-amber" href="cave-spiritueux/index.html">
-      <div class="app-icon icon-amber">🍷</div>
+    <a class="app-card c-amber" href="cave-spiritueux/index.html">
+      <div class="app-icon i-amber">🍷</div>
       <div class="app-info">
         <div class="app-name">Cave</div>
         <div class="app-desc">Vins, rhums & whiskies</div>
-        <div class="app-badge badge-amber">Inventaire</div>
+        <span class="app-tag t-amber">Inventaire</span>
       </div>
     </a>
 
-    <a class="app-card card-green full" href="menus-semaine/index.html">
-      <div class="app-icon icon-green">🍽️</div>
+    <a class="app-card c-purple wide" href="menus-semaine/index.html">
+      <div class="app-icon i-purple">🍽️</div>
       <div class="app-info">
-        <div class="app-name">Menus</div>
-        <div class="app-desc">Planification des repas de la semaine et du mois</div>
-        <div class="app-badge badge-green">Semaine · Mois</div>
+        <div class="app-name">Menus de la semaine</div>
+        <div class="app-desc">Planification des repas · semaine & mois</div>
+        <span class="app-tag t-purple">Semaine · Mois</span>
       </div>
       <div class="app-arrow">›</div>
     </a>
   </div>
 
-  <!-- Footer -->
   <div class="footer">
-    <div class="footer-info">21 rue du Beauregard · Pierrelaye</div>
-    <div class="version-chip">v2.0</div>
+    <div class="footer-left">
+      21 rue du Beauregard · Pierrelaye<br>
+      <span id="syncTime" style="opacity:0.6">—</span>
+    </div>
+    <div class="ver-chip">v2.0</div>
   </div>
 
 </div>
-
 <script>
-  // Theme from system
-  function applyTheme() {
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const stored = localStorage.getItem('theme');
-    const theme = stored || (prefersDark ? 'dark' : 'light');
-    document.documentElement.dataset.theme = theme;
-    document.getElementById('themeToggle').textContent = theme === 'dark' ? '🌙' : '☀️';
-  }
-  function toggleTheme() {
-    const current = document.documentElement.dataset.theme;
-    const next = current === 'dark' ? 'light' : 'dark';
-    localStorage.setItem('theme', next);
-    applyTheme();
-  }
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-    if (!localStorage.getItem('theme')) applyTheme();
-  });
+function applyTheme() {
+  const sys   = window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+  const saved = localStorage.getItem('fh_theme');
+  const theme = saved||sys;
+  document.documentElement.dataset.theme = theme;
+  document.getElementById('themeBtn').textContent = theme==='dark'?'🌙':'☀️';
+}
+function toggleTheme() {
+  const cur = document.documentElement.dataset.theme;
+  const nxt = cur==='dark'?'light':'dark';
+  localStorage.setItem('fh_theme',nxt);
   applyTheme();
+}
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{ if(!localStorage.getItem('fh_theme')) applyTheme(); });
+applyTheme();
 
-  // Sync time
-  const now = new Date();
-  document.getElementById('syncTime').textContent =
-    now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+// Stats from localStorage
+function loadStats() {
+  try {
+    // Colis en attente
+    const colis = JSON.parse(localStorage.getItem('lockertrack_v2'))||{packages:[]};
+    const colisActifs = colis.packages.filter(p=>p.status==='ready'||p.status==='pending').length;
+    document.getElementById('statColis').textContent = colisActifs;
+
+    // Articles courses
+    const courses = JSON.parse(localStorage.getItem('familyhub_courses_v2'))||{items:[]};
+    const coursesRestants = (courses.items||[]).filter(i=>!i.checked).length;
+    document.getElementById('statCourses').textContent = coursesRestants;
+
+    // Tâches
+    const todos = JSON.parse(localStorage.getItem('familyhub_todos_v2'))||{tasks:[]};
+    const todosRestants = (todos.tasks||[]).filter(t=>!t.done).length;
+    document.getElementById('statTodos').textContent = todosRestants;
+
+    // Cave
+    const cave = JSON.parse(localStorage.getItem('familyhub_cave_v2'))||{bottles:[]};
+    const bottles = (cave.bottles||[]).reduce((s,b)=>s+(b.qty||0),0);
+    document.getElementById('statCave').textContent = bottles;
+  } catch {}
+}
+loadStats();
+
+// Heure sync
+const now = new Date();
+document.getElementById('syncTime').textContent = now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
 </script>
 </body>
 </html>

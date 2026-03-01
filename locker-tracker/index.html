@@ -1,2952 +1,1111 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-theme="dark">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#f4f4f0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#080f14">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#e8f4f0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="LockerTrack">
-<title>LockerTrack</title>
-<link rel="apple-touch-icon" href="../icons/locker-192.svg">
-<meta name="apple-mobile-web-app-title" content="LockerTrack">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Colis">
+<title>Suivi Colis</title>
 <link rel="manifest" href="./manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
-  :root {
-    --bg: #f4f4f0;
-    --bg2: #eeeee8;
-    --bg3: #e4e4dc;
-    --surface: #ffffff;
-    --border: rgba(0,0,0,0.08);
-    --accent: #00b8a0;
-    --accent2: #e84545;
-    --accent3: #e0a800;
-    --accent4: #7c5ce8;
-    --text: #1a1a2e;
-    --text2: #5a5a7a;
-    --text3: #9999b8;
-    --radius: 16px;
-    --safe-bottom: env(safe-area-inset-bottom, 0px);
-  }
+:root {
+  --bg:#080f14;--bg2:#0d1820;--surface:#111e2a;--surface2:#172636;
+  --border:rgba(0,200,160,0.12);--border2:rgba(0,200,160,0.3);
+  --text:#d8eee8;--text2:#6a9e90;--text3:#1a3a30;
+  --teal:#00c8a0;--blue:#0088cc;--green:#22dd88;--amber:#ffaa22;--red:#ff4455;--purple:#aa88ff;
+  --safe-top:env(safe-area-inset-top,0px);--safe-bot:env(safe-area-inset-bottom,0px);
+  --safe-left:env(safe-area-inset-left,0px);--safe-right:env(safe-area-inset-right,0px);
+}
+[data-theme="light"] {
+  --bg:#e8f4f0;--bg2:#d4ebe3;--surface:#c4ddd5;--surface2:#b4cdc5;
+  --border:rgba(0,100,80,0.15);--border2:rgba(0,100,80,0.3);
+  --text:#042018;--text2:#1a6050;--text3:#88c0b0;
+  --teal:#007a60;--blue:#005599;--green:#116644;--amber:#996600;--red:#cc1122;--purple:#5533aa;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{height:100%}
+body{
+  font-family:'Rajdhani',sans-serif;
+  background:var(--bg);color:var(--text);
+  min-height:100dvh;overflow-x:hidden;
+  transition:background 0.3s,color 0.3s;
+}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;opacity:0.35}
+body::after{content:'';position:fixed;top:-20vh;right:-10%;width:70vw;height:60vh;background:radial-gradient(ellipse,rgba(0,200,160,0.07) 0%,transparent 70%);pointer-events:none;z-index:0}
+#app{position:relative;z-index:1;min-height:100dvh;display:flex;flex-direction:column;
+  padding:calc(var(--safe-top) + 12px) calc(var(--safe-right) + 16px) calc(var(--safe-bot) + 80px) calc(var(--safe-left) + 16px);
+  max-width:520px;margin:0 auto;width:100%}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+/* ── Top bar ── */
+.top-bar{display:flex;align-items:center;gap:10px;margin-bottom:20px;animation:fadeDown 0.4s ease both}
+.btn-home{width:38px;height:38px;border-radius:10px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;text-decoration:none;flex-shrink:0}
+.btn-home:active{transform:scale(0.88);background:var(--surface2)}
+.top-title{flex:1;min-width:0}
+.top-eyebrow{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--teal);opacity:0.8}
+.top-name{font-family:'Josefin Sans',sans-serif;font-size:21px;font-weight:700;text-transform:uppercase;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.btn-icon{width:38px;height:38px;border-radius:10px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-size:17px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;flex-shrink:0}
+.btn-icon:active{transform:scale(0.88)}
+.btn-icon.pulse{animation:pulse 2s infinite}
 
-  body {
-    font-family: 'Syne', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100dvh;
-    overflow-x: hidden;
-  }
+/* ── Filters ── */
+.filter-row{display:flex;gap:6px;margin-bottom:16px;animation:fadeUp 0.4s 0.05s ease both;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.filter-row::-webkit-scrollbar{display:none}
+.ftab{flex-shrink:0;padding:8px 14px;border-radius:20px;font-family:'Josefin Sans',sans-serif;font-size:12px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;transition:all 0.2s;white-space:nowrap}
+.ftab.active{border-color:var(--teal);color:var(--teal);background:rgba(0,200,160,0.1)}
+.ftab:active{transform:scale(0.94)}
+.badge{display:inline-block;background:var(--teal);color:#fff;border-radius:10px;font-size:10px;font-family:'Share Tech Mono',monospace;padding:1px 6px;margin-left:5px;vertical-align:middle}
+.badge.amber{background:var(--amber)}
+.badge.red{background:var(--red)}
 
-  /* Subtle ambient glow */
-  body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    background: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(0,184,160,0.08) 0%, transparent 60%), radial-gradient(ellipse 60% 40% at 80% 100%, rgba(124,92,232,0.06) 0%, transparent 60%);
-    pointer-events: none;
-    z-index: 0;
-  }
+/* ── Package cards ── */
+.pkg-list{display:flex;flex-direction:column;gap:12px;animation:fadeUp 0.4s 0.1s ease both}
+.pkg-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;transition:all 0.25s;cursor:pointer}
+.pkg-card:active{transform:scale(0.98)}
+.pkg-card.expanded{border-color:var(--border2)}
+.pkg-header{padding:14px 16px;display:flex;align-items:center;gap:12px}
+.carrier-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.carrier-name{font-family:'Josefin Sans',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.status-pill{padding:4px 10px;border-radius:20px;font-family:'Share Tech Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.5px;white-space:nowrap;flex-shrink:0}
+.s-ready{background:rgba(0,200,160,0.15);color:var(--teal);border:1px solid rgba(0,200,160,0.3)}
+.s-pending{background:rgba(255,170,34,0.15);color:var(--amber);border:1px solid rgba(255,170,34,0.3)}
+.s-delivered{background:rgba(34,221,136,0.12);color:var(--green);border:1px solid rgba(34,221,136,0.3)}
+.s-expired{background:rgba(255,68,85,0.12);color:var(--red);border:1px solid rgba(255,68,85,0.3)}
+.s-collected{background:rgba(255,255,255,0.06);color:var(--text2);border:1px solid var(--border)}
 
+.pkg-body{padding:0 16px 14px;border-top:1px solid var(--border)}
+.pkg-row{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.pkg-field{flex:1;min-width:120px}
+.field-label{font-family:'Share Tech Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--text2);margin-bottom:3px}
+.field-val{font-size:14px;font-weight:600;word-break:break-all}
+.field-val.mono{font-family:'Share Tech Mono',monospace;font-size:12px;letter-spacing:1px;color:var(--teal)}
+.pkg-addr{margin-top:10px;padding:10px;background:var(--bg2);border-radius:10px;font-size:13px;line-height:1.5}
+.pkg-code-box{margin-top:10px;padding:12px 16px;background:rgba(0,200,160,0.08);border:1px solid var(--border2);border-radius:12px;text-align:center}
+.code-label{font-family:'Share Tech Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--text2);margin-bottom:6px}
+.code-val{font-family:'Share Tech Mono',monospace;font-size:28px;font-weight:700;color:var(--teal);letter-spacing:4px}
+.code-sub{font-size:12px;color:var(--text2);margin-top:4px}
+.pkg-actions{display:flex;gap:8px;margin-top:12px}
+.act-btn{flex:1;padding:9px 8px;border-radius:10px;font-family:'Josefin Sans',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;transition:all 0.2s;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:5px}
+.act-btn.primary{background:rgba(0,200,160,0.15);color:var(--teal);border-color:rgba(0,200,160,0.4)}
+.act-btn.danger{background:rgba(255,68,85,0.08);color:var(--red);border-color:rgba(255,68,85,0.3)}
+.act-btn:active{transform:scale(0.94)}
+.expiry-bar{height:3px;border-radius:2px;background:var(--surface2);margin-top:12px;overflow:hidden}
+.expiry-fill{height:100%;border-radius:2px;transition:width 0.5s ease}
 
+/* ── Empty state ── */
+.empty{text-align:center;padding:60px 20px;animation:fadeUp 0.5s ease both}
+.empty-icon{font-size:56px;margin-bottom:16px;filter:grayscale(0.3)}
+.empty-title{font-family:'Josefin Sans',sans-serif;font-size:20px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.empty-sub{font-size:14px;color:var(--text2);line-height:1.5}
 
+/* ── FAB ── */
+.fab{position:fixed;bottom:calc(var(--safe-bot) + 24px);right:24px;width:56px;height:56px;border-radius:18px;background:linear-gradient(135deg,var(--teal),var(--blue));border:none;color:#fff;font-size:26px;cursor:pointer;z-index:50;box-shadow:0 4px 20px rgba(0,200,160,0.4);display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+.fab:active{transform:scale(0.9)}
 
+/* ── Modal ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);z-index:200;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--bg2);border-radius:24px 24px 0 0;padding:20px 20px calc(var(--safe-bot) + 20px);width:100%;max-width:520px;max-height:90dvh;overflow-y:auto;transform:translateY(100%);transition:transform 0.35s cubic-bezier(.32,1,.23,1)}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 20px;cursor:pointer}
+.modal-title{font-family:'Josefin Sans',sans-serif;font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:20px}
+.section-label{font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--text2);margin-bottom:8px;margin-top:20px}
+.section-label:first-child{margin-top:0}
+.form-input{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:500;transition:border-color 0.2s}
+.form-input:focus{outline:none;border-color:var(--teal)}
+.form-input::placeholder{color:var(--text2)}
+textarea.form-input{resize:vertical;min-height:80px;font-family:'Share Tech Mono',monospace;font-size:12px}
+.form-select{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:500;appearance:none}
+.carrier-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.carrier-btn{padding:12px 8px;border-radius:12px;border:1px solid var(--border);background:var(--surface);cursor:pointer;text-align:center;transition:all 0.2s;font-family:'Josefin Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.3px;color:var(--text2)}
+.carrier-btn .cem{font-size:22px;display:block;margin-bottom:4px}
+.carrier-btn.selected{border-color:var(--teal);color:var(--teal);background:rgba(0,200,160,0.1)}
+.carrier-btn:active{transform:scale(0.94)}
+.btn-submit{width:100%;padding:14px;border-radius:14px;background:linear-gradient(135deg,var(--teal),var(--blue));border:none;color:#fff;font-family:'Josefin Sans',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;margin-top:4px}
+.btn-submit:active{transform:scale(0.97)}
+.btn-secondary{width:100%;padding:12px;border-radius:14px;background:transparent;border:1px solid var(--border2);color:var(--text2);font-family:'Josefin Sans',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;margin-top:8px}
+.btn-secondary:active{transform:scale(0.97)}
+.form-row{display:flex;gap:10px}
+.form-row .form-input{flex:1}
 
+/* ── Gmail Panel ── */
+.gmail-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px}
+.gmail-account{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.gmail-avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--blue));display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;font-family:'Josefin Sans',sans-serif;font-weight:700;color:#fff}
+.gmail-info{flex:1;min-width:0}
+.gmail-name{font-family:'Josefin Sans',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase}
+.gmail-email{font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gmail-status{display:inline-flex;align-items:center;gap:5px;font-family:'Share Tech Mono',monospace;font-size:10px;padding:3px 8px;border-radius:10px;margin-top:3px}
+.gmail-status.connected{background:rgba(0,200,160,0.1);color:var(--teal)}
+.gmail-status.disconnected{background:rgba(255,255,255,0.06);color:var(--text2)}
+.oauth-info{background:rgba(0,200,160,0.06);border:1px solid rgba(0,200,160,0.15);border-radius:10px;padding:12px;margin-bottom:12px;font-size:12px;color:var(--text2);line-height:1.6}
+.oauth-info a{color:var(--teal)}
+.oauth-steps{counter-reset:step;margin:8px 0}
+.oauth-steps li{counter-increment:step;list-style:none;padding-left:20px;position:relative;margin-bottom:6px;font-size:12px;color:var(--text2)}
+.oauth-steps li::before{content:counter(step);position:absolute;left:0;top:1px;width:14px;height:14px;background:var(--teal);color:#fff;border-radius:50%;font-size:9px;display:flex;align-items:center;justify-content:center;font-family:'Share Tech Mono',monospace}
+.token-input-wrap{position:relative}
+.token-input-wrap .form-input{padding-right:44px;font-family:'Share Tech Mono',monospace;font-size:11px}
+.token-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text2);cursor:pointer;font-size:16px;padding:4px}
 
+/* ── SMS area ── */
+.sms-textarea{width:100%;padding:12px;border-radius:12px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:12px;min-height:100px;resize:vertical}
+.sms-textarea:focus{outline:none;border-color:var(--teal)}
+.sms-textarea::placeholder{color:var(--text2)}
 
+/* ── Search ── */
+.search-wrap{position:relative;margin-bottom:14px;animation:fadeDown 0.4s 0.03s ease both}
+.search-input{width:100%;padding:11px 14px 11px 40px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:500}
+.search-input:focus{outline:none;border-color:var(--teal)}
+.search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--text2);font-size:16px;pointer-events:none}
 
+/* ── Toast ── */
+.toast{position:fixed;bottom:calc(var(--safe-bot) + 96px);left:50%;transform:translateX(-50%) translateY(30px);background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:10px 18px;border-radius:12px;font-size:13px;font-family:'Josefin Sans',sans-serif;font-weight:600;z-index:999;opacity:0;transition:all 0.3s;white-space:nowrap;max-width:90vw}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
+/* ── Sync progress ── */
+.sync-bar{height:2px;background:var(--surface2);border-radius:1px;overflow:hidden;margin-bottom:8px}
+.sync-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--teal),var(--blue));border-radius:1px;transition:width 0.1s linear}
 
+/* ── QR modal ── */
+#qrModal .modal{padding-bottom:calc(var(--safe-bot) + 24px)}
+.qr-wrap{text-align:center;padding:20px 0}
+.qr-wrap canvas,.qr-wrap img{border-radius:12px;max-width:200px}
 
+/* ── Animations ── */
+@keyframes fadeDown{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
 
+/* ── Dark mode toggle ── */
+[data-theme="light"] body::after{background:radial-gradient(ellipse,rgba(0,100,80,0.06) 0%,transparent 70%)}
 
-  #app { position: relative; z-index: 1; }
-
-  /* ═══ HEADER ═══ */
-  .header {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    background: rgba(244,244,240,0.88);
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--border);
-    padding: 16px 20px 12px;
-  }
-  .header-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 12px;
-  }
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .logo-icon {
-    width: 36px; height: 36px;
-    background: var(--accent);
-    border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px;
-  }
-  .logo-text {
-    font-size: 20px;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-    background: linear-gradient(90deg, var(--accent), var(--accent4));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-  .header-actions {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-    flex-shrink: 0;
-  }
-  .logo-text {
-    font-size: 18px;
-  }
-  @media (max-width: 360px) {
-    .logo-text { display: none; }
-    .btn-select { font-size: 11px; padding: 5px 8px; }
-  }
-
-  /* Home button */
-  .btn-home {
-    width: 34px; height: 34px;
-    border-radius: 9px;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--text2);
-    font-size: 15px;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-decoration: none;
-    flex-shrink: 0;
-  }
-  .btn-home:active { transform: scale(0.93); background: var(--bg3); }
-  .btn-icon {
-    width: 38px; height: 38px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--text);
-    font-size: 18px;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .btn-icon:active { transform: scale(0.93); }
-  .btn-icon.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); }
-
-  /* Stats row */
-  .stats-row {
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  .stats-row::-webkit-scrollbar { display: none; }
-  .stat-chip {
-    flex-shrink: 0;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 5px 14px;
-    font-size: 12px;
-    font-family: 'Space Mono', monospace;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .stat-dot {
-    width: 7px; height: 7px;
-    border-radius: 50%;
-  }
-  .dot-pending { background: var(--accent3); }
-  .dot-ready { background: var(--accent); }
-  .dot-expired { background: var(--accent2); }
-
-  /* ═══ NAV TABS ═══ */
-  .nav-tabs {
-    display: flex;
-    gap: 4px;
-    padding: 12px 20px 0;
-    background: var(--bg);
-  }
-  .nav-tab {
-    flex: 1;
-    padding: 8px 12px;
-    border-radius: 10px;
-    font-size: 13px;
-    font-weight: 600;
-    text-align: center;
-    cursor: pointer;
-    color: var(--text2);
-    transition: all 0.2s;
-    border: 1px solid transparent;
-  }
-  .nav-tab.active {
-    background: var(--surface);
-    border-color: var(--border);
-    color: var(--accent);
-  }
-
-  /* ═══ MAIN CONTENT ═══ */
-  .content {
-    padding: 16px 16px calc(80px + var(--safe-bottom));
-  }
-
-  /* Section label */
-  .section-label {
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    color: var(--text3);
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    margin: 16px 4px 8px;
-  }
-
-  /* ═══ PACKAGE CARD ═══ */
-  .pkg-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    margin-bottom: 10px;
-    overflow: hidden;
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-    animation: slideUp 0.3s ease both;
-  }
-  .pkg-card:active { transform: scale(0.98); }
-  .pkg-card.expanded { border-color: var(--accent); }
-
-  @keyframes slideUp {
-    from { opacity: 0; transform: translateY(12px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  .pkg-card-header {
-    padding: 14px 16px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
-
-  .pkg-carrier-badge {
-    width: 46px; height: 46px;
-    border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 22px;
-    flex-shrink: 0;
-  }
-
-  .pkg-main { flex: 1; min-width: 0; }
-  .pkg-carrier-name {
-    font-size: 13px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 3px;
-  }
-  .pkg-locker {
-    font-size: 12px;
-    color: var(--text2);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .pkg-right { text-align: right; flex-shrink: 0; }
-  .pkg-status {
-    font-size: 11px;
-    font-weight: 700;
-    padding: 3px 9px;
-    border-radius: 6px;
-    margin-bottom: 4px;
-    display: inline-block;
-  }
-  .status-ready { background: rgba(0,229,200,0.15); color: var(--accent); }
-  .status-pending { background: rgba(255,209,102,0.15); color: var(--accent3); }
-  .status-expired { background: rgba(255,107,107,0.15); color: var(--accent2); }
-  .status-collected { background: rgba(255,255,255,0.08); color: var(--text2); }
-
-  .pkg-date {
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    color: var(--text3);
-  }
-
-  .pkg-source-badge {
-    font-size: 10px;
-    background: var(--bg3);
-    border-radius: 4px;
-    padding: 2px 6px;
-    font-family: 'Space Mono', monospace;
-    color: var(--text3);
-    margin-top: 2px;
-  }
-
-  /* Expanded details */
-  .pkg-details {
-    display: none;
-    padding: 0 16px 16px;
-    border-top: 1px solid var(--border);
-    padding-top: 14px;
-  }
-  .pkg-card.expanded .pkg-details { display: block; }
-
-  .code-block {
-    background: var(--bg3);
-    border: 1px solid rgba(0,229,200,0.2);
-    border-radius: 10px;
-    padding: 12px 16px;
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-  }
-  .code-label {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    color: var(--text3);
-    margin-bottom: 4px;
-    font-family: 'Space Mono', monospace;
-  }
-  .code-value {
-    font-family: 'Space Mono', monospace;
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--accent);
-    letter-spacing: 4px;
-  }
-  .btn-copy {
-    background: var(--accent);
-    color: var(--bg);
-    border: none;
-    border-radius: 8px;
-    padding: 8px 14px;
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-    flex-shrink: 0;
-    transition: all 0.2s;
-    font-family: 'Syne', sans-serif;
-  }
-  .btn-copy:active { transform: scale(0.95); }
-  .btn-copy.copied { background: var(--accent4); }
-
-  /* QR code */
-  .qr-container {
-    background: white;
-    border-radius: 12px;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 10px;
-    gap: 10px;
-  }
-  .qr-container canvas,
-  .qr-container img { border-radius: 4px; display: block; }
-  .qr-label {
-    font-size: 11px;
-    font-family: 'Space Mono', monospace;
-    color: #333;
-    letter-spacing: 1px;
-    text-align: center;
-    word-break: break-all;
-  }
-
-  .pkg-info-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 12px;
-    color: var(--text2);
-    margin-bottom: 6px;
-    font-family: 'Space Mono', monospace;
-  }
-  .pkg-info-row span:last-child { color: var(--text); font-weight: 600; }
-
-  .btn-collected {
-    width: 100%;
-    padding: 11px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--text2);
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    margin-top: 6px;
-    transition: all 0.2s;
-    font-family: 'Syne', sans-serif;
-  }
-  .btn-collected:active { background: var(--bg3); }
-
-  /* ═══ BOTTOM NAV ═══ */
-  .bottom-nav {
-    position: fixed;
-    bottom: 0;
-    left: 0; right: 0;
-    background: rgba(244,244,240,0.95);
-    backdrop-filter: blur(20px);
-    border-top: 1px solid var(--border);
-    display: flex;
-    padding: 8px 8px calc(8px + var(--safe-bottom));
-    z-index: 200;
-  }
-  .nav-item {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    padding: 8px 4px;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.2s;
-    color: var(--text3);
-    font-size: 10px;
-    font-weight: 600;
-  }
-  .nav-item.active { color: var(--accent); }
-  .nav-item .nav-icon { font-size: 20px; line-height: 1; }
-  .nav-item:active { transform: scale(0.93); }
-
-  /* FAB */
-  .fab {
-    position: fixed;
-    bottom: calc(72px + var(--safe-bottom));
-    right: 20px;
-    width: 54px; height: 54px;
-    background: var(--accent);
-    border-radius: 16px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 24px;
-    cursor: pointer;
-    box-shadow: 0 4px 20px rgba(0,184,160,0.35);
-    z-index: 150;
-    transition: transform 0.2s, box-shadow 0.2s;
-    border: none;
-    color: var(--bg);
-  }
-  .fab:active { transform: scale(0.93); box-shadow: 0 2px 10px rgba(0,184,160,0.25); }
-
-  /* ═══ MODAL ═══ */
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.8);
-    backdrop-filter: blur(8px);
-    z-index: 500;
-    display: none;
-    align-items: flex-end;
-    justify-content: center;
-  }
-  .modal-overlay.open { display: flex; }
-  .modal {
-    background: var(--bg2);
-    border-radius: 24px 24px 0 0;
-    border: 1px solid var(--border);
-    border-bottom: none;
-    width: 100%;
-    max-height: 92dvh;
-    overflow-y: auto;
-    padding: 20px 20px calc(20px + var(--safe-bottom));
-    animation: slideModal 0.3s ease;
-  }
-  @keyframes slideModal {
-    from { transform: translateY(100%); }
-    to   { transform: translateY(0); }
-  }
-  .modal-handle {
-    width: 40px; height: 4px;
-    background: var(--border);
-    border-radius: 2px;
-    margin: 0 auto 20px;
-  }
-  .modal-title {
-    font-size: 20px;
-    font-weight: 800;
-    margin-bottom: 20px;
-  }
-  .form-group {
-    margin-bottom: 16px;
-  }
-  .form-label {
-    font-size: 12px;
-    color: var(--text2);
-    font-weight: 600;
-    margin-bottom: 8px;
-    display: block;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-family: 'Space Mono', monospace;
-  }
-  .form-input, .form-select {
-    width: 100%;
-    padding: 12px 14px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    color: var(--text);
-    font-size: 15px;
-    font-family: 'Syne', sans-serif;
-    transition: border-color 0.2s;
-    -webkit-appearance: none;
-  }
-  .form-input:focus, .form-select:focus {
-    outline: none;
-    border-color: var(--accent);
-  }
-  .carrier-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-  }
-  .carrier-btn {
-    padding: 12px 8px;
-    background: var(--surface);
-    border: 2px solid var(--border);
-    border-radius: 12px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    color: var(--text);
-    font-family: 'Syne', sans-serif;
-  }
-  .carrier-btn.selected {
-    border-color: var(--accent);
-    background: rgba(0,229,200,0.08);
-  }
-  .carrier-emoji { font-size: 22px; display: block; margin-bottom: 4px; }
-  .carrier-name-small { font-size: 11px; font-weight: 600; }
-
-  .btn-submit {
-    width: 100%;
-    padding: 14px;
-    background: var(--accent);
-    color: var(--bg);
-    border: none;
-    border-radius: 12px;
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-    margin-top: 8px;
-    font-family: 'Syne', sans-serif;
-    transition: all 0.2s;
-  }
-  .btn-submit:active { transform: scale(0.97); }
-
-  /* ═══ ACCOUNTS PAGE ═══ */
-  .account-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px;
-    margin-bottom: 10px;
-    overflow: visible;
-  }
-  .account-header {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    margin-bottom: 14px;
-    flex-wrap: wrap;
-  }
-  .account-header > div:last-child {
-    margin-left: auto;
-    flex-shrink: 0;
-  }
-  .account-avatar {
-    width: 44px; height: 44px;
-    border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px;
-  }
-  .avatar-1 { background: linear-gradient(135deg, #00e5c8, #0066ff); }
-  .avatar-2 { background: linear-gradient(135deg, #ff6b6b, #a78bfa); }
-  .account-info h3 { font-size: 15px; font-weight: 700; }
-  .account-info p { font-size: 12px; color: var(--text2); font-family: 'Space Mono', monospace; }
-  .sync-btn {
-    margin-left: auto;
-    background: transparent;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 6px 12px;
-    color: var(--text2);
-    font-size: 12px;
-    cursor: pointer;
-    display: flex; align-items: center; gap: 6px;
-    font-family: 'Syne', sans-serif;
-    transition: all 0.2s;
-  }
-  .sync-btn:active { border-color: var(--accent); color: var(--accent); }
-  .sync-btn.syncing span { animation: spin 1s linear infinite; display: inline-block; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  .source-list { display: flex; gap: 8px; flex-wrap: wrap; }
-  .source-tag {
-    font-size: 11px;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-family: 'Space Mono', monospace;
-    display: flex; align-items: center; gap: 5px;
-  }
-  .source-tag.gmail { background: rgba(255,107,107,0.15); color: #ff9999; }
-  .source-tag.sms { background: rgba(0,229,200,0.15); color: var(--accent); }
-  .source-tag.status-ok { background: rgba(0,229,200,0.1); color: var(--accent); }
-
-  .last-sync {
-    font-size: 11px;
-    color: var(--text3);
-    font-family: 'Space Mono', monospace;
-    margin-top: 10px;
-  }
-
-  /* ═══ EMPTY STATE ═══ */
-  .empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--text3);
-  }
-  .empty-icon { font-size: 52px; margin-bottom: 16px; }
-  .empty-title { font-size: 16px; font-weight: 700; color: var(--text2); margin-bottom: 8px; }
-  .empty-desc { font-size: 13px; line-height: 1.6; }
-
-  /* ═══ TOAST ═══ */
-  .toast {
-    position: fixed;
-    top: -60px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--accent);
-    color: var(--bg);
-    padding: 10px 20px;
-    border-radius: 20px;
-    font-size: 13px;
-    font-weight: 700;
-    z-index: 999;
-    transition: top 0.3s ease;
-    white-space: nowrap;
-    font-family: 'Syne', sans-serif;
-  }
-  .toast.show { top: 20px; }
-
-  /* ═══ VIEWS ═══ */
-  .view { display: none; }
-  .view.active { display: block; }
-
-
-  /* ═══ SELECTION MODE ═══ */
-  .pkg-checkbox {
-    width: 22px; height: 22px;
-    border-radius: 7px;
-    border: 2px solid var(--border);
-    background: var(--surface);
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-    transition: all 0.15s;
-    font-size: 13px;
-  }
-  .pkg-card.selected .pkg-checkbox {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: white;
-  }
-  .pkg-card.selected {
-    border-color: var(--accent);
-    background: rgba(0,184,160,0.04);
-  }
-  .bulk-bar {
-    position: fixed;
-    bottom: calc(72px + var(--safe-bottom));
-    left: 12px; right: 12px;
-    background: var(--text);
-    color: var(--bg);
-    border-radius: 16px;
-    padding: 12px 16px;
-    display: none;
-    flex-direction: column;
-    gap: 10px;
-    z-index: 300;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
-    animation: slideUp 0.2s ease;
-  }
-  .bulk-bar.open { display: flex; }
-  .bulk-bar-top { display: flex; align-items: center; justify-content: space-between; }
-  .bulk-count { font-size: 13px; font-weight: 700; font-family: "Space Mono", monospace; }
-  .bulk-cancel {
-    background: rgba(255,255,255,0.12); border: none; border-radius: 8px;
-    color: var(--bg); padding: 6px 12px; font-size: 12px; cursor: pointer;
-    font-family: "Syne", sans-serif;
-  }
-  .bulk-actions { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
-  .bulk-actions::-webkit-scrollbar { display: none; }
-  .bulk-action-btn {
-    flex-shrink: 0; padding: 8px 14px; border-radius: 10px; border: none;
-    font-size: 12px; font-weight: 700; cursor: pointer; font-family: "Syne", sans-serif;
-    transition: all 0.15s; display: flex; align-items: center; gap: 6px;
-  }
-  .bulk-action-btn:active { transform: scale(0.95); }
-  .bulk-btn-ready     { background: rgba(0,184,160,0.2);   color: var(--accent); }
-  .bulk-btn-pending   { background: rgba(224,168,0,0.2);   color: var(--accent3); }
-  .bulk-btn-collected { background: rgba(255,255,255,0.15); color: #fff; }
-  .bulk-btn-expired   { background: rgba(232,69,69,0.2);   color: var(--accent2); }
-  .bulk-btn-delete    { background: rgba(232,69,69,0.15);  color: var(--accent2); }
-  .btn-select {
-    background: none; border: 1px solid var(--border); border-radius: 10px;
-    padding: 6px 12px; font-size: 12px; font-weight: 600; color: var(--text2);
-    cursor: pointer; font-family: "Syne", sans-serif; transition: all 0.15s; white-space: nowrap;
-  }
-  .btn-select.active { background: var(--accent); border-color: var(--accent); color: white; }
-  @keyframes slideUp {
-    from { transform: translateY(20px); opacity: 0; }
-    to   { transform: translateY(0);    opacity: 1; }
-  }
-
-  /* Carrier colors */
-  .c-chronopost { background: rgba(0,48,135,0.1); }
-  .c-mondialrelay { background: rgba(226,0,26,0.1); }
-  .c-vintedgo { background: rgba(0,119,130,0.1); }
-  .c-laposte { background: rgba(255,190,0,0.12); }
-  .c-amazon { background: rgba(255,153,0,0.12); }
-  .c-colissimo { background: rgba(0,48,135,0.1); }
-  .c-dpd { background: rgba(220,0,50,0.1); }
-  .c-ups { background: rgba(53,28,21,0.1); }
-  .c-other { background: rgba(0,0,0,0.05); }
-
-  /* Carrier logo in modal */
-  .carrier-logo-img {
-    width: 28px;
-    height: 28px;
-    object-fit: contain;
-    border-radius: 6px;
-  }
-  .carrier-emoji {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 36px;
-  }
-
-  /* Progress bar sync */
-  .sync-progress {
-    height: 2px;
-    background: var(--bg3);
-    border-radius: 1px;
-    margin-top: 10px;
-    overflow: hidden;
-  }
-  .sync-progress-bar {
-    height: 100%;
-    background: var(--accent);
-    border-radius: 1px;
-    width: 0;
-    transition: width 0.5s ease;
-  }
-
-  .divider {
-    height: 1px;
-    background: var(--border);
-    margin: 6px 0;
-  }
-
-  /* Urgency indicator */
-  .urgency-bar {
-    height: 3px;
-    border-radius: 0 0 0 0;
-  }
-  .urgency-high { background: linear-gradient(90deg, var(--accent2), transparent); }
-  .urgency-med { background: linear-gradient(90deg, var(--accent3), transparent); }
-  .urgency-low { background: linear-gradient(90deg, var(--accent), transparent); }
-  .urgency-none { display: none; }
-
-  /* QR toggle */
-  .btn-qr {
-    width: 100%;
-    padding: 11px;
-    border-radius: 10px;
-    border: 1px solid rgba(0,229,200,0.3);
-    background: rgba(0,229,200,0.06);
-    color: var(--accent);
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    margin-bottom: 10px;
-    font-family: 'Syne', sans-serif;
-    transition: all 0.2s;
-  }
-  .btn-qr:active { background: rgba(0,229,200,0.12); }
-
-  /* Search */
-  .search-bar {
-    display: flex;
-    align-items: center;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 10px 14px;
-    gap: 10px;
-    margin-bottom: 4px;
-    transition: border-color 0.2s;
-  }
-  .search-bar:focus-within { border-color: var(--accent); }
-  .search-icon { font-size: 16px; color: var(--text3); }
-  .search-input {
-    flex: 1;
-    background: none;
-    border: none;
-    color: var(--text);
-    font-size: 14px;
-    font-family: 'Syne', sans-serif;
-  }
-  .search-input:focus { outline: none; }
-  .search-input::placeholder { color: var(--text3); }
-
-  /* Filter chips */
-  .filter-row {
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    scrollbar-width: none;
-    padding: 10px 0 4px;
-  }
-  .filter-row::-webkit-scrollbar { display: none; }
-  .filter-chip {
-    flex-shrink: 0;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--text2);
-    transition: all 0.2s;
-  }
-  .filter-chip.active {
-    border-color: var(--accent);
-    background: rgba(0,229,200,0.1);
-    color: var(--accent);
-  }
-
-  /* Notification banner */
-  .notif-banner {
-    background: linear-gradient(135deg, rgba(0,229,200,0.1), rgba(167,139,250,0.1));
-    border: 1px solid rgba(0,229,200,0.2);
-    border-radius: 12px;
-    padding: 12px 16px;
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    cursor: pointer;
-  }
-  .notif-icon { font-size: 22px; }
-  .notif-text { flex: 1; font-size: 13px; line-height: 1.4; }
-  .notif-text strong { color: var(--accent); }
-  .notif-close { color: var(--text3); font-size: 16px; cursor: pointer; padding: 4px; }
-
-  /* Days left */
-  .days-left {
-    font-size: 11px;
-    font-family: 'Space Mono', monospace;
-  }
-  .days-urgent { color: var(--accent2); }
-  .days-warn { color: var(--accent3); }
-  .days-ok { color: var(--accent); }
+/* ── Pull-to-refresh indicator ── */
+.ptr-indicator{text-align:center;padding:8px;font-size:12px;color:var(--text2);height:0;overflow:hidden;transition:height 0.2s}
 </style>
 </head>
 <body>
-
 <div id="app">
-
-  <!-- TOAST -->
-  <div class="toast" id="toast"></div>
-
-  <!-- HEADER -->
-  <header class="header">
-    <div class="header-top">
-      <div class="logo">
-        <div class="logo-icon">📦</div>
-        <span class="logo-text">LockerTrack</span>
-      </div>
-      <div class="header-actions">
-        <a class="btn-home" id="homeBtn" href="../index.html" title="Accueil" style="display:none">⌂</a>
-        <button class="btn-icon" onclick="openSearch()" title="Rechercher">🔍</button>
-        <button class="btn-select" id="selectModeBtn" onclick="toggleSelectMode()">Sélectionner</button>
-        <button class="btn-icon primary" onclick="syncAll()" title="Synchroniser" id="syncBtn">⟳</button>
-      </div>
+  <div class="top-bar">
+    <a href="../index.html" class="btn-home" title="Accueil">🏠</a>
+    <div class="top-title">
+      <div class="top-eyebrow">FAMILLE DIEUL-GANDET</div>
+      <div class="top-name">📦 Suivi Colis</div>
     </div>
-    <div class="stats-row" id="statsRow">
-      <!-- filled by JS -->
-    </div>
-  </header>
-
-  <!-- VIEWS -->
-  <main>
-
-    <!-- ── VIEW : PACKAGES ── -->
-    <div class="view active" id="view-packages">
-      <div style="padding: 12px 16px 0;">
-        <div class="search-bar" id="searchBar" style="display:none">
-          <span class="search-icon">🔍</span>
-          <input class="search-input" placeholder="Rechercher un colis, transporteur…" oninput="filterPackages(this.value)" id="searchInput">
-          <span style="cursor:pointer;color:var(--text3)" onclick="closeSearch()">✕</span>
-        </div>
-        <div class="filter-row">
-          <div class="filter-chip" onclick="setFilter('all', this)">Tous</div>
-          <div class="filter-chip active" onclick="setFilter('ready', this)">Prêts</div>
-          <div class="filter-chip" onclick="setFilter('pending', this)">En route</div>
-          <div class="filter-chip" onclick="setFilter('expired', this)">Expirés</div>
-          <div class="filter-chip" onclick="setFilter('collected', this)">Récupérés</div>
-        </div>
-      </div>
-      <div class="content" id="packageList">
-        <!-- filled by JS -->
-      </div>
-    </div>
-
-    <!-- ── VIEW : PAR ADRESSE ── -->
-    <div class="view" id="view-locations">
-      <div class="loc-sort-row">
-        <div class="loc-sort-chip active" onclick="setLocSort('count', this)">🔢 Nb colis</div>
-        <div class="loc-sort-chip" onclick="setLocSort('urgency', this)">⚡ Urgence</div>
-        <div class="loc-sort-chip" onclick="setLocSort('alpha', this)">🔤 A → Z</div>
-      </div>
-      <div class="content" id="locationList">
-        <!-- filled by JS -->
-      </div>
-    </div>
-
-    <!-- ── VIEW : COMPTES ── -->
-    <div class="view" id="view-accounts">
-      <div class="content">
-
-        <!-- Setup banner (shown when no account connected) -->
-        <div id="setupBanner" style="display:none;background:linear-gradient(135deg,rgba(0,184,160,0.08),rgba(124,92,232,0.08));border:1px solid rgba(0,184,160,0.2);border-radius:14px;padding:16px;margin-bottom:16px;">
-          <div style="font-size:15px;font-weight:700;margin-bottom:6px;">🚀 Première connexion</div>
-          <p style="font-size:12px;color:var(--text2);line-height:1.6;">Connectez vos comptes Gmail pour que LockerTrack détecte automatiquement vos colis dans vos emails.</p>
-        </div>
-
-        <!-- Client ID config -->
-        <div id="clientIdBanner" style="background:rgba(224,168,0,0.08);border:1px solid rgba(224,168,0,0.25);border-radius:12px;padding:14px;margin-bottom:14px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
-            <div style="flex:1">
-              <div style="font-size:12px;font-weight:700;color:var(--accent3);margin-bottom:4px;">🔑 Client ID Google OAuth</div>
-              <div style="font-size:11px;color:var(--text2);line-height:1.5;">Requis pour la connexion Gmail. Obtenez-le sur <a href="https://console.cloud.google.com" target="_blank" style="color:var(--accent)">Google Cloud Console</a>.</div>
-            </div>
-            <button onclick="toggleClientIdEdit()" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:11px;color:var(--text2);cursor:pointer;white-space:nowrap;font-family:'Syne',sans-serif;">⚙️ Configurer</button>
-          </div>
-          <div id="clientIdEdit" style="display:none;margin-top:12px;">
-            <input class="form-input" id="clientIdInput" placeholder="123456789-abc.apps.googleusercontent.com" style="font-size:12px;font-family:'Space Mono',monospace;">
-            <div style="display:flex;gap:8px;margin-top:8px;">
-              <button onclick="saveClientId()" class="btn-submit" style="flex:1;padding:10px;font-size:13px;">✓ Enregistrer</button>
-              <button onclick="toggleClientIdEdit()" style="padding:10px 14px;background:none;border:1px solid var(--border);border-radius:10px;color:var(--text2);cursor:pointer;font-family:'Syne',sans-serif;">Annuler</button>
-            </div>
-          </div>
-          <div id="clientIdStatus" style="margin-top:8px;font-size:11px;font-family:'Space Mono',monospace;color:var(--text3);">Non configuré</div>
-        </div>
-
-        <div class="section-label">Comptes Gmail</div>
-
-        <!-- Account 1 -->
-        <div class="account-card" id="account1Card">
-          <div class="account-header">
-            <div class="account-avatar avatar-1" id="acc1avatar">👤</div>
-            <div class="account-info">
-              <h3 id="acc1name">Compte principal</h3>
-              <p id="acc1email">Non connecté</p>
-            </div>
-            <div style="display:flex;gap:6px;align-items:center;">
-              <button class="sync-btn" onclick="syncAccount(1)" id="syncBtn1" style="display:none">
-                <span>⟳</span> Sync
-              </button>
-              <button id="acc1connectBtn" onclick="connectGmail(1)" class="btn-submit" style="padding:7px 14px;font-size:12px;width:auto;">
-                Connecter
-              </button>
-              <button id="acc1disconnectBtn" onclick="disconnectAccount(1)" style="display:none;padding:7px 10px;background:none;border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--accent2);cursor:pointer;font-family:'Syne',sans-serif;">
-                ✕
-              </button>
-            </div>
-          </div>
-          <div class="source-list" id="acc1sources">
-            <span class="source-tag" style="background:rgba(0,0,0,0.05);color:var(--text3)">📧 Gmail non connecté</span>
-          </div>
-          <div class="sync-progress"><div class="sync-progress-bar" id="progress1"></div></div>
-          <div id="acc1syncResult" style="display:none;margin-top:10px;padding:10px;background:rgba(0,184,160,0.06);border-radius:8px;font-size:12px;color:var(--text2);"></div>
-          <div class="last-sync" id="lastSync1">Jamais synchronisé</div>
-        </div>
-
-        <!-- Account 2 -->
-        <div class="account-card" id="account2Card">
-          <div class="account-header">
-            <div class="account-avatar avatar-2" id="acc2avatar">👤</div>
-            <div class="account-info">
-              <h3 id="acc2name">Compte secondaire</h3>
-              <p id="acc2email">Non connecté</p>
-            </div>
-            <div style="display:flex;gap:6px;align-items:center;">
-              <button class="sync-btn" onclick="syncAccount(2)" id="syncBtn2" style="display:none">
-                <span>⟳</span> Sync
-              </button>
-              <button id="acc2connectBtn" onclick="connectGmail(2)" class="btn-submit" style="padding:7px 14px;font-size:12px;width:auto;">
-                Connecter
-              </button>
-              <button id="acc2disconnectBtn" onclick="disconnectAccount(2)" style="display:none;padding:7px 10px;background:none;border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--accent2);cursor:pointer;font-family:'Syne',sans-serif;">
-                ✕
-              </button>
-            </div>
-          </div>
-          <div class="source-list" id="acc2sources">
-            <span class="source-tag" style="background:rgba(0,0,0,0.05);color:var(--text3)">📧 Gmail non connecté</span>
-          </div>
-          <div class="sync-progress"><div class="sync-progress-bar" id="progress2"></div></div>
-          <div id="acc2syncResult" style="display:none;margin-top:10px;padding:10px;background:rgba(0,184,160,0.06);border-radius:8px;font-size:12px;color:var(--text2);"></div>
-          <div class="last-sync" id="lastSync2">Jamais synchronisé</div>
-        </div>
-
-        <!-- How it works -->
-        <div class="section-label" style="margin-top:8px;">Comment ça marche</div>
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:10px;">
-          <div style="display:flex;flex-direction:column;gap:12px;">
-            <div style="display:flex;gap:12px;align-items:flex-start;">
-              <div style="width:28px;height:28px;background:rgba(0,184,160,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">1</div>
-              <div style="font-size:12px;color:var(--text2);line-height:1.5;padding-top:4px;">Créez un projet sur <a href="https://console.cloud.google.com" target="_blank" style="color:var(--accent);font-weight:600;">Google Cloud Console</a> et activez l'API Gmail</div>
-            </div>
-            <div style="display:flex;gap:12px;align-items:flex-start;">
-              <div style="width:28px;height:28px;background:rgba(0,184,160,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">2</div>
-              <div style="font-size:12px;color:var(--text2);line-height:1.5;padding-top:4px;">Créez des identifiants OAuth 2.0 (application web) et copiez votre Client ID</div>
-            </div>
-            <div style="display:flex;gap:12px;align-items:flex-start;">
-              <div style="width:28px;height:28px;background:rgba(0,184,160,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">3</div>
-              <div style="font-size:12px;color:var(--text2);line-height:1.5;padding-top:4px;">Collez votre Client ID ci-dessus, puis connectez vos comptes Gmail</div>
-            </div>
-            <div style="display:flex;gap:12px;align-items:flex-start;">
-              <div style="width:28px;height:28px;background:rgba(0,184,160,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">4</div>
-              <div style="font-size:12px;color:var(--text2);line-height:1.5;padding-top:4px;">LockerTrack scanne vos mails et détecte automatiquement les colis Chronopost, Mondial Relay, Vinted Go, La Poste, Amazon, Colissimo…</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ── SMS Section ── -->
-        <div class="section-label" style="margin-top:16px;">SMS transporteurs</div>
-
-        <div class="account-card" id="smsCard">
-          <div class="account-header">
-            <div class="account-avatar" style="background:linear-gradient(135deg,#e0a800,#ff6b35);font-size:22px;">💬</div>
-            <div class="account-info">
-              <h3 id="smsTitle">SMS Android</h3>
-              <p id="smsStatus">Vérification…</p>
-            </div>
-            <div style="display:flex;gap:6px;align-items:center;">
-              <button class="sync-btn" id="smsSyncBtn" onclick="syncSMS()" style="display:none">
-                <span>⟳</span> Sync
-              </button>
-            </div>
-          </div>
-
-          <!-- Bridge disponible : bouton sync -->
-          <div id="smsBridgeUI" style="display:none">
-            <div style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.5;">
-              LockerTrack peut lire vos SMS transporteurs pour détecter automatiquement les colis, codes et statuts.
-            </div>
-            <button class="btn-submit" style="margin-top:0;" onclick="requestSMSPermissionAndSync()">
-              📱 Autoriser et synchroniser les SMS
-            </button>
-            <div id="smsSyncResult" style="display:none;margin-top:10px;padding:10px;background:rgba(0,184,160,0.06);border-radius:8px;font-size:12px;color:var(--text2);"></div>
-            <div class="last-sync" id="lastSyncSMS">Jamais synchronisé</div>
-          </div>
-
-          <!-- Fallback : saisie manuelle -->
-          <div id="smsManualUI" style="display:none">
-            <div style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.5;">
-              Collez ici un SMS reçu d'un transporteur pour en extraire automatiquement les informations.
-            </div>
-            <textarea id="smsManualInput"
-              style="width:100%;min-height:90px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px;font-size:12px;font-family:'Space Mono',monospace;color:var(--text);resize:vertical;outline:none;"
-              placeholder="Collez votre SMS ici…&#10;Ex: Chronopost : votre colis PP123456789FR est disponible au relais..."></textarea>
-            <button class="btn-submit" style="margin-top:8px;" onclick="parseSMSManual()">
-              🔍 Analyser ce SMS
-            </button>
-            <div id="smsManualResult" style="display:none;margin-top:10px;padding:10px;background:rgba(0,184,160,0.06);border-radius:8px;font-size:12px;color:var(--text2);"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── VIEW : PARAMÈTRES ── -->
-    <div class="view" id="view-settings">
-      <div class="content">
-        <div class="section-label">Notifications</div>
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:10px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-            <div>
-              <div style="font-size:14px;font-weight:600;">Alertes d'expiration</div>
-              <div style="font-size:12px;color:var(--text2);">Rappel avant expiration du code</div>
-            </div>
-            <label class="toggle">
-              <input type="checkbox" checked id="notifExpiry" onchange="saveSetting('notifExpiry', this.checked)">
-              <span class="slider"></span>
-            </label>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <div>
-              <div style="font-size:14px;font-weight:600;">Colis disponible</div>
-              <div style="font-size:12px;color:var(--text2);">Notif dès réception confirmée</div>
-            </div>
-            <label class="toggle">
-              <input type="checkbox" checked id="notifReady" onchange="saveSetting('notifReady', this.checked)">
-              <span class="slider"></span>
-            </label>
-          </div>
-        </div>
-
-        <div class="section-label">Synchronisation auto</div>
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:10px;">
-          <label class="form-label">Fréquence</label>
-          <select class="form-select" id="syncFreq" onchange="saveSetting('syncFreq', this.value)">
-            <option value="15">Toutes les 15 minutes</option>
-            <option value="30" selected>Toutes les 30 minutes</option>
-            <option value="60">Toutes les heures</option>
-            <option value="manual">Manuel uniquement</option>
-          </select>
-        </div>
-
-        <div class="section-label">Données</div>
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:10px;">
-          <div style="padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;" onclick="exportData()">
-            <span style="font-size:14px;">📤 Exporter les données</span>
-            <span style="color:var(--text3)">›</span>
-          </div>
-          <div style="padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;" onclick="clearCollected()">
-            <span style="font-size:14px;">🗑 Supprimer les récupérés</span>
-            <span style="color:var(--text3)">›</span>
-          </div>
-          <div style="padding:14px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;" onclick="confirmReset()">
-            <span style="font-size:14px;color:var(--accent2);">⚠️ Réinitialiser tout</span>
-            <span style="color:var(--text3)">›</span>
-          </div>
-        </div>
-
-        <div style="text-align:center;padding:20px;color:var(--text3);font-size:11px;font-family:'Space Mono',monospace;">
-          LockerTrack v1.0.0 · PWA<br>
-          Données stockées localement
-        </div>
-      </div>
-    </div>
-
-  </main>
-
-  <!-- FAB -->
-  <button class="fab" onclick="openAddModal()" title="Ajouter un colis">＋</button>
-
-  <!-- BULK ACTION BAR -->
-  <div class="bulk-bar" id="bulkBar">
-    <div class="bulk-bar-top">
-      <span class="bulk-count" id="bulkCount">0 sélectionné(s)</span>
-      <button class="bulk-cancel" onclick="cancelSelectMode()">✕ Annuler</button>
-    </div>
-    <div class="bulk-actions">
-      <button class="bulk-action-btn bulk-btn-ready"     onclick="bulkSetStatus('ready')">✅ Disponible</button>
-      <button class="bulk-action-btn bulk-btn-pending"   onclick="bulkSetStatus('pending')">🚚 En route</button>
-      <button class="bulk-action-btn bulk-btn-collected" onclick="bulkSetStatus('collected')">📦 Récupéré</button>
-      <button class="bulk-action-btn bulk-btn-expired"   onclick="bulkSetStatus('expired')">⏰ Expiré</button>
-      <button class="bulk-action-btn bulk-btn-delete"    onclick="bulkDelete()">🗑 Supprimer</button>
-    </div>
+    <button class="btn-icon" onclick="openSync()" title="Synchroniser" id="mainSyncBtn">⟳</button>
+    <button class="btn-icon" onclick="toggleTheme()" id="themeBtn" title="Thème">🌙</button>
   </div>
 
-  <!-- BOTTOM NAV -->
-  <nav class="bottom-nav">
-    <div class="nav-item active" onclick="showView('packages', this)">
-      <span class="nav-icon">📦</span>
-      <span>Colis</span>
-    </div>
-    <div class="nav-item" onclick="showView('locations', this)">
-      <span class="nav-icon">📍</span>
-      <span>Adresses</span>
-    </div>
-    <div class="nav-item" onclick="showView('accounts', this)">
-      <span class="nav-icon">🔗</span>
-      <span>Comptes</span>
-    </div>
-    <div class="nav-item" onclick="showView('settings', this)">
-      <span class="nav-icon">⚙️</span>
-      <span>Réglages</span>
-    </div>
-  </nav>
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input class="search-input" placeholder="Rechercher un colis, transporteur…" oninput="filterPackages(this.value)" id="searchInput">
+  </div>
 
+  <div class="filter-row" id="filterRow">
+    <button class="ftab active" onclick="setFilter('all',this)">Tous <span class="badge" id="badgeAll">0</span></button>
+    <button class="ftab" onclick="setFilter('ready',this)">À retirer <span class="badge amber" id="badgeReady">0</span></button>
+    <button class="ftab" onclick="setFilter('pending',this)">En route <span class="badge" id="badgePending">0</span></button>
+    <button class="ftab" onclick="setFilter('delivered',this)">Livré <span class="badge" id="badgeDelivered">0</span></button>
+    <button class="ftab" onclick="setFilter('expired',this)">Expiré <span class="badge red" id="badgeExpired">0</span></button>
+  </div>
+
+  <div class="pkg-list" id="pkgList"></div>
+
+  <button class="fab" onclick="openAddModal()" title="Ajouter un colis">＋</button>
 </div>
 
-<!-- ADD MODAL -->
+<div class="toast" id="toast"></div>
+
+<!-- ── Modal Ajout ── -->
 <div class="modal-overlay" id="addModal">
   <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">Ajouter un colis</div>
+    <div class="modal-handle" onclick="closeModal('addModal')"></div>
+    <div class="modal-title">➕ Ajouter un colis</div>
 
-    <div class="form-group">
-      <label class="form-label">Transporteur</label>
-      <div class="carrier-grid">
-        <div class="carrier-btn" onclick="selectCarrier('chronopost', this)">
-          <span class="carrier-emoji"><img src="https://www.chronopost.fr/favicon.ico" class="carrier-logo-img" onerror="this.outerHTML='🔵'"></span>
-          <span class="carrier-name-small">Chronopost</span>
-        </div>
-        <div class="carrier-btn" onclick="selectCarrier('mondialrelay', this)">
-          <span class="carrier-emoji"><img src="https://www.mondialrelay.fr/favicon.ico" class="carrier-logo-img" onerror="this.outerHTML='🔴'"></span>
-          <span class="carrier-name-small">Mondial Relay</span>
-        </div>
-        <div class="carrier-btn" onclick="selectCarrier('vintedgo', this)">
-          <span class="carrier-emoji"><img src="https://www.vinted.fr/favicon.ico" class="carrier-logo-img" onerror="this.outerHTML='🟢'"></span>
-          <span class="carrier-name-small">Vinted Go</span>
-        </div>
-        <div class="carrier-btn" onclick="selectCarrier('laposte', this)">
-          <span class="carrier-emoji"><img src="https://www.laposte.fr/favicon.ico" class="carrier-logo-img" onerror="this.outerHTML='🟡'"></span>
-          <span class="carrier-name-small">La Poste</span>
-        </div>
-        <div class="carrier-btn" onclick="selectCarrier('amazon', this)">
-          <span class="carrier-emoji"><img src="https://www.amazon.fr/favicon.ico" class="carrier-logo-img" onerror="this.outerHTML='🟠'"></span>
-          <span class="carrier-name-small">Amazon</span>
-        </div>
-        <div class="carrier-btn" onclick="selectCarrier('colissimo', this)">
-          <span class="carrier-emoji"><img src="https://www.colissimo.fr/favicon.ico" class="carrier-logo-img" onerror="this.outerHTML='🟣'"></span>
-          <span class="carrier-name-small">Colissimo</span>
-        </div>
-        <div class="carrier-btn" onclick="selectCarrier('dpd', this)">
-          <span class="carrier-emoji"><img src="https://www.dpd.com/favicon.ico" class="carrier-logo-img" onerror="this.outerHTML='🔶'"></span>
-          <span class="carrier-name-small">DPD</span>
-        </div>
-        <div class="carrier-btn" onclick="selectCarrier('ups', this)">
-          <span class="carrier-emoji"><img src="https://www.ups.com/favicon.ico" class="carrier-logo-img" onerror="this.outerHTML='🟤'"></span>
-          <span class="carrier-name-small">UPS</span>
-        </div>
-        <div class="carrier-btn" onclick="selectCarrier('other', this)">
-          <span class="carrier-emoji" style="font-size:24px">📦</span>
-          <span class="carrier-name-small">Autre</span>
-        </div>
+    <div class="section-label">Transporteur</div>
+    <div class="carrier-grid" id="carrierGrid">
+      <div class="carrier-btn" onclick="selectCarrier('chronopost',this)"><span class="cem">🔵</span>Chronopost</div>
+      <div class="carrier-btn" onclick="selectCarrier('colissimo',this)"><span class="cem">🟡</span>Colissimo</div>
+      <div class="carrier-btn" onclick="selectCarrier('mondialrelay',this)"><span class="cem">🔴</span>Mondial Relay</div>
+      <div class="carrier-btn" onclick="selectCarrier('dpd',this)"><span class="cem">🔶</span>DPD</div>
+      <div class="carrier-btn" onclick="selectCarrier('ups',this)"><span class="cem">🟤</span>UPS</div>
+      <div class="carrier-btn" onclick="selectCarrier('gls',this)"><span class="cem">🟢</span>GLS</div>
+      <div class="carrier-btn" onclick="selectCarrier('relaiscolis',this)"><span class="cem">🟠</span>Relais Colis</div>
+      <div class="carrier-btn" onclick="selectCarrier('vintedgo',this)"><span class="cem">💚</span>Vinted Go</div>
+      <div class="carrier-btn" onclick="selectCarrier('laposte',this)"><span class="cem">🟡</span>La Poste</div>
+      <div class="carrier-btn" onclick="selectCarrier('amazon',this)"><span class="cem">🟠</span>Amazon</div>
+      <div class="carrier-btn" onclick="selectCarrier('chronofresh',this)"><span class="cem">❄️</span>Chronofresh</div>
+      <div class="carrier-btn" onclick="selectCarrier('other',this)"><span class="cem">📦</span>Autre</div>
+    </div>
+
+    <div class="form-row">
+      <div style="flex:1">
+        <div class="section-label">N° de suivi</div>
+        <input class="form-input" id="addTracking" placeholder="Ex: 1ZA2E708…">
+      </div>
+      <div style="flex:1">
+        <div class="section-label">Code retrait</div>
+        <input class="form-input" id="addCode" placeholder="Ex: 6684">
       </div>
     </div>
 
-    <div class="form-group">
-      <label class="form-label">Adresse du locker</label>
-      <input class="form-input" id="lockerAddress" placeholder="Ex: Avenue de la République, Paris">
+    <div class="section-label">Lieu de retrait / Adresse livraison</div>
+    <input class="form-input" id="addAddress" placeholder="Consigne Pickup Grand Frais Herblay…" style="margin-bottom:10px">
+
+    <div class="form-row">
+      <div style="flex:1">
+        <div class="section-label">Destinataire</div>
+        <select class="form-select" id="addAccount">
+          <option value="1">Guillaume</option>
+          <option value="2">Michèle</option>
+        </select>
+      </div>
+      <div style="flex:1">
+        <div class="section-label">Date limite</div>
+        <input class="form-input" type="date" id="addExpiry">
+      </div>
     </div>
 
-    <div class="form-group">
-      <label class="form-label">Code de récupération</label>
-      <input class="form-input" id="pickupCode" placeholder="Ex: 4782 ou CODE123">
-    </div>
+    <div class="section-label">Note (optionnel)</div>
+    <input class="form-input" id="addNote" placeholder="Amazon — chemise bleue…" style="margin-bottom:16px">
 
-    <div class="form-group">
-      <label class="form-label">N° de suivi (optionnel)</label>
-      <input class="form-input" id="trackingNum" placeholder="Ex: CP1234567890FR">
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">Date d'arrivée</label>
-      <input class="form-input" type="datetime-local" id="arrivalDate">
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">Date limite de retrait</label>
-      <input class="form-input" type="date" id="expiryDate">
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">Source</label>
-      <select class="form-select" id="sourceAccount">
-        <option value="account1_gmail">Compte 1 — Gmail</option>
-        <option value="account1_sms">Compte 1 — SMS</option>
-        <option value="account2_gmail">Compte 2 — Gmail</option>
-        <option value="account2_sms">Compte 2 — SMS</option>
-        <option value="manual">Saisie manuelle</option>
-      </select>
-    </div>
-
-    <button class="btn-submit" onclick="addPackage()">✓ Ajouter le colis</button>
-    <button style="width:100%;padding:12px;background:none;border:none;color:var(--text2);font-size:13px;cursor:pointer;margin-top:8px;font-family:'Syne',sans-serif;" onclick="closeModal()">Annuler</button>
+    <button class="btn-submit" onclick="addPackage()">✓ Enregistrer</button>
+    <button class="btn-secondary" onclick="closeModal('addModal')">Annuler</button>
   </div>
 </div>
 
-<!-- Toggle CSS -->
-<style>
-.toggle { position: relative; display: inline-block; width: 46px; height: 26px; }
-.toggle input { opacity: 0; width: 0; height: 0; }
-.slider {
-  position: absolute; inset: 0;
-  background: #d0d0d8;
-  border-radius: 13px;
-  cursor: pointer;
-  transition: 0.3s;
-  border: 1px solid var(--border);
-}
-.slider:before {
-  content: '';
-  position: absolute;
-  width: 20px; height: 20px;
-  left: 2px; top: 2px;
-  background: white;
-  border-radius: 50%;
-  transition: 0.3s;
-}
-input:checked + .slider { background: var(--accent); border-color: var(--accent); }
-input:checked + .slider:before { transform: translateX(20px); }
-</style>
+<!-- ── Modal Sync / Gmail ── -->
+<div class="modal-overlay" id="syncModal">
+  <div class="modal">
+    <div class="modal-handle" onclick="closeModal('syncModal')"></div>
+    <div class="modal-title">⟳ Synchronisation</div>
 
-<style>
-  /* ═══ LOCATION VIEW ═══ */
-  .location-group {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    margin-bottom: 12px;
-    overflow: hidden;
-    animation: slideUp 0.3s ease both;
-  }
-  .location-group-header {
-    padding: 14px 16px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    cursor: pointer;
-    user-select: none;
-  }
-  .location-group-header:active { background: var(--bg); }
-  .location-pin {
-    width: 42px; height: 42px;
-    border-radius: 12px;
-    background: linear-gradient(135deg, var(--accent), var(--accent4));
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px;
-    flex-shrink: 0;
-    position: relative;
-  }
-  .location-count-badge {
-    position: absolute;
-    top: -5px; right: -5px;
-    background: var(--accent2);
-    color: white;
-    font-size: 10px;
-    font-weight: 800;
-    width: 18px; height: 18px;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'Space Mono', monospace;
-    border: 2px solid var(--surface);
-  }
-  .location-info { flex: 1; min-width: 0; }
-  .location-name {
-    font-size: 14px;
-    font-weight: 700;
-    margin-bottom: 3px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .location-meta {
-    font-size: 11px;
-    color: var(--text2);
-    font-family: 'Space Mono', monospace;
-    display: flex;
-    gap: 10px;
-    align-items: center;
-  }
-  .location-chevron {
-    color: var(--text3);
-    font-size: 14px;
-    transition: transform 0.25s;
-    flex-shrink: 0;
-  }
-  .location-group.open .location-chevron { transform: rotate(90deg); }
+    <!-- Gmail Account 1 -->
+    <div class="section-label">Compte Gmail — Guillaume</div>
+    <div class="gmail-card">
+      <div class="gmail-account">
+        <div class="gmail-avatar" id="av1">G</div>
+        <div class="gmail-info">
+          <div class="gmail-name" id="name1">Guillaume Dieul</div>
+          <div class="gmail-email" id="email1">guillaume.dieul@gmail.com</div>
+          <div class="gmail-status disconnected" id="status1">⬤ Non connecté</div>
+        </div>
+        <button class="btn-icon" onclick="disconnectAccount(1)" id="disc1" style="display:none" title="Déconnecter">✕</button>
+      </div>
+      <div class="sync-bar"><div class="sync-fill" id="progress1"></div></div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:10px" id="acc1syncResult"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-submit" style="margin-top:0;flex:1" onclick="openOAuthBrowser(1)" id="acc1connectBtn">🔗 Connecter</button>
+        <button class="btn-submit" style="margin-top:0;flex:1;background:rgba(0,200,160,0.15);color:var(--teal);border:1px solid rgba(0,200,160,0.3)" onclick="syncAccount(1)" id="syncBtn1">⟳ Sync</button>
+      </div>
+    </div>
 
-  .location-pkg-list { display: none; border-top: 1px solid var(--border); }
-  .location-group.open .location-pkg-list { display: block; }
-  .location-actions { display: none; }
-  .location-group.open .location-actions { display: flex; }
+    <!-- Gmail Account 2 -->
+    <div class="section-label">Compte Gmail — Michèle</div>
+    <div class="gmail-card">
+      <div class="gmail-account">
+        <div class="gmail-avatar" id="av2" style="background:linear-gradient(135deg,var(--purple),var(--blue))">M</div>
+        <div class="gmail-info">
+          <div class="gmail-name" id="name2">Michèle Gandet</div>
+          <div class="gmail-email" id="email2">michele.gandet@gmail.com</div>
+          <div class="gmail-status disconnected" id="status2">⬤ Non connecté</div>
+        </div>
+        <button class="btn-icon" onclick="disconnectAccount(2)" id="disc2" style="display:none" title="Déconnecter">✕</button>
+      </div>
+      <div class="sync-bar"><div class="sync-fill" id="progress2"></div></div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:10px" id="acc2syncResult"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-submit" style="margin-top:0;flex:1" onclick="openOAuthBrowser(2)" id="acc2connectBtn">🔗 Connecter</button>
+        <button class="btn-submit" style="margin-top:0;flex:1;background:rgba(0,200,160,0.15);color:var(--teal);border:1px solid rgba(0,200,160,0.3)" onclick="syncAccount(2)" id="syncBtn2">⟳ Sync</button>
+      </div>
+    </div>
 
-  .location-pkg-item {
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    border-bottom: 1px solid var(--border);
-    cursor: pointer;
-    transition: background 0.15s;
-  }
-  .location-pkg-item:last-child { border-bottom: none; }
-  .location-pkg-item:active { background: var(--bg); }
+    <!-- Comment connecter -->
+    <div class="section-label">Comment connecter ?</div>
+    <div class="oauth-info">
+      La connexion Google s'ouvre dans votre navigateur par défaut.<br>
+      <ol class="oauth-steps" style="margin-top:8px">
+        <li>Appuyez sur <b>Connecter</b> → Chrome s'ouvre</li>
+        <li>Autorisez l'accès à votre Gmail</li>
+        <li>Copiez le code affiché et revenez ici</li>
+        <li>Collez-le dans le champ ci-dessous et validez</li>
+      </ol>
+    </div>
 
-  .loc-carrier-dot {
-    width: 32px; height: 32px;
-    border-radius: 9px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 16px;
-    flex-shrink: 0;
-  }
-  .loc-pkg-info { flex: 1; min-width: 0; }
-  .loc-pkg-carrier {
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    margin-bottom: 2px;
-  }
-  .loc-pkg-code {
-    font-family: 'Space Mono', monospace;
-    font-size: 14px;
-    color: var(--accent);
-    font-weight: 700;
-  }
-  .loc-pkg-date {
-    font-size: 10px;
-    color: var(--text3);
-    font-family: 'Space Mono', monospace;
-    margin-top: 1px;
-  }
-  .loc-pkg-status {
-    font-size: 10px;
-    font-weight: 700;
-    padding: 3px 8px;
-    border-radius: 6px;
-    flex-shrink: 0;
-  }
+    <div class="section-label">Coller le code de connexion</div>
+    <div class="form-row" style="margin-bottom:12px">
+      <select class="form-select" id="tokenAccountSelect" style="flex:0 0 120px">
+        <option value="1">Guillaume</option>
+        <option value="2">Michèle</option>
+      </select>
+      <div class="token-input-wrap" style="flex:1">
+        <input class="form-input" id="tokenInput" placeholder="Collez le token ici…" type="password">
+        <button class="token-eye" onclick="toggleTokenVis()">👁</button>
+      </div>
+    </div>
+    <button class="btn-submit" onclick="saveManualToken()" style="margin-bottom:16px">✓ Valider le token</button>
 
-  .location-actions {
-    padding: 10px 16px 14px;
-    display: flex;
-    gap: 8px;
-    border-top: 1px solid var(--border);
-  }
-  .btn-map {
-    flex: 1;
-    padding: 9px 14px;
-    border-radius: 10px;
-    border: 1px solid rgba(0,184,160,0.3);
-    background: rgba(0,184,160,0.06);
-    color: var(--accent);
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: 'Syne', sans-serif;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    transition: all 0.2s;
-    text-decoration: none;
-  }
-  .btn-map:active { background: rgba(0,184,160,0.14); }
-  .btn-copy-all {
-    padding: 9px 14px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--text2);
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: 'Syne', sans-serif;
-    white-space: nowrap;
-    transition: all 0.2s;
-  }
-  .btn-copy-all:active { border-color: var(--accent4); color: var(--accent4); }
+    <div class="modal-handle" style="margin:0 auto 12px"></div>
 
-  .loc-sort-row {
-    display: flex;
-    gap: 6px;
-    padding: 12px 16px 0;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  .loc-sort-row::-webkit-scrollbar { display: none; }
-  .loc-sort-chip {
-    flex-shrink: 0;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--text2);
-    transition: all 0.2s;
-  }
-  .loc-sort-chip.active {
-    border-color: var(--accent4);
-    background: rgba(124,92,232,0.1);
-    color: var(--accent4);
-  }
+    <!-- SMS -->
+    <div class="section-label">📱 Coller un SMS transporteur</div>
+    <textarea class="sms-textarea" id="smsInput" placeholder="Collez votre SMS ici…
+Ex: Vos codes 6684 puis 7785 pour retirer votre colis Colissimo disponible en Consigne Pickup Grand Frais Herblay...
+Ex: Votre colis 00IZ31TJ de LA PLANTE DU LOUP est en route avec GLS...
+Ex: Retire ton colis avant le 2024-12-24. Code: G2-6949. Consigne Vinted Go: Maxi Bazar Herblay..."></textarea>
+    <button class="btn-submit" onclick="parseSMSManual()" style="margin-top:8px;margin-bottom:8px">📲 Extraire depuis SMS</button>
+    <button class="btn-secondary" onclick="closeModal('syncModal')">Fermer</button>
+  </div>
+</div>
 
-  .loc-status-strip { display: flex; gap: 5px; margin-top: 5px; flex-wrap: wrap; }
-  .loc-strip-chip {
-    font-size: 10px;
-    padding: 2px 8px;
-    border-radius: 5px;
-    font-family: 'Space Mono', monospace;
-    font-weight: 700;
-  }
-  .lsc-ready  { background: rgba(0,184,160,0.12); color: var(--accent); }
-  .lsc-pending{ background: rgba(224,168,0,0.12); color: var(--accent3); }
-  .lsc-expired{ background: rgba(232,69,69,0.12); color: var(--accent2); }
-  .lsc-collected{ background: rgba(0,0,0,0.06); color: var(--text3); }
-
-  /* Location urgency left border */
-  .location-group.has-expired { border-left: 3px solid var(--accent2); }
-  .location-group.has-ready   { border-left: 3px solid var(--accent); }
-</style>
+<!-- ── Modal QR Code ── -->
+<div class="modal-overlay" id="qrModal">
+  <div class="modal" style="text-align:center">
+    <div class="modal-handle" onclick="closeModal('qrModal')"></div>
+    <div class="modal-title" id="qrTitle">QR Code</div>
+    <div class="qr-wrap" id="qrContainer"></div>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--text2);margin-bottom:16px" id="qrValue"></div>
+    <button class="btn-secondary" onclick="closeModal('qrModal')">Fermer</button>
+  </div>
+</div>
 
 <script>
-// ═══════════════════════════════════════════
-//  DATA STORE
-// ═══════════════════════════════════════════
-
+// ══════════════════════════════════════════
+//  CONSTANTES & CONFIG
+// ══════════════════════════════════════════
 const STORAGE_KEY = 'lockertrack_v2';
+const OAUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
+const GMAIL_SCOPE = 'https://www.googleapis.com/auth/gmail.readonly';
+const CLIENT_ID = ''; // À configurer si besoin, sinon mode token manuel
 
+// Durée de conservation par défaut (jours)
+const CARRIER_RETENTION = {
+  chronopost:8, chronofresh:5, mondialrelay:14, colissimo:15,
+  laposte:15, vintedgo:14, amazon:3, dpd:14, ups:10, gls:7,
+  relaiscolis:10, other:14
+};
+
+// Couleurs par transporteur
+const CARRIER_COLORS = {
+  chronopost:'#003087', chronofresh:'#005fa3', mondialrelay:'#e2001a',
+  colissimo:'#ffd700', laposte:'#ffd700', vintedgo:'#09b1ba',
+  amazon:'#ff9900', dpd:'#dc0032', ups:'#351c15', gls:'#005ca9',
+  relaiscolis:'#e8621a', other:'#6a9e90'
+};
+
+const CARRIER_LABELS = {
+  chronopost:'Chronopost', chronofresh:'Chronofresh', mondialrelay:'Mondial Relay',
+  colissimo:'Colissimo', laposte:'La Poste', vintedgo:'Vinted Go',
+  amazon:'Amazon', dpd:'DPD', ups:'UPS', gls:'GLS',
+  relaiscolis:'Relais Colis', other:'Autre'
+};
+
+// ══════════════════════════════════════════
+//  DONNÉES
+// ══════════════════════════════════════════
 function loadData() {
   try {
-    const d = localStorage.getItem(STORAGE_KEY);
-    if (d) return JSON.parse(d);
-    // First launch — start empty, no sample data
-    const empty = {
-      packages: [],
-      accounts: {
-        1: { name: 'Compte principal', email: '', phone: '', lastSync: null },
-        2: { name: 'Compte secondaire', email: '', phone: '', lastSync: null }
-      },
-      settings: { notifExpiry: true, notifReady: true, syncFreq: '30' },
-      nextId: 1
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(empty));
-    return empty;
-  } catch { 
-    return {
-      packages: [],
-      accounts: {
-        1: { name: 'Compte principal', email: '', phone: '', lastSync: null },
-        2: { name: 'Compte secondaire', email: '', phone: '', lastSync: null }
-      },
-      settings: { notifExpiry: true, notifReady: true, syncFreq: '30' },
-      nextId: 1
-    };
-  }
+    const d = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (d?.packages) return d;
+  } catch {}
+  return getDefaultData();
 }
 
-function saveData(data) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+function saveData(d) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(d));
 }
 
 function getDefaultData() {
   return {
-    packages: getSamplePackages(),
-    accounts: {
-      1: { name: 'Compte principal', email: 'alice@gmail.com', phone: '+33 6 12 34 56 78', lastSync: null },
-      2: { name: 'Compte secondaire', email: 'bob@gmail.com', phone: '+33 7 98 76 54 32', lastSync: null }
-    },
-    settings: { notifExpiry: true, notifReady: true, syncFreq: '30' },
-    nextId: 10
+    packages: [], accounts: {
+      1: { name:'Guillaume Dieul', email:'guillaume.dieul@gmail.com', lastSync:null },
+      2: { name:'Michèle Gandet', email:'michele.gandet@gmail.com', lastSync:null }
+    }, nextId:1
   };
-}
-
-function getSamplePackages() {
-  return [];
 }
 
 let appData = loadData();
-let currentFilter = 'ready';
+let currentFilter = 'all';
 let currentSearch = '';
 let selectedCarrier = null;
-let expandedCards = new Set();
-let locSort = 'count'; // 'count' | 'urgency' | 'alpha'
 
-// ═══════════════════════════════════════════
-//  CARRIER CONFIG
-// ═══════════════════════════════════════════
-
-// Logos transporteurs via leurs favicons officiels
-const CARRIER_LOGOS = {
-  chronopost:   { bg: '#003087', img: 'https://www.chronopost.fr/favicon.ico' },
-  mondialrelay: { bg: '#e2001a', img: 'https://www.mondialrelay.fr/favicon.ico' },
-  colissimo:    { bg: '#003087', img: 'https://www.colissimo.fr/favicon.ico' },
-  laposte:      { bg: '#FFBE00', img: 'https://www.laposte.fr/favicon.ico' },
-  vintedgo:     { bg: '#007782', img: 'https://www.vinted.fr/favicon.ico' },
-  amazon:       { bg: '#FF9900', img: 'https://www.amazon.fr/favicon.ico' },
-  dpd:          { bg: '#DC0032', img: 'https://www.dpd.com/favicon.ico' },
-  ups:          { bg: '#351C15', img: 'https://www.ups.com/favicon.ico' },
-  other:        { bg: '#9999b8', img: null },
-};
-
-const CARRIERS = {
-  chronopost:   { name: 'Chronopost',    emoji: '🔵', color: 'c-chronopost' },
-  mondialrelay: { name: 'Mondial Relay', emoji: '🔴', color: 'c-mondialrelay' },
-  vintedgo:     { name: 'Vinted Go',     emoji: '🟢', color: 'c-vintedgo' },
-  laposte:      { name: 'La Poste',      emoji: '🟡', color: 'c-laposte' },
-  amazon:       { name: 'Amazon',        emoji: '🟠', color: 'c-amazon' },
-  colissimo:    { name: 'Colissimo',     emoji: '🟣', color: 'c-colissimo' },
-  dpd:          { name: 'DPD',           emoji: '🔶', color: 'c-dpd' },
-  ups:          { name: 'UPS',           emoji: '🟤', color: 'c-ups' },
-  other:        { name: 'Autre',         emoji: '📦', color: 'c-other' }
-};
-
-function carrierLogoHTML(carrier, size) {
-  size = size || 36;
-  const cfg = CARRIER_LOGOS[carrier] || CARRIER_LOGOS.other;
-  const fallbackEmoji = (CARRIERS[carrier] && CARRIERS[carrier].emoji) || '📦';
-  const r = Math.round(size * 0.28);
-  const imgSize = Math.round(size * 0.72);
-  if (cfg.img) {
-    // Use data attribute to avoid quote conflicts in onerror
-    return '<div style="width:' + size + 'px;height:' + size + 'px;border-radius:' + r + 'px;background:' + cfg.bg + ';display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">'
-      + '<img src="' + cfg.img + '" width="' + imgSize + '" height="' + imgSize + '" style="object-fit:contain;" onerror="this.outerHTML=\'' + fallbackEmoji + '\'">'
-      + '</div>';
-  }
-  return '<div style="width:' + size + 'px;height:' + size + 'px;border-radius:' + r + 'px;background:' + cfg.bg + ';display:flex;align-items:center;justify-content:center;font-size:' + Math.round(size * 0.5) + 'px;flex-shrink:0;">' + fallbackEmoji + '</div>';
-}
-
-const STATUS_LABELS = {
-  ready: { label: 'Disponible', cls: 'status-ready' },
-  pending: { label: 'En route', cls: 'status-pending' },
-  expired: { label: 'Expiré', cls: 'status-expired' },
-  collected: { label: 'Récupéré', cls: 'status-collected' }
-};
-
-// ═══════════════════════════════════════════
-//  RENDER
-// ═══════════════════════════════════════════
-
-function render() {
-  renderStats();
-  renderPackages();
-  renderAccounts();
-  renderLocations();
-}
-
-function renderStats() {
-  const pkgs = appData.packages;
-  const counts = {
-    ready: pkgs.filter(p => p.status === 'ready').length,
-    pending: pkgs.filter(p => p.status === 'pending').length,
-    expired: pkgs.filter(p => p.status === 'expired').length
-  };
-  document.getElementById('statsRow').innerHTML = `
-    <div class="stat-chip"><span class="stat-dot dot-ready"></span>${counts.ready} prêts</div>
-    <div class="stat-chip"><span class="stat-dot dot-pending"></span>${counts.pending} en route</div>
-    ${counts.expired > 0 ? `<div class="stat-chip"><span class="stat-dot dot-expired"></span>${counts.expired} expirés</div>` : ''}
-    <div class="stat-chip">📱 ${Object.values(appData.accounts).filter(a => a.lastSync).length}/2 syncs</div>
-  `;
-}
-
-function renderPackages() {
-  let pkgs = [...appData.packages];
-
-  // Filter
-  if (currentFilter !== 'all') pkgs = pkgs.filter(p => p.status === currentFilter);
-
-  // Search
-  if (currentSearch) {
-    const q = currentSearch.toLowerCase();
-    pkgs = pkgs.filter(p =>
-      p.carrier.includes(q) || CARRIERS[p.carrier]?.name.toLowerCase().includes(q) ||
-      p.lockerAddress.toLowerCase().includes(q) ||
-      p.pickupCode.toLowerCase().includes(q) ||
-      p.trackingNum.toLowerCase().includes(q)
-    );
-  }
-
-  // Sort: ready & expired by urgency, then date
-  pkgs.sort((a, b) => {
-    const order = { ready: 0, expired: 1, pending: 2, collected: 3 };
-    if (order[a.status] !== order[b.status]) return order[a.status] - order[b.status];
-    if (a.status === 'ready' && a.expiryDate && b.expiryDate) {
-      return new Date(a.expiryDate) - new Date(b.expiryDate);
-    }
-    return new Date(b.arrivalDate) - new Date(a.arrivalDate);
-  });
-
-  const list = document.getElementById('packageList');
-
-  if (pkgs.length === 0) {
-    list.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-icon">📭</div>
-        <div class="empty-title">Aucun colis trouvé</div>
-        <div class="empty-desc">Ajoutez un colis manuellement ou synchronisez vos comptes.</div>
-      </div>`;
-    return;
-  }
-
-  // Group by date
-  const groups = {};
-  pkgs.forEach(p => {
-    const date = formatDateGroup(p.arrivalDate);
-    if (!groups[date]) groups[date] = [];
-    groups[date].push(p);
-  });
-
-  let html = '';
-  const today = formatDateGroup(new Date().toISOString());
-  const yesterday = formatDateGroup(new Date(Date.now() - 86400000).toISOString());
-  const tomorrow = formatDateGroup(new Date(Date.now() + 86400000).toISOString());
-
-  const labelMap = { [today]: "Aujourd'hui", [yesterday]: "Hier", [tomorrow]: "Demain" };
-
-  Object.entries(groups).forEach(([date, items], i) => {
-    const label = labelMap[date] || date;
-    html += `<div class="section-label">${label}</div>`;
-    items.forEach((p, j) => {
-      html += renderCard(p, i * 10 + j);
-    });
-  });
-
-  list.innerHTML = html;
-}
-
-function renderCard(p, idx) {
-  const c = CARRIERS[p.carrier] || CARRIERS.other;
-  const s = STATUS_LABELS[p.status];
-  const exp = expandedCards.has(p.id);
-  const sel = selectMode && selectedIds.has(p.id);
-  const daysLeft = getDaysLeft(p.expiryDate);
-  const urgency = p.status === 'ready' ? getUrgency(daysLeft) : 'none';
-  const sourceLabel = getSourceLabel(p.source);
-  const acct = appData.accounts[p.account];
-  const acctName = acct ? acct.name : '';
-  const clickHandler = selectMode
-    ? `onclick="toggleSelectCard(${p.id}, event)"`
-    : `onclick="toggleCard(${p.id})"`;
-
-  return `
-    <div class="pkg-card ${exp ? 'expanded' : ''} ${sel ? 'selected' : ''}" id="card-${p.id}" ${clickHandler} style="animation-delay:${idx * 40}ms">
-      <div class="urgency-bar urgency-${urgency}"></div>
-      <div class="pkg-card-header">
-        ${selectMode ? `<div class="pkg-checkbox" onclick="toggleSelectCard(${p.id}, event)">${sel ? '✓' : ''}</div>` : ''}
-        <div class="pkg-carrier-badge ${c.color}" style="padding:0;background:none;border:none;">
-          ${carrierLogoHTML(p.carrier, 42)}
-        </div>
-        <div class="pkg-main">
-          <div class="pkg-carrier-name">${c.name}</div>
-          <div class="pkg-locker">📍 ${p.lockerAddress}</div>
-          <div class="pkg-source-badge">${sourceLabel} · ${acctName}</div>
-        </div>
-        <div class="pkg-right">
-          <div class="pkg-status ${s.cls}">${s.label}</div>
-          <div class="pkg-date">${formatDate(p.arrivalDate)}</div>
-          ${p.expiryDate ? `<div class="days-left ${getDaysClass(daysLeft)}">${daysLeft !== null ? (daysLeft < 0 ? `exp. ${Math.abs(daysLeft)}j` : `${daysLeft}j restants`) : ''}</div>` : ''}
-        </div>
-      </div>
-      ${exp ? renderCardDetails(p) : ''}
-    </div>`;
-}
-
-function renderCardDetails(p) {
-  const mapsUrl = p.lockerAddressRaw
-    ? `https://www.google.com/maps/search/${encodeURIComponent(p.lockerAddressRaw)}`
-    : `https://www.google.com/maps/search/${encodeURIComponent(p.lockerAddress)}`;
-
-  const expiryStr = p.expiryDate
-    ? new Date(p.expiryDate).toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long', year:'numeric'})
-    : '—';
-  const arrivalStr = new Date(p.arrivalDate).toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long', hour:'2-digit', minute:'2-digit'});
-
-  const daysLeft = getDaysLeft(p.expiryDate);
-  const daysClass = getDaysClass(daysLeft);
-  const daysText = daysLeft === null ? '' : daysLeft < 0
-    ? `⚠️ Expiré depuis ${Math.abs(daysLeft)} jour(s)`
-    : daysLeft === 0 ? '⚠️ Dernier jour !'
-    : `${daysLeft} jour(s) restants`;
-
-  return `
-    <div class="pkg-details" onclick="event.stopPropagation()">
-
-      <!-- ── Statut issu du mail ── -->
-      ${p.emailSubject ? `
-        <div style="background:var(--bg);border-radius:10px;padding:10px 12px;margin-bottom:10px;">
-          <div class="code-label">Dernier statut (mail)</div>
-          <div style="font-size:12px;color:var(--text2);line-height:1.5;margin-top:4px;font-style:italic;">"${p.emailSubject}"</div>
-        </div>
-      ` : ''}
-
-      <!-- ── Numéro de colis ── -->
-      ${p.trackingNum ? `
-        <div class="code-block" style="margin-bottom:10px;">
-          <div>
-            <div class="code-label">N° de colis</div>
-            <div style="font-family:'Space Mono',monospace;font-size:15px;font-weight:700;letter-spacing:2px;color:var(--text);">${p.trackingNum}</div>
-          </div>
-          <button class="btn-copy" onclick="copyCode('${p.trackingNum}', this)">📋 Copier</button>
-        </div>
-      ` : ''}
-
-      <!-- ── Code de retrait ── -->
-      ${p.pickupCode ? `
-        <div class="code-block" style="margin-bottom:10px;">
-          <div>
-            <div class="code-label">Code de retrait</div>
-            <div class="code-value">${p.pickupCode}</div>
-          </div>
-          <button class="btn-copy" onclick="copyCode('${p.pickupCode}', this)">📋 Copier</button>
-        </div>
-      ` : ''}
-
-      <!-- ── QR Code ── -->
-      ${p.qrData ? `
-        <button class="btn-qr" id="btn-qr-${p.id}" onclick="toggleQR(${p.id}, this)">📷 Afficher QR Code</button>
-        <div id="qr-${p.id}" style="display:none">
-          <div class="qr-container">
-            <div id="qr-canvas-${p.id}"></div>
-            <div class="qr-label">${p.qrData}</div>
-          </div>
-        </div>
-      ` : ''}
-
-      <!-- ── Dates ── -->
-      <div style="background:var(--bg);border-radius:10px;padding:10px 12px;margin-bottom:10px;">
-        <div class="pkg-info-row" style="margin-bottom:6px;">
-          <span>📅 Arrivée</span>
-          <span>${arrivalStr}</span>
-        </div>
-        ${p.expiryDate ? `
-          <div class="pkg-info-row" style="margin-bottom:4px;">
-            <span>⏳ Limite de retrait</span>
-            <span>${expiryStr}</span>
-          </div>
-          ${daysText ? `<div style="font-size:11px;font-family:'Space Mono',monospace;text-align:right;" class="${daysClass}">${daysText}</div>` : ''}
-        ` : ''}
-      </div>
-
-      <!-- ── Adresse locker ── -->
-      <div style="background:var(--bg);border-radius:10px;padding:10px 12px;margin-bottom:10px;">
-        <div class="code-label" style="margin-bottom:6px;">📍 Adresse du locker</div>
-        <div style="font-size:13px;color:var(--text);line-height:1.5;margin-bottom:8px;">
-          ${p.lockerAddress !== 'Adresse non détectée'
-            ? p.lockerAddress
-            : '<span style="color:var(--text3);font-style:italic;">Non détectée</span>'}
-        </div>
-        ${p.lockerAddress !== 'Adresse non détectée' ? `
-          <a href="${mapsUrl}" target="_blank" rel="noopener" class="btn-map" style="display:inline-flex;">
-            🗺️ Ouvrir dans Google Maps
-          </a>
-        ` : ''}
-      </div>
-
-      <!-- ── Lien vers le mail ── -->
-      ${p.gmailLink ? `
-        <a href="${p.gmailLink}" target="_blank" rel="noopener"
-           style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--bg);border-radius:10px;text-decoration:none;color:var(--text2);font-size:12px;margin-bottom:10px;">
-          <span style="font-size:16px;">📧</span>
-          <span>Voir le mail original dans Gmail</span>
-          <span style="margin-left:auto;color:var(--text3)">›</span>
-        </a>
-      ` : ''}
-
-      <!-- ── Marquer récupéré ── -->
-      ${p.status !== 'collected' ? `
-        <div class="divider" style="margin:6px 0 10px"></div>
-        <button class="btn-collected" onclick="markCollected(${p.id}, event)">✓ Marquer comme récupéré</button>
-      ` : ''}
-    </div>`;
-}
-
-// ═══════════════════════════════════════════
-//  HELPERS
-// ═══════════════════════════════════════════
-
-function formatDate(iso) {
-  const d = new Date(iso);
-  return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-}
-
-function formatDateGroup(iso) {
-  return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
-}
-
-function getDaysLeft(expiryDate) {
-  if (!expiryDate) return null;
-  const exp = new Date(expiryDate);
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-  exp.setHours(0, 0, 0, 0);
-  return Math.round((exp - now) / 86400000);
-}
-
-function getUrgency(daysLeft) {
-  if (daysLeft === null) return 'none';
-  if (daysLeft < 0) return 'high';
-  if (daysLeft <= 2) return 'high';
-  if (daysLeft <= 5) return 'med';
-  return 'low';
-}
-
-function getDaysClass(daysLeft) {
-  if (daysLeft === null) return '';
-  if (daysLeft < 0 || daysLeft <= 2) return 'days-urgent';
-  if (daysLeft <= 5) return 'days-warn';
-  return 'days-ok';
-}
-
-function getSourceLabel(source) {
-  const map = {
-    account1_gmail: '📧 Gmail',
-    account1_sms: '💬 SMS',
-    account2_gmail: '📧 Gmail',
-    account2_sms: '💬 SMS',
-    manual: '✏️ Manuel'
-  };
-  return map[source] || source;
-}
-
-// ═══════════════════════════════════════════
-//  ACTIONS
-// ═══════════════════════════════════════════
-
-// ═══════════════════════════════════════════
-//  SELECTION MODE
-// ═══════════════════════════════════════════
-
-let selectMode = false;
-let selectedIds = new Set();
-
-function toggleSelectMode() {
-  selectMode = !selectMode;
-  selectedIds.clear();
-  expandedCards.clear();
-  const btn = document.getElementById('selectModeBtn');
-  btn.classList.toggle('active', selectMode);
-  btn.textContent = selectMode ? 'Terminer' : 'Sélectionner';
-  document.getElementById('bulkBar').classList.toggle('open', false);
-  renderPackages();
-}
-
-function cancelSelectMode() {
-  selectMode = false;
-  selectedIds.clear();
-  expandedCards.clear();
-  const btn = document.getElementById('selectModeBtn');
-  btn.classList.remove('active');
-  btn.textContent = 'Sélectionner';
-  document.getElementById('bulkBar').classList.remove('open');
-  renderPackages();
-}
-
-function toggleSelectCard(id, e) {
-  e.stopPropagation();
-  if (selectedIds.has(id)) {
-    selectedIds.delete(id);
-  } else {
-    selectedIds.add(id);
-  }
-  const count = selectedIds.size;
-  document.getElementById('bulkCount').textContent = count + ' sélectionné' + (count > 1 ? 's' : '');
-  document.getElementById('bulkBar').classList.toggle('open', count > 0);
-  // Update just the card DOM instead of full re-render for responsiveness
-  const card = document.getElementById('card-' + id);
-  if (card) {
-    card.classList.toggle('selected', selectedIds.has(id));
-    const cb = card.querySelector('.pkg-checkbox');
-    if (cb) cb.textContent = selectedIds.has(id) ? '✓' : '';
-  }
-}
-
-function bulkSetStatus(status) {
-  if (selectedIds.size === 0) return;
-  const label = STATUS_LABELS[status]?.label || status;
-  if (!confirm('Changer ' + selectedIds.size + ' colis en "' + label + '" ?')) return;
-  appData.packages.forEach(p => {
-    if (selectedIds.has(p.id)) p.status = status;
-  });
-  saveData(appData);
-  showToast('✓ ' + selectedIds.size + ' colis mis à jour : ' + label);
-  cancelSelectMode();
-  render();
-}
-
-function bulkDelete() {
-  if (selectedIds.size === 0) return;
-  if (!confirm('Supprimer définitivement ' + selectedIds.size + ' colis ?')) return;
-  appData.packages = appData.packages.filter(p => !selectedIds.has(p.id));
-  saveData(appData);
-  showToast('🗑 ' + selectedIds.size + ' colis supprimés');
-  cancelSelectMode();
-  render();
-}
-
-function toggleCard(id) {
-  if (selectMode) { toggleSelectCard(id, event); return; }
-  if (expandedCards.has(id)) {
-    expandedCards.delete(id);
-  } else {
-    expandedCards.clear();
-    expandedCards.add(id);
-  }
-  renderPackages();
-}
-
-function toggleQR(id, btn) {
-  const qrDiv = document.getElementById('qr-' + id);
-  const canvasDiv = document.getElementById('qr-canvas-' + id);
-  if (qrDiv.style.display === 'none') {
-    qrDiv.style.display = 'block';
-    btn.textContent = '✕ Fermer QR Code';
-    // Generate real QR only once
-    if (canvasDiv && !canvasDiv._qrGenerated) {
-      const pkg = appData.packages.find(p => p.id === id);
-      if (pkg && pkg.qrData) {
-        canvasDiv.innerHTML = '';
-        try {
-          new QRCode(canvasDiv, {
-            text: pkg.qrData,
-            width: 200,
-            height: 200,
-            colorDark: '#000000',
-            colorLight: '#ffffff',
-            correctLevel: QRCode.CorrectLevel.M
-          });
-        } catch(e) {
-          canvasDiv.innerHTML = '<p style="color:#333;font-size:12px;padding:10px">Erreur génération QR</p>';
-        }
-        canvasDiv._qrGenerated = true;
-      }
-    }
-  } else {
-    qrDiv.style.display = 'none';
-    btn.textContent = '📷 Afficher QR Code';
-  }
-}
-
-function copyCode(code, btn) {
-  navigator.clipboard.writeText(code).then(() => {
-    btn.textContent = '✓ Copié!';
-    btn.classList.add('copied');
-    showToast('Code copié : ' + code);
-    setTimeout(() => { btn.textContent = '📋 Copier'; btn.classList.remove('copied'); }, 2000);
-  }).catch(() => {
-    // fallback
-    const el = document.createElement('textarea');
-    el.value = code;
-    document.body.appendChild(el);
-    el.select();
-    document.execCommand('copy');
-    document.body.removeChild(el);
-    showToast('Code copié : ' + code);
-  });
-}
-
-function markCollected(id, e) {
-  e.stopPropagation();
-  const pkg = appData.packages.find(p => p.id === id);
-  if (pkg) {
-    pkg.status = 'collected';
-    expandedCards.delete(id);
-    saveData(appData);
-    render();
-    showToast('✓ Colis marqué comme récupéré');
-  }
-}
-
-function showView(name, el) {
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('view-' + name).classList.add('active');
-  el.classList.add('active');
-  if (name === 'locations') renderLocations();
-}
-
-// ═══════════════════════════════════════════
-//  LOCATION VIEW
-// ═══════════════════════════════════════════
-
-let openLocations = new Set();
-
-function setLocSort(sort, el) {
-  locSort = sort;
-  document.querySelectorAll('.loc-sort-chip').forEach(c => c.classList.remove('active'));
-  el.classList.add('active');
-  renderLocations();
-}
-
-function toggleLocationGroup(address) {
-  if (openLocations.has(address)) {
-    openLocations.delete(address);
-  } else {
-    openLocations.add(address);
-  }
-  renderLocations();
-}
-
-function renderLocations() {
-  const el = document.getElementById('locationList');
-  if (!el) return;
-
-  // Group packages by address (exclude collected if desired — keep all here)
-  const groups = {};
-  appData.packages.forEach(p => {
-    const addr = p.lockerAddress;
-    if (!groups[addr]) groups[addr] = [];
-    groups[addr].push(p);
-  });
-
-  // Build group array with computed metrics
-  let groupArr = Object.entries(groups).map(([addr, pkgs]) => {
-    const active = pkgs.filter(p => p.status !== 'collected');
-    const hasExpired = pkgs.some(p => p.status === 'expired');
-    const hasReady   = pkgs.some(p => p.status === 'ready');
-    // Urgency score: expired=0, ready with <2d=1, ready=2, pending=3, collected=4
-    let urgScore = 99;
-    pkgs.forEach(p => {
-      if (p.status === 'expired') urgScore = Math.min(urgScore, 0);
-      else if (p.status === 'ready') {
-        const dl = getDaysLeft(p.expiryDate);
-        if (dl !== null && dl <= 2) urgScore = Math.min(urgScore, 1);
-        else urgScore = Math.min(urgScore, 2);
-      } else if (p.status === 'pending') urgScore = Math.min(urgScore, 3);
-      else urgScore = Math.min(urgScore, 4);
-    });
-    return { addr, pkgs, active, hasExpired, hasReady, urgScore };
-  });
-
-  // Sort
-  if (locSort === 'count') {
-    groupArr.sort((a, b) => b.pkgs.length - a.pkgs.length || a.addr.localeCompare(b.addr));
-  } else if (locSort === 'urgency') {
-    groupArr.sort((a, b) => a.urgScore - b.urgScore || b.pkgs.length - a.pkgs.length);
-  } else {
-    groupArr.sort((a, b) => a.addr.localeCompare(b.addr));
-  }
-
-  if (groupArr.length === 0) {
-    el.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-icon">🗺️</div>
-        <div class="empty-title">Aucune adresse</div>
-        <div class="empty-desc">Ajoutez des colis pour voir les adresses.</div>
-      </div>`;
-    return;
-  }
-
-  // Auto-open groups with urgent packages on first visit
-  if (openLocations.size === 0) {
-    groupArr.forEach(g => {
-      if (g.hasExpired || g.hasReady) openLocations.add(g.addr);
-    });
-  }
-
-  let html = `<div class="section-label">${groupArr.length} locker${groupArr.length > 1 ? 's' : ''} référencé${groupArr.length > 1 ? 's' : ''}</div>`;
-
-  groupArr.forEach(({ addr, pkgs, active, hasExpired, hasReady, urgScore }, i) => {
-    const isOpen = openLocations.has(addr);
-    const borderCls = hasExpired ? 'has-expired' : (hasReady ? 'has-ready' : '');
-
-    // Status counts for strip
-    const counts = { ready: 0, pending: 0, expired: 0, collected: 0 };
-    pkgs.forEach(p => counts[p.status]++);
-    let stripHtml = '';
-    if (counts.ready)     stripHtml += `<span class="loc-strip-chip lsc-ready">✓ ${counts.ready} prêt${counts.ready>1?'s':''}</span>`;
-    if (counts.pending)   stripHtml += `<span class="loc-strip-chip lsc-pending">⟳ ${counts.pending} en route</span>`;
-    if (counts.expired)   stripHtml += `<span class="loc-strip-chip lsc-expired">⚠ ${counts.expired} expiré${counts.expired>1?'s':''}</span>`;
-    if (counts.collected) stripHtml += `<span class="loc-strip-chip lsc-collected">✓ ${counts.collected} récupéré${counts.collected>1?'s':''}</span>`;
-
-    // Package items
-    let itemsHtml = '';
-    const sorted = [...pkgs].sort((a, b) => {
-      const ord = { expired:0, ready:1, pending:2, collected:3 };
-      return ord[a.status] - ord[b.status] || new Date(b.arrivalDate) - new Date(a.arrivalDate);
-    });
-    sorted.forEach(p => {
-      const c = CARRIERS[p.carrier] || CARRIERS.other;
-      const s = STATUS_LABELS[p.status];
-      const dl = getDaysLeft(p.expiryDate);
-      const dlText = dl !== null ? (dl < 0 ? `expiré ${Math.abs(dl)}j` : `${dl}j restants`) : '';
-      itemsHtml += `
-        <div class="location-pkg-item" onclick="jumpToPackage(${p.id})">
-          ${carrierLogoHTML(p.carrier, 32)}
-          <div class="loc-pkg-info">
-            <div class="loc-pkg-carrier">${c.name}</div>
-            ${p.pickupCode ? `<div class="loc-pkg-code">${p.pickupCode}</div>` : ''}
-            <div class="loc-pkg-date">${formatDate(p.arrivalDate)}${dlText ? ' · ' + dlText : ''}</div>
-          </div>
-          <span class="loc-pkg-status ${s.cls}">${s.label}</span>
-        </div>`;
-    });
-
-    // Codes summary for copy-all
-    const codes = pkgs.filter(p => p.pickupCode && p.status !== 'collected').map(p => `${CARRIERS[p.carrier]?.name || p.carrier}: ${p.pickupCode}`).join('\n');
-    const mapsUrl = `https://www.google.com/maps/search/${encodeURIComponent(addr)}`;
-
-    html += `
-      <div class="location-group ${borderCls} ${isOpen ? 'open' : ''}" style="animation-delay:${i*40}ms">
-        <div class="location-group-header" onclick="toggleLocationGroup(${JSON.stringify(addr)})">
-          <div class="location-pin">
-            📍
-            ${pkgs.length > 1 ? `<div class="location-count-badge">${pkgs.length}</div>` : ''}
-          </div>
-          <div class="location-info">
-            <div class="location-name">${addr}</div>
-            <div class="loc-status-strip">${stripHtml}</div>
-          </div>
-          <span class="location-chevron">›</span>
-        </div>
-        <div class="location-pkg-list">
-          ${itemsHtml}
-        </div>
-        <div class="location-actions">
-          <a class="btn-map" href="${mapsUrl}" target="_blank" rel="noopener">🗺️ Ouvrir dans Maps</a>
-          ${codes ? `<button class="btn-copy-all" onclick="copyAllCodes(${JSON.stringify(codes)}, this)">📋 Codes</button>` : ''}
-        </div>
-      </div>`;
-  });
-
-  el.innerHTML = html;
-}
-
-function copyAllCodes(codes, btn) {
-  navigator.clipboard.writeText(codes).catch(() => {
-    const el = document.createElement('textarea');
-    el.value = codes;
-    document.body.appendChild(el);
-    el.select();
-    document.execCommand('copy');
-    document.body.removeChild(el);
-  });
-  const orig = btn.textContent;
-  btn.textContent = '✓ Copié';
-  showToast('✓ Codes copiés');
-  setTimeout(() => btn.textContent = orig, 1800);
-}
-
-function jumpToPackage(id) {
-  // Switch to packages view, expand the card
-  const navItems = document.querySelectorAll('.nav-item');
-  showView('packages', navItems[0]);
-  expandedCards.clear();
-  expandedCards.add(id);
-  renderPackages();
-  // Scroll to the card
-  setTimeout(() => {
-    const card = document.getElementById('card-' + id);
-    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, 100);
-}
-
-function setFilter(filter, el) {
-  currentFilter = filter;
-  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-  el.classList.add('active');
-  renderPackages();
-}
-
-function filterPackages(q) {
-  currentSearch = q;
-  renderPackages();
-}
-
-function openSearch() {
-  const bar = document.getElementById('searchBar');
-  bar.style.display = 'flex';
-  document.getElementById('searchInput').focus();
-}
-
-function closeSearch() {
-  document.getElementById('searchBar').style.display = 'none';
-  currentSearch = '';
-  document.getElementById('searchInput').value = '';
-  renderPackages();
-}
-
-// ═══════════════════════════════════════════
-//  ADD PACKAGE
-// ═══════════════════════════════════════════
-
-function openAddModal() {
-  document.getElementById('addModal').classList.add('open');
-  // Default date to now
-  const now = new Date();
-  now.setMinutes(0, 0, 0);
-  document.getElementById('arrivalDate').value = now.toISOString().slice(0, 16);
-  const expiry = new Date(now.getTime() + 14 * 86400000);
-  document.getElementById('expiryDate').value = expiry.toISOString().split('T')[0];
-  selectedCarrier = null;
-  document.querySelectorAll('.carrier-btn').forEach(b => b.classList.remove('selected'));
-}
-
-function closeModal() {
-  document.getElementById('addModal').classList.remove('open');
-}
-
-function selectCarrier(name, el) {
-  selectedCarrier = name;
-  document.querySelectorAll('.carrier-btn').forEach(b => b.classList.remove('selected'));
-  el.classList.add('selected');
-}
-
-function addPackage() {
-  if (!selectedCarrier) { showToast('⚠️ Sélectionnez un transporteur'); return; }
-  const address = document.getElementById('lockerAddress').value.trim();
-  const code = document.getElementById('pickupCode').value.trim();
-  if (!address) { showToast('⚠️ Adresse du locker requise'); return; }
-
-  const pkg = {
-    id: appData.nextId++,
-    carrier: selectedCarrier,
-    lockerAddress: address,
-    pickupCode: code,
-    trackingNum: document.getElementById('trackingNum').value.trim(),
-    qrData: code ? `${selectedCarrier.toUpperCase()}-${code}` : null,
-    arrivalDate: new Date(document.getElementById('arrivalDate').value).toISOString(),
-    expiryDate: document.getElementById('expiryDate').value,
-    status: 'ready',
-    source: document.getElementById('sourceAccount').value,
-    account: document.getElementById('sourceAccount').value.startsWith('account1') ? 1 : 2,
-    note: ''
-  };
-
-  appData.packages.unshift(pkg);
-  saveData(appData);
-  closeModal();
-  render();
-  showToast('✓ Colis ajouté !');
-}
-
-// ═══════════════════════════════════════════
-//  SYNC
-// ═══════════════════════════════════════════
-
-// ═══════════════════════════════════════════
-//  OAUTH & GMAIL CONFIG
-// ═══════════════════════════════════════════
-
-// Gmail API scopes needed (read-only)
-const GMAIL_SCOPE = 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile';
-
-// ─── Durée de conservation par défaut (jours) par transporteur ───
-const CARRIER_RETENTION = {
-  chronopost: 8, mondialrelay: 14, colissimo: 15,
-  laposte: 15, vintedgo: 14, amazon: 3, dpd: 14, ups: 10, other: 14
-};
-
-// ─── Mots-clés de statut (ordre priorité : expired > ready > pending) ───
-const STATUS_KEYWORDS = {
-  expired: ['retourné', 'non récupéré', 'renvoyé', 'délai dépassé', 'retour expéditeur'],
-  ready:   ['disponible', 'à retirer', 'à récupérer', 'est arrivé', 'remis en point',
-            'livré en point', 'pickup ready', 'vous pouvez retirer', 'en attente de retrait',
-            'déposé dans', 'consigne disponible', 'est disponible'],
-  pending: ['en chemin', 'en cours', 'en transit', 'expédié', 'pris en charge', 'en route',
-            'en livraison', 'out for delivery', 'shipped', 'in transit', 'acheminé',
-            'sera livré', 'est en route', 'confié par', 'sera disponible', 'en préparation']
-};
-
-// ─── Détection transporteur (du plus spécifique au plus général) ───
+// ══════════════════════════════════════════
+//  DÉTECTION TRANSPORTEUR (emails + SMS)
+// ══════════════════════════════════════════
 const CARRIER_DETECTORS = [
-  // Colissimo : from @laposte.fr, body "Colissimo"
-  // Ex sujet: "Votre Colissimo confié par La boutique des saucissons sera livré lundi 02 février"
-  // Tracking: 6M22242695271 (alphanum 13 cars)
-  { carrier: 'colissimo',
-    test: (f,s,b) => /colissimo/i.test(b) || /colissimo/i.test(s) || /laposte\.(fr|net|com)/i.test(f) },
-
-  // Chronopost : from @chronopost.fr
-  // Ex sujet: "Votre colis PP918217783FR expédié par AMAZON est en chemin"
-  // Tracking: PP918217783FR (2L + 9N + 2L)
-  { carrier: 'chronopost',
-    test: (f,s,b) => /chronopost/i.test(f) || /chronopost/i.test(s) || /chronopost/i.test(b) },
-
-  // Mondial Relay : from @mondialrelay.fr
-  // Ex corps: "Votre colis 05881576 ... Point Relais® ... Coccinelle Express\n8 Espl..."
-  // Tracking: 05881576 (8 chiffres)
-  { carrier: 'mondialrelay',
-    test: (f,s,b) => /mondial.?relay/i.test(f) || /mondial.?relay/i.test(s) || /point relais/i.test(b) },
-
-  // Vinted Go : from @vinted.fr
-  { carrier: 'vintedgo',
-    test: (f,s,b) => /vinted/i.test(f) || /vinted/i.test(s) },
-
-  // Amazon : from @amazon.fr
-  { carrier: 'amazon',
-    test: (f,s,b) => /amazon/i.test(f) || /amazon locker|amazon hub/i.test(b) },
-
-  // DPD : from @dpd.fr
-  { carrier: 'dpd',
-    test: (f,s,b) => /\bdpd\b/i.test(f) || /\bdpd\b/i.test(s) },
-
+  // Chronofresh avant Chronopost (plus spécifique)
+  { c:'chronofresh', test:(f,s,b) => /chronofresh/i.test(f+s+b) },
+  // Colissimo avant La Poste
+  { c:'colissimo',   test:(f,s,b) => /colissimo/i.test(f+s+b) },
+  // Chronopost
+  { c:'chronopost',  test:(f,s,b) => /chronopost/i.test(f+s+b) || /pickup\.fr/i.test(f) },
+  // Mondial Relay
+  { c:'mondialrelay',test:(f,s,b) => /mondial.?relay/i.test(f+s+b) || /point relais/i.test(b) },
+  // Vinted Go
+  { c:'vintedgo',    test:(f,s,b) => /vinted/i.test(f+s+b) },
+  // Relais Colis
+  { c:'relaiscolis', test:(f,s,b) => /relais.?colis/i.test(f+s+b) || /relaiscolis/i.test(f) },
+  // Amazon
+  { c:'amazon',      test:(f,s,b) => /amazon/i.test(f+s+b) && !/chronopost|mondial/i.test(f+s) },
+  // DPD
+  { c:'dpd',         test:(f,s,b) => /\bdpd\b/i.test(f+s+b) || /dpdgroup/i.test(f) },
   // UPS
-  { carrier: 'ups',
-    test: (f,s,b) => /\bups\b/i.test(f) || /\bups\b/i.test(s) },
-
+  { c:'ups',         test:(f,s,b) => /\bups\b/i.test(f+s+b) || /mcinfo@ups/i.test(f) },
+  // GLS
+  { c:'gls',         test:(f,s,b) => /\bgls\b/i.test(f+s+b) || /gls-france/i.test(f+s+b) },
   // La Poste générique
-  { carrier: 'laposte',
-    test: (f,s,b) => /laposte/i.test(f) || /la poste/i.test(s) },
+  { c:'laposte',     test:(f,s,b) => /la.?poste/i.test(f+s+b) || /laposte/i.test(f) },
 ];
 
-// ─── Extraction n° de suivi par transporteur ───
-function extractTrackingNumber(carrier, text) {
-  const byCarrier = {
-    // "n°6M22242695271" ou "colis n°6M..."
-    colissimo:    [/n[°o]\s*([A-Z0-9]{9,15})\b/i, /colis\s+n[°o]?\s*([A-Z0-9]{9,15})/i, /\b(6[A-Z]\d{11})\b/],
-    // "PP918217783FR" — 2L+9N+2L
-    chronopost:   [/\bcolis\s+([A-Z]{2}\d{9}[A-Z]{2})\b/i, /\b([A-Z]{2}\d{9}[A-Z]{2})\b/],
-    // "votre colis 05881576"
-    mondialrelay: [/votre\s+colis\s+(\d{6,10})\b/i, /\bcolis\s+(\d{6,10})\b/i, /\b(\d{8})\b/],
-    vintedgo:     [/\b([A-Z]{2}\d{9}[A-Z]{2})\b/, /\b(VG[A-Z0-9]{6,12})\b/i],
-    amazon:       [/\b(\d{3}-\d{7}-\d{7})\b/, /order[^:\n]*:\s*([0-9A-Z\-]{10,20})/i],
-    dpd:          [/\b(\d{14})\b/, /n[°o][^:\n]{0,10}:\s*([0-9]{10,14})/i],
-    ups:          [/\b(1Z[A-Z0-9]{16})\b/i],
-    laposte:      [/n[°o]\s*([A-Z0-9]{9,15})\b/i, /\b([A-Z]{2}\d{9}[A-Z]{2})\b/],
-  };
-  for (const re of (byCarrier[carrier] || [])) {
-    const m = text.match(re);
-    if (m?.[1] && m[1].length >= 6) return m[1].toUpperCase();
-  }
-  return '';
-}
+// Statuts — ordre priorité : delivered > expired > ready > pending
+const STATUS_MAP = {
+  delivered:['votre colis a été livré','colis livré','livré à','a été livré','livraison effectuée','delivered','remis à'],
+  expired:  ['retourné à l\'expéditeur','non récupéré','renvoyé','délai dépassé','retour expéditeur','expiré'],
+  ready:    ['disponible en consigne','disponible dans votre','à retirer','à récupérer','est arrivé dans','est disponible',
+             'vous pouvez retirer','vos codes','code de retrait','code:','retire ton colis','colis disponible',
+             'attend dans votre point','dans votre relais','déposé dans'],
+  pending:  ['en chemin','en cours de livraison','en route','en transit','expédié','pris en charge','acheminé',
+             'sera livré','sera disponible','out for delivery','in transit','est en route','confié par'],
+};
 
-// ─── Extraction code de retrait ───
-function extractPickupCode(text) {
-  const regexes = [
-    /(?:code\s*(?:d[e']\s*)?(?:retrait|ouverture|accès|locker|pickup))\s*[:\s]+([A-Z0-9]{4,10})/i,
-    /(?:votre\s+code)\s*[:\s]+([A-Z0-9]{4,10})/i,
-    /\bcode\b\s*:\s*([0-9]{4,8})\b/i,
-    /\bpin\b\s*[:\s]+([0-9]{4,8})\b/i,
-  ];
-  for (const re of regexes) {
-    const m = text.match(re);
-    if (m?.[1]) return m[1];
-  }
-  return '';
-}
-
-// ─── Extraction adresse dépôt ───
-// Colissimo  : après "Votre point de retrait :\n\nNOM\nRUE\nCP VILLE"
-// Mondial Relay : après "Votre Point Relais® de dépôt\nNOM\nRUE\nCP VILLE"
-// Chronopost : "relais Pickup" — adresse absente du 1er mail
-function extractAddress(carrier, text) {
-  const strategies = [
-    // Colissimo — "Votre point de retrait :\n\nNOM\n RUE\nCP VILLE"
-    /(?:votre\s+point\s+de\s+retrait\s*:?\s*\n+)([\s\S]{5,200}?)(?:\n\n|facilitez|renseignez|besoin)/i,
-    // Mondial Relay — "Votre Point Relais® de dépôt\nNOM\nRUE\nCP VILLE\n\nCe message"
-    /(?:votre\s+point\s+relais®?\s+de\s+(?:dépôt|livraison|retrait)\s*\n)([\s\S]{5,150}?)(?:\n\n|ce message|merci)/i,
-    // Mondial Relay variante — "Point Relais® :\nNOM\nRUE\nCP VILLE"
-    /(?:point\s+relais®?\s*[:\n]\s*)([\s\S]{5,150}?)(?:\n\n|ce message|merci)/i,
-    // Générique — après "adresse :", "locker :", "consigne :"
-    /(?:adresse|locker|consigne)\s*[:\n]\s*([^\n]{5,80}(?:\n[^\n]{3,80}){0,3})/i,
-  ];
-  const JUNK = /^(ce message|merci|suivre|téléchargez|retrouvez|pour en|bonjour|facilitez|renseignez|données|mentions|www\.|un sourire|aidez)/i;
-  for (const re of strategies) {
-    const m = text.match(re);
-    if (m?.[1]) {
-      const lines = m[1].split('\n')
-        .map(l => l.trim())
-        .filter(l => l.length > 2 && !JUNK.test(l));
-      if (lines.length > 0) {
-        return lines.slice(0, 4).join(', ').replace(/,\s*,/g, ',').trim();
-      }
-    }
-  }
-  return '';
-}
-
-// ─── Extraction date limite ───
-function extractExpiryDate(text, arrivalDate, carrier) {
-  // "disposez de 8 jours" — Chronopost
-  const durMatch = text.match(/(?:disposez?\s+de|pendant)\s+(\d+)\s+jours?/i);
-  if (durMatch) {
-    const d = new Date(arrivalDate);
-    d.setDate(d.getDate() + parseInt(durMatch[1]));
-    return d.toISOString().split('T')[0];
-  }
-  // "jusqu'au 15/02/2025" ou "avant le 15 février"
-  const dateMatch = text.match(/(?:jusqu['']au|avant le|retirer avant)[^\d]*(\d{1,2})[\/\-\s](\d{1,2})[\/\-\s](\d{2,4})/i);
-  if (dateMatch) {
-    const [, d, mo, y] = dateMatch;
-    const year = y.length === 2 ? '20' + y : y;
-    return `${year}-${mo.padStart(2,'0')}-${d.padStart(2,'0')}`;
-  }
-  // Fallback : durée standard
-  const days = CARRIER_RETENTION[carrier] || 14;
-  const def = new Date(arrivalDate);
-  def.setDate(def.getDate() + days);
-  return def.toISOString().split('T')[0];
-}
-
-// ─── Détection statut depuis sujet + corps ───
 function detectStatus(text) {
-  const lower = text.toLowerCase();
-  for (const [status, keywords] of Object.entries(STATUS_KEYWORDS)) {
-    if (keywords.some(kw => lower.includes(kw))) return status;
+  const lo = text.toLowerCase();
+  for (const [st, kws] of Object.entries(STATUS_MAP)) {
+    if (kws.some(kw => lo.includes(kw))) return st;
   }
   return 'pending';
 }
 
-// ─── Parsing principal d'un message Gmail → objet colis ───
-function parseEmailToPackage(msg, accountSlot) {
-  const headers = msg.payload?.headers || [];
-  const from    = getHeader(headers, 'from');
-  const subject = getHeader(headers, 'subject');
-  const dateStr = getHeader(headers, 'date');
-  const body    = getEmailBody(msg.payload);
-  const fullText = subject + '\n' + body;
-  const fromLow = from.toLowerCase();
-  const subjLow = subject.toLowerCase();
-  const bodyLow = body.toLowerCase();
-
-  // 1. Détecter le transporteur
-  const detector = CARRIER_DETECTORS.find(d => d.test(fromLow, subjLow, bodyLow));
-  if (!detector) return null;
-  const carrier = detector.carrier;
-
-  // 2. Extraire les champs
-  const trackingNum   = extractTrackingNumber(carrier, fullText);
-  const pickupCode    = extractPickupCode(fullText);
-  const lockerAddress = extractAddress(carrier, fullText);
-  const arrivalDate   = new Date(dateStr || Date.now()).toISOString();
-  const status        = detectStatus(fullText);
-  const expiryDate    = extractExpiryDate(fullText, arrivalDate, carrier);
-
-  // 3. Filtrer : garder seulement si on a un n° de suivi ou une adresse
-  if (!trackingNum && !lockerAddress) return null;
-
-  // 4. Lien direct vers le mail Gmail
-  const gmailLink = `https://mail.google.com/mail/u/0/#inbox/${msg.id}`;
-
-  return {
-    id: null,
-    carrier,
-    lockerAddress: lockerAddress || 'Adresse non détectée',
-    lockerAddressRaw: lockerAddress,
-    pickupCode,
-    trackingNum,
-    qrData: pickupCode ? `${carrier.toUpperCase()}-${pickupCode}` : (trackingNum || null),
-    arrivalDate,
-    expiryDate,
-    status,
-    emailSubject: subject.substring(0, 100),
-    gmailLink,
-    source: `account${accountSlot}_gmail`,
-    account: accountSlot,
-    gmailMsgId: msg.id,
-    note: ''
+// ── Extraction n° de suivi ──
+function extractTracking(carrier, text) {
+  const patterns = {
+    // UPS: 1Z + 16 alphanum
+    ups:         [/\b(1Z[A-Z0-9]{16})\b/i],
+    // Chronopost / Chronofresh: 2L+9N+2L ou XU+...
+    chronopost:  [/\b([A-Z]{2}\d{9}[A-Z]{2})\b/, /\b(PP\d{9}FR)\b/i],
+    chronofresh: [/\b([A-Z]{2}\d{9}[A-Z]{2})\b/, /n[°o]\s*([A-Z0-9]{10,15})/i],
+    // Colissimo: 6M... ou 8X... ou alphanum 11-15
+    colissimo:   [/\bn[°o]\s*([A-Z0-9]{9,15})\b/i, /\b(6[A-Z]\d{11})\b/, /\b(8[A-Z]\d{11})\b/],
+    // Mondial Relay: 5-10 chiffres
+    mondialrelay:[/votre colis\s+(\d{5,10})\b/i, /\b(\d{8})\b/],
+    // Vinted Go: 1UW..., 173..., 176...
+    vintedgo:    [/\b(1UW[A-Z0-9]{9,})\b/i, /\b(\d{16,19})\b/, /suivi\s*:\s*([A-Z0-9]{8,})/i],
+    // DPD: 14 chiffres ou alphanum
+    dpd:         [/\b(\d{14})\b/, /n[°o][^:\n]{0,10}:\s*([0-9A-Z]{10,14})/i, /colis n[°o]\s*([0-9]{10,})/i],
+    // GLS: 8 alphanum (ex: 00IZ31TJ, 00J1TB8E)
+    gls:         [/\b([0-9A-Z]{8})\b(?:\s+(?:de|est))/i, /colis\s+([0-9A-Z]{6,10})\b/i],
+    // Relais Colis: VD... ou alphanum
+    relaiscolis: [/\b(VD[A-Z0-9]{8,})\b/i, /référence\s+colis[^:]*:\s*([A-Z0-9\s]+?)(?:\n|$)/i],
+    // La Poste
+    laposte:     [/\bn[°o]\s*([A-Z0-9]{9,15})\b/i],
+    amazon:      [/\b(\d{3}-\d{7}-\d{7})\b/],
   };
-}
-
-
-// ═══════════════════════════════════════════
-//  OAUTH & GMAIL — CLIENT ID + TOKEN STORE
-// ═══════════════════════════════════════════
-
-function getClientId() {
-  return localStorage.getItem('lockertrack_client_id') || '';
-}
-
-function saveClientId() {
-  const val = document.getElementById('clientIdInput').value.trim();
-  if (!val) { showToast('⚠️ Client ID vide'); return; }
-  localStorage.setItem('lockertrack_client_id', val);
-  updateClientIdStatus();
-  toggleClientIdEdit();
-  showToast('✓ Client ID enregistré');
-}
-
-function toggleClientIdEdit() {
-  const ed = document.getElementById('clientIdEdit');
-  const isOpen = ed.style.display !== 'none';
-  ed.style.display = isOpen ? 'none' : 'block';
-  if (!isOpen) {
-    document.getElementById('clientIdInput').value = getClientId();
+  for (const re of (patterns[carrier] || [/\b([A-Z0-9]{8,20})\b/])) {
+    const m = text.match(re);
+    if (m?.[1]?.length >= 5) return m[1].toUpperCase().trim();
   }
+  return '';
 }
 
-function updateClientIdStatus() {
-  const cid = getClientId();
-  const el = document.getElementById('clientIdStatus');
-  if (el) {
-    el.textContent = cid ? '✓ Configuré : ' + cid.substring(0, 24) + '…' : 'Non configuré';
-    el.style.color = cid ? 'var(--accent)' : 'var(--text3)';
-  }
-}
-
-// ─── Token store par compte (slot 1 ou 2) ───
-function getTokenStore(n) {
-  try { return JSON.parse(localStorage.getItem('lockertrack_token_' + n)) || null; }
-  catch { return null; }
-}
-function setTokenStore(n, data) {
-  localStorage.setItem('lockertrack_token_' + n, JSON.stringify(data));
-}
-function clearTokenStore(n) {
-  localStorage.removeItem('lockertrack_token_' + n);
-}
-
-// ─── Connexion Gmail via Google Identity Services ───
-function connectGmail(n) {
-  const clientId = getClientId();
-  if (!clientId) {
-    showToast("⚠️ Configurez d'abord votre Client ID");
-    toggleClientIdEdit();
-    return;
-  }
-  if (typeof google === 'undefined' || !google.accounts) {
-    showToast('⚠️ Google Identity Services non chargé');
-    return;
-  }
-  showToast('🔐 Connexion Google en cours…');
-  const client = google.accounts.oauth2.initTokenClient({
-    client_id: clientId,
-    scope: GMAIL_SCOPE,
-    callback: (resp) => {
-      if (resp.error) { showToast('❌ Erreur OAuth : ' + resp.error); return; }
-      fetchGoogleUserInfo(resp.access_token).then(info => {
-        setTokenStore(n, {
-          accessToken: resp.access_token,
-          email: info.email,
-          name: info.name,
-          picture: info.picture,
-          expiry: Date.now() + (resp.expires_in || 3600) * 1000
-        });
-        appData.accounts[n].email = info.email;
-        appData.accounts[n].name = info.name || (n === 1 ? 'Compte principal' : 'Compte secondaire');
-        saveData(appData);
-        renderAccounts();
-        showToast('✓ ' + info.email + ' connecté');
-        setTimeout(() => syncAccount(n), 500);
-      });
+// ── Extraction code retrait ──
+// Gère: "code: 1234", "codes 6684 puis 7785", "Code: G2-6949", "Identifiant: 5241 / Code d'ouverture: 9491"
+function extractPickupCode(text) {
+  const patterns = [
+    // "codes 6684 puis 7785" → "6684 / 7785"
+    /vos codes\s+(\d{4})\s+puis\s+(\d{4})/i,
+    // "Code d'ouverture : 9491" et "Identifiant : 5241"
+    /identifiant\s*:\s*(\d{3,8}).*?code\s*d['']ouverture\s*:\s*(\d{3,8})/is,
+    // Code: G2-6949
+    /\bcode\s*:\s*([A-Z0-9\-]{3,12})/i,
+    // code de retrait : 653188
+    /code\s*(?:d[e']\s*)?(?:retrait|ouverture|accès)\s*[:\s]+([A-Z0-9]{4,12})/i,
+    // Numéro/code standard
+    /\bcode\b\s*:?\s*([0-9]{4,8})\b/i,
+    // PIN
+    /\bpin\b\s*[:\s]+([0-9]{4,8})\b/i,
+  ];
+  for (const re of patterns) {
+    const m = text.match(re);
+    if (m) {
+      if (m[2]) return m[1] + ' / ' + m[2]; // double code
+      if (m[1]) return m[1].toUpperCase();
     }
-  });
-  client.requestAccessToken({ prompt: 'select_account' });
-}
-
-async function fetchGoogleUserInfo(accessToken) {
-  const r = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-    headers: { Authorization: 'Bearer ' + accessToken }
-  });
-  return r.json();
-}
-
-function disconnectAccount(n) {
-  if (!confirm('Déconnecter ce compte Gmail ?')) return;
-  const ts = getTokenStore(n);
-  if (ts?.accessToken && typeof google !== 'undefined') {
-    google.accounts.oauth2.revoke(ts.accessToken, () => {});
   }
-  clearTokenStore(n);
-  appData.accounts[n].email = '';
-  appData.accounts[n].name = n === 1 ? 'Compte principal' : 'Compte secondaire';
-  appData.accounts[n].lastSync = null;
-  saveData(appData);
-  renderAccounts();
-  showToast('✓ Compte déconnecté');
+  return '';
 }
 
-// ─── Gmail API fetch ───
-async function gmailFetch(accessToken, path) {
-  const r = await fetch('https://gmail.googleapis.com/gmail/v1/' + path, {
-    headers: { Authorization: 'Bearer ' + accessToken }
-  });
-  if (!r.ok) throw new Error('Gmail API ' + r.status);
-  return r.json();
+// ── Extraction adresse ──
+function extractAddress(carrier, text) {
+  // Patterns spécifiques par transporteur
+  const specific = [
+    // Colissimo / La Poste : "Votre point de retrait :\n\nNOM\nRUE\nCP VILLE"
+    /votre\s+point\s+de\s+retrait\s*:?\s*\n+(.+?\n.+?\n.+?)(?:\n\n|\nfacilitez|\nrenseignez)/is,
+    // Consigne Pickup Chronopost : "Consigne Pickup Grand Frais Herblay\n16 AVENUE..."
+    /consigne\s+pickup\s+(.+?)(?:\n|\.|jusqu)/i,
+    // Chronopost : "disponible en consigne Pickup NOM VILLE"
+    /consigne\s+pickup\s+(.+?)(?:\.|jusqu|$)/i,
+    // Mondial Relay "Votre Point Relais® de dépôt\nNOM\nRUE\nCP VILLE"
+    /votre\s+point\s+relais®?\s+(?:de\s+)?(?:dépôt|livraison|retrait)?\s*\n(.+?\n.+?\n.+?)(?:\n\n|ce message)/is,
+    // "Point Relais® :\nNOM"
+    /point\s+relais®?\s*[:\n]\s*(.+?)(?:\n\n|infos|merci)/is,
+    // Vinted Go Consigne : "Consigne Vinted Go: Maxi Bazar Herblay, 2 avenue..."
+    /consigne\s+vinted\s+go\s*:\s*(.+?)(?:\.|suivi|$)/i,
+    // Relais Colis : "dans votre Relais PIERRELAYE EXO"
+    /dans\s+(?:votre\s+)?(?:relais|point)\s+(.+?)(?:\.|jusqu|$)/i,
+    // UPS adresse "Expédier à\nNOM\nRUE\nVILLE"
+    /expédier à\s*\n(.+?\n.+?\n.+?)(?:\n\n|ups standard)/is,
+    // DPD "Sera livré à\nNOM\nRUE"
+    /sera\s+livré\s+à\s*\n(.+?\n.+?)(?:\n\n|france|voir)/is,
+    // Générique
+    /(?:adresse|locker|consigne|pickup)\s*[:\n]\s*([^\n]{5,80}(?:\n[^\n]{3,60}){0,2})/i,
+  ];
+  const JUNK = /^(ce message|merci|suivre|téléchargez|retrouvez|pour en|bonjour|facilitez|données|mentions|www\.|aidez|cette|chronopost|colissimo)/i;
+  for (const re of specific) {
+    const m = text.match(re);
+    if (m?.[1]) {
+      const lines = m[1].split('\n').map(l=>l.trim()).filter(l=>l.length>2 && !JUNK.test(l));
+      if (lines.length>0) return lines.slice(0,4).join(', ').replace(/,\s*,/g,',').trim();
+    }
+  }
+  return '';
 }
 
+// ── Extraction date expiration ──
+function extractExpiry(text, arrivalDate, carrier) {
+  // "disposez de 8 jours" / "5 jours" / "8 jours"
+  const durM = text.match(/(?:disposez?\s+de|pendant)\s+(\d+)\s+jours?/i);
+  if (durM) { const d=new Date(arrivalDate); d.setDate(d.getDate()+parseInt(durM[1])); return d.toISOString().split('T')[0]; }
+  // "retirer avant le 2024-12-24" (format ISO)
+  const isoM = text.match(/(?:avant le|jusqu['']au)\s+(\d{4}-\d{2}-\d{2})/i);
+  if (isoM) return isoM[1];
+  // "jusqu'au 12 janvier 2026" / "avant le 15/02/2025"
+  const MONTHS = {janvier:1,février:2,mars:3,avril:4,mai:5,juin:6,juillet:7,août:8,septembre:9,octobre:10,novembre:11,décembre:12};
+  const txtM = text.match(/(?:jusqu['']au|avant le)\s+(\d{1,2})\s+([a-zé]+)\s+(\d{4})/i);
+  if (txtM) {
+    const mo = MONTHS[txtM[2].toLowerCase()];
+    if (mo) return `${txtM[3]}-${String(mo).padStart(2,'0')}-${txtM[1].padStart(2,'0')}`;
+  }
+  // "jusqu'au 15/01" ou "24/01/25"
+  const numM = text.match(/(?:jusqu['']au|avant le)\s+(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/i);
+  if (numM) {
+    const y = numM[3] ? (numM[3].length===2?'20'+numM[3]:numM[3]) : new Date().getFullYear();
+    return `${y}-${numM[2].padStart(2,'0')}-${numM[1].padStart(2,'0')}`;
+  }
+  // Fallback durée standard
+  const days = CARRIER_RETENTION[carrier]||14;
+  const def = new Date(arrivalDate); def.setDate(def.getDate()+days);
+  return def.toISOString().split('T')[0];
+}
+
+// ── Extraction date livraison estimée ──
+function extractDeliveryDate(text) {
+  const MONTHS = {janvier:1,février:2,mars:3,avril:4,mai:5,juin:6,juillet:7,août:8,septembre:9,octobre:10,novembre:11,décembre:12};
+  // "sera livré lundi 02 février" / "livré jeudi 15 janvier"
+  const m1 = text.match(/(?:livré?[e]?|disponible)\s+(?:le\s+)?(?:lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)?\s*(\d{1,2})\s+([a-zé]+)(?:\s+(\d{4}))?/i);
+  if (m1) {
+    const mo = MONTHS[m1[2].toLowerCase()];
+    if (mo) {
+      const y = m1[3] || new Date().getFullYear();
+      return `${y}-${String(mo).padStart(2,'0')}-${m1[1].padStart(2,'0')}`;
+    }
+  }
+  // "vendredi 19/12/2025 entre 11:15"
+  const m2 = text.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  if (m2) return `${m2[3]}-${m2[2].padStart(2,'0')}-${m2[1].padStart(2,'0')}`;
+  // "20/11/2025"
+  return '';
+}
+
+// ══════════════════════════════════════════
+//  PARSING EMAIL → COLIS
+// ══════════════════════════════════════════
 function decodeBase64(str) {
-  try { return decodeURIComponent(escape(atob(str.replace(/-/g, '+').replace(/_/g, '/')))); }
-  catch { return ''; }
+  try { return decodeURIComponent(escape(atob(str.replace(/-/g,'+').replace(/_/g,'/')))); } catch { return ''; }
 }
 
 function getEmailBody(payload) {
   if (!payload) return '';
   if (payload.body?.data) return decodeBase64(payload.body.data);
   if (payload.parts) {
-    for (const part of payload.parts) {
-      if (part.mimeType === 'text/plain' && part.body?.data) return decodeBase64(part.body.data);
+    for (const p of payload.parts) {
+      if (p.mimeType==='text/plain' && p.body?.data) return decodeBase64(p.body.data);
     }
-    for (const part of payload.parts) {
-      const sub = getEmailBody(part);
-      if (sub) return sub;
-    }
+    for (const p of payload.parts) { const s=getEmailBody(p); if(s) return s; }
   }
   return '';
 }
 
 function getHeader(headers, name) {
-  return headers?.find(h => h.name.toLowerCase() === name.toLowerCase())?.value || '';
+  return headers?.find(h=>h.name.toLowerCase()===name.toLowerCase())?.value||'';
 }
 
+function parseEmailToPackage(msg, slot) {
+  const headers = msg.payload?.headers||[];
+  const from    = getHeader(headers,'from');
+  const subject = getHeader(headers,'subject');
+  const dateStr = getHeader(headers,'date');
+  const body    = getEmailBody(msg.payload);
+  const full    = subject+'\n'+body;
+  const flo=from.toLowerCase(), slo=subject.toLowerCase(), blo=body.toLowerCase();
 
-// ─── Sync one account ───
+  const det = CARRIER_DETECTORS.find(d=>d.test(flo,slo,blo));
+  if (!det) return null;
+  const c = det.c;
+
+  const trackingNum   = extractTracking(c, full);
+  const pickupCode    = extractPickupCode(full);
+  const lockerAddress = extractAddress(c, full);
+  const arrivalDate   = new Date(dateStr||Date.now()).toISOString();
+  const status        = detectStatus(full);
+  const expiryDate    = extractExpiry(full, arrivalDate, c);
+  const deliveryDate  = extractDeliveryDate(full);
+
+  if (!trackingNum && !lockerAddress && !pickupCode) return null;
+
+  return {
+    id:null, carrier:c,
+    trackingNum, pickupCode,
+    lockerAddress: lockerAddress||'',
+    deliveryDate, arrivalDate, expiryDate, status,
+    emailSubject: subject.substring(0,120),
+    gmailLink: `https://mail.google.com/mail/u/0/#inbox/${msg.id}`,
+    source: `account${slot}_gmail`,
+    account: slot, gmailMsgId: msg.id, note:''
+  };
+}
+
+// ══════════════════════════════════════════
+//  PARSING SMS
+// ══════════════════════════════════════════
+function parseSMSText(smsText) {
+  const lo = smsText.toLowerCase();
+  const det = CARRIER_DETECTORS.find(d=>d.test('',lo,lo));
+  const c = det?.c || 'other';
+
+  const trackingNum   = extractTracking(c, smsText);
+  const pickupCode    = extractPickupCode(smsText);
+  const lockerAddress = extractAddress(c, smsText);
+  const status        = detectStatus(smsText);
+  const now           = new Date().toISOString();
+  const expiryDate    = extractExpiry(smsText, now, c);
+  const deliveryDate  = extractDeliveryDate(smsText);
+
+  return {
+    id: null, carrier: c,
+    trackingNum, pickupCode,
+    lockerAddress: lockerAddress||'',
+    deliveryDate, arrivalDate: now, expiryDate, status,
+    emailSubject: 'Via SMS',
+    gmailLink:'', source:'sms', account:1, gmailMsgId:'', note:''
+  };
+}
+
+function parseSMSManual() {
+  const text = document.getElementById('smsInput').value.trim();
+  if (!text) { showToast('⚠️ Collez un SMS d\'abord'); return; }
+  const pkg = parseSMSText(text);
+  pkg.id = appData.nextId++;
+  appData.packages.unshift(pkg);
+  saveData(appData);
+  render();
+  document.getElementById('smsInput').value = '';
+  showToast('✓ Colis détecté : ' + (CARRIER_LABELS[pkg.carrier]||pkg.carrier));
+  closeModal('syncModal');
+}
+
+// ══════════════════════════════════════════
+//  OAUTH — MODE NAVIGATEUR EXTERNE
+// ══════════════════════════════════════════
+// Dans un APK Android, la WebView bloque les popups OAuth Google.
+// Solution : on ouvre le navigateur système avec window.open (intent),
+// et l'utilisateur copie le token et le colle manuellement.
+const OAUTH_AUTH_URL = 'https://famhub-oauth.netlify.app/'; // page d'aide
+
+function openOAuthBrowser(n) {
+  // Ouvrir la page d'aide OAuth dans Chrome externe
+  const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(CLIENT_ID||'CONFIGURE_CLIENT_ID')}&redirect_uri=urn:ietf:wg:oauth:2.0:oob&response_type=token&scope=${encodeURIComponent(GMAIL_SCOPE)}&prompt=select_account`;
+  // Dans l'APK Capacitor, window.open() ouvre le navigateur système
+  const w = window.open(url, '_system');
+  if (!w) {
+    // Fallback : montrer l'URL à copier
+    showToast('Copiez l\'URL et ouvrez-la dans Chrome');
+  }
+  document.getElementById('tokenAccountSelect').value = String(n);
+  showToast('🔗 Navigateur ouvert — copiez le token après connexion');
+}
+
+function saveManualToken() {
+  const raw = document.getElementById('tokenInput').value.trim();
+  const n   = parseInt(document.getElementById('tokenAccountSelect').value);
+  if (!raw) { showToast('⚠️ Token vide'); return; }
+  // Extraire access_token si l'utilisateur a collé l'URL complète
+  let token = raw;
+  const urlMatch = raw.match(/access_token=([^&]+)/);
+  if (urlMatch) token = urlMatch[1];
+
+  setTokenStore(n, { accessToken: token, email: appData.accounts[n].email,
+    name: appData.accounts[n].name, expiry: Date.now() + 3600*1000 });
+  renderAccounts();
+  showToast('✓ Token compte ' + n + ' enregistré');
+  document.getElementById('tokenInput').value = '';
+  setTimeout(() => syncAccount(n), 500);
+}
+
+function toggleTokenVis() {
+  const inp = document.getElementById('tokenInput');
+  inp.type = inp.type==='password'?'text':'password';
+}
+
+// Token store
+function getTokenStore(n) {
+  try { return JSON.parse(localStorage.getItem('lt_token_'+n))||null; } catch { return null; }
+}
+function setTokenStore(n,d) { localStorage.setItem('lt_token_'+n,JSON.stringify(d)); }
+function clearTokenStore(n) { localStorage.removeItem('lt_token_'+n); }
+
+function disconnectAccount(n) {
+  if (!confirm('Déconnecter ce compte ?')) return;
+  clearTokenStore(n);
+  renderAccounts();
+  showToast('✓ Compte '+n+' déconnecté');
+}
+
+// ══════════════════════════════════════════
+//  GMAIL API
+// ══════════════════════════════════════════
+async function gmailFetch(token, path) {
+  const r = await fetch('https://gmail.googleapis.com/gmail/v1/'+path, {
+    headers:{ Authorization:'Bearer '+token }
+  });
+  if (r.status===401) throw new Error('TOKEN_EXPIRED');
+  if (!r.ok) throw new Error('Gmail API '+r.status);
+  return r.json();
+}
+
 async function syncAccount(n) {
   const ts = getTokenStore(n);
-  if (!ts?.accessToken) {
-    showToast(`⚠️ Compte ${n} non connecté`);
-    return;
+  if (!ts?.accessToken) { showToast('⚠️ Compte '+n+' non connecté'); return; }
+  if (Date.now() > ts.expiry-60000) {
+    showToast('⚠️ Session expirée — reconnectez le compte '+n);
+    clearTokenStore(n); renderAccounts(); return;
   }
 
-  // Check token expiry
-  if (Date.now() > ts.expiry - 60000) {
-    showToast(`⚠️ Session expirée — reconnectez le compte ${n}`);
-    clearTokenStore(n);
-    renderAccounts();
-    return;
-  }
-
-  const btn = document.getElementById('syncBtn' + n);
-  const span = btn?.querySelector('span');
-  if (span) span.style.animation = 'spin 1s linear infinite';
-  if (btn) btn.disabled = true;
-  animateProgress('progress' + n, 3000);
-
-  const resultEl = document.getElementById(`acc${n}syncResult`);
-  if (resultEl) { resultEl.style.display = 'block'; resultEl.textContent = '🔍 Recherche des mails transporteurs…'; }
+  const resultEl = document.getElementById('acc'+n+'syncResult');
+  const fill = document.getElementById('progress'+n);
+  if (resultEl) resultEl.textContent='🔍 Recherche des mails transporteurs…';
+  if (fill) { fill.style.width='0%'; fill.style.transition='width 3s linear'; fill.style.width='80%'; }
 
   try {
-    // Build Gmail search query — locker/colis keywords from all carriers
-    const query = 'subject:(locker OR "point relais" OR "à retirer" OR "disponible" OR "pickup" OR "colis disponible" OR "votre colis") newer_than:30d';
-    const listResp = await gmailFetch(ts.accessToken, `users/me/messages?maxResults=50&q=${encodeURIComponent(query)}`);
-    const messages = listResp.messages || [];
+    const query = 'subject:(colis OR locker OR "point relais" OR pickup OR disponible OR livraison OR tracking) newer_than:45d';
+    const list  = await gmailFetch(ts.accessToken, `users/me/messages?maxResults=60&q=${encodeURIComponent(query)}`);
+    const msgs  = list.messages||[];
+    if (resultEl) resultEl.textContent=`📬 ${msgs.length} email(s) trouvé(s)…`;
 
-    if (resultEl) resultEl.textContent = `📬 ${messages.length} email(s) trouvé(s) — analyse en cours…`;
+    const existingIds = new Set(appData.packages.map(p=>p.gmailMsgId).filter(Boolean));
+    let newCount=0, skip=0;
 
-    let newCount = 0;
-    let skipCount = 0;
-    const existingMsgIds = new Set(appData.packages.map(p => p.gmailMsgId).filter(Boolean));
-
-    for (const m of messages) {
-      if (existingMsgIds.has(m.id)) { skipCount++; continue; }
-
+    for (const m of msgs) {
+      if (existingIds.has(m.id)) { skip++; continue; }
       const full = await gmailFetch(ts.accessToken, `users/me/messages/${m.id}?format=full`);
-      const pkg = parseEmailToPackage(full, n);
-      if (pkg) {
-        pkg.id = appData.nextId++;
-        appData.packages.unshift(pkg);
-        newCount++;
-      }
+      const pkg  = parseEmailToPackage(full, n);
+      if (pkg) { pkg.id=appData.nextId++; appData.packages.unshift(pkg); newCount++; }
     }
 
     appData.accounts[n].lastSync = new Date().toISOString();
-    saveData(appData);
-    render();
-
-    const msg = newCount > 0
-      ? `✓ ${newCount} nouveau(x) colis détecté(s) ! (${skipCount} déjà connus)`
-      : `✓ Aucun nouveau colis (${messages.length} mails analysés)`;
-    if (resultEl) resultEl.textContent = msg;
+    saveData(appData); render();
+    if (fill) { fill.style.transition='width 0.3s'; fill.style.width='100%'; }
+    const msg = newCount>0 ? `✓ ${newCount} nouveau(x) colis !` : `✓ Aucun nouveau (${msgs.length} analysés)`;
+    if (resultEl) resultEl.textContent=msg;
     showToast(msg);
-
-  } catch (err) {
-    const errMsg = '❌ Erreur : ' + (err.message || 'connexion impossible');
-    if (resultEl) resultEl.textContent = errMsg;
-    showToast(errMsg);
+  } catch(err) {
+    const msg = err.message==='TOKEN_EXPIRED' ? '⚠️ Token expiré, reconnectez-vous' : '❌ '+err.message;
+    if (resultEl) resultEl.textContent=msg;
+    if (err.message==='TOKEN_EXPIRED') { clearTokenStore(n); renderAccounts(); }
+    showToast(msg);
   } finally {
-    if (span) span.style.animation = '';
-    if (btn) btn.disabled = false;
     renderAccounts();
   }
 }
 
-async function syncAll() {
-  const btn = document.getElementById('syncBtn');
-  btn.style.animation = 'spin 1s linear infinite';
-  showToast('🔄 Synchronisation en cours…');
+// ══════════════════════════════════════════
+//  RENDU
+// ══════════════════════════════════════════
+function statusLabel(s) {
+  return {ready:'À retirer',pending:'En route',delivered:'Livré',expired:'Expiré',collected:'Récupéré'}[s]||s;
+}
+function statusClass(s) {
+  return {ready:'s-ready',pending:'s-pending',delivered:'s-delivered',expired:'s-expired',collected:'s-collected'}[s]||'s-pending';
+}
 
-  const connected = [1, 2].filter(n => getTokenStore(n)?.accessToken);
-  if (connected.length === 0) {
-    btn.style.animation = '';
-    showToast('⚠️ Aucun compte connecté');
+function daysLeft(exp) {
+  if (!exp) return null;
+  const diff = Math.floor((new Date(exp)-Date.now())/(1000*86400));
+  return diff;
+}
+
+function expiryColor(days) {
+  if (days<0) return 'var(--red)';
+  if (days<=2) return 'var(--red)';
+  if (days<=5) return 'var(--amber)';
+  return 'var(--green)';
+}
+
+function render() {
+  const pkgs = getFilteredPackages();
+  updateBadges();
+  const el = document.getElementById('pkgList');
+
+  if (!pkgs.length) {
+    el.innerHTML = `<div class="empty">
+      <div class="empty-icon">📭</div>
+      <div class="empty-title">Aucun colis</div>
+      <div class="empty-sub">Appuyez sur ＋ pour en ajouter un<br>ou synchronisez vos comptes Gmail</div>
+    </div>`;
     return;
   }
 
-  for (const n of connected) {
-    await syncAccount(n);
-  }
+  el.innerHTML = pkgs.map(p => {
+    const color = CARRIER_COLORS[p.carrier]||'var(--teal)';
+    const days  = daysLeft(p.expiryDate);
+    const pct   = p.expiryDate ? Math.max(0, Math.min(100, (days/(CARRIER_RETENTION[p.carrier]||14))*100)) : null;
+    const showExpiry = p.status==='ready' && days!==null;
+    const dLabel = p.deliveryDate ? fmtDate(p.deliveryDate) : '';
 
-  btn.style.animation = '';
-  btn.textContent = '⟳';
+    return `<div class="pkg-card" id="pkg${p.id}" onclick="toggleCard(${p.id})">
+      <div class="pkg-header">
+        <div class="carrier-dot" style="background:${color}"></div>
+        <div class="carrier-name">${CARRIER_LABELS[p.carrier]||p.carrier}${p.account?` · ${p.account===1?'Guillaume':'Michèle'}`:''}</div>
+        <div class="status-pill ${statusClass(p.status)}">${statusLabel(p.status)}</div>
+      </div>
+      <div class="pkg-body" id="body${p.id}" style="display:none">
+        ${p.trackingNum?`<div class="pkg-row"><div class="pkg-field">
+          <div class="field-label">N° Suivi</div>
+          <div class="field-val mono">${p.trackingNum}</div>
+        </div></div>`:''}
+        ${p.pickupCode?`<div class="pkg-code-box">
+          <div class="code-label">Code de retrait</div>
+          <div class="code-val">${p.pickupCode}</div>
+          ${p.pickupCode.includes('/')?'<div class="code-sub">Saisir les deux codes successivement</div>':''}
+        </div>`:''}
+        ${p.lockerAddress?`<div class="pkg-addr">📍 ${p.lockerAddress}</div>`:''}
+        <div class="pkg-row">
+          ${dLabel?`<div class="pkg-field"><div class="field-label">Date livraison</div><div class="field-val">${dLabel}</div></div>`:''}
+          ${showExpiry?`<div class="pkg-field"><div class="field-label">Expire dans</div>
+            <div class="field-val" style="color:${expiryColor(days)}">${days<0?'Expiré':days===0?'Aujourd\'hui':days+' jour'+( days>1?'s':'')}</div>
+          </div>`:''}
+        </div>
+        ${p.note?`<div class="pkg-addr" style="margin-top:8px">💬 ${p.note}</div>`:''}
+        ${showExpiry&&pct!==null?`<div class="expiry-bar"><div class="expiry-fill" style="width:${pct}%;background:${expiryColor(days)}"></div></div>`:''}
+        <div class="pkg-actions">
+          ${p.pickupCode||p.trackingNum?`<button class="act-btn primary" onclick="showQR(${p.id},event)">📱 QR</button>`:''}
+          ${p.gmailLink?`<a class="act-btn" href="${p.gmailLink}" target="_blank" rel="noopener" onclick="event.stopPropagation()">📧 Mail</a>`:''}
+          ${p.status!=='collected'&&p.status!=='delivered'?`<button class="act-btn" onclick="markCollected(${p.id},event)">✓ Récupéré</button>`:''}
+          <button class="act-btn danger" onclick="deletePackage(${p.id},event)">🗑</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
-// ─── Render accounts UI ───
+function toggleCard(id) {
+  const body = document.getElementById('body'+id);
+  const card = document.getElementById('pkg'+id);
+  if (!body) return;
+  const isOpen = body.style.display!=='none';
+  body.style.display = isOpen?'none':'block';
+  card.classList.toggle('expanded',!isOpen);
+}
+
+function fmtDate(iso) {
+  if (!iso) return '';
+  try {
+    return new Date(iso).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+  } catch { return iso; }
+}
+
+function getFilteredPackages() {
+  let pkgs = [...appData.packages];
+  if (currentFilter!=='all') pkgs=pkgs.filter(p=>p.status===currentFilter);
+  if (currentSearch) {
+    const q=currentSearch.toLowerCase();
+    pkgs=pkgs.filter(p=>
+      (p.carrier||'').toLowerCase().includes(q)||
+      (p.trackingNum||'').toLowerCase().includes(q)||
+      (p.lockerAddress||'').toLowerCase().includes(q)||
+      (p.note||'').toLowerCase().includes(q)||
+      (p.emailSubject||'').toLowerCase().includes(q)
+    );
+  }
+  return pkgs.sort((a,b)=>{
+    const order={ready:0,pending:1,delivered:2,expired:3,collected:4};
+    return (order[a.status]||9)-(order[b.status]||9);
+  });
+}
+
+function updateBadges() {
+  const p=appData.packages;
+  document.getElementById('badgeAll').textContent=p.length;
+  document.getElementById('badgeReady').textContent=p.filter(x=>x.status==='ready').length;
+  document.getElementById('badgePending').textContent=p.filter(x=>x.status==='pending').length;
+  document.getElementById('badgeDelivered').textContent=p.filter(x=>x.status==='delivered').length;
+  document.getElementById('badgeExpired').textContent=p.filter(x=>x.status==='expired').length;
+}
+
+function setFilter(f,btn) {
+  currentFilter=f;
+  document.querySelectorAll('.ftab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function filterPackages(v) {
+  currentSearch=v;
+  render();
+}
+
+function markCollected(id,e) {
+  e.stopPropagation();
+  const p=appData.packages.find(x=>x.id===id);
+  if (p) { p.status='collected'; saveData(appData); render(); showToast('✓ Colis marqué récupéré'); }
+}
+
+function deletePackage(id,e) {
+  e.stopPropagation();
+  if (!confirm('Supprimer ce colis ?')) return;
+  appData.packages=appData.packages.filter(p=>p.id!==id);
+  saveData(appData); render();
+}
+
+// ── QR Code ──
+function showQR(id,e) {
+  e.stopPropagation();
+  const p=appData.packages.find(x=>x.id===id);
+  if (!p) return;
+  const val = p.pickupCode||p.trackingNum||'';
+  if (!val) { showToast('Aucune donnée QR disponible'); return; }
+  document.getElementById('qrTitle').textContent=`${CARRIER_LABELS[p.carrier]||p.carrier} — ${p.pickupCode?'Code retrait':'Suivi'}`;
+  document.getElementById('qrValue').textContent=val;
+  document.getElementById('qrContainer').innerHTML='';
+  new QRCode(document.getElementById('qrContainer'),{
+    text:val,width:200,height:200,
+    colorDark:getComputedStyle(document.documentElement).getPropertyValue('--text').trim()||'#000',
+    colorLight:'transparent',correctLevel:QRCode.CorrectLevel.M
+  });
+  openModal('qrModal');
+}
+
+// ── Ajout manuel ──
+function selectCarrier(c,el) {
+  selectedCarrier=c;
+  document.querySelectorAll('.carrier-btn').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function addPackage() {
+  if (!selectedCarrier) { showToast('⚠️ Sélectionnez un transporteur'); return; }
+  const tracking = document.getElementById('addTracking').value.trim();
+  const code     = document.getElementById('addCode').value.trim();
+  const addr     = document.getElementById('addAddress').value.trim();
+  const slot     = parseInt(document.getElementById('addAccount').value)||1;
+  const expiry   = document.getElementById('addExpiry').value;
+  const note     = document.getElementById('addNote').value.trim();
+  if (!tracking&&!code&&!addr) { showToast('⚠️ Renseignez au moins un champ'); return; }
+
+  const now = new Date().toISOString();
+  const def = new Date(); def.setDate(def.getDate()+(CARRIER_RETENTION[selectedCarrier]||14));
+
+  appData.packages.unshift({
+    id:appData.nextId++, carrier:selectedCarrier,
+    trackingNum:tracking.toUpperCase(), pickupCode:code.toUpperCase(),
+    lockerAddress:addr, deliveryDate:'', arrivalDate:now,
+    expiryDate: expiry||(def.toISOString().split('T')[0]),
+    status:'ready', emailSubject:'Ajout manuel',
+    gmailLink:'', source:'manual', account:slot, gmailMsgId:'', note
+  });
+  saveData(appData); render();
+  closeModal('addModal'); showToast('✓ Colis ajouté');
+
+  // Reset
+  document.getElementById('addTracking').value='';
+  document.getElementById('addCode').value='';
+  document.getElementById('addAddress').value='';
+  document.getElementById('addNote').value='';
+  document.getElementById('addExpiry').value='';
+  selectedCarrier=null;
+  document.querySelectorAll('.carrier-btn').forEach(b=>b.classList.remove('selected'));
+}
+
+// ── Accounts render ──
 function renderAccounts() {
-  [1, 2].forEach(n => {
+  [1,2].forEach(n => {
     const ts = getTokenStore(n);
-    const acc = appData.accounts[n];
-    const connected = !!(ts?.accessToken && Date.now() < ts.expiry);
-
-    // Name & email
-    document.getElementById('acc' + n + 'name').textContent = connected ? (ts.name || acc.name) : (n === 1 ? 'Compte principal' : 'Compte secondaire');
-    document.getElementById('acc' + n + 'email').textContent = connected ? ts.email : 'Non connecté';
-
-    // Avatar — use Google profile picture if available
-    const avatar = document.getElementById('acc' + n + 'avatar');
-    if (connected && ts.picture) {
-      avatar.innerHTML = `<img src="${ts.picture}" style="width:100%;height:100%;border-radius:12px;object-fit:cover;" onerror="this.parentElement.textContent='👤'">`;
+    const s = document.getElementById('status'+n);
+    const cb = document.getElementById('acc'+n+'connectBtn');
+    const disc = document.getElementById('disc'+n);
+    if (ts?.accessToken) {
+      if (s) { s.textContent='⬤ Connecté'; s.className='gmail-status connected'; }
+      if (cb) cb.textContent='🔄 Reconnecter';
+      if (disc) disc.style.display='';
     } else {
-      avatar.textContent = '👤';
-    }
-
-    // Buttons visibility
-    document.getElementById('acc' + n + 'connectBtn').style.display = connected ? 'none' : 'block';
-    document.getElementById('acc' + n + 'disconnectBtn').style.display = connected ? 'block' : 'none';
-    document.getElementById('syncBtn' + n).style.display = connected ? 'flex' : 'none';
-
-    // Source tags
-    const sourcesEl = document.getElementById('acc' + n + 'sources');
-    if (connected) {
-      sourcesEl.innerHTML = `
-        <span class="source-tag gmail">📧 Gmail connecté</span>
-        <span class="source-tag status-ok">● Actif</span>`;
-    } else {
-      sourcesEl.innerHTML = `<span class="source-tag" style="background:rgba(0,0,0,0.05);color:var(--text3)">📧 Gmail non connecté</span>`;
-    }
-
-    // Last sync
-    const ls = appData.accounts[n].lastSync;
-    const lsEl = document.getElementById('lastSync' + n);
-    if (ls) {
-      const d = new Date(ls);
-      const dateStr = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-      const timeStr = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      lsEl.innerHTML = '🔄 Dernière sync<br><span style="font-family:"Space Mono",monospace;font-size:11px;color:var(--text);">' + dateStr + ' à ' + timeStr + '</span>';
-    } else {
-      lsEl.textContent = 'Jamais synchronisé';
-    }
-
-    // Token expiry warning
-    if (connected && Date.now() > ts.expiry - 300000) {
-      lsEl.innerHTML += ' <span style="color:var(--accent3)">· ⚠️ Session expire bientôt</span>';
+      if (s) { s.textContent='⬤ Non connecté'; s.className='gmail-status disconnected'; }
+      if (cb) cb.textContent='🔗 Connecter';
+      if (disc) disc.style.display='none';
     }
   });
-
-  // Setup banner
-  const anyConnected = [1,2].some(n => getTokenStore(n)?.accessToken);
-  const banner = document.getElementById('setupBanner');
-  if (banner) banner.style.display = anyConnected ? 'none' : 'block';
-
-  updateClientIdStatus();
 }
 
-function requestSMSAccess() {
-  showToast('⚠️ Requiert l\'app Android native');
+// ── Modal helpers ──
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  document.body.style.overflow='hidden';
 }
-
-
-// ═══════════════════════════════════════════
-//  SETTINGS
-// ═══════════════════════════════════════════
-
-function saveSetting(key, value) {
-  appData.settings[key] = value;
-  saveData(appData);
-  showToast('✓ Paramètre enregistré');
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow='';
 }
+function openAddModal() { openModal('addModal'); }
+function openSync() { openModal('syncModal'); renderAccounts(); }
 
-function exportData() {
-  const json = JSON.stringify(appData, null, 2);
-  const blob = new Blob([json], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'lockertrack-export.json';
-  a.click();
-  showToast('✓ Export téléchargé');
-}
-
-function clearCollected() {
-  const n = appData.packages.filter(p => p.status === 'collected').length;
-  if (n === 0) { showToast('Aucun colis récupéré à supprimer'); return; }
-  appData.packages = appData.packages.filter(p => p.status !== 'collected');
-  saveData(appData);
-  render();
-  showToast(`✓ ${n} colis supprimé(s)`);
-}
-
-function confirmReset() {
-  if (confirm('Supprimer TOUTES les données ? Cette action est irréversible.')) {
-    localStorage.removeItem(STORAGE_KEY);
-    appData = {
-      packages: [],
-      accounts: {
-        1: { name: 'Compte principal', email: '', phone: '', lastSync: null },
-        2: { name: 'Compte secondaire', email: '', phone: '', lastSync: null }
-      },
-      settings: { notifExpiry: true, notifReady: true, syncFreq: '30' },
-      nextId: 1
-    };
-    saveData(appData);
-    render();
-    showToast('✓ Données réinitialisées');
-  }
-}
-
-function animateProgress(id, duration) {
-  const bar = document.getElementById(id);
-  if (!bar) return;
-  bar.style.width = '0%';
-  bar.style.transition = 'width ' + duration + 'ms ease';
-  requestAnimationFrame(() => { bar.style.width = '100%'; });
-  setTimeout(() => { bar.style.width = '0%'; bar.style.transition = 'none'; }, duration + 200);
-}
-
-// ═══════════════════════════════════════════
-//  TOAST
-// ═══════════════════════════════════════════
-
-let toastTimer = null;
+// ── Toast ──
+let toastTimer;
 function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),3000);
 }
 
-// ═══════════════════════════════════════════
-//  INIT
-// ═══════════════════════════════════════════
+// ── Theme ──
+function toggleTheme() {
+  const isDark = document.documentElement.getAttribute('data-theme')==='dark';
+  document.documentElement.setAttribute('data-theme', isDark?'light':'dark');
+  document.getElementById('themeBtn').textContent=isDark?'☀️':'🌙';
+  localStorage.setItem('lt_theme', isDark?'light':'dark');
+}
 
-document.getElementById('addModal').addEventListener('click', e => {
-  if (e.target === document.getElementById('addModal')) closeModal();
+function initTheme() {
+  const saved = localStorage.getItem('lt_theme');
+  const sys   = window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+  const theme = saved||sys;
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('themeBtn').textContent=theme==='dark'?'🌙':'☀️';
+}
+
+// ── Click outside modal ──
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if(e.target===o) closeModal(o.id); });
 });
 
-// Init settings UI
-document.getElementById('notifExpiry').checked = appData.settings.notifExpiry;
-document.getElementById('notifReady').checked = appData.settings.notifReady;
-document.getElementById('syncFreq').value = appData.settings.syncFreq;
-
-// Init OAuth UI
-updateClientIdStatus();
-
-// Show home button only when running as installed PWA
-(function() {
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
-    || window.navigator.standalone === true;
-  if (isStandalone) {
-    const btn = document.getElementById('homeBtn');
-    if (btn) btn.style.display = 'flex';
-  }
-})();
-
-// Service Worker
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then(reg => console.log('SW enregistré, scope:', reg.scope))
-      .catch(err => console.warn('SW échec:', err));
-  });
-}
-
-// Initial render
+// ── Init ──
+initTheme();
+renderAccounts();
 render();
 </script>
-  <!-- Capacitor runtime (présent uniquement dans l'APK) -->
-  <script>
-    // Polyfill Capacitor pour le mode PWA web
-    if (!window.Capacitor) {
-      window.Capacitor = { isNativePlatform: () => false, Plugins: {} };
-    }
-  </script>
-  <script src="sms-bridge.js"></script>
 </body>
 </html>

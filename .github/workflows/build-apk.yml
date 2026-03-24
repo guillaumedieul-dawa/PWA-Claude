@@ -27,7 +27,7 @@ jobs:
         run: |
           npm init -y
           npm install @capacitor/core@5.7.0 @capacitor/cli@5.7.0 @capacitor/android@5.7.0
-          npm install @byteowls/capacitor-sms@5.0.0 --save
+          npm install capacitor-native-sms-reader --save
           npx cap init "FamilyHub" "com.famille.dieulgandet" --web-dir www
 
       - name: Copy web files
@@ -61,7 +61,7 @@ jobs:
       - name: Set permissions in AndroidManifest
         run: |
           MANIFEST="android/app/src/main/AndroidManifest.xml"
-          sed -i 's|</manifest>|    <uses-permission android:name="android.permission.SEND_SMS"/>\n    <uses-permission android:name="android.permission.READ_SMS"/>\n    <uses-permission android:name="android.permission.RECEIVE_SMS"/>\n    <uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>\n</manifest>|' $MANIFEST
+          sed -i 's|</manifest>|    <uses-permission android:name="android.permission.READ_SMS"/>\n    <uses-permission android:name="android.permission.RECEIVE_SMS"/>\n    <uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>\n</manifest>|' $MANIFEST
 
       - name: Fix gradlew permissions
         run: chmod +x android/gradlew
@@ -76,4 +76,3 @@ jobs:
         with:
           name: FamilyHub-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
-          

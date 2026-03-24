@@ -46,102 +46,12 @@ jobs:
           rm -rf android
           npx cap add android
 
-      - name: Inject SMS Java plugin
+      - name: Inject SMS plugin (base64)
         run: |
           PLUGIN_DIR="android/app/src/main/java/com/famille/dieulgandet"
           mkdir -p $PLUGIN_DIR
-
-          # Plugin Java natif qui lit les SMS sans dépendance externe
-          cat > $PLUGIN_DIR/SmsPlugin.java << 'JAVA'
-package com.famille.dieulgandet;
-
-import android.Manifest;
-import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.net.Uri;
-import androidx.core.app.ActivityCompat;
-import com.getcapacitor.JSArray;
-import com.getcapacitor.JSObject;
-import com.getcapacitor.Plugin;
-import com.getcapacitor.PluginCall;
-import com.getcapacitor.PluginMethod;
-import com.getcapacitor.annotation.CapacitorPlugin;
-import com.getcapacitor.annotation.Permission;
-import com.getcapacitor.annotation.PermissionCallback;
-
-@CapacitorPlugin(
-    name = "SmsPlugin",
-    permissions = {
-        @Permission(strings = { Manifest.permission.READ_SMS }, alias = "readSms"),
-        @Permission(strings = { Manifest.permission.RECEIVE_SMS }, alias = "receiveSms")
-    }
-)
-public class SmsPlugin extends Plugin {
-
-    @PluginMethod
-    public void getSMSList(PluginCall call) {
-        if (getPermissionState("readSms") != com.getcapacitor.PermissionState.GRANTED) {
-            requestPermissionForAlias("readSms", call, "smsPermissionCallback");
-            return;
-        }
-        readAndReturnSMS(call);
-    }
-
-    @PermissionCallback
-    private void smsPermissionCallback(PluginCall call) {
-        if (getPermissionState("readSms") == com.getcapacitor.PermissionState.GRANTED) {
-            readAndReturnSMS(call);
-        } else {
-            call.reject("Permission SMS refusée");
-        }
-    }
-
-    private void readAndReturnSMS(PluginCall call) {
-        JSArray messages = new JSArray();
-        try {
-            int count = call.getInt("count", 300);
-            Uri uri = Uri.parse("content://sms/inbox");
-            String[] projection = {"_id", "address", "body", "date"};
-            Cursor cursor = getContext().getContentResolver().query(
-                uri, projection, null, null, "date DESC LIMIT " + count
-            );
-            if (cursor != null) {
-                while (cursor.moveToNext()) {
-                    JSObject msg = new JSObject();
-                    msg.put("id",      cursor.getString(cursor.getColumnIndexOrThrow("_id")));
-                    msg.put("address", cursor.getString(cursor.getColumnIndexOrThrow("address")));
-                    msg.put("body",    cursor.getString(cursor.getColumnIndexOrThrow("body")));
-                    msg.put("date",    cursor.getLong(cursor.getColumnIndexOrThrow("date")));
-                    messages.put(msg);
-                }
-                cursor.close();
-            }
-        } catch (Exception e) {
-            call.reject("Erreur lecture SMS : " + e.getMessage());
-            return;
-        }
-        JSObject result = new JSObject();
-        result.put("messages", messages);
-        call.resolve(result);
-    }
-}
-JAVA
-
-          # MainActivity qui enregistre le plugin
-          cat > $PLUGIN_DIR/MainActivity.java << 'JAVA'
-package com.famille.dieulgandet;
-
-import com.getcapacitor.BridgeActivity;
-import android.os.Bundle;
-
-public class MainActivity extends BridgeActivity {
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        registerPlugin(SmsPlugin.class);
-        super.onCreate(savedInstanceState);
-    }
-}
-JAVA
+          echo "cGFja2FnZSBjb20uZmFtaWxsZS5kaWV1bGdhbmRldDsKCmltcG9ydCBhbmRyb2lkLk1hbmlmZXN0OwppbXBvcnQgYW5kcm9pZC5kYXRhYmFzZS5DdXJzb3I7CmltcG9ydCBhbmRyb2lkLm5ldC5Vcmk7CmltcG9ydCBjb20uZ2V0Y2FwYWNpdG9yLkpTQXJyYXk7CmltcG9ydCBjb20uZ2V0Y2FwYWNpdG9yLkpTT2JqZWN0OwppbXBvcnQgY29tLmdldGNhcGFjaXRvci5QbHVnaW47CmltcG9ydCBjb20uZ2V0Y2FwYWNpdG9yLlBsdWdpbkNhbGw7CmltcG9ydCBjb20uZ2V0Y2FwYWNpdG9yLlBsdWdpbk1ldGhvZDsKaW1wb3J0IGNvbS5nZXRjYXBhY2l0b3IuYW5ub3RhdGlvbi5DYXBhY2l0b3JQbHVnaW47CmltcG9ydCBjb20uZ2V0Y2FwYWNpdG9yLmFubm90YXRpb24uUGVybWlzc2lvbjsKaW1wb3J0IGNvbS5nZXRjYXBhY2l0b3IuYW5ub3RhdGlvbi5QZXJtaXNzaW9uQ2FsbGJhY2s7CgpAQ2FwYWNpdG9yUGx1Z2luKAogICAgbmFtZSA9ICJTbXNQbHVnaW4iLAogICAgcGVybWlzc2lvbnMgPSB7CiAgICAgICAgQFBlcm1pc3Npb24oc3RyaW5ncyA9IHsgTWFuaWZlc3QucGVybWlzc2lvbi5SRUFEX1NNUyB9LCBhbGlhcyA9ICJyZWFkU21zIiksCiAgICAgICAgQFBlcm1pc3Npb24oc3RyaW5ncyA9IHsgTWFuaWZlc3QucGVybWlzc2lvbi5SRUNFSVZFX1NNUyB9LCBhbGlhcyA9ICJyZWNlaXZlU21zIikKICAgIH0KKQpwdWJsaWMgY2xhc3MgU21zUGx1Z2luIGV4dGVuZHMgUGx1Z2luIHsKCiAgICBAUGx1Z2luTWV0aG9kCiAgICBwdWJsaWMgdm9pZCBnZXRTTVNMaXN0KFBsdWdpbkNhbGwgY2FsbCkgewogICAgICAgIGlmIChnZXRQZXJtaXNzaW9uU3RhdGUoInJlYWRTbXMiKSAhPSBjb20uZ2V0Y2FwYWNpdG9yLlBlcm1pc3Npb25TdGF0ZS5HUkFOVEVEKSB7CiAgICAgICAgICAgIHJlcXVlc3RQZXJtaXNzaW9uRm9yQWxpYXMoInJlYWRTbXMiLCBjYWxsLCAic21zUGVybWlzc2lvbkNhbGxiYWNrIik7CiAgICAgICAgICAgIHJldHVybjsKICAgICAgICB9CiAgICAgICAgcmVhZEFuZFJldHVyblNNUyhjYWxsKTsKICAgIH0KCiAgICBAUGVybWlzc2lvbkNhbGxiYWNrCiAgICBwcml2YXRlIHZvaWQgc21zUGVybWlzc2lvbkNhbGxiYWNrKFBsdWdpbkNhbGwgY2FsbCkgewogICAgICAgIGlmIChnZXRQZXJtaXNzaW9uU3RhdGUoInJlYWRTbXMiKSA9PSBjb20uZ2V0Y2FwYWNpdG9yLlBlcm1pc3Npb25TdGF0ZS5HUkFOVEVEKSB7CiAgICAgICAgICAgIHJlYWRBbmRSZXR1cm5TTVMoY2FsbCk7CiAgICAgICAgfSBlbHNlIHsKICAgICAgICAgICAgY2FsbC5yZWplY3QoIlBlcm1pc3Npb24gU01TIHJlZnVzZWUiKTsKICAgICAgICB9CiAgICB9CgogICAgcHJpdmF0ZSB2b2lkIHJlYWRBbmRSZXR1cm5TTVMoUGx1Z2luQ2FsbCBjYWxsKSB7CiAgICAgICAgSlNBcnJheSBtZXNzYWdlcyA9IG5ldyBKU0FycmF5KCk7CiAgICAgICAgdHJ5IHsKICAgICAgICAgICAgaW50IGNvdW50ID0gY2FsbC5nZXRJbnQoImNvdW50IiwgMzAwKTsKICAgICAgICAgICAgVXJpIHVyaSA9IFVyaS5wYXJzZSgiY29udGVudDovL3Ntcy9pbmJveCIpOwogICAgICAgICAgICBTdHJpbmdbXSBwcm9qZWN0aW9uID0geyJfaWQiLCAiYWRkcmVzcyIsICJib2R5IiwgImRhdGUifTsKICAgICAgICAgICAgQ3Vyc29yIGN1cnNvciA9IGdldENvbnRleHQoKS5nZXRDb250ZW50UmVzb2x2ZXIoKS5xdWVyeSgKICAgICAgICAgICAgICAgIHVyaSwgcHJvamVjdGlvbiwgbnVsbCwgbnVsbCwgImRhdGUgREVTQyBMSU1JVCAiICsgY291bnQKICAgICAgICAgICAgKTsKICAgICAgICAgICAgaWYgKGN1cnNvciAhPSBudWxsKSB7CiAgICAgICAgICAgICAgICB3aGlsZSAoY3Vyc29yLm1vdmVUb05leHQoKSkgewogICAgICAgICAgICAgICAgICAgIEpTT2JqZWN0IG1zZyA9IG5ldyBKU09iamVjdCgpOwogICAgICAgICAgICAgICAgICAgIG1zZy5wdXQoImlkIiwgICAgICBjdXJzb3IuZ2V0U3RyaW5nKGN1cnNvci5nZXRDb2x1bW5JbmRleE9yVGhyb3coIl9pZCIpKSk7CiAgICAgICAgICAgICAgICAgICAgbXNnLnB1dCgiYWRkcmVzcyIsIGN1cnNvci5nZXRTdHJpbmcoY3Vyc29yLmdldENvbHVtbkluZGV4T3JUaHJvdygiYWRkcmVzcyIpKSk7CiAgICAgICAgICAgICAgICAgICAgbXNnLnB1dCgiYm9keSIsICAgIGN1cnNvci5nZXRTdHJpbmcoY3Vyc29yLmdldENvbHVtbkluZGV4T3JUaHJvdygiYm9keSIpKSk7CiAgICAgICAgICAgICAgICAgICAgbXNnLnB1dCgiZGF0ZSIsICAgIGN1cnNvci5nZXRMb25nKGN1cnNvci5nZXRDb2x1bW5JbmRleE9yVGhyb3coImRhdGUiKSkpOwogICAgICAgICAgICAgICAgICAgIG1lc3NhZ2VzLnB1dChtc2cpOwogICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgY3Vyc29yLmNsb3NlKCk7CiAgICAgICAgICAgIH0KICAgICAgICB9IGNhdGNoIChFeGNlcHRpb24gZSkgewogICAgICAgICAgICBjYWxsLnJlamVjdCgiRXJyZXVyIFNNUzogIiArIGUuZ2V0TWVzc2FnZSgpKTsKICAgICAgICAgICAgcmV0dXJuOwogICAgICAgIH0KICAgICAgICBKU09iamVjdCByZXN1bHQgPSBuZXcgSlNPYmplY3QoKTsKICAgICAgICByZXN1bHQucHV0KCJtZXNzYWdlcyIsIG1lc3NhZ2VzKTsKICAgICAgICBjYWxsLnJlc29sdmUocmVzdWx0KTsKICAgIH0KfQo=" | base64 -d > $PLUGIN_DIR/SmsPlugin.java
+          echo "cGFja2FnZSBjb20uZmFtaWxsZS5kaWV1bGdhbmRldDsKCmltcG9ydCBjb20uZ2V0Y2FwYWNpdG9yLkJyaWRnZUFjdGl2aXR5OwppbXBvcnQgYW5kcm9pZC5vcy5CdW5kbGU7CgpwdWJsaWMgY2xhc3MgTWFpbkFjdGl2aXR5IGV4dGVuZHMgQnJpZGdlQWN0aXZpdHkgewogICAgQE92ZXJyaWRlCiAgICBwdWJsaWMgdm9pZCBvbkNyZWF0ZShCdW5kbGUgc2F2ZWRJbnN0YW5jZVN0YXRlKSB7CiAgICAgICAgcmVnaXN0ZXJQbHVnaW4oU21zUGx1Z2luLmNsYXNzKTsKICAgICAgICBzdXBlci5vbkNyZWF0ZShzYXZlZEluc3RhbmNlU3RhdGUpOwogICAgfQp9Cg==" | base64 -d > $PLUGIN_DIR/MainActivity.java
 
       - name: Set permissions in AndroidManifest
         run: |

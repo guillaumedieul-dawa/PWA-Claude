@@ -27,7 +27,7 @@ jobs:
         run: |
           npm init -y
           npm install @capacitor/core@5.7.0 @capacitor/cli@5.7.0 @capacitor/android@5.7.0
-          npm install capacitor-native-sms-reader --save
+          npm install capacitor-sms-inbox --save
           npx cap init "FamilyHub" "com.famille.dieulgandet" --web-dir www
 
       - name: Copy web files

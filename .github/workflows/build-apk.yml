@@ -25,14 +25,19 @@ jobs:
 
       - name: Install deps + Capacitor
         run: |
+          # Création du package.json si absent
           npm init -y
-          npm install @capacitor/core @capacitor/cli @capacitor/android
-          npm install @capacitor-community/sms-retriever
+          # Installation des coeurs de Capacitor
+          npm install @capacitor/core@5.7.0 @capacitor/cli@5.7.0 @capacitor/android@5.7.0
+          # Correction : Utilisation du paquet correct pour les SMS
+          npm install @capacitor-community/sms
+          # Initialisation
           npx cap init "FamilyHub" "com.famille.dieulgandet" --web-dir www
 
       - name: Copy web files
         run: |
           mkdir -p www
+          # On copie les fichiers de l'application dans le dossier web de Capacitor
           cp index.html www/ 2>/dev/null || true
           cp manifest.json www/ 2>/dev/null || true
           cp sw.js www/ 2>/dev/null || true
@@ -49,6 +54,7 @@ jobs:
       - name: Set MainActivity
         run: |
           MAIN="android/app/src/main/java/com/famille/dieulgandet/MainActivity.java"
+          mkdir -p $(dirname $MAIN)
           cat > $MAIN << 'JAVA'
           package com.famille.dieulgandet;
           import com.getcapacitor.BridgeActivity;
@@ -58,6 +64,7 @@ jobs:
       - name: Set permissions in AndroidManifest
         run: |
           MANIFEST="android/app/src/main/AndroidManifest.xml"
+          # Injection des permissions SMS avant la balise de fermeture
           sed -i 's|</manifest>|    <uses-permission android:name="android.permission.READ_SMS"/>\n    <uses-permission android:name="android.permission.RECEIVE_SMS"/>\n    <uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>\n</manifest>|' $MANIFEST
 
       - name: Fix gradlew permissions

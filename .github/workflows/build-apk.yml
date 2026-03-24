@@ -23,11 +23,9 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Install deps + Capacitor 7
+      - name: Install deps + Capacitor
         run: |
-          npm init -y
-          npm install @capacitor/core@7 @capacitor/cli@7 @capacitor/android@7
-          npm install capacitor-sms-inbox --save
+          npm install @capacitor/core@5.7.0 @capacitor/cli@5.7.0 @capacitor/android@5.7.0
           npx cap init "FamilyHub" "com.famille.dieulgandet" --web-dir www
 
       - name: Copy web files
@@ -48,15 +46,102 @@ jobs:
           rm -rf android
           npx cap add android
 
-      - name: Set MainActivity
+      - name: Inject SMS Java plugin
         run: |
-          MAIN="android/app/src/main/java/com/famille/dieulgandet/MainActivity.java"
-          mkdir -p $(dirname $MAIN)
-          cat > $MAIN << 'JAVA'
-          package com.famille.dieulgandet;
-          import com.getcapacitor.BridgeActivity;
-          public class MainActivity extends BridgeActivity {}
-          JAVA
+          PLUGIN_DIR="android/app/src/main/java/com/famille/dieulgandet"
+          mkdir -p $PLUGIN_DIR
+
+          # Plugin Java natif qui lit les SMS sans dépendance externe
+          cat > $PLUGIN_DIR/SmsPlugin.java << 'JAVA'
+package com.famille.dieulgandet;
+
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.net.Uri;
+import androidx.core.app.ActivityCompat;
+import com.getcapacitor.JSArray;
+import com.getcapacitor.JSObject;
+import com.getcapacitor.Plugin;
+import com.getcapacitor.PluginCall;
+import com.getcapacitor.PluginMethod;
+import com.getcapacitor.annotation.CapacitorPlugin;
+import com.getcapacitor.annotation.Permission;
+import com.getcapacitor.annotation.PermissionCallback;
+
+@CapacitorPlugin(
+    name = "SmsPlugin",
+    permissions = {
+        @Permission(strings = { Manifest.permission.READ_SMS }, alias = "readSms"),
+        @Permission(strings = { Manifest.permission.RECEIVE_SMS }, alias = "receiveSms")
+    }
+)
+public class SmsPlugin extends Plugin {
+
+    @PluginMethod
+    public void getSMSList(PluginCall call) {
+        if (getPermissionState("readSms") != com.getcapacitor.PermissionState.GRANTED) {
+            requestPermissionForAlias("readSms", call, "smsPermissionCallback");
+            return;
+        }
+        readAndReturnSMS(call);
+    }
+
+    @PermissionCallback
+    private void smsPermissionCallback(PluginCall call) {
+        if (getPermissionState("readSms") == com.getcapacitor.PermissionState.GRANTED) {
+            readAndReturnSMS(call);
+        } else {
+            call.reject("Permission SMS refusée");
+        }
+    }
+
+    private void readAndReturnSMS(PluginCall call) {
+        JSArray messages = new JSArray();
+        try {
+            int count = call.getInt("count", 300);
+            Uri uri = Uri.parse("content://sms/inbox");
+            String[] projection = {"_id", "address", "body", "date"};
+            Cursor cursor = getContext().getContentResolver().query(
+                uri, projection, null, null, "date DESC LIMIT " + count
+            );
+            if (cursor != null) {
+                while (cursor.moveToNext()) {
+                    JSObject msg = new JSObject();
+                    msg.put("id",      cursor.getString(cursor.getColumnIndexOrThrow("_id")));
+                    msg.put("address", cursor.getString(cursor.getColumnIndexOrThrow("address")));
+                    msg.put("body",    cursor.getString(cursor.getColumnIndexOrThrow("body")));
+                    msg.put("date",    cursor.getLong(cursor.getColumnIndexOrThrow("date")));
+                    messages.put(msg);
+                }
+                cursor.close();
+            }
+        } catch (Exception e) {
+            call.reject("Erreur lecture SMS : " + e.getMessage());
+            return;
+        }
+        JSObject result = new JSObject();
+        result.put("messages", messages);
+        call.resolve(result);
+    }
+}
+JAVA
+
+          # MainActivity qui enregistre le plugin
+          cat > $PLUGIN_DIR/MainActivity.java << 'JAVA'
+package com.famille.dieulgandet;
+
+import com.getcapacitor.BridgeActivity;
+import android.os.Bundle;
+
+public class MainActivity extends BridgeActivity {
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        registerPlugin(SmsPlugin.class);
+        super.onCreate(savedInstanceState);
+    }
+}
+JAVA
 
       - name: Set permissions in AndroidManifest
         run: |

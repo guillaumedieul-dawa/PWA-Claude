@@ -1,1 +1,75 @@
+name: Build APK
 
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.2.2
+
+      - uses: actions/setup-node@v4.4.0
+        with:
+          node-version: '20'
+
+      - uses: actions/setup-java@v4.7.0
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install deps + Capacitor
+        run: |
+          npm init -y
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+          npm install @capacitor-community/sms-retriever
+          npx cap init "FamilyHub" "com.famille.dieulgandet" --web-dir www
+
+      - name: Copy web files
+        run: |
+          mkdir -p www
+          cp index.html www/ 2>/dev/null || true
+          cp manifest.json www/ 2>/dev/null || true
+          cp sw.js www/ 2>/dev/null || true
+          cp -r icons/ www/ 2>/dev/null || true
+          cp -r locker-tracker/ www/ 2>/dev/null || true
+          cp -r todo-partage/ www/ 2>/dev/null || true
+          cp -r cave-spiritueux/ www/ 2>/dev/null || true
+          cp -r menus-semaine/ www/ 2>/dev/null || true
+          cp -r liste-courses/ www/ 2>/dev/null || true
+
+      - name: Add Android platform
+        run: npx cap add android
+
+      - name: Set MainActivity
+        run: |
+          MAIN="android/app/src/main/java/com/famille/dieulgandet/MainActivity.java"
+          cat > $MAIN << 'JAVA'
+          package com.famille.dieulgandet;
+          import com.getcapacitor.BridgeActivity;
+          public class MainActivity extends BridgeActivity {}
+          JAVA
+
+      - name: Set permissions in AndroidManifest
+        run: |
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+          sed -i 's|</manifest>|    <uses-permission android:name="android.permission.READ_SMS"/>\n    <uses-permission android:name="android.permission.RECEIVE_SMS"/>\n    <uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>\n</manifest>|' $MANIFEST
+
+      - name: Fix gradlew permissions
+        run: chmod +x android/gradlew
+
+      - name: Build APK
+        run: |
+          cd android
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: FamilyHub-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk

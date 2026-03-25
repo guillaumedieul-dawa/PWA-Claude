@@ -578,6 +578,7 @@ function extractExpiry(t, arrival, c) {
 
 // ══════════════════════════════════════════
 //  LECTURE SMS NATIF (Capacitor)
+//  Plugin : SmsPlugin (Java natif injecté)
 // ══════════════════════════════════════════
 async function readSMSNative() {
   // Vérifier si on est dans Capacitor (APK Android)
@@ -586,36 +587,49 @@ async function readSMSNative() {
     return;
   }
 
+  // Récupérer le plugin via registerPlugin ou Plugins
+  // Le nom "SmsPlugin" est celui défini dans @CapacitorPlugin(name = "SmsPlugin")
+  let SmsPlugin = null;
+
+  // Méthode 1 : via Capacitor.Plugins (Capacitor 5+)
+  if (window.Capacitor?.Plugins?.SmsPlugin) {
+    SmsPlugin = window.Capacitor.Plugins.SmsPlugin;
+  }
+  // Méthode 2 : via registerPlugin (fallback)
+  else if (window.Capacitor?.registerPlugin) {
+    try {
+      SmsPlugin = window.Capacitor.registerPlugin('SmsPlugin');
+    } catch(e) {}
+  }
+
+  if (!SmsPlugin) {
+    showToast('⚠️ Plugin SMS introuvable — vérifiez que MainActivity enregistre SmsPlugin');
+    return;
+  }
+
   try {
     showToast('📲 Lecture des SMS en cours…');
-    // Utilise le plugin capacitor-sms-retriever ou @byteowls/capacitor-sms
-    const { SmsRetriever } = window.Capacitor.Plugins;
 
-    // Demander la permission de lire les SMS
-    const { SMSReader } = window.Capacitor.Plugins;
-    if (!SMSReader) {
-      showToast('⚠️ Plugin SMS non disponible');
+    // Appel du plugin — getSMSList est défini dans SmsPlugin.java
+    const result = await SmsPlugin.getSMSList({ count: 300 });
+    const messages = result?.messages || [];
+
+    if (messages.length === 0) {
+      showToast('Aucun SMS reçu ou permission refusée');
       return;
     }
-
-    const perm = await SMSReader.requestPermission();
-    if (perm.status !== 'granted') {
-      showToast('⚠️ Permission SMS refusée');
-      return;
-    }
-
-    // Lire les 200 derniers SMS
-    const result = await SMSReader.getSMSList({ count: 200 });
-    const messages = result.messages || [];
 
     let newCount = 0;
-    const existingIds = new Set(appData.packages.map(p => p._fbId || p.id).filter(Boolean));
+    const existingIds = new Set(appData.packages.map(p => p._fbId || String(p.id)).filter(Boolean));
 
     for (const sms of messages) {
-      const body    = sms.body || sms.message || '';
-      const address = sms.address || sms.sender || '';
+      const body    = sms.body || '';
+      const address = sms.address || '';
       const lo      = body.toLowerCase();
-      const det     = CARRIERS.find(d => d.test(address.toLowerCase(), '', lo));
+      const adrLo   = address.toLowerCase();
+
+      // Détecter le transporteur depuis l\'expéditeur ET le corps du SMS
+      const det = CARRIERS.find(d => d.test(adrLo, lo, lo));
       if (!det) continue;
 
       const c        = det.c;
@@ -626,45 +640,55 @@ async function readSMSNative() {
 
       if (!tracking && !code && !addr) continue;
 
-      // Clé unique basée sur le contenu du SMS
-      const smsId = 'sms_' + btoa(encodeURIComponent(body.substring(0, 80))).substring(0, 20);
+      // ID unique basé sur contenu + date pour éviter les doublons
+      const smsId = 'sms_' + String(sms.date || Date.now()) + '_' + String(sms.id || '');
       if (existingIds.has(smsId)) continue;
 
-      const now     = new Date().toISOString();
-      const expiry  = extractExpiry(body, now, c);
+      const now    = new Date().toISOString();
+      const expiry = extractExpiry(body, now, c);
+
       const pkg = {
-        id:           appData.nextId++,
-        _fbId:        smsId,
-        carrier:      c,
-        trackingNum:  tracking,
-        pickupCode:   code,
-        lockerAddress:addr,
-        arrivalDate:  now,
-        expiryDate:   expiry,
-        status:       status,
-        emailSubject: 'SMS — ' + (address || 'transporteur'),
-        gmailLink:    '',
-        account:      'Guillaume', // compte du téléphone actuel
-        source:       'sms',
-        gmailMsgId:   smsId,
-        note:         ''
+        id:            appData.nextId++,
+        _fbId:         smsId,
+        carrier:       c,
+        trackingNum:   tracking,
+        pickupCode:    code,
+        lockerAddress: addr,
+        arrivalDate:   now,
+        expiryDate:    expiry,
+        status:        status,
+        emailSubject:  'SMS — ' + (address || 'transporteur'),
+        gmailLink:     '',
+        account:       'Guillaume',
+        source:        'sms',
+        gmailMsgId:    smsId,
+        note:          ''
       };
 
       appData.packages.unshift(pkg);
       existingIds.add(smsId);
       newCount++;
 
-      // Pousser vers Firebase pour partage avec Michèle
+      // Pousser vers Firebase en arrière-plan
       fbWrite(smsId, pkg).catch(() => {});
     }
 
     saveData(appData);
     render();
-    const msg = newCount > 0 ? `✓ ${newCount} colis détecté(s) dans les SMS` : '✓ Aucun nouveau colis dans les SMS';
+
+    const msg = newCount > 0
+      ? `✓ ${newCount} colis détecté(s) dans ${messages.length} SMS`
+      : `✓ Aucun nouveau colis (${messages.length} SMS analysés)`;
     showToast(msg);
 
   } catch(err) {
-    showToast('❌ Erreur SMS : ' + err.message);
+    // Gérer le cas où la permission est refusée par l\'utilisateur
+    if (err.message?.includes('refus') || err.message?.includes('denied') || err.message?.includes('PERMISSION')) {
+      showToast('⚠️ Permission SMS refusée — autorisez l\'accès dans Paramètres Android');
+    } else {
+      showToast('❌ Erreur SMS : ' + (err.message || err));
+    }
+    console.error('SMS error:', err);
   }
 }
 

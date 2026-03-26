@@ -184,8 +184,8 @@ body::after{content:'';position:fixed;top:-20vh;right:-10%;width:70vw;height:60v
   </div>
 
   <div class="filter-row">
-    <button class="ftab active" onclick="setFilter('all',this)">Tous <span class="badge" id="badgeAll">0</span></button>
-    <button class="ftab" onclick="setFilter('ready',this)">À retirer <span class="badge amber" id="badgeReady">0</span></button>
+    <button class="ftab" onclick="setFilter('all',this)">Tous <span class="badge" id="badgeAll">0</span></button>
+    <button class="ftab active" onclick="setFilter('ready',this)">À retirer <span class="badge amber" id="badgeReady">0</span></button>
     <button class="ftab" onclick="setFilter('pending',this)">En route <span class="badge muted" id="badgePending">0</span></button>
     <button class="ftab" onclick="setFilter('delivered',this)">Livré <span class="badge" id="badgeDelivered">0</span></button>
     <button class="ftab" onclick="setFilter('expired',this)">Expiré <span class="badge red" id="badgeExpired">0</span></button>
@@ -287,6 +287,7 @@ Ex: Vos codes 6684 puis 7785 pour retirer votre colis Colissimo disponible en Co
 Ex: Votre colis 00IZ31TJ de LA PLANTE DU LOUP est en route avec GLS...
 Ex: Retire ton colis avant le 2024-12-24. Code: G2-6949. Consigne Vinted Go: Maxi Bazar Herblay..."></textarea>
     <button class="btn-submit" onclick="parseSMSManual()" style="margin-top:8px;margin-bottom:8px">📲 Extraire depuis ce SMS</button>
+    <button class="btn-secondary" style="color:var(--red);border-color:rgba(255,68,85,0.3)" onclick="resetAllData()">🗑 Réinitialiser toutes les données</button>
     <button class="btn-secondary" onclick="closeModal('syncModal')">Fermer</button>
   </div>
 </div>
@@ -306,7 +307,7 @@ Ex: Retire ton colis avant le 2024-12-24. Code: G2-6949. Consigne Vinted Go: Max
 // ══════════════════════════════════════════
 //  CONFIG
 // ══════════════════════════════════════════
-const STORAGE_KEY  = 'lockertrack_v3';
+const STORAGE_KEY   = 'lockertrack_v3';
 const FB_CONFIG_KEY = 'lt_fb_config';
 
 const CARRIER_RETENTION = {
@@ -326,7 +327,7 @@ const CARRIER_LABELS = {
 };
 
 // ══════════════════════════════════════════
-//  DONNÉES LOCALES
+//  DONNÉES
 // ══════════════════════════════════════════
 function loadData() {
   try { const d=JSON.parse(localStorage.getItem(STORAGE_KEY)); if(d?.packages) return d; } catch {}
@@ -335,9 +336,39 @@ function loadData() {
 function saveData(d) { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); }
 
 let appData = loadData();
-let currentFilter = 'all';
+let currentFilter = 'ready';
 let currentSearch = '';
 let selectedCarrier = null;
+
+// ══════════════════════════════════════════
+//  PURGE automatique des colis anciens
+//  Garde : actifs + livrés/expirés < 20 jours
+// ══════════════════════════════════════════
+function purgeOldPackages() {
+  const LIMIT = 20 * 86400000;
+  const now   = Date.now();
+  const before = appData.packages.length;
+  appData.packages = appData.packages.filter(p => {
+    if (p.status === 'ready' || p.status === 'pending' || p.status === 'collected') return true;
+    // delivered / expired : garder seulement si < 20 jours
+    const ref = p.arrivalDate || p.lastUpdated;
+    if (!ref) return false;
+    return (now - new Date(ref).getTime()) < LIMIT;
+  });
+  if (appData.packages.length !== before) saveData(appData);
+}
+
+// ══════════════════════════════════════════
+//  RÉINITIALISATION
+// ══════════════════════════════════════════
+function resetAllData() {
+  if (!confirm('Supprimer TOUS les colis ? Cette action est irréversible.')) return;
+  appData = { packages:[], nextId:1, lastSync:null };
+  saveData(appData);
+  render();
+  closeModal('syncModal');
+  showToast('✓ Données réinitialisées');
+}
 
 // ══════════════════════════════════════════
 //  FIREBASE CONFIG
@@ -366,12 +397,11 @@ function fbUrl(path) {
   return `https://firestore.googleapis.com/v1/projects/${cfg.projectId}/databases/(default)/documents/${path}?key=${cfg.apiKey}`;
 }
 
-// Convertit un document Firestore (format fields) en objet JS simple
 function fbDocToObj(doc) {
   const obj = {};
   if (!doc.fields) return obj;
   for (const [k, v] of Object.entries(doc.fields)) {
-    if (v.stringValue  !== undefined) obj[k] = v.stringValue;
+    if      (v.stringValue  !== undefined) obj[k] = v.stringValue;
     else if (v.doubleValue  !== undefined) obj[k] = v.doubleValue;
     else if (v.integerValue !== undefined) obj[k] = parseInt(v.integerValue);
     else if (v.booleanValue !== undefined) obj[k] = v.booleanValue;
@@ -380,7 +410,6 @@ function fbDocToObj(doc) {
   return obj;
 }
 
-// Convertit un objet JS en format fields Firestore
 function objToFbFields(obj) {
   const fields = {};
   for (const [k, v] of Object.entries(obj)) {
@@ -399,8 +428,7 @@ async function fbGetAll() {
   if (!r.ok) throw new Error('Firebase ' + r.status);
   const data = await r.json();
   return (data.documents || []).map(doc => ({
-    ...fbDocToObj(doc),
-    _fbId: doc.name.split('/').pop()
+    ...fbDocToObj(doc), _fbId: doc.name.split('/').pop()
   }));
 }
 
@@ -408,21 +436,19 @@ async function fbWrite(docId, obj) {
   const url = fbUrl(`colis/${docId}`);
   if (!url) return;
   await fetch(url, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ fields: objToFbFields(obj) }),
-    redirect: 'follow'
+    method:'PATCH', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ fields: objToFbFields(obj) }), redirect:'follow'
   });
 }
 
 async function fbDelete(docId) {
   const url = fbUrl(`colis/${docId}`);
   if (!url) return;
-  await fetch(url, { method: 'DELETE', redirect:'follow' });
+  await fetch(url, { method:'DELETE', redirect:'follow' });
 }
 
 // ══════════════════════════════════════════
-//  SYNC FIREBASE → LOCAL
+//  SYNC FIREBASE
 // ══════════════════════════════════════════
 async function syncFromFirebase() {
   const cfg = getFBConfig();
@@ -438,18 +464,23 @@ async function syncFromFirebase() {
 
   try {
     const remotePkgs = await fbGetAll();
-    const localIds   = new Set(appData.packages.map(p => p._fbId).filter(Boolean));
     let newCount = 0;
 
     for (const pkg of remotePkgs) {
       const existing = appData.packages.find(p => p._fbId === pkg._fbId);
       if (existing) {
-        // Mettre à jour le statut si changé depuis un autre téléphone
         if (pkg.status && pkg.status !== existing.status && existing.status !== 'collected') {
           existing.status = pkg.status;
         }
+        // Mettre à jour les infos si la version distante est plus récente
+        if (pkg.lastUpdated > (existing.lastUpdated || '')) {
+          existing.trackingNum   = pkg.trackingNum   || existing.trackingNum;
+          existing.pickupCode    = pkg.pickupCode    || existing.pickupCode;
+          existing.lockerAddress = pkg.lockerAddress || existing.lockerAddress;
+          existing.deliverySlot  = pkg.deliverySlot  || existing.deliverySlot;
+          existing.trackingLink  = pkg.trackingLink  || existing.trackingLink;
+        }
       } else {
-        // Nouveau colis venant de l'autre téléphone ou du script Gmail
         if (!pkg.id) pkg.id = appData.nextId++;
         appData.packages.unshift(pkg);
         newCount++;
@@ -457,6 +488,7 @@ async function syncFromFirebase() {
     }
 
     appData.lastSync = new Date().toISOString();
+    purgeOldPackages();
     saveData(appData);
     render();
 
@@ -469,9 +501,7 @@ async function syncFromFirebase() {
     updateLastSyncLabel();
 
   } catch(err) {
-    const msg = err.message.includes('Failed to fetch')
-      ? '❌ Impossible de joindre Firebase'
-      : '❌ ' + err.message;
+    const msg = err.message.includes('Failed to fetch') ? '❌ Impossible de joindre Firebase' : '❌ ' + err.message;
     if (result) result.textContent = msg;
     if (fill)   { fill.style.width='0%'; }
     if (status) { status.textContent='⬤ Erreur'; status.className='status-badge sb-err'; }
@@ -479,13 +509,10 @@ async function syncFromFirebase() {
   }
 }
 
-// Synchro auto au démarrage si Firebase configuré et dernière sync > 30min
 function autoSync() {
   if (!getFBConfig()) return;
   const last = appData.lastSync;
-  if (!last || Date.now() - new Date(last).getTime() > 30 * 60 * 1000) {
-    syncFromFirebase();
-  }
+  if (!last || Date.now() - new Date(last).getTime() > 30*60*1000) syncFromFirebase();
 }
 
 // ══════════════════════════════════════════
@@ -506,16 +533,17 @@ const CARRIERS = [
 ];
 
 const STATUS_MAP = {
-  delivered:['a été livré','colis livré','livré à','livraison effectuée','remis à'],
+  delivered:['a été livré','colis livré','livré à','livraison effectuée','remis à','votre colis a été livré'],
   expired:  ['retourné à l\'expéditeur','non récupéré','délai dépassé','renvoyé'],
   ready:    ['disponible en consigne','à retirer','vos codes','code de retrait','code:',
              'est disponible','déposé dans','retire ton colis','est arrivé dans',
-             'attend dans votre point','dans votre relais'],
+             'attend dans votre point','dans votre relais','prêt à être enlevé'],
   pending:  ['en chemin','en cours de livraison','en route','sera livré','expédié',
-             'pris en charge','acheminé','in transit','confié par'],
+             'pris en charge','acheminé','in transit','confié par','est en route'],
 };
 
 function detectStatus(t) {
+  if (!t) return 'pending';
   const lo = t.toLowerCase();
   for (const [s,kws] of Object.entries(STATUS_MAP))
     if (kws.some(k=>lo.includes(k))) return s;
@@ -523,6 +551,7 @@ function detectStatus(t) {
 }
 
 function extractTracking(c, t) {
+  if (!t) return '';
   const P = {
     ups:        [/\b(1Z[A-Z0-9]{16})\b/i],
     chronopost: [/\b([A-Z]{2}\d{9}[A-Z]{2})\b/,/\b(PP\d{9}FR)\b/i],
@@ -541,95 +570,126 @@ function extractTracking(c, t) {
 }
 
 function extractCode(t) {
+  if (!t) return '';
   const m1=t.match(/vos codes\s+(\d{4})\s+puis\s+(\d{4})/i); if(m1) return m1[1]+' / '+m1[2];
-  const m2=t.match(/identifiant\s*:\s*(\d{3,8}).*?code\s*d['']ouverture\s*:\s*(\d{3,8})/is); if(m2) return m2[1]+' / '+m2[2];
+  const m2=t.match(/identifiant\s*:\s*(\d{3,8}).*?code\s*d.ouverture\s*:\s*(\d{3,8})/is); if(m2) return m2[1]+' / '+m2[2];
   const m3=t.match(/\bcode\s*:\s*([A-Z0-9\-]{3,12})/i); if(m3) return m3[1];
   const m4=t.match(/code\s*(?:de\s*)?retrait\s*[:\s]+([A-Z0-9]{4,12})/i); if(m4) return m4[1];
   return '';
 }
 
 function extractAddress(t) {
+  if (!t) return '';
   const P=[
     /consigne\s+pickup\s+(.+?)(?:\.|jusqu|n°|code)/i,
     /votre\s+point\s+de\s+retrait\s*:\s*\n+(.+?\n.+?\n.+?)(?:\n\n)/is,
     /sera\s+livré\s+à\s*\n(.+?\n.+?)(?:\n\n|france)/is,
     /consigne\s+vinted\s+go\s*:\s*(.+?)(?:\.|suivi)/i,
-    /informations\s+sur\s+l['']adresse\s*\n(.+?\n.+?\n.+?)(?:\n\n)/is,
     /dans\s+(?:votre\s+)?(?:relais|point)\s+(.+?)(?:\.|jusqu)/i,
     /expédier\s+à\s*\n(.+?\n.+?\n.+?)(?:\n\n|ups standard)/is,
+    /informations\s+sur\s+l.adresse\s*\n(.+?\n.+?\n.+?)(?:\n\n)/is,
   ];
-  for(const re of P){const m=t.match(re);if(m?.[1]){const lines=m[1].split('\n').map(l=>l.trim()).filter(l=>l.length>2&&!/^(ce message|merci|suivre|téléchargez|chronopost|colissimo)/i.test(l));if(lines.length)return lines.slice(0,3).join(', ');}}
+  for(const re of P){const m=t.match(re);if(m?.[1]){const lines=m[1].split('\n').map(l=>l.trim()).filter(l=>l.length>2&&!/^(ce message|merci|suivre|téléchargez)/i.test(l));if(lines.length)return lines.slice(0,3).join(', ');}}
+  return '';
+}
+
+function extractLink(t) {
+  if (!t) return '';
+  // Cherche les URLs de suivi transporteurs connues
+  const m = t.match(/https?:\/\/(?:n\.pkup\.fr|sms\.laposte\.fr|www\.chronopost\.fr\/suivi|p\.vintedgo\.com|moncolis\.gls-france\.com|gls\.tf|c\.rcol\.fr)[^\s<"')]+/i);
+  if (m) return m[0];
+  // Fallback : premier lien http court
+  const m2 = t.match(/https?:\/\/[^\s<"')]{8,60}/);
+  return m2 ? m2[0] : '';
+}
+
+function extractDeliverySlot(t) {
+  if (!t) return '';
+  // "entre 11:15 - 14:15" / "entre 13h05 et 14h05"
+  const m1 = t.match(/entre\s+(\d{1,2}[h:]\d{2})\s*[-–et]+\s*(\d{1,2}[h:]\d{2})/i);
+  if (m1) return m1[1].replace('h',':') + ' — ' + m1[2].replace('h',':');
+  // "livraison entre X et Y"
+  const m2 = t.match(/(?:livraison|livré)\s+(?:entre|de)\s+(\d{1,2}[h:]\d{2})[^\d]*(\d{1,2}[h:]\d{2})/i);
+  if (m2) return m2[1].replace('h',':') + ' — ' + m2[2].replace('h',':');
   return '';
 }
 
 function extractExpiry(t, arrival, c) {
+  if (!t) return '';
   const dur=t.match(/(?:disposez?\s+de|pendant)\s+(\d+)\s+jours?/i);
   if(dur){const d=new Date(arrival);d.setDate(d.getDate()+parseInt(dur[1]));return d.toISOString().split('T')[0];}
-  const iso=t.match(/(?:avant le|jusqu['']au)\s+(\d{4}-\d{2}-\d{2})/i);
+  const iso=t.match(/(?:avant le|jusqu[\'']au)\s+(\d{4}-\d{2}-\d{2})/i);
   if(iso)return iso[1];
   const MONTHS={janvier:1,février:2,mars:3,avril:4,mai:5,juin:6,juillet:7,août:8,septembre:9,octobre:10,novembre:11,décembre:12};
-  const txt=t.match(/(?:jusqu['']au|avant le)\s+(\d{1,2})\s+([a-zé]+)\s+(\d{4})/i);
+  const txt=t.match(/(?:jusqu[\'']au|avant le)\s+(\d{1,2})\s+([a-zé]+)\s+(\d{4})/i);
   if(txt){const mo=MONTHS[txt[2].toLowerCase()];if(mo)return`${txt[3]}-${String(mo).padStart(2,'0')}-${txt[1].padStart(2,'0')}`;}
-  const num=t.match(/(?:jusqu['']au|avant le)\s+(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/i);
+  const num=t.match(/(?:jusqu[\'']au|avant le)\s+(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/i);
   if(num){const y=num[3]?(num[3].length===2?'20'+num[3]:num[3]):new Date().getFullYear();return`${y}-${num[2].padStart(2,'0')}-${num[1].padStart(2,'0')}`;}
   const days=CARRIER_RETENTION[c]||14;
   const def=new Date(arrival);def.setDate(def.getDate()+days);return def.toISOString().split('T')[0];
 }
 
 // ══════════════════════════════════════════
-//  LECTURE SMS NATIF (Capacitor)
-//  Plugin : SmsPlugin (Java natif injecté)
+//  DÉDUPLICATION par numéro de suivi ou code
+// ══════════════════════════════════════════
+function deduplicateAndMerge(existingPkgs, newPkg) {
+  // Chercher un doublon par tracking ou code retrait
+  const key = (newPkg.trackingNum || '').toUpperCase();
+  const code = (newPkg.pickupCode || '').toUpperCase();
+
+  const dupIdx = existingPkgs.findIndex(p => {
+    if (key && p.trackingNum && p.trackingNum.toUpperCase() === key) return true;
+    if (code && p.pickupCode && p.pickupCode.toUpperCase() === code && p.carrier === newPkg.carrier) return true;
+    return false;
+  });
+
+  if (dupIdx >= 0) {
+    // Fusionner : prendre les données les plus récentes / les plus complètes
+    const existing = existingPkgs[dupIdx];
+    existingPkgs[dupIdx] = {
+      ...existing,
+      status:        newPkg.status !== 'pending' ? newPkg.status : existing.status,
+      pickupCode:    newPkg.pickupCode    || existing.pickupCode,
+      lockerAddress: newPkg.lockerAddress || existing.lockerAddress,
+      expiryDate:    newPkg.expiryDate    || existing.expiryDate,
+      deliverySlot:  newPkg.deliverySlot  || existing.deliverySlot,
+      trackingLink:  newPkg.trackingLink  || existing.trackingLink,
+      arrivalDate:   newPkg.arrivalDate   > existing.arrivalDate ? newPkg.arrivalDate : existing.arrivalDate,
+      _fbId:         existing._fbId || newPkg._fbId,
+    };
+    return false; // pas ajouté, fusionné
+  }
+  return true; // nouveau
+}
+
+// ══════════════════════════════════════════
+//  LECTURE SMS NATIF
 // ══════════════════════════════════════════
 async function readSMSNative() {
-  // Vérifier si on est dans Capacitor (APK Android)
   if (!window.Capacitor?.isNativePlatform()) {
     showToast('📱 Disponible uniquement dans l\'APK Android');
     return;
   }
 
-  // Récupérer le plugin via registerPlugin ou Plugins
-  // Le nom "SmsPlugin" est celui défini dans @CapacitorPlugin(name = "SmsPlugin")
-  let SmsPlugin = null;
-
-  // Méthode 1 : via Capacitor.Plugins (Capacitor 5+)
-  if (window.Capacitor?.Plugins?.SmsPlugin) {
-    SmsPlugin = window.Capacitor.Plugins.SmsPlugin;
+  let SmsPlugin = window.Capacitor?.Plugins?.SmsPlugin;
+  if (!SmsPlugin && window.Capacitor?.registerPlugin) {
+    try { SmsPlugin = window.Capacitor.registerPlugin('SmsPlugin'); } catch(e) {}
   }
-  // Méthode 2 : via registerPlugin (fallback)
-  else if (window.Capacitor?.registerPlugin) {
-    try {
-      SmsPlugin = window.Capacitor.registerPlugin('SmsPlugin');
-    } catch(e) {}
-  }
-
-  if (!SmsPlugin) {
-    showToast('⚠️ Plugin SMS introuvable — vérifiez que MainActivity enregistre SmsPlugin');
-    return;
-  }
+  if (!SmsPlugin) { showToast('⚠️ Plugin SMS introuvable'); return; }
 
   try {
     showToast('📲 Lecture des SMS en cours…');
-
-    // Appel du plugin — getSMSList est défini dans SmsPlugin.java
-    const result = await SmsPlugin.getSMSList({ count: 300 });
+    const result   = await SmsPlugin.getSMSList({ count: 300 });
     const messages = result?.messages || [];
-
-    if (messages.length === 0) {
-      showToast('Aucun SMS reçu ou permission refusée');
-      return;
-    }
+    if (!messages.length) { showToast('Aucun SMS ou permission refusée'); return; }
 
     let newCount = 0;
-    const existingIds = new Set(appData.packages.map(p => p._fbId || String(p.id)).filter(Boolean));
 
     for (const sms of messages) {
-      const body    = sms.body || '';
-      const address = sms.address || '';
-      const lo      = body.toLowerCase();
-      const adrLo   = address.toLowerCase();
-
-      // Détecter le transporteur depuis l\'expéditeur ET le corps du SMS
-      const det = CARRIERS.find(d => d.test(adrLo, lo, lo));
+      const body   = sms.body    || '';
+      const sender = sms.address || '';
+      const lo     = body.toLowerCase();
+      const det    = CARRIERS.find(d => d.test(sender.toLowerCase(), lo, lo));
       if (!det) continue;
 
       const c        = det.c;
@@ -637,101 +697,93 @@ async function readSMSNative() {
       const code     = extractCode(body);
       const addr     = extractAddress(body);
       const status   = detectStatus(body);
-
       if (!tracking && !code && !addr) continue;
 
-      // ID unique basé sur contenu + date pour éviter les doublons
-      const smsId = 'sms_' + String(sms.date || Date.now()) + '_' + String(sms.id || '');
-      if (existingIds.has(smsId)) continue;
-
-      const now    = new Date().toISOString();
-      const expiry = extractExpiry(body, now, c);
+      const now   = new Date().toISOString();
+      const fbId  = 'sms_' + String(sms.date||Date.now()) + '_' + String(sms.id||'');
 
       const pkg = {
         id:            appData.nextId++,
-        _fbId:         smsId,
+        _fbId:         fbId,
         carrier:       c,
         trackingNum:   tracking,
         pickupCode:    code,
         lockerAddress: addr,
+        trackingLink:  extractLink(body),
+        deliverySlot:  extractDeliverySlot(body),
         arrivalDate:   now,
-        expiryDate:    expiry,
+        expiryDate:    extractExpiry(body, now, c),
         status:        status,
-        emailSubject:  'SMS — ' + (address || 'transporteur'),
+        emailSubject:  'SMS — ' + (sender||'transporteur'),
         gmailLink:     '',
         account:       'Guillaume',
         source:        'sms',
-        gmailMsgId:    smsId,
+        gmailMsgId:    fbId,
         note:          ''
       };
 
-      appData.packages.unshift(pkg);
-      existingIds.add(smsId);
-      newCount++;
-
-      // Pousser vers Firebase en arrière-plan
-      fbWrite(smsId, pkg).catch(() => {});
+      const isNew = deduplicateAndMerge(appData.packages, pkg);
+      if (isNew) {
+        appData.packages.unshift(pkg);
+        fbWrite(fbId, pkg).catch(()=>{});
+        newCount++;
+      }
     }
 
+    purgeOldPackages();
     saveData(appData);
     render();
-
-    const msg = newCount > 0
-      ? `✓ ${newCount} colis détecté(s) dans ${messages.length} SMS`
-      : `✓ Aucun nouveau colis (${messages.length} SMS analysés)`;
-    showToast(msg);
+    showToast(newCount > 0 ? `✓ ${newCount} colis détecté(s)` : `✓ Aucun nouveau (${messages.length} SMS analysés)`);
 
   } catch(err) {
-    // Gérer le cas où la permission est refusée par l\'utilisateur
-    if (err.message?.includes('refus') || err.message?.includes('denied') || err.message?.includes('PERMISSION')) {
-      showToast('⚠️ Permission SMS refusée — autorisez l\'accès dans Paramètres Android');
+    if (err.message?.toLowerCase().includes('refus') || err.message?.toLowerCase().includes('denied')) {
+      showToast('⚠️ Permission SMS refusée');
     } else {
-      showToast('❌ Erreur SMS : ' + (err.message || err));
+      showToast('❌ ' + (err.message || err));
     }
-    console.error('SMS error:', err);
   }
 }
 
 // ══════════════════════════════════════════
-//  PARSING SMS MANUEL (fallback)
+//  PARSING SMS MANUEL
 // ══════════════════════════════════════════
 function parseSMSManual() {
   const text = document.getElementById('smsInput').value.trim();
   if (!text) { showToast('⚠️ Collez un SMS d\'abord'); return; }
-
   const lo  = text.toLowerCase();
   const det = CARRIERS.find(d => d.test('', lo, lo));
   const c   = det?.c || 'other';
+  const now = new Date().toISOString();
+  const fbId = 'sms_manual_' + Date.now();
 
-  const now     = new Date().toISOString();
-  const smsId   = 'sms_manual_' + Date.now();
   const pkg = {
-    id:           appData.nextId++,
-    _fbId:        smsId,
-    carrier:      c,
-    trackingNum:  extractTracking(c, text),
-    pickupCode:   extractCode(text),
-    lockerAddress:extractAddress(text),
-    arrivalDate:  now,
-    expiryDate:   extractExpiry(text, now, c),
-    status:       detectStatus(text),
-    emailSubject: 'SMS manuel',
-    gmailLink:    '',
-    account:      'Guillaume',
-    source:       'sms_manual',
-    gmailMsgId:   smsId,
-    note:         ''
+    id:            appData.nextId++,
+    _fbId:         fbId,
+    carrier:       c,
+    trackingNum:   extractTracking(c, text),
+    pickupCode:    extractCode(text),
+    lockerAddress: extractAddress(text),
+    trackingLink:  extractLink(text),
+    deliverySlot:  extractDeliverySlot(text),
+    arrivalDate:   now,
+    expiryDate:    extractExpiry(text, now, c),
+    status:        detectStatus(text),
+    emailSubject:  'SMS manuel',
+    gmailLink:     '',
+    account:       'Guillaume',
+    source:        'sms_manual',
+    gmailMsgId:    fbId,
+    note:          ''
   };
 
-  appData.packages.unshift(pkg);
+  const isNew = deduplicateAndMerge(appData.packages, pkg);
+  if (isNew) appData.packages.unshift(pkg);
+  purgeOldPackages();
   saveData(appData);
   render();
-
-  // Pousser vers Firebase
-  fbWrite(smsId, pkg).catch(() => {});
-
+  fbWrite(fbId, pkg).catch(()=>{});
   document.getElementById('smsInput').value = '';
-  showToast('✓ Colis détecté : ' + (CARRIER_LABELS[c] || c));
+  showToast('✓ Colis détecté : ' + (CARRIER_LABELS[c]||c));
   closeModal('syncModal');
 }
 
@@ -745,8 +797,7 @@ function markCollected(id, e) {
   p.status = 'collected';
   saveData(appData);
   render();
-  // Synchroniser avec Firebase
-  if (p._fbId) fbWrite(p._fbId, { ...p, status:'collected' }).catch(() => {});
+  if (p._fbId) fbWrite(p._fbId, {...p, status:'collected'}).catch(()=>{});
   showToast('✓ Colis marqué récupéré');
 }
 
@@ -754,7 +805,7 @@ function deletePackage(id, e) {
   e.stopPropagation();
   if (!confirm('Supprimer ce colis ?')) return;
   const p = appData.packages.find(x => x.id === id);
-  if (p?._fbId) fbDelete(p._fbId).catch(() => {});
+  if (p?._fbId) fbDelete(p._fbId).catch(()=>{});
   appData.packages = appData.packages.filter(p => p.id !== id);
   saveData(appData);
   render();
@@ -765,7 +816,7 @@ function deletePackage(id, e) {
 // ══════════════════════════════════════════
 function selCarrier(c, el) {
   selectedCarrier = c;
-  document.querySelectorAll('.carrier-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('.carrier-btn').forEach(b=>b.classList.remove('selected'));
   el.classList.add('selected');
 }
 
@@ -781,40 +832,26 @@ function addPackage() {
 
   const now    = new Date().toISOString();
   const fbId   = 'manual_' + Date.now();
-  const defExp = new Date(); defExp.setDate(defExp.getDate() + (CARRIER_RETENTION[selectedCarrier]||14));
+  const defExp = new Date(); defExp.setDate(defExp.getDate()+(CARRIER_RETENTION[selectedCarrier]||14));
 
   const pkg = {
-    id:           appData.nextId++,
-    _fbId:        fbId,
-    carrier:      selectedCarrier,
-    trackingNum:  tracking,
-    pickupCode:   code,
-    lockerAddress:addr,
-    arrivalDate:  now,
-    expiryDate:   expiry || defExp.toISOString().split('T')[0],
-    status:       'ready',
-    emailSubject: 'Ajout manuel',
-    gmailLink:    '',
-    account:      account,
-    source:       'manual',
-    gmailMsgId:   fbId,
-    note:         note
+    id:            appData.nextId++, _fbId:fbId,
+    carrier:       selectedCarrier, trackingNum:tracking, pickupCode:code,
+    lockerAddress: addr, trackingLink:'', deliverySlot:'',
+    arrivalDate:   now, expiryDate:expiry||defExp.toISOString().split('T')[0],
+    status:        'ready', emailSubject:'Ajout manuel', gmailLink:'',
+    account:       account, source:'manual', gmailMsgId:fbId, note:note
   };
 
   appData.packages.unshift(pkg);
   saveData(appData);
   render();
-
-  // Pousser vers Firebase pour partage
-  fbWrite(fbId, pkg).catch(() => {});
-
+  fbWrite(fbId, pkg).catch(()=>{});
   closeModal('addModal');
   showToast('✓ Colis ajouté');
-
-  // Reset
-  ['addTracking','addCode','addAddress','addNote','addExpiry'].forEach(id => document.getElementById(id).value = '');
+  ['addTracking','addCode','addAddress','addNote','addExpiry'].forEach(id=>document.getElementById(id).value='');
   selectedCarrier = null;
-  document.querySelectorAll('.carrier-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('.carrier-btn').forEach(b=>b.classList.remove('selected'));
 }
 
 // ══════════════════════════════════════════
@@ -828,45 +865,32 @@ function statusClass(s) {
 }
 function daysLeft(exp) {
   if (!exp) return null;
-  return Math.floor((new Date(exp) - Date.now()) / 86400000);
+  return Math.floor((new Date(exp)-Date.now())/86400000);
 }
 function expiryColor(d) {
-  if (d < 0) return 'var(--red)';
-  if (d <= 2) return 'var(--red)';
-  if (d <= 5) return 'var(--amber)';
-  return 'var(--green)';
+  if(d<0) return 'var(--red)'; if(d<=2) return 'var(--red)'; if(d<=5) return 'var(--amber)'; return 'var(--green)';
 }
 function fmtDate(iso) {
-  if (!iso) return '';
-  try { return new Date(iso).toLocaleDateString('fr-FR',{day:'numeric',month:'long'}); } catch { return iso; }
+  if(!iso) return ''; try{return new Date(iso).toLocaleDateString('fr-FR',{day:'numeric',month:'long'});}catch{return iso;}
 }
 
 function getFiltered() {
   let pkgs = [...appData.packages];
-  if (currentFilter !== 'all') pkgs = pkgs.filter(p => p.status === currentFilter);
+  if (currentFilter !== 'all') pkgs = pkgs.filter(p=>p.status===currentFilter);
   if (currentSearch) {
     const q = currentSearch.toLowerCase();
-    pkgs = pkgs.filter(p =>
-      (p.carrier||'').toLowerCase().includes(q) ||
-      (p.trackingNum||'').toLowerCase().includes(q) ||
-      (p.lockerAddress||'').toLowerCase().includes(q) ||
-      (p.note||'').toLowerCase().includes(q) ||
-      (p.account||'').toLowerCase().includes(q)
-    );
+    pkgs = pkgs.filter(p=>(p.carrier||'').toLowerCase().includes(q)||(p.trackingNum||'').toLowerCase().includes(q)||(p.lockerAddress||'').toLowerCase().includes(q)||(p.note||'').toLowerCase().includes(q)||(p.account||'').toLowerCase().includes(q));
   }
-  return pkgs.sort((a,b) => {
-    const o = {ready:0,pending:1,delivered:2,expired:3,collected:4};
-    return (o[a.status]||9) - (o[b.status]||9);
-  });
+  return pkgs.sort((a,b)=>{const o={ready:0,pending:1,delivered:2,expired:3,collected:4};return(o[a.status]||9)-(o[b.status]||9);});
 }
 
 function updateBadges() {
   const p = appData.packages;
-  document.getElementById('badgeAll').textContent      = p.length;
-  document.getElementById('badgeReady').textContent    = p.filter(x=>x.status==='ready').length;
-  document.getElementById('badgePending').textContent  = p.filter(x=>x.status==='pending').length;
-  document.getElementById('badgeDelivered').textContent= p.filter(x=>x.status==='delivered').length;
-  document.getElementById('badgeExpired').textContent  = p.filter(x=>x.status==='expired').length;
+  document.getElementById('badgeAll').textContent       = p.length;
+  document.getElementById('badgeReady').textContent     = p.filter(x=>x.status==='ready').length;
+  document.getElementById('badgePending').textContent   = p.filter(x=>x.status==='pending').length;
+  document.getElementById('badgeDelivered').textContent = p.filter(x=>x.status==='delivered').length;
+  document.getElementById('badgeExpired').textContent   = p.filter(x=>x.status==='expired').length;
 }
 
 function render() {
@@ -875,25 +899,29 @@ function render() {
   const el   = document.getElementById('pkgList');
 
   if (!pkgs.length) {
-    el.innerHTML = `<div class="empty">
-      <div class="empty-icon">📭</div>
-      <div class="empty-title">Aucun colis</div>
-      <div class="empty-sub">Appuyez sur ＋ pour en ajouter un<br>ou synchronisez vos comptes Gmail via ⟳</div>
-    </div>`;
+    el.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><div class="empty-title">Aucun colis</div><div class="empty-sub">Appuyez sur ＋ pour en ajouter<br>ou synchronisez via ⟳</div></div>`;
     return;
   }
 
   el.innerHTML = pkgs.map(p => {
-    const color = CARRIER_COLORS[p.carrier] || 'var(--teal)';
-    const days  = daysLeft(p.expiryDate);
-    const showExp = p.status === 'ready' && days !== null;
-    const pct   = showExp ? Math.max(0, Math.min(100, (days / (CARRIER_RETENTION[p.carrier]||14)) * 100)) : null;
+    const color   = CARRIER_COLORS[p.carrier]||'var(--teal)';
+    const days    = daysLeft(p.expiryDate);
+    const showExp = p.status==='ready' && days!==null;
+    const pct     = showExp ? Math.max(0,Math.min(100,(days/(CARRIER_RETENTION[p.carrier]||14))*100)) : null;
+
+    // Résumé visible dans la liste (code + tracking tronqué)
+    const summaryParts = [];
+    if (p.pickupCode) summaryParts.push(`🔑 ${p.pickupCode}`);
+    if (p.trackingNum) summaryParts.push(`#${p.trackingNum}`);
+    const summary = summaryParts.join('  ');
 
     return `<div class="pkg-card" id="pkg${p.id}" onclick="toggleCard(${p.id})">
       <div class="pkg-header">
         <div class="carrier-dot" style="background:${color}"></div>
-        <div class="carrier-name">${CARRIER_LABELS[p.carrier]||p.carrier}</div>
-        ${p.account ? `<div class="account-tag">${p.account}</div>` : ''}
+        <div style="flex:1;min-width:0">
+          <div class="carrier-name">${CARRIER_LABELS[p.carrier]||p.carrier}${p.account?` · ${p.account}`:''}</div>
+          ${summary ? `<div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--teal);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${summary}</div>` : ''}
+        </div>
         <div class="status-pill ${statusClass(p.status)}">${statusLabel(p.status)}</div>
       </div>
       <div class="pkg-body" id="body${p.id}" style="display:none">
@@ -901,17 +929,19 @@ function render() {
         ${p.pickupCode ? `<div class="code-box">
           <div class="code-lbl">Code de retrait</div>
           <div class="code-val">${p.pickupCode}</div>
-          ${p.pickupCode.includes('/') ? '<div class="code-hint">Saisir les deux codes successivement</div>' : ''}
+          ${p.pickupCode.includes('/')? '<div class="code-hint">Saisir les deux codes successivement</div>':''}
         </div>` : ''}
         ${p.lockerAddress ? `<div class="pkg-addr">📍 ${p.lockerAddress}</div>` : ''}
-        ${showExp ? `<div class="field-label">Expire</div>
-          <div class="field-val" style="color:${expiryColor(days)}">${days < 0 ? 'Expiré !' : days === 0 ? "Aujourd'hui" : `Dans ${days} jour${days > 1 ? 's' : ''}`}</div>` : ''}
+        ${p.deliverySlot  ? `<div class="pkg-addr" style="margin-top:6px">🕐 Créneau : ${p.deliverySlot}</div>` : ''}
+        ${p.trackingLink  ? `<div style="margin-top:8px"><a class="act-btn primary" href="${p.trackingLink}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:inline-flex;text-decoration:none">🔗 Suivre le colis</a></div>` : ''}
+        ${showExp ? `<div class="field-label" style="margin-top:8px">Expire</div>
+          <div class="field-val" style="color:${expiryColor(days)}">${days<0?'Expiré !':days===0?"Aujourd'hui":`Dans ${days} jour${days>1?'s':''}`}</div>` : ''}
         ${p.note ? `<div class="pkg-addr" style="margin-top:8px">💬 ${p.note}</div>` : ''}
-        ${showExp && pct !== null ? `<div class="expiry-bar"><div class="expiry-fill" style="width:${pct}%;background:${expiryColor(days)}"></div></div>` : ''}
+        ${showExp&&pct!==null?`<div class="expiry-bar"><div class="expiry-fill" style="width:${pct}%;background:${expiryColor(days)}"></div></div>`:''}
         <div class="pkg-actions">
-          ${p.pickupCode || p.trackingNum ? `<button class="act-btn primary" onclick="showQR(${p.id},event)">📱 QR</button>` : ''}
-          ${p.gmailLink ? `<a class="act-btn" href="${p.gmailLink}" target="_blank" rel="noopener" onclick="event.stopPropagation()">📧 Mail</a>` : ''}
-          ${p.status !== 'collected' && p.status !== 'delivered' ? `<button class="act-btn success" onclick="markCollected(${p.id},event)">✓ Récupéré</button>` : ''}
+          ${p.pickupCode||p.trackingNum?`<button class="act-btn primary" onclick="showQR(${p.id},event)">📱 QR</button>`:''}
+          ${p.gmailLink?`<a class="act-btn" href="${p.gmailLink}" target="_blank" rel="noopener" onclick="event.stopPropagation()">📧 Mail</a>`:''}
+          ${p.status!=='collected'&&p.status!=='delivered'?`<button class="act-btn success" onclick="markCollected(${p.id},event)">✓ Récupéré</button>`:''}
           <button class="act-btn danger" onclick="deletePackage(${p.id},event)">🗑</button>
         </div>
       </div>
@@ -920,31 +950,27 @@ function render() {
 }
 
 function toggleCard(id) {
-  const body = document.getElementById('body' + id);
-  const card = document.getElementById('pkg'  + id);
-  if (!body) return;
-  const open = body.style.display !== 'none';
-  body.style.display = open ? 'none' : 'block';
-  card.classList.toggle('expanded', !open);
+  const body=document.getElementById('body'+id);
+  const card=document.getElementById('pkg'+id);
+  if(!body)return;
+  const open=body.style.display!=='none';
+  body.style.display=open?'none':'block';
+  card.classList.toggle('expanded',!open);
 }
 
 // ══════════════════════════════════════════
 //  QR CODE
 // ══════════════════════════════════════════
-function showQR(id, e) {
+function showQR(id,e) {
   e.stopPropagation();
-  const p = appData.packages.find(x => x.id === id);
-  if (!p) return;
-  const val = p.pickupCode || p.trackingNum || '';
-  if (!val) { showToast('Aucune donnée QR disponible'); return; }
-  document.getElementById('qrTitle').textContent = `${CARRIER_LABELS[p.carrier]||p.carrier}`;
-  document.getElementById('qrValue').textContent  = val;
-  document.getElementById('qrContainer').innerHTML = '';
-  new QRCode(document.getElementById('qrContainer'), {
-    text: val, width: 180, height: 180,
-    colorDark: '#000000', colorLight: '#ffffff',
-    correctLevel: QRCode.CorrectLevel.M
-  });
+  const p=appData.packages.find(x=>x.id===id);
+  if(!p)return;
+  const val=p.pickupCode||p.trackingNum||'';
+  if(!val){showToast('Aucune donnée QR');return;}
+  document.getElementById('qrTitle').textContent=CARRIER_LABELS[p.carrier]||p.carrier;
+  document.getElementById('qrValue').textContent=val;
+  document.getElementById('qrContainer').innerHTML='';
+  new QRCode(document.getElementById('qrContainer'),{text:val,width:180,height:180,colorDark:'#000',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.M});
   openModal('qrModal');
 }
 
@@ -952,79 +978,84 @@ function showQR(id, e) {
 //  SYNC STATUS UI
 // ══════════════════════════════════════════
 function renderSyncStatus() {
-  const cfg    = getFBConfig();
-  const status = document.getElementById('fbStatus');
-  const input1 = document.getElementById('fbProjectId');
-  const input2 = document.getElementById('fbApiKey');
-  if (cfg) {
-    if (status) { status.textContent = '⬤ Configuré — ' + cfg.projectId; status.className = 'status-badge sb-ok'; }
-    if (input1) input1.value = cfg.projectId;
-    if (input2) input2.value = cfg.apiKey;
-    document.getElementById('syncDot').style.display = 'block';
+  const cfg=getFBConfig();
+  const status=document.getElementById('fbStatus');
+  const input1=document.getElementById('fbProjectId');
+  const input2=document.getElementById('fbApiKey');
+  if(cfg){
+    if(status){status.textContent='⬤ Configuré — '+cfg.projectId;status.className='status-badge sb-ok';}
+    if(input1)input1.value=cfg.projectId;
+    if(input2)input2.value=cfg.apiKey;
+    document.getElementById('syncDot').style.display='block';
   } else {
-    if (status) { status.textContent = '⬤ Non configuré'; status.className = 'status-badge sb-wait'; }
-    document.getElementById('syncDot').style.display = 'none';
+    if(status){status.textContent='⬤ Non configuré';status.className='status-badge sb-wait';}
+    document.getElementById('syncDot').style.display='none';
   }
   updateLastSyncLabel();
 }
 
-function updateLastSyncLabel() {}
+function updateLastSyncLabel() {
+  const el=document.getElementById('lastSyncLabel');
+  if(!el||!appData.lastSync)return;
+  const d=new Date(appData.lastSync);
+  el.textContent='Sync : '+d.toLocaleDateString('fr-FR')+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+}
 
 // ══════════════════════════════════════════
 //  FILTRES & RECHERCHE
 // ══════════════════════════════════════════
-function setFilter(f, btn) {
-  currentFilter = f;
-  document.querySelectorAll('.ftab').forEach(b => b.classList.remove('active'));
+function setFilter(f,btn) {
+  currentFilter=f;
+  document.querySelectorAll('.ftab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   render();
 }
-function onSearch(v) { currentSearch = v; render(); }
+function onSearch(v){currentSearch=v;render();}
 
 // ══════════════════════════════════════════
 //  MODALS
 // ══════════════════════════════════════════
-function openModal(id)  { document.getElementById(id).classList.add('open'); document.body.style.overflow = 'hidden'; }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow = ''; }
-function openAddModal() { openModal('addModal'); }
-function openSync()     { openModal('syncModal'); renderSyncStatus(); }
+function openModal(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';}
+function closeModal(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
+function openAddModal(){openModal('addModal');}
+function openSync(){openModal('syncModal');renderSyncStatus();}
 
-document.querySelectorAll('.modal-overlay').forEach(o => {
-  o.addEventListener('click', e => { if (e.target === o) closeModal(o.id); });
+document.querySelectorAll('.modal-overlay').forEach(o=>{
+  o.addEventListener('click',e=>{if(e.target===o)closeModal(o.id);});
 });
 
 // ══════════════════════════════════════════
 //  TOAST
 // ══════════════════════════════════════════
-let _toastTimer;
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  clearTimeout(_toastTimer);
-  _toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+let _tt;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('show'),3200);
 }
 
 // ══════════════════════════════════════════
 //  THÈME
 // ══════════════════════════════════════════
-function toggleTheme() {
-  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
-  document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
-  document.getElementById('themeBtn').textContent = dark ? '☀️' : '🌙';
-  localStorage.setItem('lt_theme', dark ? 'light' : 'dark');
+function toggleTheme(){
+  const dark=document.documentElement.getAttribute('data-theme')==='dark';
+  document.documentElement.setAttribute('data-theme',dark?'light':'dark');
+  document.getElementById('themeBtn').textContent=dark?'☀️':'🌙';
+  localStorage.setItem('lt_theme',dark?'light':'dark');
 }
-function initTheme() {
-  const saved = localStorage.getItem('lt_theme');
-  const sys   = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  const theme = saved || sys;
-  document.documentElement.setAttribute('data-theme', theme);
-  document.getElementById('themeBtn').textContent = theme === 'dark' ? '🌙' : '☀️';
+function initTheme(){
+  const saved=localStorage.getItem('lt_theme');
+  const sys=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+  const theme=saved||sys;
+  document.documentElement.setAttribute('data-theme',theme);
+  document.getElementById('themeBtn').textContent=theme==='dark'?'🌙':'☀️';
 }
 
 // ══════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════
 initTheme();
+purgeOldPackages();
 renderSyncStatus();
 render();
 autoSync();

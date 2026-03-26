@@ -258,6 +258,11 @@ body::after{content:'';position:fixed;top:-20vh;right:-10%;width:70vw;height:60v
     </div>
 
     <!-- Config Firebase -->
+    <div class="sect-lbl">👤 Compte actif (SMS lu)</div>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <button class="btn-submit" id="btnG" style="margin-top:0;flex:1;background:rgba(0,200,160,0.15);color:var(--teal);border:1px solid rgba(0,200,160,0.3)" onclick="setActiveAccount('Guillaume')">Guillaume</button>
+      <button class="btn-submit" id="btnM" style="margin-top:0;flex:1;background:rgba(170,136,255,0.15);color:var(--purple);border:1px solid rgba(170,136,255,0.3);opacity:0.5" onclick="setActiveAccount('Michele')">Michèle</button>
+    </div>
     <div class="sect-lbl">⚙️ Configuration Firebase</div>
     <div class="info-box">
       Saisir une seule fois. Ces informations se trouvent dans<br>
@@ -516,6 +521,23 @@ function autoSync() {
 }
 
 // ══════════════════════════════════════════
+//  COMPTE ACTIF
+// ══════════════════════════════════════════
+function getActiveAccount() {
+  return localStorage.getItem('lt_active_account') || 'Guillaume';
+}
+function setActiveAccount(name) {
+  localStorage.setItem('lt_active_account', name);
+  const g = document.getElementById('btnG');
+  const m = document.getElementById('btnM');
+  if(g && m) {
+    g.style.opacity = name === 'Guillaume' ? '1' : '0.5';
+    m.style.opacity = name === 'Michele'   ? '1' : '0.5';
+  }
+  showToast('✓ Compte actif : ' + name);
+}
+
+// ══════════════════════════════════════════
 //  DÉTECTION TRANSPORTEUR
 // ══════════════════════════════════════════
 const CARRIERS = [
@@ -556,7 +578,7 @@ function extractTracking(c, t) {
     ups:        [/\b(1Z[A-Z0-9]{16})\b/i],
     chronopost: [/\b([A-Z]{2}\d{9}[A-Z]{2})\b/,/\b(PP\d{9}FR)\b/i],
     chronofresh:[/\b([A-Z]{2}\d{9}[A-Z]{2})\b/],
-    colissimo:  [/\bn[°o]\s*([A-Z0-9]{9,15})\b/i,/\b(6[A-Z]\d{11})\b/,/\b(8[A-Z]\d{11})\b/],
+    colissimo:  [/\bn[°o]\s*([A-Z0-9]{9,15})\b/i,/\b([68][A-Z]\d{11})\b/],
     mondialrelay:[/votre colis\s+(\d{5,10})\b/i,/\b(\d{8})\b/],
     vintedgo:   [/\b(1UW[A-Z0-9]{9,})\b/i,/\b(\d{16,19})\b/,/suivi\s*:\s*([A-Z0-9]{8,})/i],
     dpd:        [/\b(\d{14})\b/,/colis n[°o]\s*(\d{10,})/i],
@@ -571,10 +593,18 @@ function extractTracking(c, t) {
 
 function extractCode(t) {
   if (!t) return '';
+  // "Vos codes 6684 puis 7785" (Pickup/Colissimo consigne)
   const m1=t.match(/vos codes\s+(\d{4})\s+puis\s+(\d{4})/i); if(m1) return m1[1]+' / '+m1[2];
+  // "Identifiant : 5241 / Code d'ouverture : 9491" (Chronopost Pickup)
   const m2=t.match(/identifiant\s*:\s*(\d{3,8}).*?code\s*d.ouverture\s*:\s*(\d{3,8})/is); if(m2) return m2[1]+' / '+m2[2];
+  // "CODE 697505" (Chronopost majuscule)
+  const m5=t.match(/\bCODE\s+(\d{4,8})\b/); if(m5) return m5[1];
+  // "Code: G2-6949" (Vinted Go)
   const m3=t.match(/\bcode\s*:\s*([A-Z0-9\-]{3,12})/i); if(m3) return m3[1];
-  const m4=t.match(/code\s*(?:de\s*)?retrait\s*[:\s]+([A-Z0-9]{4,12})/i); if(m4) return m4[1];
+  // "code de retrait 757450" / "retirez-le vite avec le code 338368"
+  const m4=t.match(/(?:code\s*(?:de\s*)?retrait|avec le code|remise du code|pr[eé]sentez.*?code)\s*[:\s]+([A-Z0-9]{4,12})/i); if(m4) return m4[1];
+  // "code 122368" (Colissimo livraison domicile)
+  const m6=t.match(/(?:remis contre|pr[eé]sentez le)\s+code\s+(\d{4,8})/i); if(m6) return m6[1];
   return '';
 }
 
@@ -588,6 +618,7 @@ function extractAddress(t) {
     /dans\s+(?:votre\s+)?(?:relais|point)\s+(.+?)(?:\.|jusqu)/i,
     /expédier\s+à\s*\n(.+?\n.+?\n.+?)(?:\n\n|ups standard)/is,
     /informations\s+sur\s+l.adresse\s*\n(.+?\n.+?\n.+?)(?:\n\n)/is,
+    /(?:au|dans le)\s+(?:P\.?\s*Relais|Point\s+Relais|LOCKER)\s+([^.!\n]{4,50})/i,
   ];
   for(const re of P){const m=t.match(re);if(m?.[1]){const lines=m[1].split('\n').map(l=>l.trim()).filter(l=>l.length>2&&!/^(ce message|merci|suivre|téléchargez)/i.test(l));if(lines.length)return lines.slice(0,3).join(', ');}}
   return '';
@@ -595,21 +626,21 @@ function extractAddress(t) {
 
 function extractLink(t) {
   if (!t) return '';
-  // Cherche les URLs de suivi transporteurs connues
-  const m = t.match(/https?:\/\/(?:n\.pkup\.fr|sms\.laposte\.fr|www\.chronopost\.fr\/suivi|p\.vintedgo\.com|moncolis\.gls-france\.com|gls\.tf|c\.rcol\.fr)[^\s<"')]+/i);
-  if (m) return m[0];
-  // Fallback : premier lien http court
-  const m2 = t.match(/https?:\/\/[^\s<"')]{8,60}/);
+  // URLs transporteurs connus (sans https:// aussi)
+  const m = t.match(/(?:https?:\/\/)?(?:n\.pkup\.fr|sms\.laposte\.fr|p\.vintedgo\.com|moncolis\.gls-france\.com|gls\.tf|c\.rcol\.fr|mrcolis\.fr|my\.dpd\.fr|amzn\.eu\/d|www\.chronopost\.fr\/[a-z])[^\s<"'\]]+/i);
+  if (m) return m[0].startsWith('http') ? m[0] : 'https://' + m[0];
+  // Fallback : premier lien http explicite
+  const m2 = t.match(/https?:\/\/[^\s<"'\]]{8,80}/);
   return m2 ? m2[0] : '';
 }
 
 function extractDeliverySlot(t) {
   if (!t) return '';
-  // "entre 11:15 - 14:15" / "entre 13h05 et 14h05"
-  const m1 = t.match(/entre\s+(\d{1,2}[h:]\d{2})\s*[-–et]+\s*(\d{1,2}[h:]\d{2})/i);
+  // "entre 13h05-14h05" / "entre 13h05 et 14h05" / "entre 10:30 et 12:30" / "09h35-10h35"
+  const m1 = t.match(/entre\s+(\d{1,2}[h:]\d{2})\s*[-–etàa]+\s*(\d{1,2}[h:]\d{2})/i);
   if (m1) return m1[1].replace('h',':') + ' — ' + m1[2].replace('h',':');
-  // "livraison entre X et Y"
-  const m2 = t.match(/(?:livraison|livré)\s+(?:entre|de)\s+(\d{1,2}[h:]\d{2})[^\d]*(\d{1,2}[h:]\d{2})/i);
+  // "10h00 et 13h00" seul (DPD)
+  const m2 = t.match(/(\d{1,2}h\d{2})\s+(?:et|-|–)\s+(\d{1,2}h\d{2})/i);
   if (m2) return m2[1].replace('h',':') + ' — ' + m2[2].replace('h',':');
   return '';
 }
@@ -716,7 +747,7 @@ async function readSMSNative() {
         status:        status,
         emailSubject:  'SMS — ' + (sender||'transporteur'),
         gmailLink:     '',
-        account:       'Guillaume',
+        account:       getActiveAccount(),
         source:        'sms',
         gmailMsgId:    fbId,
         note:          ''
@@ -770,7 +801,7 @@ function parseSMSManual() {
     status:        detectStatus(text),
     emailSubject:  'SMS manuel',
     gmailLink:     '',
-    account:       'Guillaume',
+    account:       getActiveAccount(),
     source:        'sms_manual',
     gmailMsgId:    fbId,
     note:          ''

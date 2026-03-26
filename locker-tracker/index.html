@@ -555,11 +555,11 @@ const CARRIERS = [
 ];
 
 const STATUS_MAP = {
-  delivered:['a été livré','colis livré','livré à','livraison effectuée','remis à','votre colis a été livré'],
+  delivered:['a été livré','colis livré','livré à','livraison effectuée','remis à','votre colis a été livré','livraison terminée','déposé à'],
   expired:  ['retourné à l\'expéditeur','non récupéré','délai dépassé','renvoyé'],
   ready:    ['disponible en consigne','à retirer','vos codes','code de retrait','code:',
              'est disponible','déposé dans','retire ton colis','est arrivé dans',
-             'attend dans votre point','dans votre relais','prêt à être enlevé'],
+             'attend dans votre point','dans votre relais','prêt à être enlevé','présentez pass','arrive au relais'],
   pending:  ['en chemin','en cours de livraison','en route','sera livré','expédié',
              'pris en charge','acheminé','in transit','confié par','est en route'],
 };
@@ -578,7 +578,7 @@ function extractTracking(c, t) {
     ups:        [/\b(1Z[A-Z0-9]{16})\b/i],
     chronopost: [/\b([A-Z]{2}\d{9}[A-Z]{2})\b/,/\b(PP\d{9}FR)\b/i],
     chronofresh:[/\b([A-Z]{2}\d{9}[A-Z]{2})\b/],
-    colissimo:  [/\bn[°o]\s*([A-Z0-9]{9,15})\b/i,/\b([68][A-Z]\d{11})\b/],
+    colissimo:  [/\bn[°o]\s*([A-Z0-9]{9,15})\b/i,/\b([68][A-Z]\d{11})\b/,/\b(6[A-Z]\d{10,12})\b/],
     mondialrelay:[/votre colis\s+(\d{5,10})\b/i,/\b(\d{8})\b/],
     vintedgo:   [/\b(1UW[A-Z0-9]{9,})\b/i,/\b(\d{16,19})\b/,/suivi\s*:\s*([A-Z0-9]{8,})/i],
     dpd:        [/\b(\d{14})\b/,/colis n[°o]\s*(\d{10,})/i],
@@ -593,8 +593,14 @@ function extractTracking(c, t) {
 
 function extractCode(t) {
   if (!t) return '';
-  // "Vos codes 6684 puis 7785" (Pickup/Colissimo consigne)
   const m1=t.match(/vos codes\s+(\d{4})\s+puis\s+(\d{4})/i); if(m1) return m1[1]+' / '+m1[2];
+  const m2=t.match(/identifiant\s*:\s*(\d{3,8}).*?code\s*d.ouverture\s*:\s*(\d{3,8})/is); if(m2) return m2[1]+' / '+m2[2];
+  const m3=t.match(/\bCODE\s+([A-Z0-9\-]{4,12})/); if(m3) return m3[1];
+  const m4=t.match(/\bcode\s*:\s*([A-Z0-9\-]{3,12})/i); if(m4) return m4[1];
+  const m5=t.match(/(?:contre|remise du|présentez le|présenter le)\s+(?:code|CODE)\s+([0-9]{4,8})/i); if(m5) return m5[1];
+  const m6=t.match(/code\s*(?:de\s*)?retrait\s*[:\s]+([A-Z0-9]{4,12})/i); if(m6) return m6[1];
+  return '';
+})\s+puis\s+(\d{4})/i); if(m1) return m1[1]+' / '+m1[2];
   // "Identifiant : 5241 / Code d'ouverture : 9491" (Chronopost Pickup)
   const m2=t.match(/identifiant\s*:\s*(\d{3,8}).*?code\s*d.ouverture\s*:\s*(\d{3,8})/is); if(m2) return m2[1]+' / '+m2[2];
   // "CODE 697505" (Chronopost majuscule)
@@ -626,18 +632,32 @@ function extractAddress(t) {
 
 function extractLink(t) {
   if (!t) return '';
-  // URLs transporteurs connus (sans https:// aussi)
-  const m = t.match(/(?:https?:\/\/)?(?:n\.pkup\.fr|sms\.laposte\.fr|p\.vintedgo\.com|moncolis\.gls-france\.com|gls\.tf|c\.rcol\.fr|mrcolis\.fr|my\.dpd\.fr|amzn\.eu\/d|www\.chronopost\.fr\/[a-z])[^\s<"'\]]+/i);
-  if (m) return m[0].startsWith('http') ? m[0] : 'https://' + m[0];
-  // Fallback : premier lien http explicite
-  const m2 = t.match(/https?:\/\/[^\s<"'\]]{8,80}/);
+  // Domaines transporteurs connus — priorité
+  const m = t.match(/https?:\/\/(?:n\.pkup\.fr|sms\.laposte\.fr|p\.vintedgo\.com|moncolis\.gls-france\.com|gls\.tf|c\.rcol\.fr|my\.dpd\.fr|amzn\.eu|www\.chronopost\.fr|www\.mondialrelay\.fr|mrcolis\.fr)[^\s<"')]+/i);
+  if (m) return m[0];
+  // sms.laposte.fr sans https (format SMS court)
+  const m2 = t.match(/\bsms\.laposte\.fr\/[A-Za-z0-9]+/);
+  if (m2) return 'https://' + m2[0];
+  // Fallback : premier lien http court
+  const m3 = t.match(/https?:\/\/[^\s<"')]{8,80}/);
+  return m3 ? m3[0] : '';
+}/);
   return m2 ? m2[0] : '';
 }
 
 function extractDeliverySlot(t) {
   if (!t) return '';
-  // "entre 13h05-14h05" / "entre 13h05 et 14h05" / "entre 10:30 et 12:30" / "09h35-10h35"
-  const m1 = t.match(/entre\s+(\d{1,2}[h:]\d{2})\s*[-–etàa]+\s*(\d{1,2}[h:]\d{2})/i);
+  // "entre 10:30 et 12:30" / "entre 13h05-14h05" / "entre 16h00 et 18h00"
+  const m1 = t.match(/entre\s+(\d{1,2}[h:]\d{2})\s*[-–àet]+\s*(\d{1,2}[h:]\d{2})/i);
+  if (m1) return m1[1].replace('h',':') + ' — ' + m1[2].replace('h',':');
+  // "livraison entre X et Y" / "livré aujourd'hui entre X et Y"
+  const m2 = t.match(/(?:livraison|livré|livrera)\s+(?:aujourd.hui\s+)?(?:entre|de)\s+(\d{1,2}[h:]\d{2})[^\d]*(\d{1,2}[h:]\d{2})/i);
+  if (m2) return m2[1].replace('h',':') + ' — ' + m2[2].replace('h',':');
+  // "10h00 et 13h00" sans mot clé (DPD style)
+  const m3 = t.match(/(\d{1,2}h\d{2})\s+et\s+(\d{1,2}h\d{2})/);
+  if (m3) return m3[1].replace('h',':') + ' — ' + m3[2].replace('h',':');
+  return '';
+}[h:]\d{2})\s*[-–etàa]+\s*(\d{1,2}[h:]\d{2})/i);
   if (m1) return m1[1].replace('h',':') + ' — ' + m1[2].replace('h',':');
   // "10h00 et 13h00" seul (DPD)
   const m2 = t.match(/(\d{1,2}h\d{2})\s+(?:et|-|–)\s+(\d{1,2}h\d{2})/i);

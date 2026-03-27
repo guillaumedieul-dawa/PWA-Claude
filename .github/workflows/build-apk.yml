@@ -23,59 +23,96 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Install deps + Capacitor
+      # Cache Gradle + node_modules pour accélérer le build (5-7min → 1-2min)
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            node_modules
+          key: ${{ runner.os }}-gradle-node-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-node-
+
+      - name: Install Capacitor 5
         run: |
           npm install @capacitor/core@5.7.0 @capacitor/cli@5.7.0 @capacitor/android@5.7.0
           npx cap init "FamilyHub" "com.famille.dieulgandet" --web-dir www
 
-      - name: Copy web files
+      - name: Copy web files to www/
         run: |
           mkdir -p www
-          cp index.html www/ 2>/dev/null || true
-          cp manifest.json www/ 2>/dev/null || true
-          cp sw.js www/ 2>/dev/null || true
-          cp -r icons/ www/ 2>/dev/null || true
-          cp -r locker-tracker/ www/ 2>/dev/null || true
-          cp -r todo-partage/ www/ 2>/dev/null || true
-          cp -r cave-spiritueux/ www/ 2>/dev/null || true
-          cp -r menus-semaine/ www/ 2>/dev/null || true
-          cp -r liste-courses/ www/ 2>/dev/null || true
+          cp -f index.html www/ 2>/dev/null || true
+          cp -f manifest.json www/ 2>/dev/null || true
+          cp -f sw.js www/ 2>/dev/null || true
+          cp -rf icons/ www/ 2>/dev/null || true
+          cp -rf locker-tracker/ www/ 2>/dev/null || true
+          cp -rf todo-partage/ www/ 2>/dev/null || true
+          cp -rf cave-spiritueux/ www/ 2>/dev/null || true
+          cp -rf menus-semaine/ www/ 2>/dev/null || true
+          cp -rf liste-courses/ www/ 2>/dev/null || true
 
       - name: Add Android platform
         run: |
           rm -rf android
           npx cap add android
 
-      - name: Inject SMS plugin (base64)
+      - name: Copy SmsPlugin Java files (depuis android-src/ dans le repo)
         run: |
           PLUGIN_DIR="android/app/src/main/java/com/famille/dieulgandet"
           mkdir -p $PLUGIN_DIR
-          SMS_B64="cGFja2FnZSBjb20uZmFtaWxsZS5kaWV1bGdhbmRldDsKCmltcG9ydCBhbmRyb2lkLk1hbmlmZXN0OwppbXBvcnQgYW5kcm9pZC5kYXRhYmFzZS5DdXJzb3I7CmltcG9ydCBhbmRyb2lkLm5ldC5Vcmk7CmltcG9ydCBjb20uZ2V0Y2FwYWNpdG9yLkpTQXJyYXk7CmltcG9ydCBjb20uZ2V0Y2FwYWNpdG9yLkpTT2JqZWN0OwppbXBvcnQgY29tLmdldGNhcGFjaXRvci5QbHVnaW47CmltcG9ydCBjb20uZ2V0Y2FwYWNpdG9yLlBsdWdpbkNhbGw7CmltcG9ydCBjb20uZ2V0Y2FwYWNpdG9yLlBsdWdpbk1ldGhvZDsKaW1wb3J0IGNvbS5nZXRjYXBhY2l0b3IuUGVybWlzc2lvblN0YXRlOwppbXBvcnQgY29tLmdldGNhcGFjaXRvci5hbm5vdGF0aW9uLkNhcGFjaXRvclBsdWdpbjsKaW1wb3J0IGNvbS5nZXRjYXBhY2l0b3IuYW5ub3RhdGlvbi5QZXJtaXNzaW9uOwppbXBvcnQgY29tLmdldGNhcGFjaXRvci5hbm5vdGF0aW9uLlBlcm1pc3Npb25DYWxsYmFjazsKCkBDYXBhY2l0b3JQbHVnaW4oCiAgICBuYW1lID0gIlNtc1BsdWdpbiIsCiAgICBwZXJtaXNzaW9ucyA9IHsKICAgICAgICBAUGVybWlzc2lvbigKICAgICAgICAgICAgYWxpYXMgPSAicmVhZFNtcyIsCiAgICAgICAgICAgIHN0cmluZ3MgPSB7IE1hbmlmZXN0LnBlcm1pc3Npb24uUkVBRF9TTVMgfQogICAgICAgICkKICAgIH0KKQpwdWJsaWMgY2xhc3MgU21zUGx1Z2luIGV4dGVuZHMgUGx1Z2luIHsKCiAgICBAUGx1Z2luTWV0aG9kCiAgICBwdWJsaWMgdm9pZCBnZXRTTVNMaXN0KFBsdWdpbkNhbGwgY2FsbCkgewogICAgICAgIGlmIChnZXRQZXJtaXNzaW9uU3RhdGUoInJlYWRTbXMiKSAhPSBQZXJtaXNzaW9uU3RhdGUuR1JBTlRFRCkgewogICAgICAgICAgICByZXF1ZXN0UGVybWlzc2lvbkZvckFsaWFzKCJyZWFkU21zIiwgY2FsbCwgInJlYWRTbXNDYWxsYmFjayIpOwogICAgICAgIH0gZWxzZSB7CiAgICAgICAgICAgIHJlYWRTTVMoY2FsbCk7CiAgICAgICAgfQogICAgfQoKICAgIEBQbHVnaW5NZXRob2QKICAgIHB1YmxpYyB2b2lkIGNoZWNrUGVybWlzc2lvbnMoUGx1Z2luQ2FsbCBjYWxsKSB7CiAgICAgICAgSlNPYmplY3QgcmVzdWx0ID0gbmV3IEpTT2JqZWN0KCk7CiAgICAgICAgcmVzdWx0LnB1dCgicmVhZFNtcyIsIGdldFBlcm1pc3Npb25TdGF0ZSgicmVhZFNtcyIpLnRvU3RyaW5nKCkudG9Mb3dlckNhc2UoKSk7CiAgICAgICAgY2FsbC5yZXNvbHZlKHJlc3VsdCk7CiAgICB9CgogICAgQFBsdWdpbk1ldGhvZAogICAgcHVibGljIHZvaWQgcmVxdWVzdFBlcm1pc3Npb25zKFBsdWdpbkNhbGwgY2FsbCkgewogICAgICAgIHJlcXVlc3RQZXJtaXNzaW9uRm9yQWxpYXMoInJlYWRTbXMiLCBjYWxsLCAicmVhZFNtc0NhbGxiYWNrIik7CiAgICB9CgogICAgQFBlcm1pc3Npb25DYWxsYmFjawogICAgcHJpdmF0ZSB2b2lkIHJlYWRTbXNDYWxsYmFjayhQbHVnaW5DYWxsIGNhbGwpIHsKICAgICAgICBpZiAoZ2V0UGVybWlzc2lvblN0YXRlKCJyZWFkU21zIikgPT0gUGVybWlzc2lvblN0YXRlLkdSQU5URUQpIHsKICAgICAgICAgICAgcmVhZFNNUyhjYWxsKTsKICAgICAgICB9IGVsc2UgewogICAgICAgICAgICBjYWxsLnJlamVjdCgiUGVybWlzc2lvbiBTTVMgcmVmdXNlZSBwYXIgbCB1dGlsaXNhdGV1ciIpOwogICAgICAgIH0KICAgIH0KCiAgICBwcml2YXRlIHZvaWQgcmVhZFNNUyhQbHVnaW5DYWxsIGNhbGwpIHsKICAgICAgICBKU0FycmF5IG1lc3NhZ2VzID0gbmV3IEpTQXJyYXkoKTsKICAgICAgICB0cnkgewogICAgICAgICAgICBpbnQgY291bnQgPSBjYWxsLmdldEludCgiY291bnQiLCAzMDApOwogICAgICAgICAgICBVcmkgdXJpID0gVXJpLnBhcnNlKCJjb250ZW50Oi8vc21zL2luYm94Iik7CiAgICAgICAgICAgIFN0cmluZ1tdIGNvbHMgPSB7ICJfaWQiLCAiYWRkcmVzcyIsICJib2R5IiwgImRhdGUiIH07CiAgICAgICAgICAgIEN1cnNvciBjID0gZ2V0Q29udGV4dCgpLmdldENvbnRlbnRSZXNvbHZlcigpLnF1ZXJ5KAogICAgICAgICAgICAgICAgdXJpLCBjb2xzLCBudWxsLCBudWxsLCAiZGF0ZSBERVNDIExJTUlUICIgKyBjb3VudAogICAgICAgICAgICApOwogICAgICAgICAgICBpZiAoYyAhPSBudWxsKSB7CiAgICAgICAgICAgICAgICB3aGlsZSAoYy5tb3ZlVG9OZXh0KCkpIHsKICAgICAgICAgICAgICAgICAgICBKU09iamVjdCBtID0gbmV3IEpTT2JqZWN0KCk7CiAgICAgICAgICAgICAgICAgICAgbS5wdXQoImlkIiwgICAgICBjLmdldFN0cmluZyhjLmdldENvbHVtbkluZGV4T3JUaHJvdygiX2lkIikpKTsKICAgICAgICAgICAgICAgICAgICBtLnB1dCgiYWRkcmVzcyIsIGMuZ2V0U3RyaW5nKGMuZ2V0Q29sdW1uSW5kZXhPclRocm93KCJhZGRyZXNzIikpKTsKICAgICAgICAgICAgICAgICAgICBtLnB1dCgiYm9keSIsICAgIGMuZ2V0U3RyaW5nKGMuZ2V0Q29sdW1uSW5kZXhPclRocm93KCJib2R5IikpKTsKICAgICAgICAgICAgICAgICAgICBtLnB1dCgiZGF0ZSIsICAgIGMuZ2V0TG9uZyhjLmdldENvbHVtbkluZGV4T3JUaHJvdygiZGF0ZSIpKSk7CiAgICAgICAgICAgICAgICAgICAgbWVzc2FnZXMucHV0KG0pOwogICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgYy5jbG9zZSgpOwogICAgICAgICAgICB9CiAgICAgICAgfSBjYXRjaCAoRXhjZXB0aW9uIGUpIHsKICAgICAgICAgICAgY2FsbC5yZWplY3QoIkVycmV1ciBsZWN0dXJlIFNNUzogIiArIGUuZ2V0TWVzc2FnZSgpKTsKICAgICAgICAgICAgcmV0dXJuOwogICAgICAgIH0KICAgICAgICBKU09iamVjdCByZXN1bHQgPSBuZXcgSlNPYmplY3QoKTsKICAgICAgICByZXN1bHQucHV0KCJtZXNzYWdlcyIsIG1lc3NhZ2VzKTsKICAgICAgICBjYWxsLnJlc29sdmUocmVzdWx0KTsKICAgIH0KfQo="
-          MAIN_B64="cGFja2FnZSBjb20uZmFtaWxsZS5kaWV1bGdhbmRldDsKCmltcG9ydCBjb20uZ2V0Y2FwYWNpdG9yLkJyaWRnZUFjdGl2aXR5OwppbXBvcnQgYW5kcm9pZC5vcy5CdW5kbGU7CmltcG9ydCBqYXZhLnV0aWwuQXJyYXlMaXN0OwoKcHVibGljIGNsYXNzIE1haW5BY3Rpdml0eSBleHRlbmRzIEJyaWRnZUFjdGl2aXR5IHsKICAgIEBPdmVycmlkZQogICAgcHVibGljIHZvaWQgb25DcmVhdGUoQnVuZGxlIHNhdmVkSW5zdGFuY2VTdGF0ZSkgewogICAgICAgIHJlZ2lzdGVyUGx1Z2luKFNtc1BsdWdpbi5jbGFzcyk7CiAgICAgICAgc3VwZXIub25DcmVhdGUoc2F2ZWRJbnN0YW5jZVN0YXRlKTsKICAgIH0KfQo="
-          echo "$SMS_B64"  | base64 -d > $PLUGIN_DIR/SmsPlugin.java
-          echo "$MAIN_B64" | base64 -d > $PLUGIN_DIR/MainActivity.java
+          cp android-src/SmsPlugin.java $PLUGIN_DIR/SmsPlugin.java
+          cp android-src/MainActivity.java $PLUGIN_DIR/MainActivity.java
 
-      - name: Set permissions in AndroidManifest
+      - name: Add SMS permissions in AndroidManifest
         run: |
-          MANIFEST="android/app/src/main/AndroidManifest.xml"
-          sed -i 's|</manifest>|    <uses-permission android:name="android.permission.READ_SMS"/>\n    <uses-permission android:name="android.permission.RECEIVE_SMS"/>\n    <uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>\n</manifest>|' $MANIFEST
+          python3 - << 'PYEOF'
+          import re
 
-      - name: Increment versionCode for update-in-place
-        run: |
-          BUILD_NUM=${{ github.run_number }}
-          sed -i "s/versionCode = 1/versionCode = ${BUILD_NUM}/" android/app/build.gradle
-          sed -i "s/versionName = \"1.0\"/versionName = \"1.${BUILD_NUM}\"/" android/app/build.gradle
+          manifest_path = "android/app/src/main/AndroidManifest.xml"
+          with open(manifest_path, "r") as f:
+              content = f.read()
+
+          permissions = [
+              'android.permission.READ_SMS',
+              'android.permission.RECEIVE_SMS',
+              'android.permission.INTERNET',
+              'android.permission.ACCESS_NETWORK_STATE',
+          ]
+
+          for perm in permissions:
+              tag = f'<uses-permission android:name="{perm}"/>'
+              if perm not in content:
+                  content = content.replace('</manifest>', f'    {tag}\n</manifest>')
+
+          with open(manifest_path, "w") as f:
+              f.write(content)
+
+          print("Permissions ajoutees :", permissions)
+          PYEOF
 
       - name: Fix gradlew permissions
         run: chmod +x android/gradlew
 
-      - name: Build APK
+      - name: Clean & Build APK
         run: |
           cd android
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew clean assembleDebug --no-daemon
+
+      - name: Display APK info
+        run: |
+          APK_PATH="android/app/build/outputs/apk/debug/app-debug.apk"
+          if [ -f "$APK_PATH" ]; then
+            SIZE=$(du -sh "$APK_PATH" | cut -f1)
+            echo "✓ APK généré : $APK_PATH ($SIZE)"
+          else
+            echo "❌ APK non trouvé"
+            exit 1
+          fi
 
       - name: Upload APK
         uses: actions/upload-artifact@v4.6.2
         with:
-          name: FamilyHub-APK
+          name: FamilyHub-v${{ github.run_number }}-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30

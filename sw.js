@@ -1,78 +1,110 @@
-const CACHE_NAME = 'familyhub-v2.0';
+// ══════════════════════════════════════════
+//  FamilyHub — Service Worker
+//  Couvre toutes les sous-applications
+//  Stratégie : Cache First (assets) + Network First (données)
+// ══════════════════════════════════════════
+
+const VERSION     = '3';
+const CACHE_STATIC = 'familyhub-static-v' + VERSION;
+const CACHE_DYNAMIC= 'familyhub-dynamic-v' + VERSION;
+
 const STATIC_ASSETS = [
-  './',
-  './index.html',
-  './manifest.json',
-  './liste-courses/index.html',
-  './locker-tracker/index.html',
-  './todo-partage/index.html',
-  './cave-spiritueux/index.html',
-  './menus-semaine/index.html',
-  './icons/home-192.png',
-  './icons/home-512.png',
-  './icons/courses-192.png',
-  './icons/courses-512.png',
+  '/',
+  '/index.html',
+  '/sw.js',
+  '/manifest.json',
+  '/locker-tracker/index.html',
+  '/locker-tracker/manifest.json',
+  '/todo-partage/index.html',
+  '/todo-partage/manifest.json',
+  '/cave-spiritueux/index.html',
+  '/cave-spiritueux/manifest.json',
+  '/menus-semaine/index.html',
+  '/menus-semaine/manifest.json',
+  '/liste-courses/index.html',
+  '/liste-courses/manifest.json',
 ];
 
-// Install: cache static assets
+// ── Install ──
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(STATIC_ASSETS))
-      .then(() => self.skipWaiting())
+    caches.open(CACHE_STATIC).then(cache => {
+      return cache.addAll(STATIC_ASSETS.map(url => new Request(url, { cache: 'reload' })));
+    }).then(() => self.skipWaiting())
   );
 });
 
-// Activate: clean old caches
+// ── Activate : nettoyer les anciens caches ──
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys()
-      .then(keys => Promise.all(
-        keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
-      ))
-      .then(() => self.clients.claim())
+    caches.keys().then(keys => {
+      return Promise.all(
+        keys
+          .filter(k => k !== CACHE_STATIC && k !== CACHE_DYNAMIC)
+          .map(k => caches.delete(k))
+      );
+    }).then(() => self.clients.claim())
   );
 });
 
-// Fetch: Network first for navigation, Cache first for assets
+// ── Fetch ──
 self.addEventListener('fetch', event => {
-  const { request } = event;
-  const url = new URL(request.url);
+  const request = event.request;
+  const url     = new URL(request.url);
 
-  // Skip non-GET or external (Google Fonts ok to cache)
-  if (request.method !== 'GET') return;
-  if (url.origin !== location.origin && !url.hostname.includes('fonts.googleapis.com') && !url.hostname.includes('fonts.gstatic.com')) return;
+  // Ne pas intercepter les requêtes externes (Firebase, Google Fonts, etc.)
+  if (url.origin !== self.location.origin) return;
 
-  // Navigation: network first, fallback to cache
+  // Navigation (HTML) : Network First avec fallback cache
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
-        .then(res => { const c = res.clone(); caches.open(CACHE_NAME).then(cache => cache.put(request, c)); return res; })
-        .catch(() => caches.match(request).then(r => r || caches.match('./index.html')))
+        .then(response => {
+          const clone = response.clone();
+          caches.open(CACHE_STATIC).then(c => c.put(request, clone));
+          return response;
+        })
+        .catch(() => caches.match(request).then(r => r || caches.match('/index.html')))
     );
     return;
   }
 
-  // Static assets: cache first
-  event.respondWith(
-    caches.match(request)
-      .then(cached => {
+  // Assets statiques (CSS, JS, images, fonts) : Cache First
+  if (
+    url.pathname.endsWith('.css') ||
+    url.pathname.endsWith('.js')  ||
+    url.pathname.endsWith('.png') ||
+    url.pathname.endsWith('.svg') ||
+    url.pathname.endsWith('.ico') ||
+    url.pathname.endsWith('.woff2') ||
+    url.pathname.includes('fonts.googleapis') ||
+    url.pathname.includes('fonts.gstatic')
+  ) {
+    event.respondWith(
+      caches.match(request).then(cached => {
         if (cached) return cached;
-        return fetch(request).then(res => {
-          if (res.ok) {
-            const c = res.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put(request, c));
+        return fetch(request).then(response => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_DYNAMIC).then(c => c.put(request, clone));
           }
-          return res;
-        });
+          return response;
+        }).catch(() => cached);
       })
-  );
-});
-
-// Background sync for shared data (future)
-self.addEventListener('sync', event => {
-  if (event.tag === 'sync-data') {
-    // Future: sync with remote backend
-    console.log('[SW] Background sync triggered');
+    );
+    return;
   }
+
+  // Tout le reste : Network First avec cache dynamique
+  event.respondWith(
+    fetch(request)
+      .then(response => {
+        if (response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE_DYNAMIC).then(c => c.put(request, clone));
+        }
+        return response;
+      })
+      .catch(() => caches.match(request))
+  );
 });

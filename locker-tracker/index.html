@@ -1,1437 +1,650 @@
 <!DOCTYPE html>
-<html lang="fr" data-theme="dark">
+<html lang="fr" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#080f14">
-<meta name="theme-color" media="(prefers-color-scheme: light)" content="#e8f4f0">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f8fb">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1a1c1e">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Colis">
 <title>Suivi Colis</title>
 <link rel="manifest" href="./manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Text:wght@400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 :root {
-  --bg:#080f14;--bg2:#0d1820;--surface:#111e2a;--surface2:#172636;
-  --border:rgba(0,200,160,0.12);--border2:rgba(0,200,160,0.3);
-  --text:#d8eee8;--text2:#6a9e90;--text3:#1a3a30;
-  --teal:#00c8a0;--blue:#0088cc;--green:#22dd88;--amber:#ffaa22;--red:#ff4455;--purple:#aa88ff;
-  --safe-top:env(safe-area-inset-top,0px);--safe-bot:env(safe-area-inset-bottom,0px);
-  --safe-left:env(safe-area-inset-left,0px);--safe-right:env(safe-area-inset-right,0px);
+  --p:#0057A8;--op:#FFF;--pc:#D7E3FF;--opc:#001849;
+  --s:#006875;--sc:#9EEFFD;--t:#6B5E91;--tc:#ECDCFF;
+  --err:#BA1A1A;--ec:#FFDAD6;
+  --bg:#F4F8FB;--sf:#FFF;--s1:#EDF1F4;--s2:#E6EBF0;--s3:#DEE4EA;
+  --ol:#72787E;--olv:#C2C8CF;--ob:#1A1C1E;--os:#1A1C1E;--osv:#42474C;
+  --sh:rgba(0,0,0,0.08);
+  --cr:#1A6500;--crb:#C4EFAD;--cpd:#7B4F00;--cpdb:#FFDDB4;
+  --co:#7D4000;--cob:#FFDBCA;--cd:#0A5C00;--cdb:#B7F397;
+  --cf:#93000A;--cfb:#FFDAD6;--cx:#5C5C5C;--cxb:#E6E6E6;
+  --top:env(safe-area-inset-top,0px);--bot:env(safe-area-inset-bottom,0px);
+  --rl:28px;--rm:16px;--rs:12px;
 }
-[data-theme="light"] {
-  --bg:#e8f4f0;--bg2:#d4ebe3;--surface:#c4ddd5;--surface2:#b4cdc5;
-  --border:rgba(0,100,80,0.15);--border2:rgba(0,100,80,0.3);
-  --text:#042018;--text2:#1a6050;--text3:#88c0b0;
-  --teal:#007a60;--blue:#005599;--green:#116644;--amber:#996600;--red:#cc1122;--purple:#5533aa;
+[data-theme="dark"]{
+  --p:#ADC6FF;--op:#002E6C;--pc:#00429A;--opc:#D7E3FF;
+  --s:#53D7E8;--sc:#004E57;--t:#D2BCFF;--tc:#524678;
+  --err:#FFB4AB;--ec:#93000A;
+  --bg:#1A1C1E;--sf:#1A1C1E;--s1:#252729;--s2:#2C2F31;--s3:#333639;
+  --ol:#8C9198;--olv:#42474C;--ob:#E3E2E6;--os:#E3E2E6;--osv:#C2C7CE;
+  --sh:rgba(0,0,0,0.3);
+  --cr:#A7D689;--crb:#1E3A10;--cpd:#FFB95D;--cpdb:#3E2800;
+  --co:#FFB499;--cob:#3D1500;--cd:#94DA79;--cdb:#113800;
+  --cf:#FFB4AB;--cfb:#410002;--cx:#A0A0A0;--cxb:#2A2A2A;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html{height:100%}
-body{font-family:'Rajdhani',sans-serif;background:var(--bg);color:var(--text);min-height:100dvh;overflow-x:hidden;transition:background 0.3s,color 0.3s}
-body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;opacity:0.35}
-body::after{content:'';position:fixed;top:-20vh;right:-10%;width:70vw;height:60vh;background:radial-gradient(ellipse,rgba(0,200,160,0.07) 0%,transparent 70%);pointer-events:none;z-index:0}
-#app{position:relative;z-index:1;min-height:100dvh;display:flex;flex-direction:column;
-  padding:calc(var(--safe-top)+12px) calc(var(--safe-right)+16px) calc(var(--safe-bot)+80px) calc(var(--safe-left)+16px);
-  max-width:520px;margin:0 auto;width:100%}
+html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Google Sans Text',sans-serif;overflow-x:hidden;transition:background .3s,color .3s}
+#app{max-width:520px;margin:0 auto;min-height:100dvh;padding-bottom:calc(var(--bot) + 96px)}
 
-/* ── Top bar ── */
-.top-bar{display:flex;align-items:center;gap:10px;margin-bottom:16px;animation:fadeDown 0.4s ease both}
-.btn-home{width:38px;height:38px;border-radius:10px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;text-decoration:none;flex-shrink:0}
-.btn-home:active{transform:scale(0.88)}
-.top-title{flex:1;min-width:0}
-.top-eyebrow{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--teal);opacity:0.8}
-.top-name{font-family:'Josefin Sans',sans-serif;font-size:20px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
-.btn-icon{width:38px;height:38px;border-radius:10px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-size:17px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;flex-shrink:0;position:relative}
-.btn-icon:active{transform:scale(0.88)}
-.sync-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--green);border:1.5px solid var(--bg)}
+/* Top App Bar */
+.tbar{position:sticky;top:0;z-index:100;background:var(--bg);padding:calc(var(--top) + 12px) 16px 8px;display:flex;align-items:center;gap:8px}
+.ihome{width:40px;height:40px;border-radius:50%;border:none;background:var(--s1);color:var(--os);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none;flex-shrink:0;transition:background .2s}
+.ihome:active{background:var(--s2)}
+.ttl{flex:1;min-width:0}
+.tlbl{font-size:11px;color:var(--osv);letter-spacing:.3px}
+.th{font-family:'Google Sans',sans-serif;font-size:22px;font-weight:700;color:var(--ob);letter-spacing:-.3px;line-height:1.1}
+.ibtn{width:40px;height:40px;border-radius:50%;border:none;background:var(--s1);color:var(--os);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background .2s;position:relative}
+.ibtn:active{background:var(--s2)}
+.ndot{position:absolute;top:7px;right:7px;width:8px;height:8px;border-radius:50%;background:#4CAF50;border:2px solid var(--bg)}
 
-/* ── Filters ── */
-.filter-row{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;animation:fadeUp 0.4s 0.05s ease both}
-.filter-row::-webkit-scrollbar{display:none}
-.ftab{flex-shrink:0;padding:7px 12px;border-radius:20px;font-family:'Josefin Sans',sans-serif;font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;transition:all 0.2s;white-space:nowrap}
-.ftab.active{border-color:var(--teal);color:var(--teal);background:rgba(0,200,160,0.1)}
-.ftab:active{transform:scale(0.94)}
-.badge{display:inline-block;background:var(--teal);color:#fff;border-radius:10px;font-size:10px;font-family:'Share Tech Mono',monospace;padding:1px 6px;margin-left:4px;vertical-align:middle}
-.badge.amber{background:var(--amber)} .badge.red{background:var(--red)} .badge.muted{background:var(--text2)}
-.badge.orange{background:#ff7722}
+/* Search */
+.swrap{padding:8px 16px 4px;position:relative}
+.sfield{width:100%;padding:11px 16px 11px 44px;border-radius:28px;border:none;background:var(--s1);color:var(--ob);font-family:'Google Sans Text',sans-serif;font-size:16px;outline:none;transition:background .2s}
+.sfield:focus{background:var(--s2)}
+.sfield::placeholder{color:var(--osv)}
+.sico{position:absolute;left:28px;top:50%;transform:translateY(-50%);color:var(--osv);font-size:18px;pointer-events:none}
 
-/* ── Search ── */
-.search-wrap{position:relative;margin-bottom:12px;animation:fadeDown 0.4s 0.03s ease both}
-.search-input{width:100%;padding:10px 14px 10px 38px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:15px}
-.search-input:focus{outline:none;border-color:var(--teal)}
-.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text2);font-size:15px;pointer-events:none}
+/* Chips */
+.chips{display:flex;gap:8px;padding:8px 16px 12px;overflow-x:auto;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;padding:7px 14px;border-radius:8px;border:1px solid var(--olv);background:transparent;color:var(--osv);font-family:'Google Sans Text',sans-serif;font-size:13px;cursor:pointer;white-space:nowrap;transition:all .2s;display:flex;align-items:center;gap:6px}
+.chip.sel{background:var(--pc);border-color:var(--pc);color:var(--opc);font-weight:500}
+.chip:active{opacity:.75}
+.cn{border-radius:10px;font-size:11px;padding:1px 7px;font-weight:700}
+.chip.sel .cn{background:var(--opc);color:var(--pc)}
+.chip:not(.sel) .cn{background:var(--s2);color:var(--osv)}
 
-/* ── Package cards ── */
-.pkg-list{display:flex;flex-direction:column;gap:10px;animation:fadeUp 0.4s 0.1s ease both}
-.pkg-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;transition:all 0.25s;cursor:pointer}
-.pkg-card:active{transform:scale(0.98)}
-.pkg-card.expanded{border-color:var(--border2)}
+/* Cards */
+.plist{display:flex;flex-direction:column;gap:8px;padding:0 12px}
+.pcard{background:var(--sf);border-radius:var(--rl);overflow:hidden;cursor:pointer;box-shadow:0 1px 3px var(--sh);transition:box-shadow .2s,transform .15s;border:1px solid transparent;animation:fu .3s ease both}
+.pcard:active{transform:scale(0.98)}
+.pcard.open{box-shadow:0 3px 8px var(--sh);border-color:var(--olv)}
+.ptint{height:4px;width:100%}
+.phdr{padding:12px 16px 10px;display:flex;align-items:flex-start;gap:12px}
+.cbadge{width:44px;height:44px;border-radius:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px}
+.pht{flex:1;min-width:0}
+.pcname{font-family:'Google Sans',sans-serif;font-size:16px;font-weight:700;color:var(--os);line-height:1.2}
+.pinline{font-size:12px;color:var(--p);font-family:'Roboto Mono',monospace;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.pmeta{font-size:12px;color:var(--osv);margin-top:2px}
+.schip{padding:4px 12px;border-radius:8px;font-size:12px;font-family:'Google Sans Text',sans-serif;font-weight:500;white-space:nowrap;flex-shrink:0;margin-top:2px}
+.sr{background:var(--crb);color:var(--cr)} .sp{background:var(--cpdb);color:var(--cpd)}
+.so{background:var(--cob);color:var(--co)} .sd{background:var(--cdb);color:var(--cd)}
+.sf{background:var(--cfb);color:var(--cf)} .sx{background:var(--cxb);color:var(--cx)}
 
-/* Header carte */
-.pkg-header{padding:12px 14px;display:flex;align-items:center;gap:10px}
-.carrier-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-.pkg-header-info{flex:1;min-width:0}
-.carrier-row{display:flex;align-items:center;gap:6px;margin-bottom:2px}
-.carrier-name{font-family:'Josefin Sans',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
-.account-avatar{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;font-family:'Josefin Sans',sans-serif;flex-shrink:0}
-.av-g{background:linear-gradient(135deg,var(--teal),var(--blue));color:#fff}
-.av-m{background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff}
-.pkg-summary{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--teal);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pkg-meta{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text2);margin-top:1px}
-.status-pill{padding:3px 10px;border-radius:20px;font-family:'Share Tech Mono',monospace;font-size:10px;white-space:nowrap;flex-shrink:0}
-.s-ready{background:rgba(0,200,160,0.15);color:var(--teal);border:1px solid rgba(0,200,160,0.3)}
-.s-pending{background:rgba(255,170,34,0.15);color:var(--amber);border:1px solid rgba(255,170,34,0.3)}
-.s-out_for_delivery{background:rgba(255,120,0,0.15);color:#ff7722;border:1px solid rgba(255,120,0,0.3)}
-.s-delivered{background:rgba(34,221,136,0.12);color:var(--green);border:1px solid rgba(34,221,136,0.3)}
-.s-failed{background:rgba(255,68,85,0.12);color:var(--red);border:1px solid rgba(255,68,85,0.3)}
-.s-expired{background:rgba(255,68,85,0.12);color:var(--red);border:1px solid rgba(255,68,85,0.3)}
-.s-collected{background:rgba(255,255,255,0.06);color:var(--text2);border:1px solid var(--border)}
+/* Body */
+.pbdy{padding:0 16px 14px}
+.div{height:1px;background:var(--olv);margin:0 -16px 12px;opacity:.4}
+.flbl{font-size:11px;color:var(--osv);letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px;font-family:'Google Sans',sans-serif}
+.frow{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.fval{font-family:'Roboto Mono',monospace;font-size:14px;color:var(--p);font-weight:500;flex:1;word-break:break-all}
+.cfab{width:32px;height:32px;border-radius:50%;border:none;background:var(--pc);color:var(--opc);font-size:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background .15s}
+.cfab:active{background:var(--s2)}
 
-/* Body carte */
-.pkg-body{padding:0 14px 12px;border-top:1px solid var(--border)}
-.field-label{font-family:'Share Tech Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--text2);margin-bottom:3px;margin-top:10px}
-.field-row{display:flex;align-items:center;gap:6px}
-.field-val{font-size:14px;font-weight:600;flex:1}
-.field-mono{font-family:'Share Tech Mono',monospace;font-size:12px;letter-spacing:1px;color:var(--teal)}
-.copy-btn{padding:4px 8px;border-radius:6px;background:rgba(0,200,160,0.1);border:1px solid rgba(0,200,160,0.2);color:var(--teal);font-size:12px;cursor:pointer;flex-shrink:0;transition:all 0.15s;font-family:'Share Tech Mono',monospace}
-.copy-btn:active{transform:scale(0.9);background:rgba(0,200,160,0.25)}
-.pkg-addr{margin-top:8px;padding:10px;background:var(--bg2);border-radius:10px;font-size:13px;line-height:1.5;position:relative}
-.maps-btn{display:inline-flex;align-items:center;gap:4px;margin-top:6px;padding:5px 10px;border-radius:8px;background:rgba(0,136,204,0.15);border:1px solid rgba(0,136,204,0.3);color:var(--blue);font-size:11px;font-family:'Josefin Sans',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;cursor:pointer;text-decoration:none;transition:all 0.15s}
-.maps-btn:active{transform:scale(0.95)}
-.code-box{margin-top:8px;padding:12px 14px;background:rgba(0,200,160,0.08);border:1px solid var(--border2);border-radius:12px}
-.code-lbl{font-family:'Share Tech Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--text2);margin-bottom:6px}
-.code-val-row{display:flex;align-items:center;gap:8px}
-.code-val{font-family:'Share Tech Mono',monospace;font-size:24px;font-weight:700;color:var(--teal);letter-spacing:4px;flex:1}
-.code-hint{font-size:11px;color:var(--text2);margin-top:4px}
+/* Code box */
+.cbox{background:var(--pc);border-radius:var(--rm);padding:16px;margin-bottom:12px}
+.cblbl{font-size:11px;color:var(--opc);opacity:.7;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;font-family:'Google Sans',sans-serif}
+.cbrow{display:flex;align-items:center;gap:8px}
+.cbval{font-family:'Roboto Mono',monospace;font-size:26px;font-weight:700;color:var(--opc);letter-spacing:5px;flex:1}
+.cbcopy{width:36px;height:36px;border-radius:50%;border:none;background:rgba(0,0,0,.1);color:var(--opc);font-size:15px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.cbcopy:active{background:rgba(0,0,0,.2)}
+.cbhint{font-size:11px;color:var(--opc);opacity:.7;margin-top:4px}
 
-/* Photo attachment */
-.photo-section{margin-top:8px}
-.photo-thumb{width:100%;max-height:180px;object-fit:cover;border-radius:10px;display:block;margin-top:6px}
-.photo-actions{display:flex;gap:6px;margin-top:6px}
-.photo-btn{flex:1;padding:8px;border-radius:10px;border:1px dashed var(--border2);background:transparent;color:var(--text2);font-family:'Josefin Sans',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;cursor:pointer;text-align:center;transition:all 0.2s}
-.photo-btn:active{transform:scale(0.95)}
+/* Addr */
+.acard{background:var(--s1);border-radius:var(--rm);padding:12px 14px;margin-bottom:12px}
+.atop{display:flex;align-items:flex-start;gap:8px}
+.atxt{flex:1;font-size:14px;color:var(--os);line-height:1.5}
+.mbtn{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:8px 16px;border-radius:20px;border:none;background:var(--p);color:var(--op);font-family:'Google Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;text-decoration:none;transition:opacity .2s}
+.mbtn:active{opacity:.8}
 
-/* Timeline (style Aftership) */
-.timeline{margin-top:10px;padding:10px 12px;background:var(--bg2);border-radius:10px}
-.timeline-title{font-family:'Share Tech Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--text2);margin-bottom:10px}
-.tl-item{display:flex;gap:10px;padding-bottom:10px;position:relative}
-.tl-item:not(:last-child)::before{content:'';position:absolute;left:8px;top:16px;bottom:0;width:1px;background:var(--border2)}
-.tl-dot{width:17px;height:17px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:8px;margin-top:1px;z-index:1}
-.tl-dot.active{background:var(--teal);color:#fff}
-.tl-dot.old{background:var(--surface2);border:1px solid var(--border2);color:var(--text2)}
-.tl-content{flex:1;min-width:0}
-.tl-status{font-family:'Josefin Sans',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px}
-.tl-date{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text2);margin-top:2px}
-.tl-desc{font-size:11px;color:var(--text2);margin-top:2px;line-height:1.4}
+/* Slot */
+.slot{display:inline-flex;align-items:center;gap:6px;background:var(--tc);border-radius:8px;padding:6px 12px;font-size:13px;margin-bottom:12px}
 
-/* Barre expiration */
-.expiry-bar{height:4px;border-radius:2px;background:var(--surface2);margin-top:8px;overflow:hidden}
-.expiry-fill{height:100%;border-radius:2px;transition:width 0.5s ease}
+/* Expiry */
+.xrow{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.xlbl{font-size:13px;color:var(--osv)}
+.xval{font-family:'Google Sans',sans-serif;font-size:14px;font-weight:700}
+.xbar{height:6px;border-radius:3px;background:var(--s2);overflow:hidden;margin-bottom:12px}
+.xfill{height:100%;border-radius:3px;transition:width .5s}
+
+/* Track link */
+.tlink{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--s1);border-radius:var(--rm);margin-bottom:12px;text-decoration:none;color:var(--p);font-family:'Google Sans Text',sans-serif;font-size:14px;font-weight:500}
+.tlink:active{background:var(--s2)}
+
+/* Timeline */
+.tl{margin-bottom:12px}
+.tlhd{font-size:11px;color:var(--osv);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;font-family:'Google Sans',sans-serif}
+.tli{display:flex;gap:12px;padding-bottom:10px;position:relative}
+.tli:not(:last-child)::before{content:'';position:absolute;left:11px;top:22px;bottom:0;width:2px;background:var(--olv);border-radius:1px}
+.tld{width:24px;height:24px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;z-index:1}
+.tld.now{background:var(--p);color:var(--op)}
+.tld.old{background:var(--s2);border:2px solid var(--olv);color:var(--osv)}
+.tlc{flex:1}
+.tlst{font-family:'Google Sans',sans-serif;font-size:14px;font-weight:600;color:var(--os)}
+.tldt{font-size:12px;color:var(--osv);margin-top:1px}
 
 /* Actions */
-.pkg-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
-.act-btn{flex:1;min-width:56px;padding:8px 6px;border-radius:10px;font-family:'Josefin Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;transition:all 0.2s;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:4px}
-.act-btn.primary{background:rgba(0,200,160,0.15);color:var(--teal);border-color:rgba(0,200,160,0.4)}
-.act-btn.success{background:rgba(34,221,136,0.12);color:var(--green);border-color:rgba(34,221,136,0.3)}
-.act-btn.danger{background:rgba(255,68,85,0.08);color:var(--red);border-color:rgba(255,68,85,0.3)}
-.act-btn.share{background:rgba(0,136,204,0.12);color:var(--blue);border-color:rgba(0,136,204,0.3)}
-.act-btn:active{transform:scale(0.94)}
+.pacts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.act{padding:8px 12px;border-radius:20px;border:1px solid var(--olv);background:transparent;color:var(--osv);font-family:'Google Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;transition:background .15s;text-decoration:none}
+.act:active{background:var(--s2)}
+.act.fl{background:var(--pc);border-color:transparent;color:var(--opc)}
+.act.gn{background:var(--cdb);border-color:transparent;color:var(--cd)}
+.act.rd{background:var(--cfb);border-color:transparent;color:var(--cf)}
+.act.sh{background:var(--sc);border-color:transparent;color:var(--s)}
 
-/* ── Empty ── */
-.empty{text-align:center;padding:60px 20px;animation:fadeUp 0.5s ease both}
-.empty-icon{font-size:56px;margin-bottom:16px}
-.empty-title{font-family:'Josefin Sans',sans-serif;font-size:20px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
-.empty-sub{font-size:14px;color:var(--text2);line-height:1.5}
+/* Empty */
+.empty{text-align:center;padding:64px 24px}
+.eico{font-size:64px;margin-bottom:16px;opacity:.5}
+.etit{font-family:'Google Sans',sans-serif;font-size:22px;font-weight:700;color:var(--ob);margin-bottom:8px}
+.esub{font-size:15px;color:var(--osv);line-height:1.6}
 
-/* ── FAB ── */
-.fab{position:fixed;bottom:calc(var(--safe-bot)+22px);right:22px;width:54px;height:54px;border-radius:16px;background:linear-gradient(135deg,var(--teal),var(--blue));border:none;color:#fff;font-size:26px;cursor:pointer;z-index:50;box-shadow:0 4px 20px rgba(0,200,160,0.4);display:flex;align-items:center;justify-content:center;transition:all 0.2s}
-.fab:active{transform:scale(0.9)}
+/* FAB — en bas à droite, au-dessus du toast */
+.fab{position:fixed;bottom:calc(var(--bot) + 28px);right:20px;width:56px;height:56px;border-radius:18px;background:var(--pc);color:var(--opc);border:none;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px var(--sh);transition:all .2s;z-index:49}
+.fab:active{transform:scale(0.92)}
 
-/* ── Modal ── */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);z-index:200;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s}
-.modal-overlay.open{opacity:1;pointer-events:all}
-.modal{background:var(--bg2);border-radius:24px 24px 0 0;padding:20px 20px calc(var(--safe-bot)+20px);width:100%;max-width:520px;max-height:92dvh;overflow-y:auto;transform:translateY(100%);transition:transform 0.35s cubic-bezier(.32,1,.23,1)}
-.modal-overlay.open .modal{transform:translateY(0)}
-.modal-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 16px;cursor:pointer}
-.modal-title{font-family:'Josefin Sans',sans-serif;font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px}
-.sect-lbl{font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--text2);margin-bottom:8px;margin-top:16px}
-.sect-lbl:first-of-type,.sect-lbl.no-top{margin-top:0}
-.form-input{width:100%;padding:11px 14px;border-radius:12px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:500;transition:border-color 0.2s}
-.form-input:focus{outline:none;border-color:var(--teal)}
-.form-input::placeholder{color:var(--text2)}
-.form-select{width:100%;padding:11px 14px;border-radius:12px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:500;appearance:none}
-.form-row{display:flex;gap:10px}
-.carrier-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
-.carrier-btn{padding:10px 6px;border-radius:12px;border:1px solid var(--border);background:var(--surface);cursor:pointer;text-align:center;transition:all 0.2s;font-family:'Josefin Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.3px;color:var(--text2)}
-.carrier-btn .cem{font-size:20px;display:block;margin-bottom:3px}
-.carrier-btn.selected{border-color:var(--teal);color:var(--teal);background:rgba(0,200,160,0.1)}
-.carrier-btn:active{transform:scale(0.94)}
-.btn-submit{width:100%;padding:13px;border-radius:14px;background:linear-gradient(135deg,var(--teal),var(--blue));border:none;color:#fff;font-family:'Josefin Sans',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;margin-top:4px}
-.btn-submit:active{transform:scale(0.97)}
-.btn-secondary{width:100%;padding:11px;border-radius:14px;background:transparent;border:1px solid var(--border2);color:var(--text2);font-family:'Josefin Sans',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;margin-top:8px}
-.btn-danger-outline{width:100%;padding:11px;border-radius:14px;background:transparent;border:1px solid rgba(255,68,85,0.3);color:var(--red);font-family:'Josefin Sans',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;margin-top:8px}
-
-/* ── Onglets modal ── */
-.modal-tabs{display:flex;gap:6px;margin-bottom:16px}
-.mtab{flex:1;padding:8px;border-radius:10px;font-family:'Josefin Sans',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;text-align:center;transition:all 0.2s}
-.mtab.active{border-color:var(--teal);color:var(--teal);background:rgba(0,200,160,0.1)}
-.mtab:active{transform:scale(0.95)}
-.tab-panel{display:none}
-.tab-panel.active{display:block}
-
-/* ── Sync card ── */
-.sync-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px}
-.sync-header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-.sync-avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
-.sync-name{font-family:'Josefin Sans',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase}
-.sync-sub{font-size:11px;color:var(--text2)}
-.status-badge{display:inline-flex;align-items:center;gap:4px;font-family:'Share Tech Mono',monospace;font-size:10px;padding:3px 8px;border-radius:10px}
-.sb-ok{background:rgba(0,200,160,0.1);color:var(--teal)}
-.sb-wait{background:rgba(255,255,255,0.06);color:var(--text2)}
-.sb-err{background:rgba(255,68,85,0.1);color:var(--red)}
-.prog-bar{height:2px;background:var(--surface2);border-radius:1px;overflow:hidden;margin:8px 0}
-.prog-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--teal),var(--blue));border-radius:1px;transition:width 0.3s}
-.info-box{background:rgba(0,200,160,0.06);border:1px solid rgba(0,200,160,0.15);border-radius:10px;padding:11px 13px;font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:10px}
-.sms-area{width:100%;padding:11px;border-radius:12px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:12px;min-height:90px;resize:vertical}
-.sms-area:focus{outline:none;border-color:var(--teal)}
-.sms-area::placeholder{color:var(--text2)}
-.log-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text2);line-height:1.7;max-height:120px;overflow-y:auto;margin-bottom:8px}
-
-/* ── Config admin ── */
-.config-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)}
-.config-label{flex:1;font-size:13px;font-weight:600}
-.config-carrier-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.config-input{width:70px;padding:5px 8px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:12px;text-align:center}
-
-/* ── Toast ── */
-.toast{position:fixed;bottom:calc(var(--safe-bot)+90px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:10px 18px;border-radius:12px;font-size:13px;font-family:'Josefin Sans',sans-serif;font-weight:600;z-index:999;opacity:0;transition:all 0.3s;white-space:nowrap;max-width:90vw;text-align:center}
+/* Toast — en bas, en dessous du FAB */
+.toast{position:fixed;bottom:calc(var(--bot) + 100px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--ob);color:var(--bg);padding:12px 20px;border-radius:28px;font-family:'Google Sans',sans-serif;font-size:14px;font-weight:500;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;max-width:88vw;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.2)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-/* ── QR ── */
-.qr-wrap{text-align:center;padding:16px 0}
-.qr-wrap canvas,.qr-wrap img{border-radius:12px;max-width:180px}
+/* Bottom Sheet */
+.sov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s}
+.sov.on{opacity:1;pointer-events:all}
+.sht{background:var(--sf);border-radius:28px 28px 0 0;padding:12px 24px calc(var(--bot) + 24px);width:100%;max-width:520px;max-height:92dvh;overflow-y:auto;transform:translateY(100%);transition:transform .35s cubic-bezier(.32,1,.23,1)}
+.sov.on .sht{transform:none}
+.shnd{width:32px;height:4px;background:var(--olv);border-radius:2px;margin:0 auto 18px;cursor:pointer}
+.shtit{font-family:'Google Sans',sans-serif;font-size:20px;font-weight:700;color:var(--ob);margin-bottom:18px}
+.slbl{font-size:12px;color:var(--osv);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px;font-family:'Google Sans',sans-serif}
+.slbl.ft{margin-top:0}
+.fin{width:100%;padding:14px 16px;border-radius:var(--rs);border:1px solid var(--olv);background:var(--s1);color:var(--ob);font-family:'Google Sans Text',sans-serif;font-size:16px;outline:none;transition:border-color .2s}
+.fin:focus{border-color:var(--p);background:var(--sf)}
+.fin::placeholder{color:var(--osv)}
+.fsel{width:100%;padding:14px 16px;border-radius:var(--rs);border:1px solid var(--olv);background:var(--s1);color:var(--ob);font-family:'Google Sans Text',sans-serif;font-size:16px;appearance:none;outline:none}
+.row2{display:flex;gap:12px}
+.row2>*{flex:1}
+.cgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}
+.cb{padding:12px 6px;border-radius:var(--rm);border:1px solid var(--olv);background:var(--s1);cursor:pointer;text-align:center;transition:all .2s}
+.cb span{font-size:22px;display:block;margin-bottom:4px}
+.cb p{font-family:'Google Sans',sans-serif;font-size:11px;font-weight:500;color:var(--osv)}
+.cb.sel{background:var(--pc);border-color:var(--p)}
+.cb.sel p{color:var(--opc)}
+.cb:active{transform:scale(.96)}
+.bfill{width:100%;padding:14px;border-radius:var(--rl);background:var(--p);color:var(--op);border:none;font-family:'Google Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:opacity .2s;margin-top:8px}
+.bfill:active{opacity:.85}
+.bout{width:100%;padding:13px;border-radius:var(--rl);background:transparent;border:1px solid var(--olv);color:var(--osv);font-family:'Google Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;margin-top:8px}
+.bdng{width:100%;padding:13px;border-radius:var(--rl);background:transparent;border:1px solid var(--cfb);color:var(--cf);font-family:'Google Sans',sans-serif;font-size:14px;cursor:pointer;margin-top:8px}
 
-/* ── Animations ── */
-@keyframes fadeDown{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
-@keyframes spin{to{transform:rotate(360deg)}}
+/* Tabs */
+.stabs{display:flex;background:var(--s1);border-radius:12px;padding:4px;gap:4px;margin-bottom:16px}
+.stab{flex:1;padding:8px;border-radius:8px;border:none;background:transparent;color:var(--osv);font-family:'Google Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s}
+.stab.sel{background:var(--sf);color:var(--p);box-shadow:0 1px 3px var(--sh)}
+.tpan{display:none}
+.tpan.on{display:block}
+
+/* Sync */
+.srow{background:var(--s1);border-radius:var(--rm);padding:14px;margin-bottom:12px;display:flex;align-items:center;gap:12px}
+.sico{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.snm{font-family:'Google Sans',sans-serif;font-size:15px;font-weight:600;color:var(--os)}
+.ssub{font-size:12px;color:var(--osv);margin-top:2px}
+.sbg{font-size:11px;padding:3px 10px;border-radius:10px;font-family:'Google Sans',sans-serif;font-weight:500}
+.bok{background:var(--cdb);color:var(--cd)}
+.bwt{background:var(--s2);color:var(--osv)}
+.ber{background:var(--cfb);color:var(--cf)}
+.pbar{height:4px;background:var(--s2);border-radius:2px;overflow:hidden;margin:8px 0}
+.pfil{height:100%;background:var(--p);border-radius:2px;width:0%;transition:width .3s}
+.lbox{background:var(--s1);border-radius:var(--rs);padding:12px;font-family:'Roboto Mono',monospace;font-size:11px;color:var(--osv);line-height:1.7;max-height:110px;overflow-y:auto;margin-bottom:8px;white-space:pre-wrap}
+.ibox{background:var(--pc);border-radius:var(--rs);padding:12px 14px;font-size:13px;color:var(--opc);line-height:1.6;margin-bottom:12px}
+.smsa{width:100%;padding:12px 14px;border-radius:var(--rs);border:1px solid var(--olv);background:var(--s1);color:var(--ob);font-family:'Roboto Mono',monospace;font-size:12px;min-height:90px;resize:vertical;outline:none}
+.smsa:focus{border-color:var(--p)}
+.smsa::placeholder{color:var(--osv)}
+
+/* Config */
+.cfgr{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--olv)}
+.cfgd{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.cfgl{flex:1;font-size:14px;color:var(--os)}
+.cfgi{width:64px;padding:6px 10px;border-radius:8px;border:1px solid var(--olv);background:var(--s1);color:var(--ob);font-family:'Roboto Mono',monospace;font-size:13px;text-align:center;outline:none}
+.cfgi:focus{border-color:var(--p)}
+
+@keyframes fu{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 </style>
 </head>
 <body>
+
 <div id="app">
-  <div class="top-bar">
-    <a href="../index.html" class="btn-home" title="Accueil">🏠</a>
-    <div class="top-title">
-      <div class="top-eyebrow">FAMILLE DIEUL-GANDET</div>
-      <div class="top-name">📦 Suivi Colis</div>
+  <div class="tbar">
+    <a href="../index.html" class="ihome">🏠</a>
+    <div class="ttl">
+      <div class="tlbl">Famille Dieul-Gandet</div>
+      <div class="th">📦 Mes colis</div>
     </div>
-    <button class="btn-icon" onclick="openSync()" title="Synchroniser" id="syncBtn">
-      ⟳<div class="sync-dot" id="syncDot" style="display:none"></div>
-    </button>
-    <button class="btn-icon" onclick="toggleTheme()" id="themeBtn" title="Thème">🌙</button>
+    <button class="ibtn" onclick="openSync()">⟳<div class="ndot" id="sd" style="display:none"></div></button>
+    <button class="ibtn" onclick="toggleTheme()" id="thbtn">🌙</button>
   </div>
 
-  <div class="search-wrap">
-    <span class="search-icon">🔍</span>
-    <input class="search-input" placeholder="Transporteur, n° suivi, lieu…" oninput="onSearch(this.value)" id="searchInput">
+  <div class="swrap">
+    <span class="sico">🔍</span>
+    <input class="sfield" placeholder="Rechercher…" oninput="onSrch(this.value)">
   </div>
 
-  <div class="filter-row">
-    <button class="ftab" onclick="setFilter('all',this)">Tous <span class="badge" id="badgeAll">0</span></button>
-    <button class="ftab active" onclick="setFilter('ready',this)">À retirer <span class="badge amber" id="badgeReady">0</span></button>
-    <button class="ftab" onclick="setFilter('out_for_delivery',this)">Livraison <span class="badge orange" id="badgeOut">0</span></button>
-    <button class="ftab" onclick="setFilter('pending',this)">En route <span class="badge muted" id="badgePending">0</span></button>
-    <button class="ftab" onclick="setFilter('failed',this)">Échec <span class="badge red" id="badgeFailed">0</span></button>
-    <button class="ftab" onclick="setFilter('delivered',this)">Récupéré <span class="badge" id="badgeDelivered">0</span></button>
+  <div class="chips">
+    <button class="chip" onclick="setF('all',this)">Tous <span class="cn" id="bA">0</span></button>
+    <button class="chip sel" onclick="setF('ready',this)">À retirer <span class="cn" id="bR">0</span></button>
+    <button class="chip" onclick="setF('out_for_delivery',this)">En livraison <span class="cn" id="bO">0</span></button>
+    <button class="chip" onclick="setF('pending',this)">En route <span class="cn" id="bP">0</span></button>
+    <button class="chip" onclick="setF('failed',this)">Échec <span class="cn" id="bF">0</span></button>
+    <button class="chip" onclick="setF('delivered',this)">Récupéré <span class="cn" id="bD">0</span></button>
   </div>
 
-  <div class="pkg-list" id="pkgList"></div>
-  <button class="fab" onclick="openAddModal()">＋</button>
+  <div class="plist" id="PL"></div>
 </div>
 
+<button class="fab" onclick="openAdd()">＋</button>
 <div class="toast" id="toast"></div>
 
-<!-- ═══ MODAL AJOUT ═══ -->
-<div class="modal-overlay" id="addModal">
-  <div class="modal">
-    <div class="modal-handle" onclick="closeModal('addModal')"></div>
-    <div class="modal-title">➕ Ajouter un colis</div>
-    <div class="sect-lbl no-top">Transporteur</div>
-    <div class="carrier-grid">
-      <div class="carrier-btn" onclick="selCarrier('chronopost',this)"><span class="cem">🔵</span>Chronopost</div>
-      <div class="carrier-btn" onclick="selCarrier('colissimo',this)"><span class="cem">🟡</span>Colissimo</div>
-      <div class="carrier-btn" onclick="selCarrier('mondialrelay',this)"><span class="cem">🔴</span>M. Relay</div>
-      <div class="carrier-btn" onclick="selCarrier('dpd',this)"><span class="cem">🔶</span>DPD</div>
-      <div class="carrier-btn" onclick="selCarrier('ups',this)"><span class="cem">🟤</span>UPS</div>
-      <div class="carrier-btn" onclick="selCarrier('gls',this)"><span class="cem">🟢</span>GLS</div>
-      <div class="carrier-btn" onclick="selCarrier('relaiscolis',this)"><span class="cem">🟠</span>Relais Colis</div>
-      <div class="carrier-btn" onclick="selCarrier('vintedgo',this)"><span class="cem">💚</span>Vinted Go</div>
-      <div class="carrier-btn" onclick="selCarrier('laposte',this)"><span class="cem">🟡</span>La Poste</div>
-      <div class="carrier-btn" onclick="selCarrier('amazon',this)"><span class="cem">🟠</span>Amazon</div>
-      <div class="carrier-btn" onclick="selCarrier('chronofresh',this)"><span class="cem">❄️</span>Chronofresh</div>
-      <div class="carrier-btn" onclick="selCarrier('other',this)"><span class="cem">📦</span>Autre</div>
+<!-- SHEET AJOUT -->
+<div class="sov" id="shAdd">
+  <div class="sht">
+    <div class="shnd" onclick="closeS('shAdd')"></div>
+    <div class="shtit">Nouveau colis</div>
+    <div class="slbl ft">Transporteur</div>
+    <div class="cgrid">
+      <div class="cb" onclick="selC('chronopost',this)"><span>🔵</span><p>Chronopost</p></div>
+      <div class="cb" onclick="selC('colissimo',this)"><span>🟡</span><p>Colissimo</p></div>
+      <div class="cb" onclick="selC('mondialrelay',this)"><span>🔴</span><p>M. Relay</p></div>
+      <div class="cb" onclick="selC('dpd',this)"><span>🔶</span><p>DPD</p></div>
+      <div class="cb" onclick="selC('ups',this)"><span>🟤</span><p>UPS</p></div>
+      <div class="cb" onclick="selC('gls',this)"><span>🟢</span><p>GLS</p></div>
+      <div class="cb" onclick="selC('relaiscolis',this)"><span>🟠</span><p>Relais Colis</p></div>
+      <div class="cb" onclick="selC('vintedgo',this)"><span>💚</span><p>Vinted Go</p></div>
+      <div class="cb" onclick="selC('laposte',this)"><span>🟡</span><p>La Poste</p></div>
+      <div class="cb" onclick="selC('amazon',this)"><span>🟠</span><p>Amazon</p></div>
+      <div class="cb" onclick="selC('chronofresh',this)"><span>❄️</span><p>Chronofresh</p></div>
+      <div class="cb" onclick="selC('other',this)"><span>📦</span><p>Autre</p></div>
     </div>
-    <div class="form-row" style="gap:10px;margin-bottom:10px">
-      <div style="flex:1"><div class="sect-lbl no-top">N° suivi</div><input class="form-input" id="addTracking" placeholder="1ZA2E708…" oninput="autoDetectCarrier(this.value)"></div>
-      <div style="flex:1"><div class="sect-lbl no-top">Code retrait</div><input class="form-input" id="addCode" placeholder="6684"></div>
+    <div class="row2">
+      <div><div class="slbl ft">N° suivi</div><input class="fin" id="aT" placeholder="1ZA2E708…" oninput="autoDet(this.value)"></div>
+      <div><div class="slbl ft">Code retrait</div><input class="fin" id="aC" placeholder="6684"></div>
     </div>
-    <div class="sect-lbl">Adresse / Lieu de retrait</div>
-    <input class="form-input" id="addAddress" placeholder="Consigne Pickup Grand Frais Herblay…" style="margin-bottom:10px">
-    <div class="form-row" style="gap:10px;margin-bottom:10px">
-      <div style="flex:1"><div class="sect-lbl no-top">Compte</div>
-        <select class="form-select" id="addAccount"><option value="Guillaume">Guillaume</option><option value="Michele">Michèle</option></select>
-      </div>
-      <div style="flex:1"><div class="sect-lbl no-top">Expéditeur</div><input class="form-input" id="addSender" placeholder="Vinted, Amazon…"></div>
+    <div class="slbl">Adresse</div>
+    <input class="fin" id="aA" placeholder="Consigne Pickup Grand Frais Herblay…" style="margin-bottom:8px">
+    <div class="row2">
+      <div><div class="slbl ft">Compte</div><select class="fsel" id="aAc"><option value="Guillaume">Guillaume</option><option value="Michele">Michèle</option></select></div>
+      <div><div class="slbl ft">Expéditeur</div><input class="fin" id="aSd" placeholder="Vinted…"></div>
     </div>
-    <div class="sect-lbl">Note</div>
-    <input class="form-input" id="addNote" placeholder="Chaussures bleues…" style="margin-bottom:14px">
-    <button class="btn-submit" onclick="addPackage()">✓ Enregistrer</button>
-    <button class="btn-secondary" onclick="closeModal('addModal')">Annuler</button>
+    <div class="slbl">Note</div>
+    <input class="fin" id="aN" placeholder="Chaussures bleues…" style="margin-bottom:4px">
+    <button class="bfill" onclick="addPkg()">Enregistrer</button>
+    <button class="bout" onclick="closeS('shAdd')">Annuler</button>
   </div>
 </div>
 
-<!-- ═══ MODAL SYNC / CONFIG ═══ -->
-<div class="modal-overlay" id="syncModal">
-  <div class="modal">
-    <div class="modal-handle" onclick="closeModal('syncModal')"></div>
-    <div class="modal-title">⟳ Synchronisation</div>
-
-    <div class="modal-tabs">
-      <button class="mtab active" onclick="showTab('tabSync',this)">Sync</button>
-      <button class="mtab" onclick="showTab('tabSMS',this)">SMS</button>
-      <button class="mtab" onclick="showTab('tabConfig',this)">⚙ Config</button>
-      <button class="mtab" onclick="showTab('tabLogs',this)">Logs</button>
+<!-- SHEET SYNC -->
+<div class="sov" id="shSync">
+  <div class="sht">
+    <div class="shnd" onclick="closeS('shSync')"></div>
+    <div class="shtit">Synchronisation</div>
+    <div class="stabs">
+      <button class="stab sel" onclick="showT('tSy',this)">Sync</button>
+      <button class="stab" onclick="showT('tSM',this)">SMS</button>
+      <button class="stab" onclick="showT('tCf',this)">Config</button>
+      <button class="stab" onclick="showT('tLg',this)">Logs</button>
     </div>
 
-    <!-- ─ Onglet Sync ─ -->
-    <div class="tab-panel active" id="tabSync">
-      <div class="sync-card">
-        <div class="sync-header">
-          <div class="sync-avatar" style="background:linear-gradient(135deg,#f57c00,#ffa000)">🔥</div>
-          <div style="flex:1;min-width:0">
-            <div class="sync-name">Firebase Firestore</div>
-            <div class="sync-sub">Base partagée Guillaume &amp; Michèle</div>
-            <div class="status-badge sb-wait" id="fbStatus">⬤ Non configuré</div>
-          </div>
+    <div class="tpan on" id="tSy">
+      <div class="srow">
+        <div class="sico" style="background:#FFF3E0">🔥</div>
+        <div style="flex:1;min-width:0">
+          <div class="snm">Firebase Firestore</div>
+          <div class="ssub">Base partagée</div>
+          <span class="sbg bwt" id="fbSt">Non configuré</span>
         </div>
-        <div class="prog-bar"><div class="prog-fill" id="fbProg"></div></div>
-        <div style="font-size:12px;color:var(--text2);margin-bottom:10px" id="fbResult"></div>
-        <div style="font-size:11px;color:var(--text2);margin-bottom:10px;font-family:'Share Tech Mono',monospace" id="lastSyncLabel"></div>
-        <button class="btn-submit" style="margin-top:0" onclick="syncFromFirebase()">⟳ Actualiser depuis Firebase</button>
       </div>
-
-      <div class="sect-lbl">⚙️ Configuration Firebase (une seule fois)</div>
-      <div class="info-box">Coller le <b>projectId</b> et l'<b>apiKey</b> depuis<br>console.firebase.google.com → Paramètres → Vos apps</div>
-      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
-        <input class="form-input" id="fbProjectId" placeholder="projectId  ex: familyhub-colis">
-        <input class="form-input" id="fbApiKey" placeholder="apiKey  ex: AIzaSy…">
-        <button class="btn-submit" style="margin-top:0" onclick="saveFirebaseConfig()">✓ Enregistrer</button>
-      </div>
+      <div class="pbar"><div class="pfil" id="fbPg"></div></div>
+      <div style="font-size:13px;color:var(--osv);margin-bottom:6px" id="fbRes"></div>
+      <div style="font-size:12px;color:var(--osv);margin-bottom:14px;font-family:'Roboto Mono',monospace" id="fbLs"></div>
+      <button class="bfill" style="margin-top:0" onclick="syncFB()">⟳ Actualiser</button>
+      <div class="slbl">Configuration Firebase</div>
+      <input class="fin" id="fbPi" placeholder="projectId" style="margin-bottom:8px">
+      <input class="fin" id="fbAk" placeholder="apiKey" style="margin-bottom:8px">
+      <button class="bfill" style="margin-top:0" onclick="saveFB()">✓ Enregistrer</button>
     </div>
 
-    <!-- ─ Onglet SMS ─ -->
-    <div class="tab-panel" id="tabSMS">
-      <div class="info-box">L'app lit les SMS transporteurs de ce téléphone et les partage via Firebase.</div>
-      <div style="display:flex;gap:8px;margin-bottom:12px">
-        <select class="form-select" id="smsAccount" style="flex:0 0 130px">
-          <option value="Guillaume">Guillaume</option>
-          <option value="Michele">Michèle</option>
-        </select>
-        <button class="btn-submit" style="margin-top:0;flex:1" onclick="readSMSNative()">📲 Lire les SMS</button>
-      </div>
-      <div class="sect-lbl">Ou coller un SMS manuellement</div>
-      <textarea class="sms-area" id="smsInput" placeholder="Collez votre SMS ici…
-Ex: Vos codes 6684 puis 7785 pour retirer votre colis Colissimo disponible en Consigne Pickup Grand Frais Herblay...
-Ex: Votre colis 00IZ31TJ de LA PLANTE DU LOUP est en route avec GLS...
-Ex: CODE 697505. Votre colis 05308822264609F sera livré aujourd'hui entre 13h05-14h05..."></textarea>
-      <button class="btn-submit" onclick="parseSMSManual()" style="margin-top:8px">📲 Extraire depuis ce SMS</button>
+    <div class="tpan" id="tSM">
+      <div class="ibox">L'app lit les SMS transporteurs de ce téléphone et les partage via Firebase avec l'autre compte.</div>
+      <button class="bfill" style="margin-top:0" onclick="readSMS()">📲 Lire les SMS</button>
+      <div class="slbl">Ou coller manuellement</div>
+      <textarea class="smsa" id="smsIn" placeholder="Collez un SMS transporteur ici…"></textarea>
+      <button class="bfill" onclick="parseMan()">Extraire</button>
     </div>
 
-    <!-- ─ Onglet Config ─ -->
-    <div class="tab-panel" id="tabConfig">
-      <div class="sect-lbl no-top">Délai d'expiration par transporteur (jours)</div>
-      <div id="retentionConfig"></div>
-      <button class="btn-submit" onclick="saveRetentionConfig()" style="margin-top:12px">✓ Sauvegarder les délais</button>
-      <div class="btn-danger-outline" onclick="resetAllData()">🗑 Réinitialiser toutes les données</div>
+    <div class="tpan" id="tCf">
+      <div style="font-size:13px;color:var(--osv);margin-bottom:12px">Délai d'expiration par transporteur (jours)</div>
+      <div id="retCf"></div>
+      <button class="bfill" onclick="saveRet()">✓ Sauvegarder</button>
+      <button class="bdng" onclick="resetAll()">🗑 Réinitialiser toutes les données</button>
     </div>
 
-    <!-- ─ Onglet Logs ─ -->
-    <div class="tab-panel" id="tabLogs">
-      <div class="sect-lbl no-top">📱 Dernier scan SMS</div>
-      <div class="log-box" id="logSMS">Aucun scan effectué</div>
-      <div class="sect-lbl">🔥 Dernière sync Firebase</div>
-      <div class="log-box" id="logFirebase">Aucune sync effectuée</div>
-      <div class="sect-lbl">📧 Dernier sync Gmail (Apps Script)</div>
-      <div class="log-box" id="logGmail">Aucune info disponible</div>
+    <div class="tpan" id="tLg">
+      <div class="slbl ft">📱 Dernier scan SMS</div>
+      <div class="lbox" id="logS">—</div>
+      <div class="slbl">🔥 Dernière sync Firebase</div>
+      <div class="lbox" id="logF">—</div>
+      <div class="slbl">📧 Dernier sync Gmail (Apps Script)</div>
+      <div class="lbox" id="logG">—</div>
     </div>
 
-    <button class="btn-secondary" onclick="closeModal('syncModal')">Fermer</button>
+    <button class="bout" onclick="closeS('shSync')">Fermer</button>
   </div>
 </div>
 
-<!-- ═══ MODAL QR ═══ -->
-<div class="modal-overlay" id="qrModal">
-  <div class="modal" style="text-align:center">
-    <div class="modal-handle" onclick="closeModal('qrModal')"></div>
-    <div class="modal-title" id="qrTitle">QR Code</div>
-    <div class="qr-wrap" id="qrContainer"></div>
-    <div style="font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--text2);margin-bottom:16px" id="qrValue"></div>
-    <button class="btn-secondary" onclick="closeModal('qrModal')">Fermer</button>
+<!-- SHEET QR -->
+<div class="sov" id="shQR">
+  <div class="sht" style="text-align:center">
+    <div class="shnd" onclick="closeS('shQR')"></div>
+    <div class="shtit" id="qrT">QR Code</div>
+    <div id="qrB" style="padding:8px 0"></div>
+    <div style="font-family:'Roboto Mono',monospace;font-size:14px;color:var(--osv);margin-bottom:16px" id="qrV"></div>
+    <button class="bout" onclick="closeS('shQR')">Fermer</button>
   </div>
 </div>
-
-<!-- Input photo caché -->
-<input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" onchange="handlePhotoCapture(event)">
 
 <script>
-// ══════════════════════════════════════════
-//  CONFIG & CONSTANTES
-// ══════════════════════════════════════════
-const STORAGE_KEY    = 'lockertrack_v3';
-const FB_CONFIG_KEY  = 'lt_fb_config';
-const RETENTION_KEY  = 'lt_retention';
-const LOGS_KEY       = 'lt_logs';
-const LAST_SMS_KEY   = 'lt_last_sms_scan';
+const SK='lt_v3',FBK='lt_fb',RK='lt_ret',LK='lt_logs',LSK='lt_lsms';
+const FB0={projectId:'familyhub-colis-8abbd',apiKey:'AIzaSyDgjLxRdUP4NzLCCXzaourqOB2_A1vt5aA'};
+const DR={chronopost:8,chronofresh:5,mondialrelay:5,colissimo:15,laposte:15,vintedgo:14,amazon:3,dpd:14,ups:10,gls:7,relaiscolis:10,other:14};
+const CL={chronopost:'#003087',chronofresh:'#005fa3',mondialrelay:'#e2001a',colissimo:'#f5c400',laposte:'#f5c400',vintedgo:'#09b1ba',amazon:'#ff9900',dpd:'#dc0032',ups:'#6b4226',gls:'#005ca9',relaiscolis:'#e8621a',other:'#888'};
+const LB={chronopost:'Chronopost',chronofresh:'Chronofresh',mondialrelay:'Mondial Relay',colissimo:'Colissimo',laposte:'La Poste',vintedgo:'Vinted Go',amazon:'Amazon',dpd:'DPD',ups:'UPS',gls:'GLS',relaiscolis:'Relais Colis',other:'Autre'};
+const EM={chronopost:'🔵',chronofresh:'❄️',mondialrelay:'🔴',colissimo:'🟡',laposte:'🟡',vintedgo:'💚',amazon:'🟠',dpd:'🔶',ups:'🟤',gls:'🟢',relaiscolis:'🟠',other:'📦'};
 
-// Délais par défaut (paramétrables)
-const DEFAULT_RETENTION = {
-  chronopost:8, chronofresh:5, mondialrelay:5, colissimo:15,
-  laposte:15, vintedgo:14, amazon:3, dpd:14, ups:10, gls:7,
-  relaiscolis:10, other:14
-};
+function loadD(){try{const d=JSON.parse(localStorage.getItem(SK));if(d?.packages)return d;}catch{}return{packages:[],nextId:1,lastSync:null};}
+function saveD(d){localStorage.setItem(SK,JSON.stringify(d));}
+function getRet(){try{return{...DR,...JSON.parse(localStorage.getItem(RK))};}catch{return{...DR};}}
+function getFB(){try{const s=JSON.parse(localStorage.getItem(FBK));return s||FB0;}catch{return FB0;}}
 
-const CARRIER_COLORS = {
-  chronopost:'#003087', chronofresh:'#005fa3', mondialrelay:'#e2001a',
-  colissimo:'#f5c400', laposte:'#f5c400', vintedgo:'#09b1ba',
-  amazon:'#ff9900', dpd:'#dc0032', ups:'#351c15', gls:'#005ca9',
-  relaiscolis:'#e8621a', other:'#6a9e90'
-};
-const CARRIER_LABELS = {
-  chronopost:'Chronopost', chronofresh:'Chronofresh', mondialrelay:'Mondial Relay',
-  colissimo:'Colissimo', laposte:'La Poste', vintedgo:'Vinted Go',
-  amazon:'Amazon', dpd:'DPD', ups:'UPS', gls:'GLS',
-  relaiscolis:'Relais Colis', other:'Autre'
-};
+let D=loadD(),flt='ready',srch='',SC=null;
 
-// ══════════════════════════════════════════
-//  DONNÉES
-// ══════════════════════════════════════════
-function loadData() {
-  try { const d=JSON.parse(localStorage.getItem(STORAGE_KEY)); if(d?.packages) return d; } catch {}
-  return { packages:[], nextId:1, lastSync:null };
+function wlog(t,m){try{const l=JSON.parse(localStorage.getItem(LK)||'{}');l[t]=new Date().toLocaleString('fr-FR')+' · '+m;localStorage.setItem(LK,JSON.stringify(l));}catch{}}
+function renderLogs(){
+  try{
+    const l=JSON.parse(localStorage.getItem(LK)||'{}');
+    document.getElementById('logS').textContent=l.sms||'—';
+    document.getElementById('logF').textContent=l.firebase||'—';
+    document.getElementById('logG').textContent=l.gmail||'—';
+    fetchGmailLog();
+  }catch{}
 }
-function saveData(d) { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); }
-function getRetention() {
-  try { return {...DEFAULT_RETENTION, ...JSON.parse(localStorage.getItem(RETENTION_KEY))}; } catch { return {...DEFAULT_RETENTION}; }
+async function fetchGmailLog(){
+  try{
+    const c=getFB();
+    const r=await fetch(`https://firestore.googleapis.com/v1/projects/${c.projectId}/databases/(default)/documents/meta/lastGmailSync?key=${c.apiKey}`,{redirect:'follow'});
+    if(!r.ok)return;
+    const d=await r.json();
+    const v=d.fields?.log?.stringValue||d.fields?.message?.stringValue||'';
+    if(v){wlog('gmail',v);const el=document.getElementById('logG');if(el)el.textContent=v;}
+  }catch{}
 }
 
-let appData       = loadData();
-let currentFilter = 'ready';
-let currentSearch = '';
-let selectedCarrier = null;
-let currentPhotoTarget = null; // id du colis pour attacher une photo
-
-// ══════════════════════════════════════════
-//  LOGS
-// ══════════════════════════════════════════
-function writeLogs(type, msg) {
-  try {
-    const logs = JSON.parse(localStorage.getItem(LOGS_KEY)||'{}');
-    logs[type] = new Date().toLocaleString('fr-FR') + ' · ' + msg;
-    localStorage.setItem(LOGS_KEY, JSON.stringify(logs));
-  } catch {}
+function purge(){
+  const L=20*86400000,now=Date.now();const b=D.packages.length;
+  D.packages=D.packages.filter(p=>{if(['ready','pending','out_for_delivery','failed'].includes(p.status))return true;const r=p.arrivalDate||p.lastUpdated;if(!r)return false;return now-new Date(r).getTime()<L;});
+  if(D.packages.length!==b)saveD(D);
 }
-function renderLogs() {
-  try {
-    const logs = JSON.parse(localStorage.getItem(LOGS_KEY)||'{}');
-    document.getElementById('logSMS').textContent      = logs.sms      || 'Aucun scan effectué';
-    document.getElementById('logFirebase').textContent = logs.firebase  || 'Aucune sync effectuée';
-    document.getElementById('logGmail').textContent    = logs.gmail     || 'Aucune info disponible';
-  } catch {}
-}
+function resetAll(){if(!confirm('Supprimer TOUS les colis ?'))return;D={packages:[],nextId:1,lastSync:null};saveD(D);render();closeS('shSync');showToast('✓ Réinitialisé');}
 
-// ══════════════════════════════════════════
-//  PURGE : livrés/expirés > 20 jours
-// ══════════════════════════════════════════
-function purgeOldPackages() {
-  const LIMIT = 20*86400000;
-  const now   = Date.now();
-  const before = appData.packages.length;
-  appData.packages = appData.packages.filter(p => {
-    if (['ready','pending','out_for_delivery','failed'].includes(p.status)) return true;
-    const ref = p.arrivalDate||p.lastUpdated;
-    if (!ref) return false;
-    return (now - new Date(ref).getTime()) < LIMIT;
-  });
-  if (appData.packages.length !== before) saveData(appData);
-}
+function fbU(p){const c=getFB();return`https://firestore.googleapis.com/v1/projects/${c.projectId}/databases/(default)/documents/${p}?key=${c.apiKey}`;}
+function toF(o){const f={};for(const[k,v]of Object.entries(o)){if(v==null)continue;if(typeof v==='string')f[k]={stringValue:v};else if(typeof v==='number')f[k]={doubleValue:v};else if(typeof v==='boolean')f[k]={booleanValue:v};}return f;}
+function frD(doc){const o={};if(!doc.fields)return o;for(const[k,v]of Object.entries(doc.fields)){if(v.stringValue!==undefined)o[k]=v.stringValue;else if(v.doubleValue!==undefined)o[k]=v.doubleValue;else if(v.integerValue!==undefined)o[k]=parseInt(v.integerValue);else if(v.booleanValue!==undefined)o[k]=v.booleanValue;else o[k]='';}return o;}
+async function fbW(id,obj){const u=fbU(`colis/${id}`);const w={...obj};delete w.photo;await fetch(u,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({fields:toF(w)}),redirect:'follow'}).catch(()=>{});}
+async function fbDel(id){await fetch(fbU(`colis/${id}`),{method:'DELETE',redirect:'follow'}).catch(()=>{});}
+async function fbAll(){const r=await fetch(fbU('colis')+'&pageSize=500',{redirect:'follow'});if(!r.ok)throw new Error('Firebase '+r.status);const d=await r.json();return(d.documents||[]).map(x=>({...frD(x),_fbId:x.name.split('/').pop()}));}
 
-// ══════════════════════════════════════════
-//  RESET
-// ══════════════════════════════════════════
-function resetAllData() {
-  if (!confirm('Supprimer TOUS les colis ? Action irréversible.')) return;
-  appData = { packages:[], nextId:1, lastSync:null };
-  saveData(appData);
-  render();
-  closeModal('syncModal');
-  showToast('✓ Données réinitialisées');
-}
-
-// ══════════════════════════════════════════
-//  FIREBASE CONFIG
-// ══════════════════════════════════════════
-function getFBConfig() {
-  try { return JSON.parse(localStorage.getItem(FB_CONFIG_KEY))||null; } catch { return null; }
-}
-function saveFBConfig(cfg) { localStorage.setItem(FB_CONFIG_KEY, JSON.stringify(cfg)); }
-
-function saveFirebaseConfig() {
-  const projectId = document.getElementById('fbProjectId').value.trim();
-  const apiKey    = document.getElementById('fbApiKey').value.trim();
-  if (!projectId||!apiKey) { showToast('⚠️ Les deux champs sont obligatoires'); return; }
-  saveFBConfig({ projectId, apiKey });
-  renderSyncStatus();
-  showToast('✓ Configuration Firebase enregistrée');
-  syncFromFirebase();
-}
-
-// ══════════════════════════════════════════
-//  FIREBASE REST API
-// ══════════════════════════════════════════
-function fbBaseUrl(path) {
-  const cfg=getFBConfig();
-  if (!cfg) return null;
-  return `https://firestore.googleapis.com/v1/projects/${cfg.projectId}/databases/(default)/documents/${path}?key=${cfg.apiKey}`;
-}
-
-function fbDocToObj(doc) {
-  const obj={};
-  if (!doc.fields) return obj;
-  for (const [k,v] of Object.entries(doc.fields)) {
-    if      (v.stringValue  !== undefined) obj[k]=v.stringValue;
-    else if (v.doubleValue  !== undefined) obj[k]=v.doubleValue;
-    else if (v.integerValue !== undefined) obj[k]=parseInt(v.integerValue);
-    else if (v.booleanValue !== undefined) obj[k]=v.booleanValue;
-    else obj[k]='';
-  }
-  return obj;
-}
-
-function objToFbFields(obj) {
-  const fields={};
-  for (const [k,v] of Object.entries(obj)) {
-    if (v===null||v===undefined) continue;
-    if (typeof v==='string')  fields[k]={stringValue:v};
-    else if (typeof v==='number')  fields[k]={doubleValue:v};
-    else if (typeof v==='boolean') fields[k]={booleanValue:v};
-  }
-  return fields;
-}
-
-async function fbGetAll() {
-  const url=fbBaseUrl('colis');
-  if (!url) throw new Error('Firebase non configuré');
-  const r=await fetch(url+'&pageSize=500',{redirect:'follow'});
-  if (!r.ok) throw new Error('Firebase '+r.status);
-  const data=await r.json();
-  return (data.documents||[]).map(doc=>({...fbDocToObj(doc),_fbId:doc.name.split('/').pop()}));
-}
-
-async function fbWrite(docId, obj) {
-  const url=fbBaseUrl(`colis/${docId}`);
-  if (!url) return;
-  // Ne pas stocker les photos en Firebase (trop volumineux) — stockage local uniquement
-  const toWrite={...obj};
-  delete toWrite.photo;
-  await fetch(url,{
-    method:'PATCH',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({fields:objToFbFields(toWrite)}),redirect:'follow'
-  });
-}
-
-async function fbDelete(docId) {
-  const url=fbBaseUrl(`colis/${docId}`);
-  if (!url) return;
-  await fetch(url,{method:'DELETE',redirect:'follow'});
-}
-
-// ══════════════════════════════════════════
-//  SYNC FIREBASE → LOCAL
-// ══════════════════════════════════════════
-async function syncFromFirebase() {
-  const cfg=getFBConfig();
-  if (!cfg) { showToast('⚠️ Configurez Firebase d\'abord'); return; }
-
-  const fill=document.getElementById('fbProg');
-  const result=document.getElementById('fbResult');
-  const status=document.getElementById('fbStatus');
-
-  if (fill)   { fill.style.transition='width 3s linear'; fill.style.width='75%'; }
-  if (result) result.textContent='🔍 Connexion…';
-  if (status) { status.textContent='⬤ Sync…'; status.className='status-badge sb-wait'; }
-
-  try {
-    const remotePkgs=await fbGetAll();
-    let newCount=0;
-
-    for (const pkg of remotePkgs) {
-      const existing=appData.packages.find(p=>p._fbId===pkg._fbId);
-      if (existing) {
-        if (pkg.status&&pkg.status!==existing.status&&existing.status!=='collected')
-          existing.status=pkg.status;
-        if ((pkg.lastUpdated||'')>(existing.lastUpdated||'')) {
-          existing.trackingNum   = pkg.trackingNum   || existing.trackingNum;
-          existing.pickupCode    = pkg.pickupCode    || existing.pickupCode;
-          existing.lockerAddress = pkg.lockerAddress || existing.lockerAddress;
-          existing.deliverySlot  = pkg.deliverySlot  || existing.deliverySlot;
-          existing.trackingLink  = pkg.trackingLink  || existing.trackingLink;
-          existing.sender        = pkg.sender        || existing.sender;
-          if (pkg.events?.length) existing.events = pkg.events;
-        }
-      } else {
-        if (!pkg.id) pkg.id=appData.nextId++;
-        appData.packages.unshift(pkg);
-        newCount++;
-      }
+async function syncFB(){
+  const pg=document.getElementById('fbPg'),rs=document.getElementById('fbRes'),st=document.getElementById('fbSt');
+  if(pg){pg.style.transition='width 3s linear';pg.style.width='75%';}
+  if(rs)rs.textContent='Connexion…';if(st){st.textContent='Sync…';st.className='sbg bwt';}
+  try{
+    const rem=await fbAll();let n=0;
+    for(const p of rem){
+      const ex=D.packages.find(x=>x._fbId===p._fbId);
+      if(ex){
+        if(p.status&&p.status!==ex.status&&ex.status!=='collected')ex.status=p.status;
+        if((p.lastUpdated||'')>(ex.lastUpdated||'')){ex.pickupCode=p.pickupCode||ex.pickupCode;ex.lockerAddress=p.lockerAddress||ex.lockerAddress;ex.deliverySlot=p.deliverySlot||ex.deliverySlot;ex.trackingLink=p.trackingLink||ex.trackingLink;ex.trackingNum=p.trackingNum||ex.trackingNum;if(p.events?.length)ex.events=p.events;}
+      }else{if(!p.id)p.id=D.nextId++;D.packages.unshift(p);n++;}
     }
-
-    appData.lastSync=new Date().toISOString();
-    purgeOldPackages();
-    saveData(appData);
-    render();
-
-    if (fill)   { fill.style.transition='width 0.3s'; fill.style.width='100%'; }
-    const msg=newCount>0?`✓ ${newCount} nouveau(x) colis`:`✓ À jour — ${remotePkgs.length} colis`;
-    if (result) result.textContent=msg;
-    if (status) { status.textContent='⬤ Connecté'; status.className='status-badge sb-ok'; }
-    document.getElementById('syncDot').style.display='block';
-    updateLastSyncLabel();
-    writeLogs('firebase', msg+` (${remotePkgs.length} total)`);
-    renderLogs();
-    showToast(msg);
-
-  } catch(err) {
-    const msg=err.message.includes('Failed to fetch')?'❌ Impossible de joindre Firebase':'❌ '+err.message;
-    if (result) result.textContent=msg;
-    if (fill)   { fill.style.width='0%'; }
-    if (status) { status.textContent='⬤ Erreur'; status.className='status-badge sb-err'; }
-    writeLogs('firebase', '❌ '+err.message);
-    renderLogs();
-    showToast(msg);
+    D.lastSync=new Date().toISOString();purge();saveD(D);render();
+    if(pg){pg.style.transition='width 0.3s';pg.style.width='100%';}
+    const msg=n>0?`✓ ${n} nouveau(x)`:`✓ À jour — ${rem.length} colis`;
+    if(rs)rs.textContent=msg;if(st){st.textContent='Connecté';st.className='sbg bok';}
+    document.getElementById('sd').style.display='block';
+    updLs();wlog('firebase',msg);renderLogs();showToast(msg);
+  }catch(e){
+    if(rs)rs.textContent='❌ '+e.message;if(pg)pg.style.width='0%';
+    if(st){st.textContent='Erreur';st.className='sbg ber';}
+    wlog('firebase','❌ '+e.message);showToast('❌ '+e.message);
   }
 }
-
-function autoSync() {
-  if (!getFBConfig()) return;
-  const last=appData.lastSync;
-  if (!last||Date.now()-new Date(last).getTime()>30*60*1000) syncFromFirebase();
-  // Lire SMS au démarrage si dernier scan > 30 min
-  const lastSMS=localStorage.getItem(LAST_SMS_KEY);
-  if (!lastSMS||Date.now()-parseInt(lastSMS)>30*60*1000) {
-    setTimeout(()=>readSMSNative(true), 2000); // délai pour laisser l'UI charger
-  }
+function saveFB(){
+  const pi=document.getElementById('fbPi').value.trim();
+  const ak=document.getElementById('fbAk').value.trim();
+  if(!pi||!ak){showToast('⚠️ Les deux champs sont requis');return;}
+  localStorage.setItem(FBK,JSON.stringify({projectId:pi,apiKey:ak}));
+  renderSS();showToast('✓ Firebase configuré');syncFB();
+}
+function autoSync(){
+  const last=D.lastSync;if(!last||Date.now()-new Date(last).getTime()>30*60*1000)syncFB();
+  const ls=localStorage.getItem(LSK);if(!ls||Date.now()-parseInt(ls)>30*60*1000)setTimeout(()=>readSMS(true),2500);
 }
 
-// ══════════════════════════════════════════
-//  DÉTECTION TRANSPORTEUR
-// ══════════════════════════════════════════
-const CARRIERS = [
-  { c:'chronofresh',  test:(f,s,b)=>/chronofresh/i.test(f+s+b) },
-  { c:'colissimo',    test:(f,s,b)=>/colissimo/i.test(f+s+b)||/laposte/i.test(f) },
-  { c:'chronopost',   test:(f,s,b)=>/chronopost/i.test(f+s+b)||/pickup\.fr/i.test(f) },
-  { c:'mondialrelay', test:(f,s,b)=>/mondial.?relay/i.test(f+s+b)||/mrcolis/i.test(f+s+b)||/point relais/i.test(b) },
-  { c:'vintedgo',     test:(f,s,b)=>/vinted/i.test(f+s+b)||/vintedgo/i.test(f) },
-  { c:'relaiscolis',  test:(f,s,b)=>/relais.?colis/i.test(f+s+b)||/relaiscolis/i.test(f) },
-  { c:'amazon',       test:(f,s,b)=>/amazon/i.test(f+s+b)&&!/chronopost|mondial/i.test(f+s)||/amzn\.eu/i.test(b) },
-  { c:'dpd',          test:(f,s,b)=>/\bdpd\b/i.test(f+s+b)||/dpdgroup/i.test(f)||/my\.dpd\.fr/i.test(b) },
-  { c:'ups',          test:(f,s,b)=>/\bups\b/i.test(f+s+b)||/mcinfo@ups/i.test(f)||/ups\.com\/su/i.test(b) },
-  { c:'gls',          test:(f,s,b)=>/\bgls\b/i.test(f+s+b)||/gls-france/i.test(f+s+b)||/moncolis\.gls/i.test(b) },
-  { c:'laposte',      test:(f,s,b)=>/la.?poste/i.test(f+s+b) },
+const CARS=[
+  {c:'chronofresh',t:(f,s,b)=>/chronofresh/i.test(f+s+b)},
+  {c:'colissimo',  t:(f,s,b)=>/colissimo/i.test(f+s+b)||/laposte/i.test(f)},
+  {c:'chronopost', t:(f,s,b)=>/chronopost/i.test(f+s+b)||/pickup\.fr/i.test(f)},
+  {c:'mondialrelay',t:(f,s,b)=>/mondial.?relay/i.test(f+s+b)||/mrcolis/i.test(f+s+b)},
+  {c:'vintedgo',   t:(f,s,b)=>/vinted/i.test(f+s+b)},
+  {c:'relaiscolis',t:(f,s,b)=>/relais.?colis/i.test(f+s+b)},
+  {c:'amazon',     t:(f,s,b)=>/amazon/i.test(f+s+b)&&!/chronopost|mondial/i.test(f+s)||/amzn\.eu/i.test(b)},
+  {c:'dpd',        t:(f,s,b)=>/\bdpd\b/i.test(f+s+b)||/my\.dpd\.fr/i.test(b)},
+  {c:'ups',        t:(f,s,b)=>/\bups\b/i.test(f+s+b)||/ups\.com\/su/i.test(b)},
+  {c:'gls',        t:(f,s,b)=>/\bgls\b/i.test(f+s+b)||/moncolis\.gls/i.test(b)},
+  {c:'laposte',    t:(f,s,b)=>/la.?poste/i.test(f+s+b)},
 ];
+const TKP=[{c:'ups',r:/^1Z[A-Z0-9]{16}$/i},{c:'colissimo',r:/^[68][A-Z]\d{11}$/},{c:'chronopost',r:/^[A-Z]{2}\d{9}[A-Z]{2}$/},{c:'chronopost',r:/^PP\d{9}FR$/i},{c:'chronopost',r:/^\d{13}[A-Z]$/},{c:'vintedgo',r:/^1UW[A-Z0-9]{9,}$/i},{c:'vintedgo',r:/^\d{13,19}$/},{c:'dpd',r:/^\d{14}$/},{c:'relaiscolis',r:/^VD[A-Z0-9]{8,}$/i},{c:'gls',r:/^[0-9A-Z]{8}$/},{c:'mondialrelay',r:/^\d{8}$/}];
+function autoDet(v){if(!v||v.length<6)return;const t=v.trim().toUpperCase();const m=TKP.find(x=>x.r.test(t));if(!m)return;const b=document.querySelector(`.cb[onclick*="'${m.c}'"]`);if(b){selC(m.c,b);showToast('Transporteur détecté : '+LB[m.c]);}}
 
-// Détection automatique transporteur depuis numéro de suivi (style Aftership)
-const TRACKING_PATTERNS = [
-  { c:'ups',         re:/^1Z[A-Z0-9]{16}$/i },
-  { c:'colissimo',   re:/^[68][A-Z]\d{11}$/ },
-  { c:'chronopost',  re:/^[A-Z]{2}\d{9}[A-Z]{2}$/ },
-  { c:'chronopost',  re:/^PP\d{9}FR$/i },
-  { c:'chronopost',  re:/^\d{13}[A-Z]$/ },
-  { c:'vintedgo',    re:/^1UW[A-Z0-9]{9,}$/i },
-  { c:'vintedgo',    re:/^\d{13,19}$/ },
-  { c:'dpd',         re:/^\d{14}$/ },
-  { c:'relaiscolis', re:/^VD[A-Z0-9]{8,}$/i },
-  { c:'gls',         re:/^[0-9A-Z]{8}$/ },
-  { c:'mondialrelay',re:/^\d{8}$/ },
-];
-
-function detectCarrierFromTracking(num) {
-  if (!num||num.length<5) return null;
-  const t=num.trim().toUpperCase();
-  for (const {c,re} of TRACKING_PATTERNS) { if(re.test(t)) return c; }
-  return null;
-}
-
-function autoDetectCarrier(val) {
-  if (!val||val.length<6) return;
-  const c=detectCarrierFromTracking(val);
-  if (!c) return;
-  // Sélectionner le transporteur dans la grille
-  const btn=document.querySelector(`.carrier-btn[onclick*="'${c}'"]`);
-  if (btn) { selCarrier(c,btn); showToast('🔍 Transporteur détecté : '+CARRIER_LABELS[c]); }
-}
-
-// Statuts — ordre de priorité strict (style Aftership)
-const STATUS_MAP = {
-  delivered:  ['votre colis a été livré','a été livré','colis livré','livré à','livraison effectuée','remis à','livraison terminée','livré le'],
-  expired:    ['retourné à l\'expéditeur','non récupéré','délai dépassé','renvoyé'],
-  failed:     ['tentative de livraison échouée','absent lors de la livraison','livraison impossible','échec de livraison','failed attempt','n\'a pas pu être livré'],
-  out_for_delivery:['est en cours de livraison','notre chauffeur vous le livrera','livré aujourd\'hui','arrive aujourd\'hui','arrive ce jour','programmé en livraison'],
-  ready:      ['disponible en consigne','à retirer','vos codes','code de retrait','code:','est disponible','déposé dans','retire ton colis','est arrivé','attend dans votre point','dans votre relais','prêt à être enlevé','retirez-le vite','retirez vite','contre remise du code','présentez le code','présentez ce code','disponible au','est arrivé au p. relais','présentez pass'],
-  pending:    ['en chemin','en route','sera livré','expédié','pris en charge','acheminé','in transit','confié par','est en route','nous vous préviendrons','mise en livraison'],
+const SM={
+  delivered:  ['votre colis a été livré','a été livré','colis livré','livré à','livraison effectuée','remis à','livraison terminée'],
+  expired:    ['retourné à l\'expéditeur','non récupéré','délai dépassé'],
+  failed:     ['tentative de livraison échouée','absent lors de','livraison impossible','n\'a pas pu être livré'],
+  out_for_delivery:['est en cours de livraison','chauffeur vous le livrera','livré aujourd\'hui','arrive aujourd\'hui','arrive ce jour','programmé en livraison'],
+  ready:      ['disponible en consigne','à retirer','vos codes','code de retrait','code:','est disponible','déposé dans','retire ton colis','est arrivé','retirez-le vite','contre remise du code','présentez le code','présentez ce code','disponible au','présentez pass','contre code'],
+  pending:    ['en chemin','en route','sera livré','expédié','pris en charge','acheminé','confié par','nous vous préviendrons'],
 };
+function detSt(t){if(!t)return'pending';const lo=t.toLowerCase();for(const s of['delivered','expired','failed','out_for_delivery','ready','pending'])if(SM[s].some(k=>lo.includes(k)))return s;return'pending';}
 
-function detectStatus(t) {
-  if (!t) return 'pending';
-  const lo=t.toLowerCase();
-  const ORDER=['delivered','expired','failed','out_for_delivery','ready','pending'];
-  for (const s of ORDER)
-    if (STATUS_MAP[s].some(k=>lo.includes(k))) return s;
-  return 'pending';
-}
+function xT(c,t){if(!t)return'';const P={ups:[/\b(1Z[A-Z0-9]{16})\b/i],chronopost:[/\b([A-Z]{2}\d{9}[A-Z]{2})\b/,/\b(PP\d{9}FR)\b/i,/\b(\d{13}[A-Z])\b/],chronofresh:[/\b([A-Z]{2}\d{9}[A-Z]{2})\b/],colissimo:[/\b(6[A-Z]\d{11})\b/,/\b(8[A-Z]\d{11})\b/,/\bn[°o]\s*([A-Z0-9]{9,15})\b/i],mondialrelay:[/\b(\d{8})\b/,/\b(\d{5,7})\b/],vintedgo:[/\b(1UW[A-Z0-9]{9,})\b/i,/\b(\d{13,19})\b/,/suivi\s*:\s*([A-Z0-9]{8,})/i],dpd:[/\b(\d{14})\b/,/colis n[°o]\s*(\d{10,})/i],gls:[/colis\s+([0-9A-Z]{6,10})\b/i],relaiscolis:[/\b(VD[A-Z0-9]{8,})\b/i],laposte:[/\b(6[A-Z]\d{11})\b/,/\b(8[A-Z]\d{11})\b/],amazon:[/\b(\d{3}-\d{7}-\d{7})\b/]};for(const r of(P[c]||[])){const m=t.match(r);if(m?.[1])return m[1].toUpperCase().trim();}return'';}
+function xC(t){if(!t)return'';const m1=t.match(/(?:vos\s+)?codes?\s+(\d{4})\s+puis\s+(\d{4})/i);if(m1)return m1[1]+' / '+m1[2];const m2=t.match(/identifiant\s*:\s*(\d{3,8}).*?code\s*d.ouverture\s*:\s*(\d{3,8})/is);if(m2)return m2[1]+' / '+m2[2];const m3=t.match(/\bCODE\s+(\d{4,8})\b/);if(m3)return m3[1];const m4=t.match(/contre\s+code\s+(\d{4,8})/i);if(m4)return m4[1];const m5=t.match(/code\s+de\s+retrait\s+(\d{4,8})/i);if(m5)return m5[1];const m6=t.match(/\bcode\s*:\s*([A-Z0-9\-]{3,12})/i);if(m6)return m6[1];return'';}
+function xA(t){if(!t)return'';const J=/^(ce message|merci|suivre|téléchargez|pour ne|absent|bonjour)/i;const P=[/consigne\s+pickup\s+(.+?)(?:\.|jusqu|n°|code|\+\s*d)/i,/consigne\s+vinted\s+go\s*:\s*(.+?)(?:\.|suivi)/i,/(?:au\s+)?(?:p\.\s*)?relais\s+([A-Z][A-Z\s]{3,40}?)(?:\.|retirez|avec|$)/i,/disponible\s+au\s+(.+?)(?:\.|retirez|avec|$)/i,/votre\s+point\s+de\s+retrait\s*:\s*\n+(.+?\n.+?\n.+?)(?:\n\n)/is,/sera\s+livré\s+à\s*\n(.+?\n.+?)(?:\n\n|france)/is,/expédier\s+à\s*\n(.+?\n.+?\n.+?)(?:\n\n|ups standard)/is,/informations\s+sur\s+l.adresse\s*\n(.+?\n.+?\n.+?)(?:\n\n)/is];for(const r of P){const m=t.match(r);if(m?.[1]){const ln=m[1].split('\n').map(l=>l.trim()).filter(l=>l.length>2&&!J.test(l));if(ln.length)return ln.slice(0,3).join(', ').substring(0,150);}}return'';}
+function xL(t){if(!t)return'';const ps=[/https?:\/\/(?:n\.pkup\.fr)[^\s<"')]+/i,/https?:\/\/(?:sms\.laposte\.fr)[^\s<"')]+/i,/sms\.laposte\.fr\/[^\s<"')]+/i,/https?:\/\/(?:p\.vintedgo\.com)[^\s<"')]+/i,/https?:\/\/(?:moncolis\.gls-france\.com)[^\s<"')]+/i,/https?:\/\/(?:gls\.tf)[^\s<"')]+/i,/https?:\/\/(?:c\.rcol\.fr)[^\s<"')]+/i,/https?:\/\/(?:my\.dpd\.fr)[^\s<"')]+/i,/my\.dpd\.fr\/[^\s<"')]+/i,/https?:\/\/(?:amzn\.eu)[^\s<"')]+/i,/https?:\/\/(?:www\.chronopost\.fr)[^\s<"')]+/i,/ups\.com\/su\/[^\s<"')]+/i,/https?:\/\/[^\s<"')]{12,60}/];for(const r of ps){const m=t.match(r);if(m){let u=m[0];if(!u.startsWith('http'))u='https://'+u;return u;}}return'';}
+function xSl(t){if(!t)return'';const m1=t.match(/entre\s+(\d{1,2}[h:]\d{2})\s*[-–et]+\s*(\d{1,2}[h:]\d{2})/i);if(m1)return m1[1].replace('h',':')+' — '+m1[2].replace('h',':');const m2=t.match(/(?:livré|livraison|livrera)\s+(?:aujourd.hui\s+)?entre\s+(\d{1,2}[h:]\d{2})[^\d]*(\d{1,2}[h:]\d{2})/i);if(m2)return m2[1].replace('h',':')+' — '+m2[2].replace('h',':');return'';}
+function xEx(t,arr,c){if(!t)return'';const R=getRet();const d=t.match(/(?:disposez?\s+de|pendant)\s+(\d+)\s+jours?/i);if(d){const x=new Date(arr);x.setDate(x.getDate()+parseInt(d[1]));return x.toISOString().split('T')[0];}const i=t.match(/(?:avant le|jusqu['']au)\s+(\d{4}-\d{2}-\d{2})/i);if(i)return i[1];const M={janvier:1,février:2,mars:3,avril:4,mai:5,juin:6,juillet:7,août:8,septembre:9,octobre:10,novembre:11,décembre:12};const tx=t.match(/(?:jusqu['']au|avant le)\s+(\d{1,2})\s+([a-zé]+)\s+(\d{4})/i);if(tx){const mo=M[tx[2].toLowerCase()];if(mo)return`${tx[3]}-${String(mo).padStart(2,'0')}-${tx[1].padStart(2,'0')}`;}const nm=t.match(/(?:jusqu['']au|avant le)\s+(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/i);if(nm){const y=nm[3]?(nm[3].length===2?'20'+nm[3]:nm[3]):new Date().getFullYear();return`${y}-${nm[2].padStart(2,'0')}-${nm[1].padStart(2,'0')}`;}const days=R[c]||14;const def=new Date(arr);def.setDate(def.getDate()+days);return def.toISOString().split('T')[0];}
+function xSd(t){if(!t)return'';const m1=t.match(/expédié\s+par\s+([A-Z][^\n.]{2,40}?)(?:\n|\.|est)/i);if(m1)return m1[1].trim();const m2=t.match(/de\s+([A-Z][^\n.]{3,40}?)(?:\n|\.|est|\bun)/);if(m2&&m2[1].length<50)return m2[1].trim();return'';}
 
-// ══════════════════════════════════════════
-//  PARSEURS (tracking, code, adresse, lien, créneau)
-// ══════════════════════════════════════════
-function extractTracking(c,t) {
-  if (!t) return '';
-  const P={
-    ups:        [/\b(1Z[A-Z0-9]{16})\b/i],
-    chronopost: [/\b([A-Z]{2}\d{9}[A-Z]{2})\b/,/\b(PP\d{9}FR)\b/i,/\b(\d{13}[A-Z])\b/],
-    chronofresh:[/\b([A-Z]{2}\d{9}[A-Z]{2})\b/],
-    colissimo:  [/\b(6[A-Z]\d{11})\b/,/\b(8[A-Z]\d{11})\b/,/\bn[°o]\s*([A-Z0-9]{9,15})\b/i],
-    mondialrelay:[/\b(\d{8})\b/,/\b(\d{5,7})\b/],
-    vintedgo:   [/\b(1UW[A-Z0-9]{9,})\b/i,/\b(\d{13,19})\b/,/suivi\s*:\s*([A-Z0-9]{8,})/i],
-    dpd:        [/\b(\d{14})\b/,/colis n[°o]\s*(\d{10,})/i],
-    gls:        [/colis\s+([0-9A-Z]{6,10})\b/i],
-    relaiscolis:[/\b(VD[A-Z0-9]{8,})\b/i],
-    laposte:    [/\b(6[A-Z]\d{11})\b/,/\b(8[A-Z]\d{11})\b/,/\bn[°o]\s*([A-Z0-9]{9,15})\b/i],
-    amazon:     [/\b(\d{3}-\d{7}-\d{7})\b/],
-  };
-  for(const re of(P[c]||[])){const m=t.match(re);if(m?.[1])return m[1].toUpperCase().trim();}
-  return '';
-}
+function findDup(pkg){const k=(pkg.trackingNum||'').toUpperCase().trim();const co=(pkg.pickupCode||'').toUpperCase().trim();return D.packages.find(p=>{if(k&&p.trackingNum&&p.trackingNum.toUpperCase().trim()===k)return true;if(co&&p.pickupCode&&p.pickupCode.toUpperCase().trim()===co&&p.carrier===pkg.carrier)return true;return false;});}
+function mrg(ex,nw){const O={pending:0,out_for_delivery:1,ready:2,failed:2,delivered:3,expired:4,collected:4};if((O[nw.status]||0)>(O[ex.status]||0))ex.status=nw.status;ex.pickupCode=nw.pickupCode||ex.pickupCode;ex.lockerAddress=nw.lockerAddress||ex.lockerAddress;ex.expiryDate=nw.expiryDate||ex.expiryDate;ex.deliverySlot=nw.deliverySlot||ex.deliverySlot;ex.trackingLink=nw.trackingLink||ex.trackingLink;ex.trackingNum=nw.trackingNum||ex.trackingNum;ex.sender=nw.sender||ex.sender;ex._fbId=ex._fbId||nw._fbId;if(!ex.events)ex.events=[];if(nw.status&&nw.status!==ex.status)ex.events.unshift({date:new Date().toISOString(),status:nw.status,desc:''});if(ex.events.length>10)ex.events=ex.events.slice(0,10);ex.lastUpdated=nw.arrivalDate||ex.lastUpdated;}
 
-function extractCode(t) {
-  if (!t) return '';
-  const m1=t.match(/(?:vos\s+)?codes?\s+(\d{4})\s+puis\s+(\d{4})/i); if(m1) return m1[1]+' / '+m1[2];
-  const m2=t.match(/identifiant\s*:\s*(\d{3,8}).*?code\s*d.ouverture\s*:\s*(\d{3,8})/is); if(m2) return m2[1]+' / '+m2[2];
-  const m3=t.match(/\bCODE\s+(\d{4,8})\b/); if(m3) return m3[1];
-  const m4=t.match(/contre\s+code\s+(\d{4,8})/i); if(m4) return m4[1];
-  const m5=t.match(/(?:présentez\s+(?:le\s+|ce\s+)?)?code\s+de\s+retrait\s+(\d{4,8})/i); if(m5) return m5[1];
-  const m6=t.match(/\bcode\s*:\s*([A-Z0-9\-]{3,12})/i); if(m6) return m6[1];
-  const m7=t.match(/code\s*[:\s]+([A-Z0-9]{4,12})/i); if(m7) return m7[1];
-  return '';
-}
-
-function extractAddress(t) {
-  if (!t) return '';
-  const JUNK=/^(ce message|merci|suivre|téléchargez|pour ne|absent|bonjour|appuyez|discutez)/i;
-  const P=[
-    /consigne\s+pickup\s+(.+?)(?:\.|jusqu|n°|code|\+\s*d)/i,
-    /consigne\s+vinted\s+go\s*:\s*(.+?)(?:\.|suivi)/i,
-    /point\s+relais\s+vinted\s+go\s+(.+?)(?:\.|utilise|avant)/i,
-    /(?:au\s+)?(?:p\.\s*)?relais\s+([A-Z][A-Z\s]{3,40}?)(?:\.|retirez|avec|$)/i,
-    /disponible\s+au\s+(.+?)(?:\.|retirez|avec|$)/i,
-    /votre\s+point\s+de\s+retrait\s*:\s*\n+(.+?\n.+?\n.+?)(?:\n\n)/is,
-    /sera\s+livré\s+à\s*\n(.+?\n.+?)(?:\n\n|france)/is,
-    /expédier\s+à\s*\n(.+?\n.+?\n.+?)(?:\n\n|ups standard)/is,
-    /informations\s+sur\s+l.adresse\s*\n(.+?\n.+?\n.+?)(?:\n\n)/is,
-    /relais\s+([A-Z][A-Z\s]+?)(?:jusqu|avant|code|avec|\.)/i,
-  ];
-  for(const re of P){const m=t.match(re);if(m?.[1]){const lines=m[1].split('\n').map(l=>l.trim()).filter(l=>l.length>2&&!JUNK.test(l));if(lines.length)return lines.slice(0,3).join(', ').substring(0,150);}}
-  return '';
-}
-
-function extractLink(t) {
-  if (!t) return '';
-  const patterns=[
-    /https?:\/\/(?:n\.pkup\.fr)[^\s<"')]+/i,
-    /https?:\/\/(?:sms\.laposte\.fr)[^\s<"')]+/i,
-    /sms\.laposte\.fr\/[^\s<"')]+/i,
-    /https?:\/\/(?:p\.vintedgo\.com)[^\s<"')]+/i,
-    /https?:\/\/(?:moncolis\.gls-france\.com)[^\s<"')]+/i,
-    /https?:\/\/(?:gls\.tf)[^\s<"')]+/i,
-    /https?:\/\/(?:c\.rcol\.fr)[^\s<"')]+/i,
-    /https?:\/\/(?:my\.dpd\.fr)[^\s<"')]+/i,
-    /my\.dpd\.fr\/[^\s<"')]+/i,
-    /https?:\/\/(?:amzn\.eu)[^\s<"')]+/i,
-    /https?:\/\/(?:www\.chronopost\.fr)[^\s<"')]+/i,
-    /ups\.com\/su\/[^\s<"')]+/i,
-    /https?:\/\/[^\s<"')]{10,60}/,
-  ];
-  for(const re of patterns){const m=t.match(re);if(m){let u=m[0];if(!u.startsWith('http'))u='https://'+u;return u;}}
-  return '';
-}
-
-function extractDeliverySlot(t) {
-  if (!t) return '';
-  const m1=t.match(/entre\s+(\d{1,2}[h:]\d{2})\s*[-–et]+\s*(\d{1,2}[h:]\d{2})/i);
-  if(m1) return m1[1].replace('h',':')+' — '+m1[2].replace('h',':');
-  const m2=t.match(/(?:livré|livraison|livrera)\s+(?:aujourd.hui\s+)?entre\s+(\d{1,2}[h:]\d{2})[^\d]*(\d{1,2}[h:]\d{2})/i);
-  if(m2) return m2[1].replace('h',':')+' — '+m2[2].replace('h',':');
-  return '';
-}
-
-function extractExpiry(t,arrival,c) {
-  if (!t) return '';
-  const R=getRetention();
-  const dur=t.match(/(?:disposez?\s+de|pendant)\s+(\d+)\s+jours?/i);
-  if(dur){const d=new Date(arrival);d.setDate(d.getDate()+parseInt(dur[1]));return d.toISOString().split('T')[0];}
-  const iso=t.match(/(?:avant le|jusqu['']au)\s+(\d{4}-\d{2}-\d{2})/i); if(iso) return iso[1];
-  const MONTHS={janvier:1,février:2,mars:3,avril:4,mai:5,juin:6,juillet:7,août:8,septembre:9,octobre:10,novembre:11,décembre:12};
-  const txt=t.match(/(?:jusqu['']au|avant le)\s+(\d{1,2})\s+([a-zé]+)\s+(\d{4})/i);
-  if(txt){const mo=MONTHS[txt[2].toLowerCase()];if(mo)return`${txt[3]}-${String(mo).padStart(2,'0')}-${txt[1].padStart(2,'0')}`;}
-  const num=t.match(/(?:jusqu['']au|avant le)\s+(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/i);
-  if(num){const y=num[3]?(num[3].length===2?'20'+num[3]:num[3]):new Date().getFullYear();return`${y}-${num[2].padStart(2,'0')}-${num[1].padStart(2,'0')}`;}
-  const days=R[c]||14;
-  const def=new Date(arrival);def.setDate(def.getDate()+days);return def.toISOString().split('T')[0];
-}
-
-function extractSender(t) {
-  if (!t) return '';
-  // "expédié par AMAZON" / "de MAITROX SERVICE" / "confié par La boutique des saucissons"
-  const m1=t.match(/expédié\s+par\s+([A-Z][^\n.]{2,40}?)(?:\n|\.|est)/i);
-  if(m1) return m1[1].trim();
-  const m2=t.match(/de\s+([A-Z][^\n.]{3,40}?)(?:\n|\.|est|\bun)/);
-  if(m2&&m2[1].length<50) return m2[1].trim();
-  return '';
-}
-
-// ══════════════════════════════════════════
-//  DÉDUPLICATION (1 ligne par colis)
-// ══════════════════════════════════════════
-function findDuplicate(pkg) {
-  const key =(pkg.trackingNum||'').toUpperCase().trim();
-  const code=(pkg.pickupCode||'').toUpperCase().trim();
-  return appData.packages.find(p=>{
-    if(key  && p.trackingNum && p.trackingNum.toUpperCase().trim()===key) return true;
-    if(code && p.pickupCode  && p.pickupCode.toUpperCase().trim()===code && p.carrier===pkg.carrier) return true;
-    return false;
-  });
-}
-
-function mergePackage(existing, newer) {
-  const ORDER={pending:0,out_for_delivery:1,ready:2,failed:2,delivered:3,expired:4,collected:4};
-  if((ORDER[newer.status]||0)>(ORDER[existing.status]||0)) existing.status=newer.status;
-  existing.pickupCode    = newer.pickupCode    || existing.pickupCode;
-  existing.lockerAddress = newer.lockerAddress || existing.lockerAddress;
-  existing.expiryDate    = newer.expiryDate    || existing.expiryDate;
-  existing.deliverySlot  = newer.deliverySlot  || existing.deliverySlot;
-  existing.trackingLink  = newer.trackingLink  || existing.trackingLink;
-  existing.trackingNum   = newer.trackingNum   || existing.trackingNum;
-  existing.sender        = newer.sender        || existing.sender;
-  existing._fbId         = existing._fbId      || newer._fbId;
-  // Ajouter un événement timeline si statut a changé
-  if (newer.status && newer.status !== existing.status) {
-    addEvent(existing, newer.status, newer.emailSubject||'');
-  }
-  existing.lastUpdated=newer.arrivalDate||existing.lastUpdated;
-}
-
-function addEvent(pkg, status, desc) {
-  if (!pkg.events) pkg.events=[];
-  pkg.events.unshift({
-    date:new Date().toISOString(),
-    status:status,
-    desc:desc.substring(0,80)
-  });
-  if(pkg.events.length>10) pkg.events=pkg.events.slice(0,10);
-}
-
-// ══════════════════════════════════════════
-//  LECTURE SMS NATIF (Capacitor / SmsPlugin.java)
-// ══════════════════════════════════════════
-async function readSMSNative(silent=false) {
-  if (!window.Capacitor?.isNativePlatform()) {
-    if (!silent) showToast('📱 Disponible uniquement dans l\'APK Android');
-    return;
-  }
-
-  let SmsPlugin=window.Capacitor?.Plugins?.SmsPlugin;
-  if (!SmsPlugin&&window.Capacitor?.registerPlugin) {
-    try { SmsPlugin=window.Capacitor.registerPlugin('SmsPlugin'); } catch(e) {}
-  }
-  if (!SmsPlugin) { if(!silent) showToast('⚠️ Plugin SMS introuvable'); return; }
-
-  const accountName=document.getElementById('smsAccount')?.value||'Guillaume';
-
-  try {
-    if (!silent) showToast('📲 Lecture des SMS en cours…');
-
-    // Lire les SMS depuis la dernière date connue ou les 300 derniers
-    const result=await SmsPlugin.getSMSList({ count:500 });
-    const messages=result?.messages||[];
-    if(!messages.length) { if(!silent) showToast('Aucun SMS ou permission refusée'); return; }
-
-    let newCount=0, mergedCount=0;
-
-    for(const sms of messages) {
-      const body  =sms.body   ||'';
-      const sender=sms.address||'';
-      const lo    =body.toLowerCase();
-      const det   =CARRIERS.find(d=>d.test(sender.toLowerCase(),lo,lo));
-      if(!det) continue;
-
-      const c       =det.c;
-      const tracking=extractTracking(c,body);
-      const code    =extractCode(body);
-      const addr    =extractAddress(body);
-      const status  =detectStatus(body);
-      if(!tracking&&!code&&!addr) continue;
-
-      const now  =new Date().toISOString();
-      const fbId ='sms_'+String(sms.date||Date.now())+'_'+btoa(encodeURIComponent((sender+'|'+(body||'').substring(0,20)))).substring(0,16);
-
-      const pkg={
-        id:appData.nextId++, _fbId:fbId, carrier:c,
-        trackingNum:tracking, pickupCode:code,
-        lockerAddress:addr, trackingLink:extractLink(body),
-        deliverySlot:extractDeliverySlot(body),
-        sender:extractSender(body)||sender,
-        arrivalDate:now, expiryDate:extractExpiry(body,now,c),
-        status:status, emailSubject:'SMS — '+(sender||'transporteur'),
-        gmailLink:'', account:accountName, source:'sms',
-        gmailMsgId:fbId, note:'', lastUpdated:now,
-        events:[{date:now,status:status,desc:'Reçu par SMS'}]
-      };
-
-      const dup=findDuplicate(pkg);
-      if(dup){mergePackage(dup,pkg);mergedCount++;}
-      else{appData.packages.unshift(pkg);fbWrite(fbId,pkg).catch(()=>{});newCount++;}
+async function readSMS(silent=false){
+  if(!window.Capacitor?.isNativePlatform()){if(!silent)showToast('📱 APK Android uniquement');return;}
+  let P=window.Capacitor?.Plugins?.SmsPlugin;
+  if(!P&&window.Capacitor?.registerPlugin)try{P=window.Capacitor.registerPlugin('SmsPlugin');}catch{}
+  if(!P){if(!silent)showToast('⚠️ Plugin SMS introuvable');return;}
+  try{
+    if(!silent)showToast('📲 Lecture SMS…');
+    const r=await P.getSMSList({count:500});const msgs=r?.messages||[];
+    if(!msgs.length){if(!silent)showToast('Aucun SMS ou permission refusée');return;}
+    let nw=0,up=0;
+    for(const sms of msgs){
+      const body=sms.body||'',sender=sms.address||'',lo=body.toLowerCase();
+      const det=CARS.find(d=>d.t(sender.toLowerCase(),lo,lo));if(!det)continue;
+      const c=det.c;const tr=xT(c,body),co=xC(body),ad=xA(body);if(!tr&&!co&&!ad)continue;
+      const status=detSt(body);
+      // Date = timestamp réel du SMS reçu sur le téléphone
+      const smsDate=sms.date?new Date(parseInt(sms.date)).toISOString():new Date().toISOString();
+      const fbId='sms_'+String(sms.date||Date.now())+'_'+btoa(encodeURIComponent((sender+'|'+(body||'').substring(0,20)))).substring(0,16);
+      const pkg={id:D.nextId++,_fbId:fbId,carrier:c,trackingNum:tr,pickupCode:co,lockerAddress:ad,trackingLink:xL(body),deliverySlot:xSl(body),sender:xSd(body)||sender,arrivalDate:smsDate,expiryDate:xEx(body,smsDate,c),status,emailSubject:'SMS — '+(sender||'transporteur'),gmailLink:'',account:'Guillaume',source:'sms',gmailMsgId:fbId,note:'',lastUpdated:smsDate,events:[{date:smsDate,status,desc:'SMS reçu'}]};
+      const dup=findDup(pkg);if(dup){mrg(dup,pkg);up++;}else{D.packages.unshift(pkg);fbW(fbId,pkg).catch(()=>{});nw++;}
     }
-
-    localStorage.setItem(LAST_SMS_KEY, String(Date.now()));
-    purgeOldPackages();
-    saveData(appData);
-    render();
-
-    const msg=newCount>0?`✓ ${newCount} nouveau(x), ${mergedCount} mis à jour`
-              :mergedCount>0?`✓ ${mergedCount} colis mis à jour`
-              :`✓ Aucun nouveau (${messages.length} SMS analysés)`;
-    writeLogs('sms', msg+` — ${messages.length} SMS lus`);
-    renderLogs();
-    if (!silent) showToast(msg);
-
-  } catch(err) {
-    const lo=(err.message||'').toLowerCase();
-    const msg=lo.includes('refus')||lo.includes('denied')?'⚠️ Permission SMS refusée':'❌ '+(err.message||err);
-    writeLogs('sms','❌ '+err.message);
-    if (!silent) showToast(msg);
-  }
+    localStorage.setItem(LSK,String(Date.now()));purge();saveD(D);render();
+    const msg=nw>0?`✓ ${nw} nouveau(x), ${up} mis à jour`:up>0?`✓ ${up} mis à jour`:`✓ Aucun nouveau (${msgs.length} SMS)`;
+    wlog('sms',msg+` — ${msgs.length} SMS lus`);if(!silent)showToast(msg);
+  }catch(e){if(!silent)showToast('❌ '+(e.message||e));wlog('sms','❌ '+e.message);}
 }
 
-// ══════════════════════════════════════════
-//  PARSING SMS MANUEL
-// ══════════════════════════════════════════
-function parseSMSManual() {
-  const text=document.getElementById('smsInput').value.trim();
-  if (!text) { showToast('⚠️ Collez un SMS d\'abord'); return; }
-  const lo=text.toLowerCase();
-  const det=CARRIERS.find(d=>d.test('',lo,lo));
-  const c=det?.c||'other';
-  const now=new Date().toISOString();
-  const fbId='sms_manual_'+Date.now();
-  const accountName=document.getElementById('smsAccount')?.value||'Guillaume';
-
-  const pkg={
-    id:appData.nextId++, _fbId:fbId, carrier:c,
-    trackingNum:extractTracking(c,text), pickupCode:extractCode(text),
-    lockerAddress:extractAddress(text), trackingLink:extractLink(text),
-    deliverySlot:extractDeliverySlot(text), sender:extractSender(text),
-    arrivalDate:now, expiryDate:extractExpiry(text,now,c),
-    status:detectStatus(text), emailSubject:'SMS manuel',
-    gmailLink:'', account:accountName, source:'sms_manual',
-    gmailMsgId:fbId, note:'', lastUpdated:now,
-    events:[{date:now,status:detectStatus(text),desc:'Ajouté manuellement'}]
-  };
-
-  const dup=findDuplicate(pkg);
-  if(dup){mergePackage(dup,pkg);showToast('↗ Colis mis à jour : '+(CARRIER_LABELS[c]||c));}
-  else{appData.packages.unshift(pkg);fbWrite(fbId,pkg).catch(()=>{});showToast('✓ Colis ajouté : '+(CARRIER_LABELS[c]||c));}
-
-  purgeOldPackages();saveData(appData);render();
-  document.getElementById('smsInput').value='';
-  closeModal('syncModal');
+function parseMan(){
+  const t=document.getElementById('smsIn').value.trim();if(!t){showToast('⚠️ Collez un SMS');return;}
+  const lo=t.toLowerCase();const det=CARS.find(d=>d.t('',lo,lo));const c=det?.c||'other';
+  const now=new Date().toISOString();const fbId='sms_man_'+Date.now();
+  const pkg={id:D.nextId++,_fbId:fbId,carrier:c,trackingNum:xT(c,t),pickupCode:xC(t),lockerAddress:xA(t),trackingLink:xL(t),deliverySlot:xSl(t),sender:xSd(t),arrivalDate:now,expiryDate:xEx(t,now,c),status:detSt(t),emailSubject:'SMS manuel',gmailLink:'',account:'Guillaume',source:'sms_manual',gmailMsgId:fbId,note:'',lastUpdated:now,events:[{date:now,status:detSt(t),desc:'Manuel'}]};
+  const dup=findDup(pkg);if(dup){mrg(dup,pkg);showToast('↗ Mis à jour');}else{D.packages.unshift(pkg);fbW(fbId,pkg).catch(()=>{});showToast('✓ Ajouté : '+LB[c]);}
+  purge();saveD(D);render();document.getElementById('smsIn').value='';closeS('shSync');
 }
 
-// ══════════════════════════════════════════
-//  PHOTO / SCREENSHOT
-// ══════════════════════════════════════════
-function attachPhoto(pkgId, event) {
-  event.stopPropagation();
-  currentPhotoTarget=pkgId;
-  document.getElementById('photoInput').click();
+function selC(c,el){SC=c;document.querySelectorAll('.cb').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');}
+function addPkg(){
+  if(!SC){showToast('⚠️ Choisissez un transporteur');return;}
+  const tr=document.getElementById('aT').value.trim().toUpperCase();
+  const co=document.getElementById('aC').value.trim().toUpperCase();
+  const ad=document.getElementById('aA').value.trim();
+  if(!tr&&!co&&!ad){showToast('⚠️ Renseignez au moins un champ');return;}
+  const R=getRet();const now=new Date().toISOString();const fbId='man_'+Date.now();
+  const defExp=new Date();defExp.setDate(defExp.getDate()+(R[SC]||14));
+  const pkg={id:D.nextId++,_fbId:fbId,carrier:SC,trackingNum:tr,pickupCode:co,lockerAddress:ad,trackingLink:'',deliverySlot:'',sender:document.getElementById('aSd').value.trim(),arrivalDate:now,expiryDate:defExp.toISOString().split('T')[0],status:'ready',emailSubject:'Ajout manuel',gmailLink:'',account:document.getElementById('aAc').value,source:'manual',gmailMsgId:fbId,note:document.getElementById('aN').value.trim(),lastUpdated:now,events:[{date:now,status:'ready',desc:'Manuel'}]};
+  D.packages.unshift(pkg);saveD(D);render();fbW(fbId,pkg).catch(()=>{});
+  closeS('shAdd');showToast('✓ Colis ajouté');
+  ['aT','aC','aA','aSd','aN'].forEach(id=>document.getElementById(id).value='');
+  SC=null;document.querySelectorAll('.cb').forEach(b=>b.classList.remove('sel'));
 }
 
-function handlePhotoCapture(event) {
-  const file=event.target.files[0];
-  if (!file||!currentPhotoTarget) return;
-  const reader=new FileReader();
-  reader.onload=(e)=>{
-    const base64=e.target.result;
-    const pkg=appData.packages.find(p=>p.id===currentPhotoTarget);
-    if (pkg) {
-      pkg.photo=base64;
-      saveData(appData);
-      render();
-      showToast('✓ Photo enregistrée');
-    }
-  };
-  reader.readAsDataURL(file);
-  event.target.value=''; // reset pour permettre re-sélection
+function markDone(id,e){e.stopPropagation();const p=D.packages.find(x=>x.id===id);if(!p)return;p.status='collected';if(!p.events)p.events=[];p.events.unshift({date:new Date().toISOString(),status:'collected',desc:''});saveD(D);render();if(p._fbId)fbW(p._fbId,{...p,status:'collected'}).catch(()=>{});showToast('✓ Récupéré');}
+function delPkg(id,e){e.stopPropagation();if(!confirm('Supprimer ?'))return;const p=D.packages.find(x=>x.id===id);if(p?._fbId)fbDel(p._fbId).catch(()=>{});D.packages=D.packages.filter(x=>x.id!==id);saveD(D);render();}
+
+function cpT(txt,lbl,e){e.stopPropagation();if(!txt)return;if(navigator.clipboard)navigator.clipboard.writeText(txt).then(()=>showToast('📋 '+lbl+' copié'));else{const t=document.createElement('textarea');t.value=txt;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);showToast('📋 '+lbl+' copié');}}
+function shareP(id,e){e.stopPropagation();const p=D.packages.find(x=>x.id===id);if(!p)return;const lines=[`📦 ${LB[p.carrier]}`,p.trackingNum?`N° : ${p.trackingNum}`:'',p.pickupCode?`Code : ${p.pickupCode}`:'',p.lockerAddress?`📍 ${p.lockerAddress}`:'',p.deliverySlot?`🕐 ${p.deliverySlot}`:'',p.expiryDate?`⏰ Expire le ${fFull(p.expiryDate)}`:'',p.trackingLink?`🔗 ${p.trackingLink}`:''].filter(Boolean);const text=lines.join('\n');if(navigator.share)navigator.share({title:'Colis',text}).catch(()=>{});else cpT(text,'Infos',e);}
+
+function sLbl(s){return{ready:'À retirer',pending:'En route',out_for_delivery:'En livraison',delivered:'Récupéré',failed:'Échec livr.',expired:'Expiré',collected:'Récupéré'}[s]||s;}
+function sCls(s){return{ready:'sr',pending:'sp',out_for_delivery:'so',delivered:'sd',failed:'sf',expired:'sx',collected:'sd'}[s]||'sp';}
+function dLeft(e){if(!e)return null;return Math.floor((new Date(e)-Date.now())/86400000);}
+function xCol(d){if(d<0||d<=2)return'var(--cf)';if(d<=5)return'var(--cpd)';return'var(--cr)';}
+function fFull(iso){if(!iso)return'';try{return new Date(iso).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});}catch{return iso;}}
+function fShort(iso){if(!iso)return'';try{return new Date(iso).toLocaleDateString('fr-FR',{day:'numeric',month:'short'});}catch{return iso;}}
+function fSrc(p){return(p.source?.includes('sms')?'📱':'📧')+' '+fShort(p.arrivalDate);}
+
+function getFilt(){
+  let pkgs=[...D.packages];
+  if(flt!=='all')pkgs=pkgs.filter(p=>p.status===flt||(flt==='delivered'&&p.status==='collected'));
+  if(srch){const q=srch.toLowerCase();pkgs=pkgs.filter(p=>(p.carrier||'').toLowerCase().includes(q)||(p.trackingNum||'').toLowerCase().includes(q)||(p.lockerAddress||'').toLowerCase().includes(q)||(p.sender||'').toLowerCase().includes(q)||(p.note||'').toLowerCase().includes(q));}
+  return pkgs.sort((a,b)=>{const o={out_for_delivery:0,ready:1,failed:2,pending:3,delivered:4,expired:5,collected:5};return(o[a.status]||9)-(o[b.status]||9);});
 }
+function updBadges(){const p=D.packages;document.getElementById('bA').textContent=p.length;document.getElementById('bR').textContent=p.filter(x=>x.status==='ready').length;document.getElementById('bO').textContent=p.filter(x=>x.status==='out_for_delivery').length;document.getElementById('bP').textContent=p.filter(x=>x.status==='pending').length;document.getElementById('bF').textContent=p.filter(x=>x.status==='failed').length;document.getElementById('bD').textContent=p.filter(x=>x.status==='delivered'||x.status==='collected').length;}
 
-function deletePhoto(pkgId, event) {
-  event.stopPropagation();
-  const pkg=appData.packages.find(p=>p.id===pkgId);
-  if (pkg&&confirm('Supprimer la photo ?')) {
-    delete pkg.photo;
-    saveData(appData);
-    render();
-    showToast('✓ Photo supprimée');
-  }
-}
+function render(){
+  updBadges();const pkgs=getFilt();const el=document.getElementById('PL');
+  if(!pkgs.length){el.innerHTML=`<div class="empty"><div class="eico">📭</div><div class="etit">Aucun colis</div><div class="esub">Appuyez sur + pour en ajouter<br>ou synchronisez via ⟳</div></div>`;return;}
+  const R=getRet();
+  el.innerHTML=pkgs.map((p,i)=>{
+    const color=CL[p.carrier]||'#888';
+    const days=dLeft(p.expiryDate);
+    const showE=p.status==='ready'&&days!==null;
+    const pct=showE?Math.max(0,Math.min(100,(days/(R[p.carrier]||14))*100)):null;
+    const isOut=p.status==='out_for_delivery';
+    const parts=[];if(p.pickupCode)parts.push('🔑 '+p.pickupCode);if(p.trackingNum)parts.push(p.trackingNum.substring(0,16)+(p.trackingNum.length>16?'…':''));
+    const sum=parts.join('  ');
 
-// ══════════════════════════════════════════
-//  COPY TO CLIPBOARD
-// ══════════════════════════════════════════
-function copyText(text, label, event) {
-  event.stopPropagation();
-  if (!text) return;
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(text).then(()=>showToast('📋 '+label+' copié !'));
-  } else {
-    // Fallback pour WebView Android
-    const ta=document.createElement('textarea');
-    ta.value=text;
-    ta.style.position='fixed';ta.style.opacity='0';
-    document.body.appendChild(ta);
-    ta.select();document.execCommand('copy');
-    document.body.removeChild(ta);
-    showToast('📋 '+label+' copié !');
-  }
-}
-
-// ══════════════════════════════════════════
-//  PARTAGE (style Aftership)
-// ══════════════════════════════════════════
-function sharePackage(id, event) {
-  event.stopPropagation();
-  const p=appData.packages.find(x=>x.id===id);
-  if (!p) return;
-  const lines=[
-    `📦 ${CARRIER_LABELS[p.carrier]||p.carrier}`,
-    p.trackingNum ? `N° : ${p.trackingNum}` : '',
-    p.pickupCode  ? `Code : ${p.pickupCode}` : '',
-    p.lockerAddress ? `📍 ${p.lockerAddress}` : '',
-    p.deliverySlot ? `🕐 ${p.deliverySlot}` : '',
-    p.expiryDate ? `⏰ Expire le ${fmtDateFull(p.expiryDate)}` : '',
-    p.trackingLink ? `🔗 ${p.trackingLink}` : '',
-  ].filter(Boolean);
-  const text=lines.join('\n');
-
-  if (navigator.share) {
-    navigator.share({ title:'Colis '+CARRIER_LABELS[p.carrier], text }).catch(()=>{});
-  } else {
-    copyText(text, 'Info colis', event);
-  }
-}
-
-// ══════════════════════════════════════════
-//  ACTIONS COLIS
-// ══════════════════════════════════════════
-function markCollected(id,e) {
-  e.stopPropagation();
-  const p=appData.packages.find(x=>x.id===id);
-  if (!p) return;
-  p.status='collected';
-  addEvent(p,'collected','Marqué récupéré');
-  saveData(appData);render();
-  if(p._fbId) fbWrite(p._fbId,{...p,status:'collected'}).catch(()=>{});
-  showToast('✓ Colis marqué récupéré');
-}
-
-function deletePackage(id,e) {
-  e.stopPropagation();
-  if (!confirm('Supprimer ce colis ?')) return;
-  const p=appData.packages.find(x=>x.id===id);
-  if(p?._fbId) fbDelete(p._fbId).catch(()=>{});
-  appData.packages=appData.packages.filter(p=>p.id!==id);
-  saveData(appData);render();
-}
-
-// ══════════════════════════════════════════
-//  AJOUT MANUEL
-// ══════════════════════════════════════════
-function selCarrier(c,el) {
-  selectedCarrier=c;
-  document.querySelectorAll('.carrier-btn').forEach(b=>b.classList.remove('selected'));
-  el.classList.add('selected');
-}
-
-function addPackage() {
-  if (!selectedCarrier) { showToast('⚠️ Choisissez un transporteur'); return; }
-  const tracking=document.getElementById('addTracking').value.trim().toUpperCase();
-  const code    =document.getElementById('addCode').value.trim().toUpperCase();
-  const addr    =document.getElementById('addAddress').value.trim();
-  const account =document.getElementById('addAccount').value;
-  const sender  =document.getElementById('addSender').value.trim();
-  const note    =document.getElementById('addNote').value.trim();
-  if (!tracking&&!code&&!addr) { showToast('⚠️ Renseignez au moins un champ'); return; }
-
-  const now   =new Date().toISOString();
-  const fbId  ='manual_'+Date.now();
-  const R     =getRetention();
-  const defExp=new Date(); defExp.setDate(defExp.getDate()+(R[selectedCarrier]||14));
-
-  const pkg={
-    id:appData.nextId++, _fbId:fbId, carrier:selectedCarrier,
-    trackingNum:tracking, pickupCode:code, lockerAddress:addr,
-    trackingLink:'', deliverySlot:'', sender:sender,
-    arrivalDate:now, expiryDate:defExp.toISOString().split('T')[0],
-    status:'ready', emailSubject:'Ajout manuel', gmailLink:'',
-    account:account, source:'manual', gmailMsgId:fbId, note:note, lastUpdated:now,
-    events:[{date:now,status:'ready',desc:'Ajouté manuellement'}]
-  };
-
-  appData.packages.unshift(pkg);saveData(appData);render();
-  fbWrite(fbId,pkg).catch(()=>{});
-  closeModal('addModal');showToast('✓ Colis ajouté');
-  ['addTracking','addCode','addAddress','addSender','addNote'].forEach(id=>document.getElementById(id).value='');
-  selectedCarrier=null;
-  document.querySelectorAll('.carrier-btn').forEach(b=>b.classList.remove('selected'));
-}
-
-// ══════════════════════════════════════════
-//  CONFIG ADMIN — délais paramétrables
-// ══════════════════════════════════════════
-function renderRetentionConfig() {
-  const R=getRetention();
-  const container=document.getElementById('retentionConfig');
-  if (!container) return;
-  container.innerHTML=Object.entries(DEFAULT_RETENTION).map(([c,d])=>
-    `<div class="config-row">
-       <div class="carrier-dot config-carrier-dot" style="background:${CARRIER_COLORS[c]||'#666'}"></div>
-       <div class="config-label">${CARRIER_LABELS[c]||c}</div>
-       <input class="config-input" type="number" min="1" max="60" id="ret_${c}" value="${R[c]||d}">
-       <span style="font-size:11px;color:var(--text2)">j</span>
-     </div>`
-  ).join('');
-}
-
-function saveRetentionConfig() {
-  const newR={};
-  Object.keys(DEFAULT_RETENTION).forEach(c=>{
-    const el=document.getElementById('ret_'+c);
-    if(el) newR[c]=Math.max(1,Math.min(60,parseInt(el.value)||DEFAULT_RETENTION[c]));
-  });
-  localStorage.setItem(RETENTION_KEY,JSON.stringify(newR));
-  showToast('✓ Délais sauvegardés');
-}
-
-// ══════════════════════════════════════════
-//  RENDU
-// ══════════════════════════════════════════
-function statusLabel(s) {
-  return {ready:'À retirer',pending:'En route',out_for_delivery:'En livraison',
-    delivered:'Récupéré',failed:'Échec livr.',expired:'Expiré',collected:'Récupéré'}[s]||s;
-}
-function statusClass(s) {
-  return {ready:'s-ready',pending:'s-pending',out_for_delivery:'s-out_for_delivery',
-    delivered:'s-delivered',failed:'s-failed',expired:'s-expired',collected:'s-collected'}[s]||'s-pending';
-}
-function daysLeft(exp) {
-  if(!exp)return null;
-  return Math.floor((new Date(exp)-Date.now())/86400000);
-}
-function expiryColor(d) {
-  if(d<0||d<=2)return'var(--red)';if(d<=5)return'var(--amber)';return'var(--green)';
-}
-function fmtDateFull(iso) {
-  if(!iso)return'';
-  try{return new Date(iso).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});}
-  catch{return iso;}
-}
-function fmtDateShort(iso) {
-  if(!iso)return'';
-  try{return new Date(iso).toLocaleDateString('fr-FR',{day:'numeric',month:'short'});}
-  catch{return iso;}
-}
-function fmtSourceDate(p) {
-  const icon=p.source==='sms'||p.source==='sms_manual'?'📱':'📧';
-  const d=fmtDateShort(p.arrivalDate);
-  return icon+' '+d;
-}
-
-function getFiltered() {
-  let pkgs=[...appData.packages];
-  if(currentFilter!=='all') pkgs=pkgs.filter(p=>p.status===currentFilter||(currentFilter==='delivered'&&p.status==='collected'));
-  if(currentSearch) {
-    const q=currentSearch.toLowerCase();
-    pkgs=pkgs.filter(p=>(p.carrier||'').toLowerCase().includes(q)||(p.trackingNum||'').toLowerCase().includes(q)||(p.lockerAddress||'').toLowerCase().includes(q)||(p.note||'').toLowerCase().includes(q)||(p.account||'').toLowerCase().includes(q)||(p.sender||'').toLowerCase().includes(q));
-  }
-  return pkgs.sort((a,b)=>{
-    const o={out_for_delivery:0,ready:1,failed:2,pending:3,delivered:4,expired:5,collected:5};
-    return(o[a.status]||9)-(o[b.status]||9);
-  });
-}
-
-function updateBadges() {
-  const p=appData.packages;
-  document.getElementById('badgeAll').textContent       = p.length;
-  document.getElementById('badgeReady').textContent     = p.filter(x=>x.status==='ready').length;
-  document.getElementById('badgeOut').textContent       = p.filter(x=>x.status==='out_for_delivery').length;
-  document.getElementById('badgePending').textContent   = p.filter(x=>x.status==='pending').length;
-  document.getElementById('badgeFailed').textContent    = p.filter(x=>x.status==='failed').length;
-  document.getElementById('badgeDelivered').textContent = p.filter(x=>x.status==='delivered'||x.status==='collected').length;
-}
-
-function render() {
-  updateBadges();
-  const pkgs=getFiltered();
-  const el=document.getElementById('pkgList');
-
-  if(!pkgs.length){
-    el.innerHTML=`<div class="empty"><div class="empty-icon">📭</div><div class="empty-title">Aucun colis</div><div class="empty-sub">Appuyez sur ＋ pour en ajouter<br>ou synchronisez via ⟳</div></div>`;
-    return;
-  }
-
-  el.innerHTML=pkgs.map(p=>{
-    const color=CARRIER_COLORS[p.carrier]||'var(--teal)';
-    const days =daysLeft(p.expiryDate);
-    const showExp=p.status==='ready'&&days!==null;
-    const R=getRetention();
-    const pct=showExp?Math.max(0,Math.min(100,(days/(R[p.carrier]||14))*100)):null;
-    const isActive=p.status==='out_for_delivery';
-
-    // Résumé (code + tracking) visible sans ouvrir la carte
-    const parts=[];
-    if(p.pickupCode)  parts.push('🔑 '+p.pickupCode);
-    if(p.trackingNum) parts.push('#'+p.trackingNum.substring(0,16)+(p.trackingNum.length>16?'…':''));
-    const summary=parts.join('  ');
-
-    return `<div class="pkg-card${isActive?' expanded':''}" id="pkg${p.id}" onclick="toggleCard(${p.id})">
-      <div class="pkg-header">
-        <div class="carrier-dot" style="background:${color}${isActive?';animation:pulse 1.5s infinite':''}"></div>
-        <div class="pkg-header-info">
-          <div class="carrier-row">
-            <div class="carrier-name">${CARRIER_LABELS[p.carrier]||p.carrier}</div>
-            <div class="account-avatar ${p.account==='Michele'?'av-m':'av-g'}">${p.account==='Michele'?'M':'G'}</div>
-          </div>
-          ${summary?`<div class="pkg-summary">${summary}</div>`:''}
-          <div class="pkg-meta">${fmtSourceDate(p)}${p.sender?' · '+p.sender.substring(0,25):''}</div>
+    return`<div class="pcard${isOut?' open':''}" id="pc${p.id}" onclick="tog(${p.id})" style="animation-delay:${i*0.04}s">
+      <div class="ptint" style="background:${color}"></div>
+      <div class="phdr">
+        <div class="cbadge" style="background:${color}22">${EM[p.carrier]||'📦'}</div>
+        <div class="pht">
+          <div class="pcname">${LB[p.carrier]||p.carrier}</div>
+          ${sum?`<div class="pinline">${sum}</div>`:''}
+          <div class="pmeta">${fSrc(p)}${p.sender?' · '+p.sender.substring(0,22):''}</div>
         </div>
-        <div class="status-pill ${statusClass(p.status)}">${statusLabel(p.status)}</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          <div class="schip ${sCls(p.status)}">${sLbl(p.status)}</div>
+          <div style="font-size:12px;color:var(--osv)">${p.account==='Michele'?'💜 M':'💙 G'}</div>
+        </div>
       </div>
-      <div class="pkg-body" id="body${p.id}" style="display:${isActive?'block':'none'}">
-        ${p.trackingNum?`
-        <div class="field-label">N° Suivi</div>
-        <div class="field-row">
-          <div class="field-val field-mono">${p.trackingNum}</div>
-          <button class="copy-btn" onclick="copyText('${p.trackingNum}','N° suivi',event)">📋</button>
-        </div>`:''}
-        ${p.pickupCode?`<div class="code-box">
-          <div class="code-lbl">Code de retrait</div>
-          <div class="code-val-row">
-            <div class="code-val">${p.pickupCode}</div>
-            <button class="copy-btn" onclick="copyText('${p.pickupCode}','Code',event)" style="font-size:14px">📋</button>
+      <div id="pb${p.id}" style="display:${isOut?'block':'none'}">
+        <div class="pbdy">
+          <div class="div"></div>
+          ${p.trackingNum?`<div class="flbl">N° de suivi</div><div class="frow"><div class="fval">${p.trackingNum}</div><button class="cfab" onclick="cpT('${p.trackingNum}','N° suivi',event)">📋</button></div>`:''}
+          ${p.pickupCode?`<div class="cbox"><div class="cblbl">Code de retrait</div><div class="cbrow"><div class="cbval">${p.pickupCode}</div><button class="cbcopy" onclick="cpT('${p.pickupCode}','Code',event)">📋</button></div>${p.pickupCode.includes('/')?'<div class="cbhint">Saisir les deux codes successivement</div>':''}</div>`:''}
+          ${p.lockerAddress?`<div class="acard"><div class="atop"><span style="font-size:16px">📍</span><div class="atxt">${p.lockerAddress}</div><button class="cfab" onclick="cpT('${p.lockerAddress.replace(/'/g,"\\'")}','Adresse',event)">📋</button></div><a class="mbtn" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.lockerAddress)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🗺 Ouvrir dans Maps</a></div>`:''}
+          ${p.deliverySlot?`<div class="slot">🕐 Créneau : <b style="margin-left:4px">${p.deliverySlot}</b></div>`:''}
+          ${p.trackingLink?`<a class="tlink" href="${p.trackingLink}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔗 Suivre le colis</a>`:''}
+          ${showE&&days!==null?`<div class="xrow"><div class="xlbl">Expire le</div><div class="xval" style="color:${xCol(days)}">${fFull(p.expiryDate)}</div></div><div class="xbar"><div class="xfill" style="width:${pct}%;background:${xCol(days)}"></div></div>`:''}
+          ${p.note?`<div style="background:var(--s1);border-radius:var(--rs);padding:10px 12px;margin-bottom:12px;font-size:14px;color:var(--osv)">💬 ${p.note}</div>`:''}
+          ${p.events&&p.events.length?`<div class="tl"><div class="tlhd">Historique</div>${p.events.map((ev,i)=>`<div class="tli"><div class="tld ${i===0?'now':'old'}">${i===0?'●':'·'}</div><div class="tlc"><div class="tlst">${sLbl(ev.status)}</div><div class="tldt">${fShort(ev.date)}</div></div></div>`).join('')}</div>`:''}
+          <div class="pacts">
+            ${p.pickupCode||p.trackingNum?`<button class="act fl" onclick="showQR(${p.id},event)">📱 QR</button>`:''}
+            ${p.gmailLink?`<a class="act" href="${p.gmailLink}" target="_blank" rel="noopener" onclick="event.stopPropagation()">📧</a>`:''}
+            <button class="act sh" onclick="shareP(${p.id},event)">↗ Partager</button>
+            ${p.status!=='collected'&&p.status!=='delivered'?`<button class="act gn" onclick="markDone(${p.id},event)">✓ Récupéré</button>`:''}
+            <button class="act rd" onclick="delPkg(${p.id},event)">🗑</button>
           </div>
-          ${p.pickupCode.includes('/')?'<div class="code-hint">Saisir les deux codes successivement</div>':''}
-        </div>`:''}
-        ${p.lockerAddress?`<div class="pkg-addr">
-          <div style="display:flex;align-items:flex-start;gap:6px">
-            <span>📍</span>
-            <span style="flex:1">${p.lockerAddress}</span>
-            <button class="copy-btn" onclick="copyText('${p.lockerAddress.replace(/'/g,"\\'")}','Adresse',event)">📋</button>
-          </div>
-          <a class="maps-btn" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.lockerAddress)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">
-            🗺 Ouvrir dans Maps
-          </a>
-        </div>`:''}
-        ${p.deliverySlot?`<div class="pkg-addr" style="margin-top:6px">🕐 Créneau : <b>${p.deliverySlot}</b></div>`:''}
-        ${p.trackingLink?`<div style="margin-top:8px">
-          <a class="act-btn primary" href="${p.trackingLink}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:inline-flex;text-decoration:none">🔗 Suivre le colis</a>
-        </div>`:''}
-        ${showExp?`<div class="field-label" style="margin-top:8px">Expire le</div>
-          <div class="field-val" style="color:${expiryColor(days)};font-weight:700">${fmtDateFull(p.expiryDate)}</div>
-          <div class="expiry-bar"><div class="expiry-fill" style="width:${pct}%;background:${expiryColor(days)}"></div></div>`:''}
-        ${p.note?`<div class="pkg-addr" style="margin-top:8px">💬 ${p.note}</div>`:''}
-
-        <!-- Photo -->
-        <div class="photo-section">
-          ${p.photo?`<img src="${p.photo}" class="photo-thumb" alt="Photo colis" onclick="event.stopPropagation()">
-            <div class="photo-actions">
-              <button class="photo-btn" onclick="attachPhoto(${p.id},event)">📷 Remplacer</button>
-              <button class="photo-btn" style="color:var(--red);border-color:rgba(255,68,85,0.3)" onclick="deletePhoto(${p.id},event)">🗑 Supprimer</button>
-            </div>`
-          :`<div class="photo-actions">
-              <button class="photo-btn" onclick="attachPhoto(${p.id},event)">📷 Ajouter une photo (SMS/mail)</button>
-            </div>`}
-        </div>
-
-        <!-- Timeline (style Aftership) -->
-        ${p.events&&p.events.length?`<div class="timeline">
-          <div class="timeline-title">Historique</div>
-          ${p.events.map((ev,i)=>`<div class="tl-item">
-            <div class="tl-dot ${i===0?'active':'old'}">${i===0?'●':'○'}</div>
-            <div class="tl-content">
-              <div class="tl-status">${statusLabel(ev.status)}</div>
-              <div class="tl-date">${fmtDateShort(ev.date)}</div>
-              ${ev.desc?`<div class="tl-desc">${ev.desc.substring(0,60)}</div>`:''}
-            </div>
-          </div>`).join('')}
-        </div>`:''}
-
-        <div class="pkg-actions">
-          ${p.pickupCode||p.trackingNum?`<button class="act-btn primary" onclick="showQR(${p.id},event)">📱 QR</button>`:''}
-          ${p.gmailLink?`<a class="act-btn" href="${p.gmailLink}" target="_blank" rel="noopener" onclick="event.stopPropagation()">📧</a>`:''}
-          <button class="act-btn share" onclick="sharePackage(${p.id},event)">↗ Partager</button>
-          ${p.status!=='collected'&&p.status!=='delivered'?`<button class="act-btn success" onclick="markCollected(${p.id},event)">✓</button>`:''}
-          <button class="act-btn danger" onclick="deletePackage(${p.id},event)">🗑</button>
         </div>
       </div>
     </div>`;
   }).join('');
 }
 
-function toggleCard(id){
-  const body=document.getElementById('body'+id);
-  const card=document.getElementById('pkg'+id);
-  if(!body)return;
-  const open=body.style.display!=='none';
-  body.style.display=open?'none':'block';
-  card.classList.toggle('expanded',!open);
+function tog(id){const b=document.getElementById('pb'+id),c=document.getElementById('pc'+id);if(!b)return;const op=b.style.display!=='none';b.style.display=op?'none':'block';c.classList.toggle('open',!op);}
+
+function showQR(id,e){e.stopPropagation();const p=D.packages.find(x=>x.id===id);if(!p)return;const val=p.pickupCode||p.trackingNum||'';if(!val){showToast('Aucune donnée QR');return;}document.getElementById('qrT').textContent=LB[p.carrier]||p.carrier;document.getElementById('qrV').textContent=val;document.getElementById('qrB').innerHTML='';new QRCode(document.getElementById('qrB'),{text:val,width:200,height:200,colorDark:'#000',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.M});openS('shQR');}
+
+function renderSS(){
+  const cfg=getFB();const st=document.getElementById('fbSt');
+  const i1=document.getElementById('fbPi'),i2=document.getElementById('fbAk');
+  if(st){const custom=localStorage.getItem(FBK);st.textContent=custom?'Configuré':'Par défaut';st.className='sbg '+(custom?'bok':'bwt');}
+  if(i1)i1.value=cfg.projectId;if(i2)i2.value=cfg.apiKey;
+  document.getElementById('sd').style.display='block';updLs();
 }
+function updLs(){const el=document.getElementById('fbLs');if(!el||!D.lastSync){if(el)el.textContent='';return;}const d=new Date(D.lastSync);el.textContent='Sync : '+d.toLocaleDateString('fr-FR')+' à '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});}
 
-// ══════════════════════════════════════════
-//  QR CODE
-// ══════════════════════════════════════════
-function showQR(id,e){
-  e.stopPropagation();
-  const p=appData.packages.find(x=>x.id===id);
-  if(!p)return;
-  const val=p.pickupCode||p.trackingNum||'';
-  if(!val){showToast('Aucune donnée QR');return;}
-  document.getElementById('qrTitle').textContent=CARRIER_LABELS[p.carrier]||p.carrier;
-  document.getElementById('qrValue').textContent=val;
-  document.getElementById('qrContainer').innerHTML='';
-  new QRCode(document.getElementById('qrContainer'),{text:val,width:180,height:180,colorDark:'#000',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.M});
-  openModal('qrModal');
-}
+function renderRetCf(){const R=getRet();document.getElementById('retCf').innerHTML=Object.entries(DR).map(([c,d])=>`<div class="cfgr"><div class="cfgd" style="background:${CL[c]||'#888'}"></div><div class="cfgl">${LB[c]||c}</div><input class="cfgi" type="number" min="1" max="60" id="r_${c}" value="${R[c]||d}"><span style="font-size:12px;color:var(--osv)"> j</span></div>`).join('');}
+function saveRet(){const nr={};Object.keys(DR).forEach(c=>{const e=document.getElementById('r_'+c);if(e)nr[c]=Math.max(1,Math.min(60,parseInt(e.value)||DR[c]));});localStorage.setItem(RK,JSON.stringify(nr));showToast('✓ Délais sauvegardés');}
 
-// ══════════════════════════════════════════
-//  SYNC STATUS UI
-// ══════════════════════════════════════════
-function renderSyncStatus(){
-  const cfg=getFBConfig();
-  const status=document.getElementById('fbStatus');
-  const i1=document.getElementById('fbProjectId');
-  const i2=document.getElementById('fbApiKey');
-  if(cfg){
-    if(status){status.textContent='⬤ Configuré — '+cfg.projectId;status.className='status-badge sb-ok';}
-    if(i1)i1.value=cfg.projectId;
-    if(i2)i2.value=cfg.apiKey;
-    document.getElementById('syncDot').style.display='block';
-  }else{
-    if(status){status.textContent='⬤ Non configuré';status.className='status-badge sb-wait';}
-    document.getElementById('syncDot').style.display='none';
-  }
-  updateLastSyncLabel();
-}
-function updateLastSyncLabel(){
-  const el=document.getElementById('lastSyncLabel');
-  if(!el)return;
-  if(!appData.lastSync){el.textContent='';return;}
-  const d=new Date(appData.lastSync);
-  el.textContent='Sync : '+d.toLocaleDateString('fr-FR')+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-}
+function setF(f,btn){flt=f;document.querySelectorAll('.chip').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');render();}
+function onSrch(v){srch=v;render();}
 
-// ══════════════════════════════════════════
-//  ONGLETS MODAL
-// ══════════════════════════════════════════
-function showTab(tabId, btn) {
-  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.mtab').forEach(b=>b.classList.remove('active'));
-  document.getElementById(tabId).classList.add('active');
-  btn.classList.add('active');
-  if(tabId==='tabConfig') renderRetentionConfig();
-  if(tabId==='tabLogs')   renderLogs();
-}
+function openS(id){document.getElementById(id).classList.add('on');document.body.style.overflow='hidden';}
+function closeS(id){document.getElementById(id).classList.remove('on');document.body.style.overflow='';}
+function openAdd(){openS('shAdd');}
+function openSync(){openS('shSync');renderSS();renderLogs();}
+document.querySelectorAll('.sov').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)closeS(o.id);}));
 
-// ══════════════════════════════════════════
-//  FILTRES & RECHERCHE
-// ══════════════════════════════════════════
-function setFilter(f,btn){
-  currentFilter=f;
-  document.querySelectorAll('.ftab').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');render();
-}
-function onSearch(v){currentSearch=v;render();}
+function showT(id,btn){document.querySelectorAll('.tpan').forEach(p=>p.classList.remove('on'));document.querySelectorAll('.stab').forEach(b=>b.classList.remove('sel'));document.getElementById(id).classList.add('on');btn.classList.add('sel');if(id==='tCf')renderRetCf();if(id==='tLg')renderLogs();}
 
-// ══════════════════════════════════════════
-//  MODALS
-// ══════════════════════════════════════════
-function openModal(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';}
-function closeModal(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
-function openAddModal(){openModal('addModal');}
-function openSync(){openModal('syncModal');renderSyncStatus();}
-
-document.querySelectorAll('.modal-overlay').forEach(o=>{
-  o.addEventListener('click',e=>{if(e.target===o)closeModal(o.id);});
-});
-
-// ══════════════════════════════════════════
-//  TOAST
-// ══════════════════════════════════════════
 let _tt;
-function showToast(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg;t.classList.add('show');
-  clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('show'),3500);
-}
+function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('show'),3500);}
 
-// ══════════════════════════════════════════
-//  THÈME (suit le système Android)
-// ══════════════════════════════════════════
-function applyTheme(theme){
-  document.documentElement.setAttribute('data-theme',theme);
-  document.getElementById('themeBtn').textContent=theme==='dark'?'🌙':'☀️';
-}
-function toggleTheme(){
-  const dark=document.documentElement.getAttribute('data-theme')==='dark';
-  const next=dark?'light':'dark';
-  localStorage.setItem('lt_theme',next);applyTheme(next);
-}
-function initTheme(){
-  const saved=localStorage.getItem('lt_theme');
-  if(saved){applyTheme(saved);return;}
-  const sys=window.matchMedia('(prefers-color-scheme: dark)');
-  applyTheme(sys.matches?'dark':'light');
-  sys.addEventListener('change',e=>{if(!localStorage.getItem('lt_theme'))applyTheme(e.matches?'dark':'light');});
-}
+function applyTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('thbtn').textContent=t==='dark'?'🌙':'☀️';}
+function toggleTheme(){const d=document.documentElement.getAttribute('data-theme')==='dark';const n=d?'light':'dark';localStorage.setItem('lt_th',n);applyTheme(n);}
+function initTheme(){const s=localStorage.getItem('lt_th');if(s){applyTheme(s);return;}const sys=window.matchMedia('(prefers-color-scheme: dark)');applyTheme(sys.matches?'dark':'light');sys.addEventListener('change',e=>{if(!localStorage.getItem('lt_th'))applyTheme(e.matches?'dark':'light');});}
 
-// ══════════════════════════════════════════
-//  INIT
-// ══════════════════════════════════════════
-initTheme();
-purgeOldPackages();
-renderSyncStatus();
-render();
-autoSync(); // sync Firebase + lecture SMS auto au démarrage
+initTheme();purge();renderSS();render();autoSync();
 </script>
 </body>
 </html>

@@ -195,8 +195,8 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 .tpan.on{display:block}
 
 /* Sync */
-.srow{background:var(--s1);border-radius:var(--rm);padding:14px;margin-bottom:12px;display:flex;align-items:center;gap:12px}
-.sico{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.srow{background:var(--s1);border-radius:var(--rm);padding:14px;margin-bottom:12px;display:flex;align-items:flex-start;gap:12px;overflow:visible}
+.sico{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;position:relative;z-index:0}
 .snm{font-family:'Google Sans',sans-serif;font-size:15px;font-weight:600;color:var(--os)}
 .ssub{font-size:12px;color:var(--osv);margin-top:2px}
 .sbg{font-size:11px;padding:3px 10px;border-radius:10px;font-family:'Google Sans',sans-serif;font-weight:500}
@@ -305,7 +305,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
     </div>
 
     <div class="tpan on" id="tSy">
-      <div class="srow" style="align-items:flex-start">
+      <div class="srow" style="align-items:flex-start;overflow:visible">
         <div class="sico" style="background:#FFF3E0;flex-shrink:0">🔥</div>
         <div style="flex:1;min-width:0;overflow:hidden">
           <div class="snm">Firebase Firestore</div>
@@ -365,6 +365,9 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 <script>
 const SK='lt_v3',FBK='lt_fb',RK='lt_ret',LK='lt_logs',LSK='lt_lsms';
 const FB0={projectId:'familyhub-colis-8abbd',apiKey:''};
+const DK='lt_disabled'; // clés des transporteurs désactivés
+function getDisabled(){try{return new Set(JSON.parse(localStorage.getItem(DK)||'[]'));}catch{return new Set();}}
+function isDisabled(c){return getDisabled().has(c);}
 const DR={chronopost:8,chronofresh:5,mondialrelay:5,colissimo:15,laposte:15,vintedgo:14,amazon:3,dpd:14,ups:10,gls:7,relaiscolis:10,other:14};
 const CL={chronopost:'#003087',chronofresh:'#005fa3',mondialrelay:'#e2001a',colissimo:'#f5c400',laposte:'#f5c400',vintedgo:'#09b1ba',amazon:'#ff9900',dpd:'#dc0032',ups:'#6b4226',gls:'#005ca9',relaiscolis:'#e8621a',other:'#888'};
 const LB={chronopost:'Chronopost',chronofresh:'Chronofresh',mondialrelay:'Mondial Relay',colissimo:'Colissimo',laposte:'La Poste',vintedgo:'Vinted Go',amazon:'Amazon',dpd:'DPD',ups:'UPS',gls:'GLS',relaiscolis:'Relais Colis',other:'Autre'};
@@ -418,7 +421,8 @@ async function fetchGmailLog(){
     const r=await fetch(url,{redirect:'follow'});
     if(!r.ok){
       const el=document.getElementById('logG');
-      if(el)el.textContent='Erreur '+r.status+' — vérifiez que le script Apps Script a bien été exécuté';
+      if(r.status===403)el.textContent='Erreur 403 : Règles Firebase bloquent la lecture.\nCorrection : Firebase Console → Firestore → Rules → ajouter :\nmatch /meta/{doc} { allow read: if true; }';
+      else if(el)el.textContent='Erreur '+r.status+' — vérifiez la configuration Firebase';
       return;
     }
     const d=await r.json();
@@ -557,7 +561,13 @@ function xEx(t,arr,c){if(!t)return'';const R=getRet();const d=t.match(/(?:dispos
 function xSd(t){if(!t)return'';const m1=t.match(/expédié\s+par\s+([A-Z][^\n.]{2,40}?)(?:\n|\.|est)/i);if(m1)return m1[1].trim();const m2=t.match(/de\s+([A-Z][^\n.]{3,40}?)(?:\n|\.|est|\bun)/);if(m2&&m2[1].length<50)return m2[1].trim();return'';}
 
 function findDup(pkg){const k=(pkg.trackingNum||'').toUpperCase().trim();const co=(pkg.pickupCode||'').toUpperCase().trim();return D.packages.find(p=>{if(k&&p.trackingNum&&p.trackingNum.toUpperCase().trim()===k)return true;if(co&&p.pickupCode&&p.pickupCode.toUpperCase().trim()===co&&p.carrier===pkg.carrier)return true;return false;});}
-function mrg(ex,nw){const O={pending:0,out_for_delivery:1,ready:2,failed:2,delivered:3,expired:4,collected:4};if((O[nw.status]||0)>(O[ex.status]||0))ex.status=nw.status;ex.pickupCode=nw.pickupCode||ex.pickupCode;ex.lockerAddress=nw.lockerAddress||ex.lockerAddress;ex.expiryDate=nw.expiryDate||ex.expiryDate;ex.deliverySlot=nw.deliverySlot||ex.deliverySlot;ex.trackingLink=nw.trackingLink||ex.trackingLink;ex.trackingNum=nw.trackingNum||ex.trackingNum;ex.sender=nw.sender||ex.sender;ex._fbId=ex._fbId||nw._fbId;if(!ex.events)ex.events=[];if(nw.status&&nw.status!==ex.status)ex.events.unshift({date:new Date().toISOString(),status:nw.status,desc:''});if(ex.events.length>10)ex.events=ex.events.slice(0,10);ex.lastUpdated=nw.arrivalDate||ex.lastUpdated;}
+function mrg(ex,nw){const O={pending:0,out_for_delivery:1,ready:2,failed:2,delivered:3,expired:4,collected:4};if((O[nw.status]||0)>(O[ex.status]||0))ex.status=nw.status;ex.pickupCode=nw.pickupCode||ex.pickupCode;ex.lockerAddress=nw.lockerAddress||ex.lockerAddress;ex.expiryDate=nw.expiryDate||ex.expiryDate;ex.deliverySlot=nw.deliverySlot||ex.deliverySlot;ex.trackingLink=nw.trackingLink||ex.trackingLink;ex.trackingNum=nw.trackingNum||ex.trackingNum;ex.sender=nw.sender||ex.sender;ex._fbId=ex._fbId||nw._fbId;if(!ex.events)ex.events=[];if(nw.status&&nw.status!==ex.status){
+    ex.events.unshift({date:new Date().toISOString(),status:nw.status,desc:'Mise à jour'});
+  }if(ex.events.length>10)ex.events=ex.events.slice(0,10);// Garder la date d'arrivée la plus ancienne (pas écraser par une re-lecture)
+  if(nw.arrivalDate && (!ex.arrivalDate || new Date(nw.arrivalDate)<new Date(ex.arrivalDate))){
+    ex.arrivalDate=nw.arrivalDate;
+  }
+  ex.lastUpdated=new Date().toISOString();}
 
 async function readSMS(silent=false){
   if(!window.Capacitor?.isNativePlatform()){if(!silent)showToast('📱 APK Android uniquement');return;}
@@ -577,7 +587,7 @@ async function readSMS(silent=false){
       // Date = timestamp réel du SMS reçu sur le téléphone
       const smsDate=sms.date?new Date(parseInt(sms.date)).toISOString():new Date().toISOString();
       const fbId='sms_'+String(sms.date||Date.now())+'_'+btoa(encodeURIComponent((sender+'|'+(body||'').substring(0,20)))).substring(0,16);
-      const pkg={id:D.nextId++,_fbId:fbId,carrier:c,trackingNum:tr,pickupCode:co,lockerAddress:ad,trackingLink:xL(body),deliverySlot:xSl(body),sender:xSd(body)||sender,arrivalDate:smsDate,expiryDate:xEx(body,smsDate,c),status,emailSubject:'SMS — '+(sender||'transporteur'),gmailLink:'',account:'Guillaume',source:'sms',gmailMsgId:fbId,note:'',lastUpdated:smsDate,events:[{date:smsDate,status,desc:'SMS reçu'}]};
+      const pkg={id:D.nextId++,_fbId:fbId,carrier:c,trackingNum:tr,pickupCode:co,lockerAddress:ad,trackingLink:xL(body),deliverySlot:xSl(body),sender:xSd(body)||sender,arrivalDate:smsDate,expiryDate:xEx(body,smsDate,c),status,emailSubject:'SMS — '+(sender||'transporteur'),gmailLink:'',account:'Guillaume',source:'sms',gmailMsgId:fbId,note:'',lastUpdated:smsDate,events:[{date:smsDate,status:status,desc:'SMS — '+(sender||'')}]};
       const dup=findDup(pkg);if(dup){mrg(dup,pkg);up++;}else{D.packages.unshift(pkg);fbW(fbId,pkg).catch(()=>{});nw++;}
     }
     localStorage.setItem(LSK,String(Date.now()));purge();saveD(D);render();
@@ -630,10 +640,18 @@ function dLeft(e){if(!e)return null;return Math.floor((new Date(e)-Date.now())/8
 function xCol(d){if(d<0||d<=2)return'var(--cf)';if(d<=5)return'var(--cpd)';return'var(--cr)';}
 function fFull(iso){if(!iso)return'';try{return new Date(iso).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});}catch{return iso;}}
 function fShort(iso){if(!iso)return'';try{return new Date(iso).toLocaleDateString('fr-FR',{day:'numeric',month:'short'});}catch{return iso;}}
+function fmtSlotWithDay(slot,arrDate){
+  if(!slot)return'';
+  const days=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+  try{
+    const d=arrDate?new Date(arrDate):new Date();
+    return days[d.getDay()]+' '+d.getDate()+'/'+String(d.getMonth()+1).padStart(2,'0')+' · '+slot;
+  }catch{return slot;}
+}
 function fSrc(p){return(p.source?.includes('sms')?'📱':'📧')+' '+fShort(p.arrivalDate);}
 
 function getFilt(){
-  let pkgs=[...D.packages];
+  const DIS=getDisabled();let pkgs=D.packages.filter(p=>!DIS.has(p.carrier));
   if(flt!=='all')pkgs=pkgs.filter(p=>p.status===flt||(flt==='delivered'&&p.status==='collected'));
   if(srch){const q=srch.toLowerCase();pkgs=pkgs.filter(p=>(p.carrier||'').toLowerCase().includes(q)||(p.trackingNum||'').toLowerCase().includes(q)||(p.lockerAddress||'').toLowerCase().includes(q)||(p.sender||'').toLowerCase().includes(q)||(p.note||'').toLowerCase().includes(q));}
   return pkgs.sort((a,b)=>{const o={out_for_delivery:0,ready:1,failed:2,pending:3,delivered:4,expired:5,collected:5};return(o[a.status]||9)-(o[b.status]||9);});
@@ -649,7 +667,7 @@ function render(){
     const days=dLeft(p.expiryDate);
     const showE=p.status==='ready'&&days!==null;
     const pct=showE?Math.max(0,Math.min(100,(days/(R[p.carrier]||14))*100)):null;
-    const isOut=p.status==='out_for_delivery';
+    const isOut=false; // toutes les cartes repliées par défaut
     const parts=[];if(p.pickupCode)parts.push('🔑 '+p.pickupCode);if(p.trackingNum)parts.push(p.trackingNum.substring(0,16)+(p.trackingNum.length>16?'…':''));
     const sum=parts.join('  ');
 
@@ -673,7 +691,7 @@ function render(){
           ${p.trackingNum?`<div class="flbl">N° de suivi</div><div class="frow"><div class="fval">${p.trackingNum}</div><button class="cfab" onclick="cpT('${p.trackingNum}','N° suivi',event)">📋</button></div>`:''}
           ${p.pickupCode?`<div class="cbox"><div class="cblbl">Code de retrait</div><div class="cbrow"><div class="cbval">${p.pickupCode}</div><button class="cbcopy" onclick="cpT('${p.pickupCode}','Code',event)">📋</button></div>${p.pickupCode.includes('/')?'<div class="cbhint">Saisir les deux codes successivement</div>':''}</div>`:''}
           ${p.lockerAddress?`<div class="acard"><div class="atop"><span style="font-size:16px">📍</span><div class="atxt">${p.lockerAddress}</div><button class="cfab" onclick="cpT('${p.lockerAddress.replace(/'/g,"\\'")}','Adresse',event)">📋</button></div><a class="mbtn" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.lockerAddress)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🗺 Ouvrir dans Maps</a></div>`:''}
-          ${p.deliverySlot?`<div class="slot">🕐 Créneau : <b style="margin-left:4px">${p.deliverySlot}</b></div>`:''}
+          ${p.deliverySlot?`<div class="slot">🕐 ${fmtSlotWithDay(p.deliverySlot,p.arrivalDate)}</div>`:''}
           ${p.trackingLink?`<a class="tlink" href="${p.trackingLink}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔗 Suivre le colis</a>`:''}
           ${showE&&days!==null?`<div class="xrow"><div class="xlbl">Expire le</div><div class="xval" style="color:${xCol(days)}">${fFull(p.expiryDate)}</div></div><div class="xbar"><div class="xfill" style="width:${pct}%;background:${xCol(days)}"></div></div>`:''}
           ${p.note?`<div style="background:var(--s1);border-radius:var(--rs);padding:10px 12px;margin-bottom:12px;font-size:14px;color:var(--osv)">💬 ${p.note}</div>`:''}
@@ -691,7 +709,14 @@ function render(){
   }).join('');
 }
 
-function tog(id){const b=document.getElementById('pb'+id),c=document.getElementById('pc'+id);if(!b)return;const op=b.style.display!=='none';b.style.display=op?'none':'block';c.classList.toggle('open',!op);}
+function tog(id){
+  const b=document.getElementById('pb'+id);
+  const card=document.getElementById('pc'+id);
+  if(!b||!card)return;
+  const isOpen=b.style.display==='block';
+  b.style.display=isOpen?'none':'block';
+  card.classList.toggle('open',!isOpen);
+}
 
 function showQR(id,e){e.stopPropagation();const p=D.packages.find(x=>x.id===id);if(!p)return;const val=p.pickupCode||p.trackingNum||'';if(!val){showToast('Aucune donnée QR');return;}document.getElementById('qrT').textContent=LB[p.carrier]||p.carrier;document.getElementById('qrV').textContent=val;document.getElementById('qrB').innerHTML='';new QRCode(document.getElementById('qrB'),{text:val,width:200,height:200,colorDark:'#000',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.M});openS('shQR');}
 
@@ -704,7 +729,26 @@ function renderSS(){
 }
 function updLs(){const el=document.getElementById('fbLs');if(!el||!D.lastSync){if(el)el.textContent='';return;}const d=new Date(D.lastSync);el.textContent='Sync : '+d.toLocaleDateString('fr-FR')+' à '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});}
 
-function renderRetCf(){const R=getRet();document.getElementById('retCf').innerHTML=Object.entries(DR).map(([c,d])=>`<div class="cfgr"><div class="cfgd" style="background:${CL[c]||'#888'}"></div><div class="cfgl">${LB[c]||c}</div><input class="cfgi" type="number" min="1" max="60" id="r_${c}" value="${R[c]||d}"><span style="font-size:12px;color:var(--osv)"> j</span></div>`).join('');}
+function renderRetCf(){
+  const R=getRet();const DIS=getDisabled();
+  document.getElementById('retCf').innerHTML=Object.entries(DR).map(([c,d])=>{
+    const dis=DIS.has(c);
+    return`<div class="cfgr" style="${dis?'opacity:0.45':''}">
+      <div class="cfgd" style="background:${CL[c]||'#888'}"></div>
+      <div class="cfgl">${LB[c]||c}</div>
+      <input class="cfgi" type="number" min="1" max="60" id="r_${c}" value="${R[c]||d}" ${dis?'disabled':''}>
+      <span style="font-size:12px;color:var(--osv)"> j</span>
+      <button onclick="toggleDisabled('${c}',this)" style="padding:4px 8px;border-radius:8px;border:1px solid var(--olv);background:${dis?'var(--cfb)':'var(--s2)'};color:${dis?'var(--cf)':'var(--osv)'};font-size:11px;cursor:pointer;white-space:nowrap;font-family:'Google Sans',sans-serif" title="${dis?'Réactiver':'Désactiver'}">${dis?'✕ OFF':'✓ ON'}</button>
+    </div>`;
+  }).join('');
+}
+function toggleDisabled(c,btn){
+  const d=getDisabled();
+  if(d.has(c))d.delete(c);else d.add(c);
+  localStorage.setItem(DK,JSON.stringify([...d]));
+  renderRetCf();render();
+  showToast(d.has(c)?`${LB[c]} désactivé`:`${LB[c]} réactivé`);
+}
 function saveRet(){const nr={};Object.keys(DR).forEach(c=>{const e=document.getElementById('r_'+c);if(e)nr[c]=Math.max(1,Math.min(60,parseInt(e.value)||DR[c]));});localStorage.setItem(RK,JSON.stringify(nr));showToast('✓ Délais sauvegardés');}
 
 function setF(f,btn){flt=f;document.querySelectorAll('.chip').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');render();}

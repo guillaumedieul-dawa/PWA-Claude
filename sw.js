@@ -1,12 +1,11 @@
 // ══════════════════════════════════════════
-//  FamilyHub — Service Worker
-//  Couvre toutes les sous-applications
-//  Stratégie : Cache First (assets) + Network First (données)
+//  FamilyHub — Service Worker v4
+//  Toutes les sous-applications couvertes
 // ══════════════════════════════════════════
 
-const VERSION     = '3';
-const CACHE_STATIC = 'familyhub-static-v' + VERSION;
-const CACHE_DYNAMIC= 'familyhub-dynamic-v' + VERSION;
+const VERSION      = '4';
+const CACHE_STATIC = 'fh-static-v' + VERSION;
+const CACHE_DYN    = 'fh-dyn-v'    + VERSION;
 
 const STATIC_ASSETS = [
   '/',
@@ -25,85 +24,87 @@ const STATIC_ASSETS = [
   '/liste-courses/manifest.json',
 ];
 
-// ── Install ──
+// ── Install : mettre en cache tous les assets statiques ──
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_STATIC).then(cache => {
-      return cache.addAll(STATIC_ASSETS.map(url => new Request(url, { cache: 'reload' })));
+      return Promise.allSettled(
+        STATIC_ASSETS.map(url =>
+          cache.add(new Request(url, { cache: 'reload' }))
+            .catch(e => console.warn('SW: impossible de cacher', url, e))
+        )
+      );
     }).then(() => self.skipWaiting())
   );
 });
 
-// ── Activate : nettoyer les anciens caches ──
+// ── Activate : supprimer les anciens caches ──
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(keys => {
-      return Promise.all(
+    caches.keys().then(keys =>
+      Promise.all(
         keys
-          .filter(k => k !== CACHE_STATIC && k !== CACHE_DYNAMIC)
-          .map(k => caches.delete(k))
-      );
-    }).then(() => self.clients.claim())
+          .filter(k => k !== CACHE_STATIC && k !== CACHE_DYN)
+          .map(k => {
+            console.log('SW: suppression cache obsolète', k);
+            return caches.delete(k);
+          })
+      )
+    ).then(() => self.clients.claim())
   );
 });
 
-// ── Fetch ──
+// ── Fetch : stratégie hybride ──
 self.addEventListener('fetch', event => {
-  const request = event.request;
-  const url     = new URL(request.url);
+  const { request } = event;
+  const url = new URL(request.url);
 
-  // Ne pas intercepter les requêtes externes (Firebase, Google Fonts, etc.)
+  // Ignorer les requêtes externes (Firebase, Fonts, CDN)
   if (url.origin !== self.location.origin) return;
 
-  // Navigation (HTML) : Network First avec fallback cache
+  // Navigation HTML : Network First → fallback cache → fallback racine
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
-        .then(response => {
-          const clone = response.clone();
-          caches.open(CACHE_STATIC).then(c => c.put(request, clone));
-          return response;
+        .then(res => {
+          if (res.ok) {
+            caches.open(CACHE_STATIC).then(c => c.put(request, res.clone()));
+          }
+          return res;
         })
-        .catch(() => caches.match(request).then(r => r || caches.match('/index.html')))
+        .catch(() =>
+          caches.match(request)
+            .then(r => r || caches.match('/index.html'))
+        )
     );
     return;
   }
 
-  // Assets statiques (CSS, JS, images, fonts) : Cache First
-  if (
-    url.pathname.endsWith('.css') ||
-    url.pathname.endsWith('.js')  ||
-    url.pathname.endsWith('.png') ||
-    url.pathname.endsWith('.svg') ||
-    url.pathname.endsWith('.ico') ||
-    url.pathname.endsWith('.woff2') ||
-    url.pathname.includes('fonts.googleapis') ||
-    url.pathname.includes('fonts.gstatic')
-  ) {
+  // Assets statiques (JS, CSS, images, fonts) : Cache First
+  const ext = url.pathname.split('.').pop().toLowerCase();
+  if (['js','css','png','svg','ico','woff','woff2','jpg','jpeg'].includes(ext)) {
     event.respondWith(
       caches.match(request).then(cached => {
         if (cached) return cached;
-        return fetch(request).then(response => {
-          if (response.ok) {
-            const clone = response.clone();
-            caches.open(CACHE_DYNAMIC).then(c => c.put(request, clone));
+        return fetch(request).then(res => {
+          if (res.ok) {
+            caches.open(CACHE_DYN).then(c => c.put(request, res.clone()));
           }
-          return response;
+          return res;
         }).catch(() => cached);
       })
     );
     return;
   }
 
-  // Tout le reste : Network First avec cache dynamique
+  // Tout le reste : Network First avec fallback cache
   event.respondWith(
     fetch(request)
-      .then(response => {
-        if (response.ok) {
-          const clone = response.clone();
-          caches.open(CACHE_DYNAMIC).then(c => c.put(request, clone));
+      .then(res => {
+        if (res.ok) {
+          caches.open(CACHE_DYN).then(c => c.put(request, res.clone()));
         }
-        return response;
+        return res;
       })
       .catch(() => caches.match(request))
   );

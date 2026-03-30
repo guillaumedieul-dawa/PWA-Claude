@@ -183,5 +183,15 @@ function loadBadges(){
 initTheme();
 loadBadges();
 </script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(r => console.log('SW enregistré', r.scope))
+      .catch(e => console.warn('SW erreur', e));
+  });
+}
+</script>
 </body>
 </html>

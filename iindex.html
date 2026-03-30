@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f8fb">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1a1c1e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="FamilyHub">
+<title>FamilyHub</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Text:wght@400;500&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --p:#0057A8;--op:#FFF;--pc:#D7E3FF;--opc:#001849;
+  --bg:#F4F8FB;--sf:#FFF;--s1:#EDF1F4;--s2:#E6EBF0;--s3:#DEE4EA;
+  --ol:#72787E;--olv:#C2C8CF;--ob:#1A1C1E;--os:#1A1C1E;--osv:#42474C;
+  --sh:rgba(0,0,0,0.08);
+  --top:env(safe-area-inset-top,0px);--bot:env(safe-area-inset-bottom,0px);
+  --rl:28px;--rm:16px;--rs:12px;
+}
+[data-theme="dark"]{
+  --p:#ADC6FF;--op:#002E6C;--pc:#00429A;--opc:#D7E3FF;
+  --bg:#1A1C1E;--sf:#1A1C1E;--s1:#252729;--s2:#2C2F31;--s3:#333639;
+  --ol:#8C9198;--olv:#42474C;--ob:#E3E2E6;--os:#E3E2E6;--osv:#C2C7CE;
+  --sh:rgba(0,0,0,0.3);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Google Sans Text',sans-serif;overflow-x:hidden}
+
+#app{max-width:520px;margin:0 auto;padding:calc(var(--top)+20px) 20px calc(var(--bot)+24px)}
+
+/* Header */
+.hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px}
+.hdr-left{}
+.hdr-eyebrow{font-size:11px;color:var(--osv);letter-spacing:.5px;font-family:'Google Sans',sans-serif}
+.hdr-title{font-family:'Google Sans',sans-serif;font-size:28px;font-weight:700;color:var(--ob);letter-spacing:-.5px;line-height:1.1}
+.ibtn{width:40px;height:40px;border-radius:50%;border:none;background:var(--s1);color:var(--os);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.ibtn:active{background:var(--s2)}
+
+/* Greeting card */
+.greeting{background:var(--p);border-radius:var(--rl);padding:20px 24px;margin-bottom:24px;color:var(--op)}
+.greet-lbl{font-size:12px;opacity:.8;font-family:'Google Sans',sans-serif;letter-spacing:.3px}
+.greet-name{font-family:'Google Sans',sans-serif;font-size:22px;font-weight:700;margin-top:4px}
+.greet-sub{font-size:13px;opacity:.8;margin-top:8px;line-height:1.5}
+
+/* Section */
+.sec-lbl{font-family:'Google Sans',sans-serif;font-size:13px;font-weight:500;color:var(--osv);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+
+/* App grid */
+.app-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px}
+.app-card{background:var(--sf);border-radius:var(--rl);padding:20px 18px;cursor:pointer;box-shadow:0 1px 3px var(--sh);transition:all .2s;text-decoration:none;display:flex;flex-direction:column;gap:8px;border:1px solid transparent}
+.app-card:active{transform:scale(.97);border-color:var(--olv)}
+.app-icon{width:48px;height:48px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:4px}
+.app-name{font-family:'Google Sans',sans-serif;font-size:15px;font-weight:700;color:var(--os)}
+.app-desc{font-size:12px;color:var(--osv);line-height:1.4}
+.app-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;font-family:'Google Sans',sans-serif;margin-top:2px}
+
+/* Users */
+.users-row{display:flex;gap:12px;margin-bottom:24px}
+.user-card{flex:1;background:var(--sf);border-radius:var(--rm);padding:14px 16px;box-shadow:0 1px 3px var(--sh);display:flex;align-items:center;gap:12px}
+.user-av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Google Sans',sans-serif;font-size:16px;font-weight:700;flex-shrink:0}
+.user-av-g{background:#D7E3FF;color:#001849}
+.user-av-m{background:#ECDCFF;color:#1D0160}
+.user-name{font-family:'Google Sans',sans-serif;font-size:14px;font-weight:600;color:var(--os)}
+.user-mail{font-size:11px;color:var(--osv);margin-top:2px}
+
+/* Footer */
+.footer{text-align:center;font-size:11px;color:var(--osv);margin-top:8px;font-family:'Roboto Mono',monospace}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="hdr">
+    <div class="hdr-left">
+      <div class="hdr-eyebrow">Bonjour 👋</div>
+      <div class="hdr-title">FamilyHub</div>
+    </div>
+    <button class="ibtn" onclick="toggleTheme()" id="thbtn">🌙</button>
+  </div>
+
+  <div class="greeting">
+    <div class="greet-lbl">Applications de la famille</div>
+    <div class="greet-name">Dieul-Gandet</div>
+    <div class="greet-sub">21 rue du Beauregard, Pierrelaye<br>Données partagées entre Guillaume et Michèle</div>
+  </div>
+
+  <div class="sec-lbl">Applications</div>
+  <div class="app-grid">
+    <a href="./locker-tracker/index.html" class="app-card">
+      <div class="app-icon" style="background:#D7E3FF">📦</div>
+      <div class="app-name">Suivi Colis</div>
+      <div class="app-desc">SMS, Gmail, codes retrait, QR</div>
+      <span class="app-badge" style="background:#D7E3FF;color:#001849" id="badgeColis">— colis</span>
+    </a>
+    <a href="./todo-partage/index.html" class="app-card">
+      <div class="app-icon" style="background:#C4EFAD">✅</div>
+      <div class="app-name">To-Do partagé</div>
+      <div class="app-desc">Liste de tâches commune</div>
+      <span class="app-badge" style="background:#C4EFAD;color:#1A6500" id="badgeTodo">— tâches</span>
+    </a>
+    <a href="./cave-spiritueux/index.html" class="app-card">
+      <div class="app-icon" style="background:#ECDCFF">🍷</div>
+      <div class="app-name">Cave</div>
+      <div class="app-desc">Vins, rhums, whiskys</div>
+      <span class="app-badge" style="background:#ECDCFF;color:#1D0160" id="badgeCave">— bouteilles</span>
+    </a>
+    <a href="./menus-semaine/index.html" class="app-card">
+      <div class="app-icon" style="background:#FFDDB4">🍽️</div>
+      <div class="app-name">Menus</div>
+      <div class="app-desc">Semaine et mois</div>
+      <span class="app-badge" style="background:#FFDDB4;color:#7B4F00" id="badgeMenus">7 jours</span>
+    </a>
+    <a href="./liste-courses/index.html" class="app-card" style="grid-column:1/-1">
+      <div style="display:flex;align-items:center;gap:14px">
+        <div class="app-icon" style="background:#9EEFFD;margin-bottom:0">🛒</div>
+        <div>
+          <div class="app-name">Liste de courses</div>
+          <div class="app-desc">Courses partagées en temps réel</div>
+          <span class="app-badge" style="background:#9EEFFD;color:#004E57;margin-top:4px" id="badgeCourses">— articles</span>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <div class="sec-lbl">Utilisateurs</div>
+  <div class="users-row">
+    <div class="user-card">
+      <div class="user-av user-av-g">G</div>
+      <div>
+        <div class="user-name">Guillaume</div>
+        <div class="user-mail">guillaume.dieul@gmail.com</div>
+      </div>
+    </div>
+    <div class="user-card">
+      <div class="user-av user-av-m">M</div>
+      <div>
+        <div class="user-name">Michèle</div>
+        <div class="user-mail">michele.gandet@gmail.com</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">FamilyHub v2 · Pierrelaye</div>
+</div>
+
+<script>
+function applyTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('thbtn').textContent=t==='dark'?'🌙':'☀️';}
+function toggleTheme(){const d=document.documentElement.getAttribute('data-theme')==='dark';const n=d?'light':'dark';localStorage.setItem('lt_th',n);applyTheme(n);}
+function initTheme(){const s=localStorage.getItem('lt_th');if(s){applyTheme(s);return;}const sys=window.matchMedia('(prefers-color-scheme: dark)');applyTheme(sys.matches?'dark':'light');sys.addEventListener('change',e=>{if(!localStorage.getItem('lt_th'))applyTheme(e.matches?'dark':'light');});}
+
+// Badges dynamiques depuis localStorage
+function loadBadges(){
+  try{
+    const colis=JSON.parse(localStorage.getItem('lt_v3')||'{}');
+    const pkgs=colis.packages||[];
+    const ready=pkgs.filter(p=>p.status==='ready').length;
+    const el=document.getElementById('badgeColis');
+    if(el)el.textContent=ready>0?ready+' à retirer':pkgs.length+' colis';
+  }catch{}
+  try{
+    const todo=JSON.parse(localStorage.getItem('fh_todo')||'{}');
+    const tasks=todo.tasks||[];
+    const pending=tasks.filter(t=>!t.done).length;
+    const el=document.getElementById('badgeTodo');
+    if(el)el.textContent=pending>0?pending+' en cours':tasks.length+' tâches';
+  }catch{}
+  try{
+    const cave=JSON.parse(localStorage.getItem('fh_cave')||'{}');
+    const bottles=(cave.bottles||[]).length;
+    const el=document.getElementById('badgeCave');
+    if(el)el.textContent=bottles+' bouteille'+(bottles>1?'s':'');
+  }catch{}
+  try{
+    const courses=JSON.parse(localStorage.getItem('fh_courses')||'{}');
+    const items=(courses.items||[]).filter(i=>!i.done).length;
+    const el=document.getElementById('badgeCourses');
+    if(el)el.textContent=items>0?items+' article'+(items>1?'s':'')+' restants':'Liste vide';
+  }catch{}
+}
+
+initTheme();
+loadBadges();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(r => console.log('SW enregistré', r.scope))
+      .catch(e => console.warn('SW erreur', e));
+  });
+}
+</script>
+</body>
+</html>

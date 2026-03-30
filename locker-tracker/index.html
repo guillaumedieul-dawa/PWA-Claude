@@ -71,7 +71,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 
 /* Cards */
 .plist{display:flex;flex-direction:column;gap:8px;padding:0 12px}
-.pcard{background:var(--sf);border-radius:var(--rl);overflow:hidden;cursor:pointer;box-shadow:0 1px 3px var(--sh);transition:box-shadow .2s,transform .15s;border:1px solid transparent;animation:fu .3s ease both}
+.pcard{background:var(--sf);border-radius:var(--rl);overflow:hidden;cursor:pointer;box-shadow:0 1px 3px var(--sh);transition:box-shadow .2s,transform .15s;border:1px solid transparent;animation:fu .3s ease both;user-select:none;-webkit-user-select:none}
 .pcard:active{transform:scale(0.98)}
 .pcard.open{box-shadow:0 3px 8px var(--sh);border-color:var(--olv)}
 .ptint{height:4px;width:100%}
@@ -228,7 +228,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
     <a href="../index.html" class="ihome">🏠</a>
     <div class="ttl">
       <div class="tlbl">Famille Dieul-Gandet</div>
-      <div class="th">📦 Mes colis</div>
+      <div class="th">📦 Mes colis <span id="totalBadge" style="font-size:14px;font-weight:400;color:var(--osv)"></span></div>
     </div>
     <button class="ibtn" onclick="openSync()">⟳<div class="ndot" id="sd" style="display:none"></div></button>
     <button class="ibtn" onclick="toggleTheme()" id="thbtn">🌙</button>
@@ -648,6 +648,20 @@ function markDone(id,e){e.stopPropagation();const p=D.packages.find(x=>x.id===id
 function delPkg(id,e){e.stopPropagation();if(!confirm('Supprimer ?'))return;const p=D.packages.find(x=>x.id===id);if(p?._fbId)fbDel(p._fbId).catch(()=>{});D.packages=D.packages.filter(x=>x.id!==id);saveD(D);render();}
 
 function cpT(txt,lbl,e){e.stopPropagation();if(!txt)return;if(navigator.clipboard)navigator.clipboard.writeText(txt).then(()=>showToast('📋 '+lbl+' copié'));else{const t=document.createElement('textarea');t.value=txt;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);showToast('📋 '+lbl+' copié');}}
+function copyAll(id,e){
+  e.stopPropagation();
+  const p=D.packages.find(x=>x.id===id);if(!p)return;
+  const parts=[
+    LB[p.carrier]||p.carrier,
+    p.trackingNum?'N° : '+p.trackingNum:'',
+    p.pickupCode?'Code : '+p.pickupCode:'',
+    p.lockerAddress?p.lockerAddress:'',
+    p.deliverySlot?'Créneau : '+p.deliverySlot:'',
+    p.expiryDate?'Expire le '+fFull(p.expiryDate):'',
+    p.trackingLink||'',
+  ].filter(Boolean).join('\n');
+  cpT(parts,'Infos colis',e);
+}
 function shareP(id,e){e.stopPropagation();const p=D.packages.find(x=>x.id===id);if(!p)return;const lines=[`📦 ${LB[p.carrier]}`,p.trackingNum?`N° : ${p.trackingNum}`:'',p.pickupCode?`Code : ${p.pickupCode}`:'',p.lockerAddress?`📍 ${p.lockerAddress}`:'',p.deliverySlot?`🕐 ${p.deliverySlot}`:'',p.expiryDate?`⏰ Expire le ${fFull(p.expiryDate)}`:'',p.trackingLink?`🔗 ${p.trackingLink}`:''].filter(Boolean);const text=lines.join('\n');if(navigator.share)navigator.share({title:'Colis',text}).catch(()=>{});else cpT(text,'Infos',e);}
 
 function sLbl(s){return{ready:'À retirer',pending:'En route',out_for_delivery:'En livraison',delivered:'Récupéré',failed:'Échec livr.',expired:'Expiré',collected:'Récupéré'}[s]||s;}
@@ -697,11 +711,19 @@ function getFilt(){
     return da-db;
   });
 }
-function updBadges(){const p=D.packages;document.getElementById('bA').textContent=p.length;document.getElementById('bR').textContent=p.filter(x=>x.status==='ready').length;document.getElementById('bO').textContent=p.filter(x=>x.status==='out_for_delivery').length;document.getElementById('bP').textContent=p.filter(x=>x.status==='pending').length;document.getElementById('bF').textContent=p.filter(x=>x.status==='failed').length;document.getElementById('bD').textContent=p.filter(x=>x.status==='delivered'||x.status==='collected').length;}
+function updBadges(){const p=D.packages;
+  const tb=document.getElementById('totalBadge');
+  if(tb){const r=p.filter(x=>x.status==='ready').length;tb.textContent=r>0?r+' à retirer':p.length>0?p.length+' colis':'';}document.getElementById('bA').textContent=p.length;document.getElementById('bR').textContent=p.filter(x=>x.status==='ready').length;document.getElementById('bO').textContent=p.filter(x=>x.status==='out_for_delivery').length;document.getElementById('bP').textContent=p.filter(x=>x.status==='pending').length;document.getElementById('bF').textContent=p.filter(x=>x.status==='failed').length;document.getElementById('bD').textContent=p.filter(x=>x.status==='delivered'||x.status==='collected').length;}
 
 function render(){
   updBadges();const pkgs=getFilt();const el=document.getElementById('PL');
-  if(!pkgs.length){el.innerHTML=`<div class="empty"><div class="eico">📭</div><div class="etit">Aucun colis</div><div class="esub">Appuyez sur + pour en ajouter<br>ou synchronisez via ⟳</div></div>`;return;}
+  if(!pkgs.length){const emptyMsgs={
+    ready:'Aucun colis à retirer',pending:'Aucun colis en route',
+    out_for_delivery:'Aucune livraison en cours',failed:'Aucun échec de livraison',
+    delivered:'Aucun colis récupéré',expired:'Aucun colis expiré',all:'Aucun colis'
+  };
+  const emptyTitle=emptyMsgs[flt]||'Aucun colis';
+  el.innerHTML=`<div class="empty"><div class="eico">📭</div><div class="etit">${emptyTitle}</div><div class="esub">${flt==='all'?'Appuyez sur + ou synchronisez via ⟳':'Changer de filtre ou synchroniser via ⟳'}</div></div>`;return;}
   const R=getRet();
   el.innerHTML=pkgs.map((p,i)=>{
     const color=CL[p.carrier]||'#888';
@@ -709,7 +731,14 @@ function render(){
     const showE=p.status==='ready'&&days!==null;
     const pct=showE?Math.max(0,Math.min(100,(days/(R[p.carrier]||14))*100)):null;
     const isOut=false; // toutes les cartes repliées par défaut
-    const parts=[];if(p.pickupCode)parts.push('🔑 '+p.pickupCode);if(p.trackingNum)parts.push(p.trackingNum.substring(0,16)+(p.trackingNum.length>16?'…':''));
+    const parts=[];
+    if(p.pickupCode)parts.push('🔑 '+esc(p.pickupCode));
+    if(p.trackingNum)parts.push(p.trackingNum.substring(0,16)+(p.trackingNum.length>16?'…':''));
+    const dL=dLeft(p.expiryDate);
+    if(p.status==='ready'&&dL!==null&&dL<=3){
+      const urgency=dL<0?'⚠️ Expiré':dL===0?'⚠️ Auj.':'⚠️ J-'+String(dL);
+      parts.push(urgency);
+    }
     const sum=parts.join('  ');
 
     return`<div class="pcard${isOut?' open':''}" id="pc${p.id}" onclick="tog(${p.id})" style="animation-delay:${i*0.04}s">
@@ -741,6 +770,7 @@ function render(){
             ${p.pickupCode||p.trackingNum?`<button class="act fl" onclick="showQR(${p.id},event)">📱 QR</button>`:''}
             ${p.gmailLink?`<a class="act" href="${p.gmailLink}" target="_blank" rel="noopener" onclick="event.stopPropagation()">📧</a>`:''}
             <button class="act sh" onclick="shareP(${p.id},event)">↗ Partager</button>
+            <button class="act" onclick="copyAll(${p.id},event)" title="Copier toutes les infos">📋 Tout copier</button>
             ${p.status!=='collected'&&p.status!=='delivered'?`<button class="act gn" onclick="markDone(${p.id},event)">✓ Récupéré</button>`:''}
             <button class="act rd" onclick="delPkg(${p.id},event)">🗑</button>
           </div>
@@ -795,7 +825,13 @@ function toggleDisabled(c,btn){
 }
 function saveRet(){const nr={};Object.keys(DR).forEach(c=>{const e=document.getElementById('r_'+c);if(e)nr[c]=Math.max(1,Math.min(60,parseInt(e.value)||DR[c]));});localStorage.setItem(RK,JSON.stringify(nr));showToast('✓ Délais sauvegardés');}
 
-function setF(f,btn){flt=f;document.querySelectorAll('.chip').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');render();}
+function setF(f,btn){
+  flt=f;
+  sessionStorage.setItem('fh_filter',f);
+  document.querySelectorAll('.chip').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  render();
+}
 function onSrch(v){
   srch=v;render();
   const clr=document.getElementById('srchClr');
@@ -825,7 +861,22 @@ function applyTheme(t){document.documentElement.setAttribute('data-theme',t);doc
 function toggleTheme(){const d=document.documentElement.getAttribute('data-theme')==='dark';const n=d?'light':'dark';localStorage.setItem('lt_th',n);applyTheme(n);}
 function initTheme(){const s=localStorage.getItem('lt_th');if(s){applyTheme(s);return;}const sys=window.matchMedia('(prefers-color-scheme: dark)');applyTheme(sys.matches?'dark':'light');sys.addEventListener('change',e=>{if(!localStorage.getItem('lt_th'))applyTheme(e.matches?'dark':'light');});}
 
-initTheme();purge();renderSS();render();autoSync();
+// Restaurer le dernier filtre utilisé
+const savedFilter=sessionStorage.getItem('fh_filter');
+if(savedFilter)flt=savedFilter;
+initTheme();purge();renderSS();
+// Activer le chip correspondant au filtre sauvegardé
+document.addEventListener('DOMContentLoaded',()=>{
+  const chips=document.querySelectorAll('.chip');
+  chips.forEach(btn=>{
+    const onclick=btn.getAttribute('onclick')||'';
+    if(onclick.includes("'"+flt+"'")){
+      chips.forEach(b=>b.classList.remove('sel'));
+      btn.classList.add('sel');
+    }
+  });
+});
+render();autoSync();
 </script>
 
 <script>

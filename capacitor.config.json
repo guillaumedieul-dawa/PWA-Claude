@@ -8,26 +8,12 @@
   },
   "android": {
     "allowMixedContent": false,
-    "backgroundColor": "#080f14",
-    "overrideUserAgent": "FamilyHub/2.0 Android",
-    "appendUserAgent": "FamilyHubApp"
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false
   },
   "plugins": {
-    "StatusBar": {
-      "style": "DARK",
-      "backgroundColor": "#080f14",
-      "overlaysWebView": false
-    },
     "SplashScreen": {
-      "launchShowDuration": 1200,
-      "backgroundColor": "#080f14",
-      "androidSplashResourceName": "splash",
-      "showSpinner": false
-    },
-    "Keyboard": {
-      "resize": "body",
-      "style": "dark",
-      "resizeOnFullScreen": true
+      "launchShowDuration": 0
     }
   }
 }

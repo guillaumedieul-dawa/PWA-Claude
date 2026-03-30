@@ -236,7 +236,7 @@ function render(){
         <div class="task-text">${t.text}</div>
         ${t.note?`<div style="font-size:12px;color:var(--osv);margin-top:3px">${t.note}</div>`:''}
         <div class="task-meta">
-          <span class="task-who" style="color:${t.who==='Michele'?'#6B5E91':t.who==='Guillaume'?'#0057A8':'#006875'}">${t.who==='Michele'?'M':'t.who'==='Guillaume'?'G':'G+M'}</span>
+          <span class="task-who" style="color:${t.who==='Michele'?'#6B5E91':t.who==='Guillaume'?'#0057A8':'#006875'}">${t.who==='Michele'?'M':t.who==='Guillaume'?'G':'G+M'}</span>
           <span class="task-date">${fmtDate(t.done?t.doneAt:t.date)}</span>
         </div>
       </div>

@@ -57,7 +57,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 .sfield{width:100%;padding:11px 16px 11px 44px;border-radius:28px;border:none;background:var(--s1);color:var(--ob);font-family:'Google Sans Text',sans-serif;font-size:16px;outline:none;transition:background .2s}
 .sfield:focus{background:var(--s2)}
 .sfield::placeholder{color:var(--osv)}
-.sico{position:absolute;left:28px;top:50%;transform:translateY(-50%);color:var(--osv);font-size:18px;pointer-events:none}
+.search-ico{position:absolute;left:28px;top:50%;transform:translateY(-50%);color:var(--osv);font-size:18px;pointer-events:none}
 
 /* Chips */
 .chips{display:flex;gap:8px;padding:8px 16px 12px;overflow-x:auto;scrollbar-width:none}
@@ -195,8 +195,8 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 .tpan.on{display:block}
 
 /* Sync */
-.srow{background:var(--s1);border-radius:var(--rm);padding:14px;margin-bottom:12px;display:flex;align-items:flex-start;gap:12px;overflow:visible}
-.sico{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;position:relative;z-index:0}
+.srow{background:var(--s1);border-radius:var(--rm);padding:14px;margin-bottom:12px;display:flex;align-items:flex-start;gap:12px}
+.sico{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
 .snm{font-family:'Google Sans',sans-serif;font-size:15px;font-weight:600;color:var(--os)}
 .ssub{font-size:12px;color:var(--osv);margin-top:2px}
 .sbg{font-size:11px;padding:3px 10px;border-radius:10px;font-family:'Google Sans',sans-serif;font-weight:500}
@@ -235,7 +235,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
   </div>
 
   <div class="swrap">
-    <span class="sico">🔍</span>
+    <span class="search-ico">🔍</span>
     <input class="sfield" id="srchIn" placeholder="Rechercher…" oninput="onSrch(this.value)">
     <button id="srchClr" onclick="clearSearch()" style="display:none;position:absolute;right:28px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--osv);font-size:16px;cursor:pointer;padding:4px;border-radius:50%">✕</button>
   </div>
@@ -305,9 +305,9 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
     </div>
 
     <div class="tpan on" id="tSy">
-      <div class="srow" style="align-items:flex-start;overflow:visible">
-        <div class="sico" style="background:#FFF3E0;flex-shrink:0">🔥</div>
-        <div style="flex:1;min-width:0;overflow:hidden">
+      <div class="srow">
+        <div class="sico" style="background:#FFF3E0">🔥</div>
+        <div style="flex:1;min-width:0">
           <div class="snm">Firebase Firestore</div>
           <div class="ssub">Base de données partagée</div>
           <span class="sbg bwt" id="fbSt">Non configuré</span>
@@ -365,6 +365,24 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 <script>
 const SK='lt_v3',FBK='lt_fb',RK='lt_ret',LK='lt_logs',LSK='lt_lsms';
 const FB0={projectId:'familyhub-colis-8abbd',apiKey:''};
+
+// Sécurité : échapper les caractères HTML pour éviter les injections XSS
+function esc(s){
+  if(!s)return'';
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+// Version pour attributs onclick (escape les guillemets simples)
+function escAttr(s){
+  if(!s)return'';
+  return String(s).replace(/'/g,"\'").replace(/
+/g,' ').replace(/
+/g,'');
+}
 const DK='lt_disabled'; // clés des transporteurs désactivés
 function getDisabled(){try{return new Set(JSON.parse(localStorage.getItem(DK)||'[]'));}catch{return new Set();}}
 function isDisabled(c){return getDisabled().has(c);}
@@ -421,8 +439,13 @@ async function fetchGmailLog(){
     const r=await fetch(url,{redirect:'follow'});
     if(!r.ok){
       const el=document.getElementById('logG');
-      if(r.status===403)el.textContent='Erreur 403 : Règles Firebase bloquent la lecture.\nCorrection : Firebase Console → Firestore → Rules → ajouter :\nmatch /meta/{doc} { allow read: if true; }';
-      else if(el)el.textContent='Erreur '+r.status+' — vérifiez la configuration Firebase';
+      if(r.status===403){
+        el.textContent='Erreur 403 : Règles Firestore bloquent la lecture.\nAller dans Firebase Console → Firestore → Règles → ajouter :\nmatch /meta/{doc}{allow read,write:if true;}';
+      } else if(r.status===404){
+        el.textContent='Pas encore de log — exécutez syncGmailToFirebase() dans Apps Script une première fois manuellement.';
+      } else {
+        el.textContent='Erreur '+r.status+' — vérifiez projectId et apiKey Firebase';
+      }
       return;
     }
     const d=await r.json();
@@ -482,7 +505,7 @@ async function syncFB(){
       if(ex){
         if(p.status&&p.status!==ex.status&&ex.status!=='collected')ex.status=p.status;
         if((p.lastUpdated||'')>(ex.lastUpdated||'')){ex.pickupCode=p.pickupCode||ex.pickupCode;ex.lockerAddress=p.lockerAddress||ex.lockerAddress;ex.deliverySlot=p.deliverySlot||ex.deliverySlot;ex.trackingLink=p.trackingLink||ex.trackingLink;ex.trackingNum=p.trackingNum||ex.trackingNum;if(p.events?.length)ex.events=p.events;}
-      }else{if(!p.id)p.id=D.nextId++;D.packages.unshift(p);n++;}
+      }else{if(!p.id)p.id=D.nextId++; else p.id=Math.round(Number(p.id));D.packages.unshift(p);n++;}
     }
     D.lastSync=new Date().toISOString();purge();saveD(D);render();
     if(pg){pg.style.transition='width 0.3s';pg.style.width='100%';}
@@ -587,7 +610,7 @@ async function readSMS(silent=false){
       // Date = timestamp réel du SMS reçu sur le téléphone
       const smsDate=sms.date?new Date(parseInt(sms.date)).toISOString():new Date().toISOString();
       const fbId='sms_'+String(sms.date||Date.now())+'_'+btoa(encodeURIComponent((sender+'|'+(body||'').substring(0,20)))).substring(0,16);
-      const pkg={id:D.nextId++,_fbId:fbId,carrier:c,trackingNum:tr,pickupCode:co,lockerAddress:ad,trackingLink:xL(body),deliverySlot:xSl(body),sender:xSd(body)||sender,arrivalDate:smsDate,expiryDate:xEx(body,smsDate,c),status,emailSubject:'SMS — '+(sender||'transporteur'),gmailLink:'',account:'Guillaume',source:'sms',gmailMsgId:fbId,note:'',lastUpdated:smsDate,events:[{date:smsDate,status:status,desc:'SMS — '+(sender||'')}]};
+      const pkg={id:Math.round(D.nextId++),_fbId:fbId,carrier:c,trackingNum:tr,pickupCode:co,lockerAddress:ad,trackingLink:xL(body),deliverySlot:xSl(body),sender:xSd(body)||sender,arrivalDate:smsDate,expiryDate:xEx(body,smsDate,c),status,emailSubject:'SMS — '+(sender||'transporteur'),gmailLink:'',account:'Guillaume',source:'sms',gmailMsgId:fbId,note:'',lastUpdated:smsDate,events:[{date:smsDate,status:status,desc:'SMS — '+(sender||'')}]};
       const dup=findDup(pkg);if(dup){mrg(dup,pkg);up++;}else{D.packages.unshift(pkg);fbW(fbId,pkg).catch(()=>{});nw++;}
     }
     localStorage.setItem(LSK,String(Date.now()));purge();saveD(D);render();
@@ -651,10 +674,28 @@ function fmtSlotWithDay(slot,arrDate){
 function fSrc(p){return(p.source?.includes('sms')?'📱':'📧')+' '+fShort(p.arrivalDate);}
 
 function getFilt(){
-  const DIS=getDisabled();let pkgs=D.packages.filter(p=>!DIS.has(p.carrier));
+  const DIS=getDisabled();
+  const now5=Date.now()+5*86400000;
+  let pkgs=D.packages.filter(p=>{
+    if(DIS.has(p.carrier))return false;
+    // En livraison : exclure si date d'arrivée dépassée de plus de 5 jours
+    if(p.status==='out_for_delivery'&&flt!=='all'){
+      const arr=p.arrivalDate?new Date(p.arrivalDate).getTime():0;
+      if(arr>0&&arr<Date.now()-5*86400000)return false;
+    }
+    return true;
+  });
   if(flt!=='all')pkgs=pkgs.filter(p=>p.status===flt||(flt==='delivered'&&p.status==='collected'));
   if(srch){const q=srch.toLowerCase();pkgs=pkgs.filter(p=>(p.carrier||'').toLowerCase().includes(q)||(p.trackingNum||'').toLowerCase().includes(q)||(p.lockerAddress||'').toLowerCase().includes(q)||(p.sender||'').toLowerCase().includes(q)||(p.note||'').toLowerCase().includes(q));}
-  return pkgs.sort((a,b)=>{const o={out_for_delivery:0,ready:1,failed:2,pending:3,delivered:4,expired:5,collected:5};return(o[a.status]||9)-(o[b.status]||9);});
+  return pkgs.sort((a,b)=>{
+    const o={out_for_delivery:0,ready:1,failed:2,pending:3,delivered:4,expired:5,collected:5};
+    const so=(o[a.status]||9)-(o[b.status]||9);
+    if(so!==0) return so;
+    // Même statut → trier par date la plus proche (expiry ou arrivalDate)
+    const da=new Date(a.expiryDate||a.arrivalDate||0).getTime();
+    const db=new Date(b.expiryDate||b.arrivalDate||0).getTime();
+    return da-db;
+  });
 }
 function updBadges(){const p=D.packages;document.getElementById('bA').textContent=p.length;document.getElementById('bR').textContent=p.filter(x=>x.status==='ready').length;document.getElementById('bO').textContent=p.filter(x=>x.status==='out_for_delivery').length;document.getElementById('bP').textContent=p.filter(x=>x.status==='pending').length;document.getElementById('bF').textContent=p.filter(x=>x.status==='failed').length;document.getElementById('bD').textContent=p.filter(x=>x.status==='delivered'||x.status==='collected').length;}
 
@@ -676,25 +717,25 @@ function render(){
       <div class="phdr">
         <div class="cbadge" style="background:${color}18;display:flex;align-items:center;justify-content:center">${carrierLogo(p.carrier,26)}</div>
         <div class="pht">
-          <div class="pcname">${LB[p.carrier]||p.carrier}</div>
+          <div class="pcname">${esc(LB[p.carrier]||p.carrier)}</div>
           ${sum?`<div class="pinline">${sum}</div>`:''}
-          <div class="pmeta">${fSrc(p)}${p.sender?' · '+p.sender.substring(0,22):''}</div>
+          <div class="pmeta">${fSrc(p)}${p.sender?' · '+esc(p.sender.substring(0,22)):''}</div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
-          <div class="schip ${sCls(p.status)}">${sLblDate(p)}</div>
+          <div class="schip ${sCls(p.status)}">${esc(sLblDate(p))}</div>
           <div style="font-size:12px;color:var(--osv)">${p.account==='Michele'?'M':'G'}</div>
         </div>
       </div>
       <div id="pb${p.id}" style="display:${isOut?'block':'none'}">
         <div class="pbdy">
           <div class="div"></div>
-          ${p.trackingNum?`<div class="flbl">N° de suivi</div><div class="frow"><div class="fval">${p.trackingNum}</div><button class="cfab" onclick="cpT('${p.trackingNum}','N° suivi',event)">📋</button></div>`:''}
-          ${p.pickupCode?`<div class="cbox"><div class="cblbl">Code de retrait</div><div class="cbrow"><div class="cbval">${p.pickupCode}</div><button class="cbcopy" onclick="cpT('${p.pickupCode}','Code',event)">📋</button></div>${p.pickupCode.includes('/')?'<div class="cbhint">Saisir les deux codes successivement</div>':''}</div>`:''}
-          ${p.lockerAddress?`<div class="acard"><div class="atop"><span style="font-size:16px">📍</span><div class="atxt">${p.lockerAddress}</div><button class="cfab" onclick="cpT('${p.lockerAddress.replace(/'/g,"\\'")}','Adresse',event)">📋</button></div><a class="mbtn" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.lockerAddress)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🗺 Ouvrir dans Maps</a></div>`:''}
-          ${p.deliverySlot?`<div class="slot">🕐 ${fmtSlotWithDay(p.deliverySlot,p.arrivalDate)}</div>`:''}
+          ${p.trackingNum?`<div class="flbl">N° de suivi</div><div class="frow"><div class="fval">${esc(p.trackingNum)}</div><button class="cfab" onclick="cpT('${escAttr(p.trackingNum)}','N° suivi',event)">📋</button></div>`:''}
+          ${p.pickupCode?`<div class="cbox"><div class="cblbl">Code de retrait</div><div class="cbrow"><div class="cbval">${esc(p.pickupCode)}</div><button class="cbcopy" onclick="cpT('${escAttr(p.pickupCode)}','Code',event)">📋</button></div>${p.pickupCode.includes('/')?'<div class="cbhint">Saisir les deux codes successivement</div>':''}</div>`:''}
+          ${p.lockerAddress?`<div class="acard"><div class="atop"><span style="font-size:16px">📍</span><div class="atxt">${esc(p.lockerAddress)}</div><button class="cfab" onclick="cpT('${escAttr(p.lockerAddress)}','Adresse',event)">📋</button></div><a class="mbtn" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.lockerAddress||'')}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🗺 Ouvrir dans Maps</a></div>`:''}
+          ${p.deliverySlot?`<div class="slot">🕐 ${esc(fmtSlotWithDay(p.deliverySlot,p.arrivalDate))}</div>`:''}
           ${p.trackingLink?`<a class="tlink" href="${p.trackingLink}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔗 Suivre le colis</a>`:''}
           ${showE&&days!==null?`<div class="xrow"><div class="xlbl">Expire le</div><div class="xval" style="color:${xCol(days)}">${fFull(p.expiryDate)}</div></div><div class="xbar"><div class="xfill" style="width:${pct}%;background:${xCol(days)}"></div></div>`:''}
-          ${p.note?`<div style="background:var(--s1);border-radius:var(--rs);padding:10px 12px;margin-bottom:12px;font-size:14px;color:var(--osv)">💬 ${p.note}</div>`:''}
+          ${p.note?`<div style="background:var(--s1);border-radius:var(--rs);padding:10px 12px;margin-bottom:12px;font-size:14px;color:var(--osv)">💬 ${esc(p.note)}</div>`:''}
           ${p.events&&p.events.length?`<div class="tl"><div class="tlhd">Historique</div>${p.events.map((ev,i)=>`<div class="tli"><div class="tld ${i===0?'now':'old'}">${i===0?'●':'·'}</div><div class="tlc"><div class="tlst">${sLbl(ev.status)}</div><div class="tldt">${fShort(ev.date)}</div></div></div>`).join('')}</div>`:''}
           <div class="pacts">
             ${p.pickupCode||p.trackingNum?`<button class="act fl" onclick="showQR(${p.id},event)">📱 QR</button>`:''}
@@ -710,11 +751,14 @@ function render(){
 }
 
 function tog(id){
-  const b=document.getElementById('pb'+id);
-  const card=document.getElementById('pc'+id);
+  // Normaliser l'id (peut être float depuis Firebase: 5.0 → '5')
+  const sid=String(Math.round(Number(id)));
+  const b=document.getElementById('pb'+sid);
+  const card=document.getElementById('pc'+sid);
   if(!b||!card)return;
-  const isOpen=b.style.display==='block';
+  const isOpen=b.getAttribute('data-open')==='1';
   b.style.display=isOpen?'none':'block';
+  b.setAttribute('data-open',isOpen?'0':'1');
   card.classList.toggle('open',!isOpen);
 }
 
@@ -782,6 +826,16 @@ function toggleTheme(){const d=document.documentElement.getAttribute('data-theme
 function initTheme(){const s=localStorage.getItem('lt_th');if(s){applyTheme(s);return;}const sys=window.matchMedia('(prefers-color-scheme: dark)');applyTheme(sys.matches?'dark':'light');sys.addEventListener('change',e=>{if(!localStorage.getItem('lt_th'))applyTheme(e.matches?'dark':'light');});}
 
 initTheme();purge();renderSS();render();autoSync();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(r => console.log('SW enregistré', r.scope))
+      .catch(e => console.warn('SW erreur', e));
+  });
+}
 </script>
 </body>
 </html>

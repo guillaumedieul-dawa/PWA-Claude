@@ -255,5 +255,15 @@ function toggleTheme(){const d=document.documentElement.getAttribute('data-theme
 function initTheme(){const s=localStorage.getItem('lt_th');if(s){applyTheme(s);return;}const sys=window.matchMedia('(prefers-color-scheme: dark)');applyTheme(sys.matches?'dark':'light');sys.addEventListener('change',e=>{if(!localStorage.getItem('lt_th'))applyTheme(e.matches?'dark':'light');});}
 initTheme();render();
 </script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(r => console.log('SW enregistré', r.scope))
+      .catch(e => console.warn('SW erreur', e));
+  });
+}
+</script>
 </body>
 </html>

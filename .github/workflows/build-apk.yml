@@ -91,6 +91,42 @@ jobs:
           print("Permissions ajoutees :", permissions)
           PYEOF
 
+      - name: Setup stable debug keystore (mise à jour APK sans réinstallation)
+        run: |
+          # Keystore stable stocké dans le repo ou généré une seule fois
+          # Sans keystore fixe, Android refuse l'update (signatures différentes)
+          KEYSTORE_DIR="$HOME/.android"
+          mkdir -p "$KEYSTORE_DIR"
+          if [ ! -f "$KEYSTORE_DIR/debug.keystore" ]; then
+            keytool -genkeypair -v               -keystore "$KEYSTORE_DIR/debug.keystore"               -storepass android -keypass android               -alias androiddebugkey               -keyalg RSA -keysize 2048 -validity 10000               -dname "CN=FamilyHub,OU=Android,O=Famille Dieul-Gandet,L=Pierrelaye,S=IDF,C=FR"               2>/dev/null
+            echo "✓ Debug keystore créé"
+          else
+            echo "✓ Debug keystore existant utilisé"
+          fi
+
+      - name: Set versionCode auto (évite les conflits de version)
+        run: |
+          # versionCode = YYYYMMDDNN (date + numéro de run)
+          VERSION_CODE=$(date +%Y%m%d)$(printf "%02d" $((GITHUB_RUN_NUMBER % 100)))
+          VERSION_NAME="1.$(date +%Y%m%d)"
+          echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_ENV
+          echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
+          echo "✓ versionCode: $VERSION_CODE, versionName: $VERSION_NAME"
+
+      - name: Inject versionCode in build.gradle
+        run: |
+          python3 - << 'PYEOF'
+          import re, os
+          path = "android/app/build.gradle"
+          with open(path) as f: content = f.read()
+          vc = os.environ.get('VERSION_CODE','10000')
+          vn = os.environ.get('VERSION_NAME','1.0')
+          content = re.sub(r'versionCode\s+\d+', f'versionCode {vc}', content)
+          content = re.sub(r'versionName\s+"[^"]+"', f'versionName "{vn}"', content)
+          with open(path,'w') as f: f.write(content)
+          print(f"✓ versionCode={vc}, versionName={vn}")
+          PYEOF
+
       - name: Fix gradlew permissions
         run: chmod +x android/gradlew
 

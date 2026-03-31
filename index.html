@@ -77,7 +77,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
       <div class="hdr-eyebrow">Bonjour 👋</div>
       <div class="hdr-title">FamilyHub</div>
     </div>
-    <button class="ibtn" onclick="toggleTheme()" id="thbtn">🌙</button>
+    <button class="ibtn" data-action="toggleTheme" id="thbtn">🌙</button>
   </div>
 
   <div class="greeting">
@@ -179,6 +179,13 @@ function loadBadges(){
     if(el)el.textContent=items>0?items+' article'+(items>1?'s':'')+' restants':'Liste vide';
   }catch{}
 }
+
+
+document.addEventListener('click',function(e){
+  const el=e.target.closest('[data-action]');
+  if(!el)return;
+  if(el.getAttribute('data-action')==='toggleTheme')toggleTheme();
+});
 
 initTheme();
 loadBadges();

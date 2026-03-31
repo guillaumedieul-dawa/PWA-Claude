@@ -863,20 +863,19 @@ function initTheme(){const s=localStorage.getItem('lt_th');if(s){applyTheme(s);r
 
 // Restaurer le dernier filtre utilisé
 const savedFilter=sessionStorage.getItem('fh_filter');
-if(savedFilter)flt=savedFilter;
-initTheme();purge();renderSS();
-// Activer le chip correspondant au filtre sauvegardé
-document.addEventListener('DOMContentLoaded',()=>{
+if(savedFilter){
+  flt=savedFilter;
+  // Activer le bon chip dès maintenant (DOM déjà chargé car script en bas de body)
   const chips=document.querySelectorAll('.chip');
   chips.forEach(btn=>{
-    const onclick=btn.getAttribute('onclick')||'';
-    if(onclick.includes("'"+flt+"'")){
+    const oc=btn.getAttribute('onclick')||'';
+    if(oc.includes("'"+flt+"'")){
       chips.forEach(b=>b.classList.remove('sel'));
       btn.classList.add('sel');
     }
   });
-});
-render();autoSync();
+}
+initTheme();purge();renderSS();render();autoSync();
 </script>
 
 <script>

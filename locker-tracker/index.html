@@ -749,7 +749,7 @@ function render(){
     }
     const sum=parts.join('  ');
 
-    return`<div class="pcard${isOut?' open':''}" id="pc${p.id}" onclick="tog(${p.id})" style="animation-delay:${i*0.04}s">
+    return`<div class="pcard${isOut?' open':''}" id="pc${p.id}" data-action="tog" data-id="${p.id}" style="animation-delay:${i*0.04}s">
       <div class="ptint" style="background:${color}"></div>
       <div class="phdr">
         <div class="cbadge" style="background:${color}18;display:flex;align-items:center;justify-content:center">${carrierLogo(p.carrier,26)}</div>
@@ -766,21 +766,21 @@ function render(){
       <div id="pb${p.id}" style="display:${isOut?'block':'none'}">
         <div class="pbdy">
           <div class="div"></div>
-          ${p.trackingNum?`<div class="flbl">N° de suivi</div><div class="frow"><div class="fval">${esc(p.trackingNum)}</div><button class="cfab" onclick="cpT('${escAttr(p.trackingNum)}','N° suivi',event)">📋</button></div>`:''}
-          ${p.pickupCode?`<div class="cbox"><div class="cblbl">Code de retrait</div><div class="cbrow"><div class="cbval">${esc(p.pickupCode)}</div><button class="cbcopy" onclick="cpT('${escAttr(p.pickupCode)}','Code',event)">📋</button></div>${p.pickupCode.includes('/')?'<div class="cbhint">Saisir les deux codes successivement</div>':''}</div>`:''}
-          ${p.lockerAddress?`<div class="acard"><div class="atop"><span style="font-size:16px">📍</span><div class="atxt">${esc(p.lockerAddress)}</div><button class="cfab" onclick="cpT('${escAttr(p.lockerAddress)}','Adresse',event)">📋</button></div><a class="mbtn" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.lockerAddress||'')}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🗺 Ouvrir dans Maps</a></div>`:''}
+          ${p.trackingNum?`<div class="flbl">N° de suivi</div><div class="frow"><div class="fval">${esc(p.trackingNum)}</div><button class="cfab" data-action="cpT" data-val="${escAttr(p.trackingNum)}" data-lbl="N° suivi">📋</button></div>`:''}
+          ${p.pickupCode?`<div class="cbox"><div class="cblbl">Code de retrait</div><div class="cbrow"><div class="cbval">${esc(p.pickupCode)}</div><button class="cbcopy" data-action="cpT" data-val="${escAttr(p.pickupCode)}" data-lbl="Code">📋</button></div>${p.pickupCode.includes('/')?'<div class="cbhint">Saisir les deux codes successivement</div>':''}</div>`:''}
+          ${p.lockerAddress?`<div class="acard"><div class="atop"><span style="font-size:16px">📍</span><div class="atxt">${esc(p.lockerAddress)}</div><button class="cfab" data-action="cpT" data-val="${escAttr(p.lockerAddress)}" data-lbl="Adresse">📋</button></div><a class="mbtn" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.lockerAddress||'')}" target="_blank" rel="noopener" data-action="stopProp">🗺 Ouvrir dans Maps</a></div>`:''}
           ${p.deliverySlot?`<div class="slot">🕐 ${esc(fmtSlotWithDay(p.deliverySlot,p.arrivalDate))}</div>`:''}
-          ${p.trackingLink?`<a class="tlink" href="${p.trackingLink}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔗 Suivre le colis</a>`:''}
+          ${p.trackingLink?`<a class="tlink" href="${p.trackingLink}" target="_blank" rel="noopener" data-action="stopProp">🔗 Suivre le colis</a>`:''}
           ${showE&&days!==null?`<div class="xrow"><div class="xlbl">Expire le</div><div class="xval" style="color:${xCol(days)}">${fFull(p.expiryDate)}</div></div><div class="xbar"><div class="xfill" style="width:${pct}%;background:${xCol(days)}"></div></div>`:''}
           ${p.note?`<div style="background:var(--s1);border-radius:var(--rs);padding:10px 12px;margin-bottom:12px;font-size:14px;color:var(--osv)">💬 ${esc(p.note)}</div>`:''}
           ${p.events&&p.events.length?`<div class="tl"><div class="tlhd">Historique</div>${p.events.map((ev,i)=>`<div class="tli"><div class="tld ${i===0?'now':'old'}">${i===0?'●':'·'}</div><div class="tlc"><div class="tlst">${sLbl(ev.status)}</div><div class="tldt">${fShort(ev.date)}</div></div></div>`).join('')}</div>`:''}
           <div class="pacts">
-            ${p.pickupCode||p.trackingNum?`<button class="act fl" onclick="showQR(${p.id},event)">📱 QR</button>`:''}
-            ${p.gmailLink?`<a class="act" href="${p.gmailLink}" target="_blank" rel="noopener" onclick="event.stopPropagation()">📧</a>`:''}
-            <button class="act sh" onclick="shareP(${p.id},event)">↗ Partager</button>
-            <button class="act" onclick="copyAll(${p.id},event)" title="Copier toutes les infos">📋 Tout copier</button>
-            ${p.status!=='collected'&&p.status!=='delivered'?`<button class="act gn" onclick="markDone(${p.id},event)">✓ Récupéré</button>`:''}
-            <button class="act rd" onclick="delPkg(${p.id},event)">🗑</button>
+            ${p.pickupCode||p.trackingNum?`<button class="act fl" data-action="showQR" data-id="${p.id}">📱 QR</button>`:''}
+            ${p.gmailLink?`<a class="act" href="${p.gmailLink}" target="_blank" rel="noopener" data-action="stopProp">📧</a>`:''}
+            <button class="act sh" data-action="shareP" data-id="${p.id}">↗ Partager</button>
+            <button class="act" data-action="copyAll" data-id="${p.id}" title="Copier toutes les infos">📋 Tout copier</button>
+            ${p.status!=='collected'&&p.status!=='delivered'?`<button class="act gn" data-action="markDone" data-id="${p.id}">✓ Récupéré</button>`:''}
+            <button class="act rd" data-action="delPkg" data-id="${p.id}">🗑</button>
           </div>
         </div>
       </div>
@@ -820,7 +820,7 @@ function renderRetCf(){
       <div class="cfgl">${LB[c]||c}</div>
       <input class="cfgi" type="number" min="1" max="60" id="r_${c}" value="${R[c]||d}" ${dis?'disabled':''}>
       <span style="font-size:12px;color:var(--osv)"> j</span>
-      <button onclick="toggleDisabled('${c}',this)" style="padding:4px 8px;border-radius:8px;border:1px solid var(--olv);background:${dis?'var(--cfb)':'var(--s2)'};color:${dis?'var(--cf)':'var(--osv)'};font-size:11px;cursor:pointer;white-space:nowrap;font-family:'Google Sans',sans-serif" title="${dis?'Réactiver':'Désactiver'}">${dis?'✕ OFF':'✓ ON'}</button>
+      <button data-action="toggleDisabled" data-carrier="${c}" style="padding:4px 8px;border-radius:8px;border:1px solid var(--olv);background:${dis?'var(--cfb)':'var(--s2)'};color:${dis?'var(--cf)':'var(--osv)'};font-size:11px;cursor:pointer;white-space:nowrap;font-family:'Google Sans',sans-serif" title="${dis?'Réactiver':'Désactiver'}">${dis?'✕ OFF':'✓ ON'}</button>
     </div>`;
   }).join('');
 }
@@ -886,28 +886,51 @@ function applyTheme(t){document.documentElement.setAttribute('data-theme',t);doc
 function toggleTheme(){const d=document.documentElement.getAttribute('data-theme')==='dark';const n=d?'light':'dark';localStorage.setItem('lt_th',n);applyTheme(n);}
 function initTheme(){const s=localStorage.getItem('lt_th');if(s){applyTheme(s);return;}const sys=window.matchMedia('(prefers-color-scheme: dark)');applyTheme(sys.matches?'dark':'light');sys.addEventListener('change',e=>{if(!localStorage.getItem('lt_th'))applyTheme(e.matches?'dark':'light');});}
 
-// ── Dispatcher global : gère tous les data-action sans onclick inline ──
-// Nécessaire pour Capacitor WebView qui bloque les onclick= attributs
+// ── Dispatcher global : gère TOUS les data-action ──
+// Remplace tous les onclick= pour compatibilité Capacitor WebView Android
 document.addEventListener('click', function(e){
   const el=e.target.closest('[data-action]');
   if(!el)return;
   const action=el.getAttribute('data-action');
+  const ds=el.dataset;
+
+  // Empêcher la propagation pour les actions sur les cartes
+  const cardActions=['cpT','showQR','shareP','copyAll','markDone','delPkg','stopProp','toggleDisabled'];
+  if(cardActions.includes(action)) e.stopPropagation();
+
   switch(action){
+    // ── Top bar & navigation ──
     case 'openSync':    openSync();break;
     case 'openAdd':     openAdd();break;
     case 'toggleTheme': toggleTheme();break;
     case 'clearSearch': clearSearch();break;
-    case 'setFilter':   setF(el.getAttribute('data-filter'),el);break;
-    case 'closeSheet':  closeS(el.getAttribute('data-sheet'));break;
-    case 'selCarrier':  selC(el.getAttribute('data-carrier'),el);break;
+    // ── Filtres ──
+    case 'setFilter':   setF(ds.filter,el);break;
+    // ── Sheets ──
+    case 'closeSheet':  closeS(ds.sheet);break;
+    // ── Transporteurs ──
+    case 'selCarrier':  selC(ds.carrier,el);break;
+    // ── Formulaire ajout ──
     case 'addPkg':      addPkg();break;
+    // ── Sync ──
     case 'syncFB':      syncFB();break;
     case 'saveFB':      saveFB();break;
     case 'readSMS':     readSMS();break;
     case 'parseMan':    parseMan();break;
+    // ── Config ──
     case 'saveRet':     saveRet();break;
     case 'resetAll':    resetAll();break;
-    case 'showTab':     showT(el.getAttribute('data-tab'),el);break;
+    case 'showTab':     showT(ds.tab,el);break;
+    case 'toggleDisabled': toggleDisabled(ds.carrier,el);break;
+    // ── Actions cartes (générées dynamiquement via innerHTML) ──
+    case 'tog':         tog(ds.id);break;
+    case 'cpT':         cpT(ds.val,ds.lbl,e);break;
+    case 'showQR':      showQR(Math.round(Number(ds.id)),e);break;
+    case 'shareP':      shareP(Math.round(Number(ds.id)),e);break;
+    case 'copyAll':     copyAll(Math.round(Number(ds.id)),e);break;
+    case 'markDone':    markDone(Math.round(Number(ds.id)),e);break;
+    case 'delPkg':      delPkg(Math.round(Number(ds.id)),e);break;
+    case 'stopProp':    e.stopPropagation();break;
   }
 });
 

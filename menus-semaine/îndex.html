@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f8fb">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1a1c1e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Menus">
+<title>Menus de la semaine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Text:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--p:#0057A8;--op:#FFF;--pc:#D7E3FF;--opc:#001849;--bg:#F4F8FB;--sf:#FFF;--s1:#EDF1F4;--s2:#E6EBF0;--s3:#DEE4EA;--ol:#72787E;--olv:#C2C8CF;--ob:#1A1C1E;--os:#1A1C1E;--osv:#42474C;--sh:rgba(0,0,0,0.08);--top:env(safe-area-inset-top,0px);--bot:env(safe-area-inset-bottom,0px);--rl:28px;--rm:16px;--rs:12px}
+[data-theme="dark"]{--p:#ADC6FF;--op:#002E6C;--pc:#00429A;--opc:#D7E3FF;--bg:#1A1C1E;--sf:#1A1C1E;--s1:#252729;--s2:#2C2F31;--s3:#333639;--ol:#8C9198;--olv:#42474C;--ob:#E3E2E6;--os:#E3E2E6;--osv:#C2C7CE;--sh:rgba(0,0,0,0.3)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Google Sans Text',sans-serif;overflow-x:hidden;transition:background .3s,color .3s}
+#app{max-width:520px;margin:0 auto;min-height:100dvh;padding-bottom:calc(var(--bot)+96px)}
+.tbar{position:sticky;top:0;z-index:100;background:var(--bg);padding:calc(var(--top)+12px) 16px 8px;display:flex;align-items:center;gap:8px}
+.ihome{width:40px;height:40px;border-radius:50%;border:none;background:var(--s1);color:var(--os);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none;flex-shrink:0}
+.ihome:active{background:var(--s2)}
+.ttl{flex:1;min-width:0}
+.tlbl{font-size:11px;color:var(--osv);letter-spacing:.3px}
+.th{font-family:'Google Sans',sans-serif;font-size:22px;font-weight:700;color:var(--ob);letter-spacing:-.3px;line-height:1.1}
+.ibtn{width:40px;height:40px;border-radius:50%;border:none;background:var(--s1);color:var(--os);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.ibtn:active{background:var(--s2)}
+/* Nav semaine */
+.week-nav{display:flex;align-items:center;justify-content:space-between;padding:8px 16px 12px}
+.week-lbl{font-family:'Google Sans',sans-serif;font-size:16px;font-weight:700;color:var(--ob)}
+.wnav-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--olv);background:transparent;color:var(--os);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.wnav-btn:active{background:var(--s2)}
+.week-today{padding:6px 14px;border-radius:20px;border:none;background:var(--pc);color:var(--opc);font-family:'Google Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer}
+/* Day cards */
+.dlist{padding:0 12px;display:flex;flex-direction:column;gap:8px}
+.dcard{background:var(--sf);border-radius:var(--rl);overflow:hidden;box-shadow:0 1px 3px var(--sh);transition:all .2s}
+.dcard.today{border:2px solid var(--p)}
+.dhdr{padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer}
+.dhdr:active{background:var(--s1)}
+.dday{font-family:'Google Sans',sans-serif;font-size:16px;font-weight:700;color:var(--os);width:90px;flex-shrink:0}
+.dday .dnum{font-size:11px;color:var(--osv);font-weight:400;display:block;margin-top:1px}
+.dslots{flex:1;display:flex;gap:8px;flex-wrap:wrap}
+.dslot{flex:1;min-width:80px}
+.dslot-lbl{font-size:10px;color:var(--osv);text-transform:uppercase;letter-spacing:.5px;font-family:'Google Sans',sans-serif;margin-bottom:3px}
+.dslot-val{font-size:13px;color:var(--os);font-weight:500;line-height:1.3}
+.dslot-empty{font-size:13px;color:var(--olv);font-style:italic}
+.dslot-add{font-size:13px;color:var(--p);cursor:pointer;font-style:italic}
+/* Edit inline */
+.dedit{padding:0 16px 14px;border-top:1px solid var(--olv)}
+.dedit-row{margin-top:10px}
+.dedit-lbl{font-size:11px;color:var(--osv);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;font-family:'Google Sans',sans-serif}
+.dedit-in{width:100%;padding:10px 14px;border-radius:var(--rs);border:1px solid var(--olv);background:var(--s1);color:var(--ob);font-family:'Google Sans Text',sans-serif;font-size:14px;outline:none}
+.dedit-in:focus{border-color:var(--p)}
+.dedit-in::placeholder{color:var(--osv)}
+.dedit-acts{display:flex;gap:8px;margin-top:10px}
+.btn-sm{flex:1;padding:10px;border-radius:var(--rs);font-family:'Google Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:opacity .2s;border:none}
+.btn-ok{background:var(--p);color:var(--op)}
+.btn-ok:active{opacity:.85}
+.btn-cl{background:var(--s2);color:var(--osv);border:1px solid var(--olv) !important}
+/* Toast */
+.toast{position:fixed;bottom:calc(var(--bot)+100px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--ob);color:var(--bg);padding:12px 20px;border-radius:28px;font-family:'Google Sans',sans-serif;font-size:14px;font-weight:500;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;max-width:88vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@keyframes fu{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.dcard{animation:fu .25s ease both}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="tbar">
+    <a href="../index.html" class="ihome">🏠</a>
+    <div class="ttl">
+      <div class="tlbl">FamilyHub</div>
+      <div class="th">🍽️ Menus de la semaine</div>
+    </div>
+    <button class="ibtn" data-action="toggleTheme" id="thbtn">🌙</button>
+  </div>
+
+  <div class="week-nav">
+    <button class="wnav-btn" data-action="prevWeek">‹</button>
+    <div class="week-lbl" id="weekLbl"></div>
+    <button class="week-today" data-action="goToday">Aujourd'hui</button>
+    <button class="wnav-btn" data-action="nextWeek">›</button>
+  </div>
+
+  <div class="dlist" id="DL"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SK='fh_menus';
+const DAYS=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+const DAYS_S=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+const MONTHS=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+
+function loadD(){try{const d=JSON.parse(localStorage.getItem(SK));if(d)return d;}catch{}return{};}
+function saveD(d){localStorage.setItem(SK,JSON.stringify(d));}
+
+let D=loadD();
+let weekOffset=0;
+let openDay=null;
+
+function getWeekDates(offset=0){
+  const now=new Date();
+  const day=now.getDay();
+  const monday=new Date(now);
+  monday.setDate(now.getDate()-((day+6)%7)+offset*7);
+  monday.setHours(0,0,0,0);
+  return Array.from({length:7},(_,i)=>{
+    const d=new Date(monday);d.setDate(monday.getDate()+i);return d;
+  });
+}
+
+function dayKey(date){return date.toISOString().split('T')[0];}
+
+function renderWeekLabel(dates){
+  const a=dates[0],b=dates[6];
+  document.getElementById('weekLbl').textContent=
+    `${a.getDate()} ${MONTHS[a.getMonth()]} — ${b.getDate()} ${MONTHS[b.getMonth()]}`;
+}
+
+function render(){
+  const dates=getWeekDates(weekOffset);
+  renderWeekLabel(dates);
+  const today=dayKey(new Date());
+  const el=document.getElementById('DL');
+  el.innerHTML=dates.map((date,i)=>{
+    const k=dayKey(date);
+    const m=D[k]||{};
+    const isToday=k===today;
+    const isOpen=openDay===k;
+    return`<div class="dcard${isToday?' today':''}" id="dc_${k}" style="animation-delay:${i*.04}s">
+      <div class="dhdr" data-action="togDay" data-key="${k}">
+        <div class="dday">
+          ${DAYS[date.getDay()]}
+          <span class="dnum">${date.getDate()} ${MONTHS[date.getMonth()]}</span>
+        </div>
+        <div class="dslots">
+          <div class="dslot">
+            <div class="dslot-lbl">🌞 Midi</div>
+            ${m.midi?`<div class="dslot-val">${m.midi}</div>`:`<div class="dslot-empty">—</div>`}
+          </div>
+          <div class="dslot">
+            <div class="dslot-lbl">🌙 Soir</div>
+            ${m.soir?`<div class="dslot-val">${m.soir}</div>`:`<div class="dslot-empty">—</div>`}
+          </div>
+        </div>
+      </div>
+      ${isOpen?`<div class="dedit">
+        <div class="dedit-row">
+          <div class="dedit-lbl">🌞 Repas du midi</div>
+          <input class="dedit-in" id="midi_${k}" value="${m.midi||''}" placeholder="Poulet rôti, salade…">
+        </div>
+        <div class="dedit-row">
+          <div class="dedit-lbl">🌙 Repas du soir</div>
+          <input class="dedit-in" id="soir_${k}" value="${m.soir||''}" placeholder="Pâtes bolognaise…">
+        </div>
+        <div class="dedit-row">
+          <div class="dedit-lbl">💬 Note</div>
+          <input class="dedit-in" id="note_${k}" value="${m.note||''}" placeholder="Invités, régime, rapide…">
+        </div>
+        <div class="dedit-acts">
+          <button class="btn-sm btn-ok" data-action="saveDay" data-key="${k}">✓ Enregistrer</button>
+          <button class="btn-sm btn-cl" data-action="togDay" data-key="${k}">Annuler</button>
+        </div>
+      </div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function togDay(k){
+  openDay=openDay===k?null:k;render();
+  if(openDay){
+    const el=document.getElementById(`midi_${k}`);
+    if(el)setTimeout(()=>el.focus(),100);
+  }
+}
+
+function saveDay(k){
+  const midi=(document.getElementById(`midi_${k}`)?.value||'').trim();
+  const soir=(document.getElementById(`soir_${k}`)?.value||'').trim();
+  const note=(document.getElementById(`note_${k}`)?.value||'').trim();
+  if(midi||soir||note)D[k]={midi,soir,note};
+  else delete D[k];
+  saveD(D);openDay=null;render();showToast('✓ Menu enregistré');
+}
+
+function prevWeek(){weekOffset--;render();}
+function nextWeek(){weekOffset++;render();}
+function goToday(){weekOffset=0;render();}
+
+let _tt;function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('show'),3000);}
+function applyTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('thbtn').textContent=t==='dark'?'🌙':'☀️';}
+function toggleTheme(){const d=document.documentElement.getAttribute('data-theme')==='dark';const n=d?'light':'dark';localStorage.setItem('lt_th',n);applyTheme(n);}
+function initTheme(){const s=localStorage.getItem('lt_th');if(s){applyTheme(s);return;}const sys=window.matchMedia('(prefers-color-scheme: dark)');applyTheme(sys.matches?'dark':'light');sys.addEventListener('change',e=>{if(!localStorage.getItem('lt_th'))applyTheme(e.matches?'dark':'light');});}
+
+// ── Dispatcher global : gère data-action sans onclick inline ──
+document.addEventListener('click', function(e){
+  const el=e.target.closest('[data-action]');
+  if(!el)return;
+  e.stopPropagation();
+  const a=el.getAttribute('data-action');
+  const d=el.dataset;
+  switch(a){
+    case 'toggleTheme': toggleTheme();break;
+    case 'closeSheet':  closeS(d.sheet||d.id||el.closest('.sov')?.id);break;
+    case 'prevWeek': prevWeek();break;
+    case 'nextWeek': nextWeek();break;
+    case 'goToday':  goToday();break;
+    case 'togDay':   togDay(el.dataset.key);break;
+    case 'saveDay':  saveDay(el.dataset.key);break;
+  }
+});
+document.addEventListener('click', function(e){
+  if(e.target.classList.contains('sov'))closeS(e.target.id);
+});
+
+initTheme();render();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(r => console.log('SW enregistré', r.scope))
+      .catch(e => console.warn('SW erreur', e));
+  });
+}
+</script>
+</body>
+</html>

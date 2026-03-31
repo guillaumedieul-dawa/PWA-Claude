@@ -239,7 +239,7 @@ function render(){
   const el=document.getElementById('BL');
   if(!bottles.length){el.innerHTML=`<div class="empty"><div class="eico">🍷</div><div class="etit">Cave vide</div><div class="esub">Appuyez sur + pour ajouter une bouteille</div></div>`;return;}
   el.innerHTML=bottles.map((b,i)=>`
-    <div class="bcard" id="bc${b.id}" onclick="tog(${b.id})" style="animation-delay:${i*.03}s">
+    <div class="bcard" id="bc${b.id}" data-action="togBottle" data-id="${b.id}" style="animation-delay:${i*.03}s">
       <div class="bico" style="background:${COLORS[b.type]||'#E6EBF0'}">${ICONS[b.type]||'🍶'}</div>
       <div class="binfo">
         <div class="bname">${b.nom}</div>
@@ -249,12 +249,12 @@ function render(){
           ${b.comment?`<div class="field-lbl">Commentaire</div><div class="field-val">${b.comment}</div>`:''}
           <div class="field-lbl">Quantité en cave</div>
           <div class="qty-ctrl">
-            <button class="qty-btn" onclick="changeQty(${b.id},-1,event)">−</button>
+            <button class="qty-btn" data-action="changeQty" data-id="${b.id}" data-delta="-1">−</button>
             <div class="qty-val">${b.qty}</div>
-            <button class="qty-btn" onclick="changeQty(${b.id},1,event)">+</button>
+            <button class="qty-btn" data-action="changeQty" data-id="${b.id}" data-delta="1">+</button>
           </div>
           <div class="bacts">
-            <button class="act rd" onclick="delBottle(${b.id},event)">🗑 Supprimer</button>
+            <button class="act rd" data-action="delBottle" data-id="${b.id}">🗑 Supprimer</button>
           </div>
         </div>
       </div>
@@ -291,6 +291,9 @@ document.addEventListener('click', function(e){
       el.classList.add('sel');render();break;
     case 'openAdd': document.getElementById('shAdd').classList.add('on');document.body.style.overflow='hidden';break;
     case 'addBottle': addBottle();break;
+    case 'togBottle':  tog(parseInt(el.dataset.id));break;
+    case 'changeQty':  changeQty(parseInt(el.dataset.id),parseInt(el.dataset.delta),e);break;
+    case 'delBottle':  delBottle(parseInt(el.dataset.id),e);break;
   }
 });
 document.addEventListener('click', function(e){

@@ -246,20 +246,20 @@ function render(){
   for(const [cat,arr] of Object.entries(cats)){
     html+=`<div class="cat-head">${cat}</div>`;
     arr.forEach((item,i)=>{
-      html+=`<div class="icard${item.done?' done':''}" onclick="toggleItem(${item.id})" style="animation-delay:${i*.02}s">
+      html+=`<div class="icard${item.done?' done':''}" data-action="toggleItem" data-id="${item.id}" style="animation-delay:${i*.02}s">
         <div class="chk${item.done?' done':''}">${item.done?'<span style="color:#fff;font-size:12px">✓</span>':''}</div>
         <div class="ibody">
           <div class="iname">${item.nom}</div>
           ${item.qty?`<div class="iqty">${item.qty}</div>`:''}
         </div>
         <span class="iwho" style="background:${WHO_COLORS[item.who]||'#E6EBF0'};color:${WHO_TC[item.who]||'#42474C'}">${item.who==='Michele'?'M':'G'}</span>
-        <button class="idel" onclick="delItem(${item.id},event)">🗑</button>
+        <button class="idel" data-action="delItem" data-id="${item.id}">🗑</button>
       </div>`;
     });
   }
   html+='</div>';
   if(doneCnt>0){
-    html+=`<button class="clear-btn" onclick="clearDone()">🗑 Supprimer les ${doneCnt} article(s) achetés</button>`;
+    html+=`<button class="clear-btn" data-action="clearDone">🗑 Supprimer les ${doneCnt} article(s) achetés</button>`;
   }
   el.innerHTML=html;
 }
@@ -287,9 +287,12 @@ document.addEventListener('click', function(e){
       flt=el.getAttribute('data-filter');
       document.querySelectorAll('.chip').forEach(b=>b.classList.remove('sel'));
       el.classList.add('sel');render();break;
-    case 'quickAdd': quickAdd();break;
+    case 'quickAdd':    quickAdd();break;
     case 'openAdd': document.getElementById('shAdd').classList.add('on');document.body.style.overflow='hidden';break;
-    case 'addItem': addItem();break;
+    case 'addItem':     addItem();break;
+    case 'toggleItem':  toggleItem(parseInt(el.dataset.id));break;
+    case 'delItem':     delItem(parseInt(el.dataset.id),e);break;
+    case 'clearDone':   clearDone();break;
   }
 });
 document.addEventListener('click', function(e){

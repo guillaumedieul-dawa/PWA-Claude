@@ -101,34 +101,34 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
       <div class="tlbl">FamilyHub</div>
       <div class="th">🛒 Liste de courses</div>
     </div>
-    <button class="ibtn" onclick="toggleTheme()" id="thbtn">🌙</button>
+    <button class="ibtn" data-action="toggleTheme" id="thbtn">🌙</button>
   </div>
 
   <div class="qadd">
-    <input class="qadd-in" id="qi" placeholder="Ajouter un article…" onkeydown="if(event.key==='Enter')quickAdd()">
-    <button class="qadd-btn" onclick="quickAdd()">＋</button>
+    <input class="qadd-in" id="qi" placeholder="Ajouter un article…" data-action="qaEnter">
+    <button class="qadd-btn" data-action="quickAdd">＋</button>
   </div>
 
   <div class="prog-wrap" id="progWrap"></div>
 
   <div class="chips">
-    <button class="chip sel" onclick="setF('all',this)">Tout</button>
-    <button class="chip" onclick="setF('todo',this)">À acheter</button>
-    <button class="chip" onclick="setF('done',this)">Achetés</button>
-    <button class="chip" onclick="setF('g',this)">Guillaume</button>
-    <button class="chip" onclick="setF('m',this)">Michèle</button>
+    <button class="chip sel" data-action="setFilter" data-filter="all">Tout</button>
+    <button class="chip" data-action="setFilter" data-filter="todo">À acheter</button>
+    <button class="chip" data-action="setFilter" data-filter="done">Achetés</button>
+    <button class="chip" data-action="setFilter" data-filter="g">Guillaume</button>
+    <button class="chip" data-action="setFilter" data-filter="m">Michèle</button>
   </div>
 
   <div id="IL"></div>
 </div>
 
-<button class="fab" onclick="openAdd()">＋</button>
+<button class="fab" data-action="openAdd">＋</button>
 <div class="toast" id="toast"></div>
 
 <!-- Sheet ajout détaillé -->
 <div class="sov" id="shAdd">
   <div class="sht">
-    <div class="shnd" onclick="closeS('shAdd')"></div>
+    <div class="shnd" data-action="closeSheet" data-sheet="shAdd"></div>
     <div class="shtit">Ajouter un article</div>
     <div class="slbl ft">Article</div>
     <input class="fin" id="aNom" placeholder="Lait, pain, fromage…">
@@ -154,8 +154,8 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
       <option value="Guillaume">Guillaume</option>
       <option value="Michele">Michèle</option>
     </select>
-    <button class="bfill" onclick="addItem()">Enregistrer</button>
-    <button class="bout" onclick="closeS('shAdd')">Annuler</button>
+    <button class="bfill" data-action="addItem">Enregistrer</button>
+    <button class="bout" data-action="closeSheet" data-sheet="shAdd">Annuler</button>
   </div>
 </div>
 
@@ -272,6 +272,30 @@ let _tt;function showToast(m){const t=document.getElementById('toast');t.textCon
 function applyTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('thbtn').textContent=t==='dark'?'🌙':'☀️';}
 function toggleTheme(){const d=document.documentElement.getAttribute('data-theme')==='dark';const n=d?'light':'dark';localStorage.setItem('lt_th',n);applyTheme(n);}
 function initTheme(){const s=localStorage.getItem('lt_th');if(s){applyTheme(s);return;}const sys=window.matchMedia('(prefers-color-scheme: dark)');applyTheme(sys.matches?'dark':'light');sys.addEventListener('change',e=>{if(!localStorage.getItem('lt_th'))applyTheme(e.matches?'dark':'light');});}
+
+// ── Dispatcher global : gère data-action sans onclick inline ──
+document.addEventListener('click', function(e){
+  const el=e.target.closest('[data-action]');
+  if(!el)return;
+  e.stopPropagation();
+  const a=el.getAttribute('data-action');
+  const d=el.dataset;
+  switch(a){
+    case 'toggleTheme': toggleTheme();break;
+    case 'closeSheet':  closeS(d.sheet||d.id||el.closest('.sov')?.id);break;
+    case 'setFilter':
+      flt=el.getAttribute('data-filter');
+      document.querySelectorAll('.chip').forEach(b=>b.classList.remove('sel'));
+      el.classList.add('sel');render();break;
+    case 'quickAdd': quickAdd();break;
+    case 'openAdd': document.getElementById('shAdd').classList.add('on');document.body.style.overflow='hidden';break;
+    case 'addItem': addItem();break;
+  }
+});
+document.addEventListener('click', function(e){
+  if(e.target.classList.contains('sov'))closeS(e.target.id);
+});
+
 initTheme();render();
 </script>
 

@@ -230,7 +230,7 @@ function render(){
     el.innerHTML=`<div class="empty"><div class="eico">✅</div><div class="etit">${flt==='done'?'Aucune tâche terminée':'Tout est fait !'}</div><div class="esub">Appuyez sur + pour ajouter une tâche</div></div>`;return;
   }
   el.innerHTML=tasks.map((t,i)=>`
-    <div class="task${t.done?' done':''}" onclick="toggleDone(${t.id})" style="animation-delay:${i*.03}s">
+    <div class="task${t.done?' done':''}" data-action="toggleDone" data-id="${t.id}" style="animation-delay:${i*.03}s">
       <div class="chk${t.done?' done':''}">${t.done?'<span style="color:#fff;font-size:13px">✓</span>':''}</div>
       <div class="task-body">
         <div class="task-text">${t.text}</div>
@@ -241,7 +241,7 @@ function render(){
         </div>
       </div>
       <div class="task-prio" style="background:${PRIO_COLORS[t.prio]||PRIO_COLORS.mid}"></div>
-      <button class="task-del" onclick="delTask(${t.id},event)">🗑</button>
+      <button class="task-del" data-action="delTask" data-id="${t.id}">🗑</button>
     </div>`).join('');
 }
 
@@ -277,6 +277,8 @@ document.addEventListener('click', function(e){
       document.querySelectorAll('.pbtn').forEach(b=>b.classList.remove('sel'));
       el.classList.add('sel');break;
     case 'qaEnter':    break;
+    case 'toggleDone': toggleDone(parseInt(el.dataset.id));break;
+    case 'delTask':    delTask(parseInt(el.dataset.id),e);break;
   }
 });
 document.addEventListener('click', function(e){

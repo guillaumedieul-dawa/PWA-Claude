@@ -37,11 +37,17 @@ jobs:
       - name: Install Capacitor 5
         run: |
           npm install @capacitor/core@5.7.0 @capacitor/cli@5.7.0 @capacitor/android@5.7.0
-          npx cap init "FamilyHub" "com.famille.dieulgandet" --web-dir www
+          # Ne PAS utiliser cap init : il écraserait le capacitor.config.json du repo
+          # Le capacitor.config.json est déjà dans le repo avec la bonne config
 
       - name: Copy web files to www/
         run: |
           mkdir -p www
+          # capacitor.config.json doit rester à la racine (Capacitor le lit depuis là)
+          # Vérifier qu'il existe, sinon le créer
+          if [ ! -f capacitor.config.json ]; then
+            echo '{"appId":"com.famille.dieulgandet","appName":"FamilyHub","webDir":"www","android":{"allowMixedContent":true,"captureInput":true,"webContentsDebuggingEnabled":false},"plugins":{"SplashScreen":{"launchShowDuration":0}}}' > capacitor.config.json
+          fi
           cp -f index.html www/ 2>/dev/null || true
           cp -f manifest.json www/ 2>/dev/null || true
           cp -f sw.js www/ 2>/dev/null || true

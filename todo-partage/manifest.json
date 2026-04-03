@@ -1,0 +1,15 @@
+{
+  "name": "To-Do Familial",
+  "short_name": "To-Do",
+  "description": "Tâches partagées — Dieul-Gandet",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#080f14",
+  "theme_color": "#0088cc",
+  "lang": "fr",
+  "icons": [
+    { "src": "../../icons/home-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "../../icons/home-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

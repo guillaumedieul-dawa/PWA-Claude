@@ -1,0 +1,68 @@
+{
+  "id": "/locker-tracker/",
+  "name": "LockerTrack",
+  "short_name": "LockerTrack",
+  "description": "Gestionnaire de colis en consignes et points relais — sync Gmail automatique",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "background_color": "#f4f4f0",
+  "theme_color": "#00b8a0",
+  "orientation": "portrait-primary",
+  "lang": "fr",
+  "dir": "ltr",
+  "iarc_rating_id": "e84b072d-71b3-4d3e-86ae-31a8ce4e53b7",
+  "icons": [
+    {
+      "src": "../icons/locker-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "../icons/locker-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "../icons/locker-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "../icons/screenshot-locker-narrow.svg",
+      "sizes": "390x844",
+      "type": "image/svg+xml",
+      "form_factor": "narrow",
+      "label": "LockerTrack — liste des colis"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Colis prêts",
+      "short_name": "Prêts",
+      "description": "Voir les colis disponibles à retirer",
+      "url": "./index.html?filter=ready"
+    },
+    {
+      "name": "Ajouter",
+      "short_name": "Ajouter",
+      "description": "Ajouter un colis manuellement",
+      "url": "./index.html?action=add"
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "categories": [
+    "utilities",
+    "productivity"
+  ]
+}

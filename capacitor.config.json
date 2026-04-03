@@ -1,0 +1,19 @@
+{
+  "appId": "com.famille.dieulgandet",
+  "appName": "FamilyHub",
+  "webDir": "www",
+  "server": {
+    "cleartext": true,
+    "allowNavigation": []
+  },
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": true
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 0
+    }
+  }
+}

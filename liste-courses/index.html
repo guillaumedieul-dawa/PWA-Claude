@@ -264,7 +264,7 @@ function render(){
   el.innerHTML=html;
 }
 
-function setF(f,btn){flt=f;document.querySelectorAll('.chip').forEach(b=>b.classList.remove('sel'));if(btn)btn.classList.add('sel');render();}
+function setF(f,btn){flt=f;document.querySelectorAll('.chip').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');render();}
 function openAdd(){document.getElementById('shAdd').classList.add('on');document.body.style.overflow='hidden';}
 function closeS(id){document.getElementById(id).classList.remove('on');document.body.style.overflow='';}
 document.querySelectorAll('.sov').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)closeS(o.id);}));
@@ -273,31 +273,40 @@ function applyTheme(t){document.documentElement.setAttribute('data-theme',t);doc
 function toggleTheme(){const d=document.documentElement.getAttribute('data-theme')==='dark';const n=d?'light':'dark';localStorage.setItem('lt_th',n);applyTheme(n);}
 function initTheme(){const s=localStorage.getItem('lt_th');if(s){applyTheme(s);return;}const sys=window.matchMedia('(prefers-color-scheme: dark)');applyTheme(sys.matches?'dark':'light');sys.addEventListener('change',e=>{if(!localStorage.getItem('lt_th'))applyTheme(e.matches?'dark':'light');});}
 
-// ── Dispatcher global : gère data-action sans onclick inline ──
-document.addEventListener('click', function(e){
-  const el=e.target.closest('[data-action]');
-  if(!el)return;
-  e.stopPropagation();
-  const a=el.getAttribute('data-action');
-  const d=el.dataset;
-  switch(a){
-    case 'toggleTheme': toggleTheme();break;
-    case 'closeSheet':  closeS(d.sheet||d.id||el.closest('.sov')?.id);break;
-    case 'setFilter':
-      flt=el.getAttribute('data-filter');
-      document.querySelectorAll('.chip').forEach(b=>b.classList.remove('sel'));
-      el.classList.add('sel');render();break;
-    case 'quickAdd':    quickAdd();break;
-    case 'openAdd': document.getElementById('shAdd').classList.add('on');document.body.style.overflow='hidden';break;
-    case 'addItem':     addItem();break;
-    case 'toggleItem':  toggleItem(parseInt(el.dataset.id));break;
-    case 'delItem':     delItem(parseInt(el.dataset.id),e);break;
-    case 'clearDone':   clearDone();break;
-  }
-});
-// Fermeture sheets gérée par le dispatcher principal
+
+
+// ── Listeners directs sur chaque bouton (compatible Capacitor WebView) ──
+function attachHandlers(){
+  document.querySelectorAll('[data-action]').forEach(function(el){
+    el.addEventListener('click',function(e){
+      e.stopPropagation();
+      const a=el.getAttribute('data-action');
+      const ds=el.dataset;
+      switch(a){
+        case 'toggleTheme': toggleTheme();break;
+        case 'closeSheet':  closeS(ds.sheet||ds.id||el.closest('.sov')?.id);break;
+        case 'setFilter':
+          flt=el.getAttribute('data-filter');
+          document.querySelectorAll('.chip').forEach(b=>b.classList.remove('sel'));
+          el.classList.add('sel');render();break;
+        case 'quickAdd':    quickAdd();break;
+        case 'openAdd':     openAdd();break;
+        case 'addItem':     addItem();break;
+        case 'toggleItem':  toggleItem(parseInt(ds.id));break;
+        case 'delItem':     delItem(parseInt(ds.id),e);break;
+        case 'clearDone':   clearDone();break;
+      }
+    });
+  });
+  document.querySelectorAll('.sov').forEach(function(sov){
+    sov.addEventListener('click',function(e){
+      if(e.target===sov)closeS(sov.id);
+    });
+  });
+}
 
 initTheme();render();
+attachHandlers();
 </script>
 
 <script>

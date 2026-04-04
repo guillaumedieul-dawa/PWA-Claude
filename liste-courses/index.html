@@ -264,7 +264,7 @@ function render(){
   el.innerHTML=html;
 }
 
-function setF(f,btn){flt=f;document.querySelectorAll('.chip').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');render();}
+function setF(f,btn){flt=f;document.querySelectorAll('.chip').forEach(b=>b.classList.remove('sel'));if(btn)btn.classList.add('sel');render();}
 function openAdd(){document.getElementById('shAdd').classList.add('on');document.body.style.overflow='hidden';}
 function closeS(id){document.getElementById(id).classList.remove('on');document.body.style.overflow='';}
 document.querySelectorAll('.sov').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)closeS(o.id);}));
@@ -295,9 +295,7 @@ document.addEventListener('click', function(e){
     case 'clearDone':   clearDone();break;
   }
 });
-document.addEventListener('click', function(e){
-  if(e.target.classList.contains('sov'))closeS(e.target.id);
-});
+// Fermeture sheets gérée par le dispatcher principal
 
 initTheme();render();
 </script>

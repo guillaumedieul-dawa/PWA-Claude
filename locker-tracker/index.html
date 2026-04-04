@@ -587,7 +587,22 @@ function xSl(t){if(!t)return'';const m1=t.match(/entre\s+(\d{1,2}[h:]\d{2})\s*[-
 function xEx(t,arr,c){if(!t)return'';const R=getRet();const d=t.match(/(?:disposez?\s+de|pendant)\s+(\d+)\s+jours?/i);if(d){const x=new Date(arr);x.setDate(x.getDate()+parseInt(d[1]));return x.toISOString().split('T')[0];}const i=t.match(/(?:avant le|jusqu['']au)\s+(\d{4}-\d{2}-\d{2})/i);if(i)return i[1];const M={janvier:1,février:2,mars:3,avril:4,mai:5,juin:6,juillet:7,août:8,septembre:9,octobre:10,novembre:11,décembre:12};const tx=t.match(/(?:jusqu['']au|avant le)\s+(\d{1,2})\s+([a-zé]+)\s+(\d{4})/i);if(tx){const mo=M[tx[2].toLowerCase()];if(mo)return`${tx[3]}-${String(mo).padStart(2,'0')}-${tx[1].padStart(2,'0')}`;}const nm=t.match(/(?:jusqu['']au|avant le)\s+(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/i);if(nm){const y=nm[3]?(nm[3].length===2?'20'+nm[3]:nm[3]):new Date().getFullYear();return`${y}-${nm[2].padStart(2,'0')}-${nm[1].padStart(2,'0')}`;}const days=R[c]||14;const def=new Date(arr);def.setDate(def.getDate()+days);return def.toISOString().split('T')[0];}
 function xSd(t){if(!t)return'';const m1=t.match(/expédié\s+par\s+([A-Z][^\n.]{2,40}?)(?:\n|\.|est)/i);if(m1)return m1[1].trim();const m2=t.match(/de\s+([A-Z][^\n.]{3,40}?)(?:\n|\.|est|\bun)/);if(m2&&m2[1].length<50)return m2[1].trim();return'';}
 
-function findDup(pkg){const k=(pkg.trackingNum||'').toUpperCase().trim();const co=(pkg.pickupCode||'').toUpperCase().trim();return D.packages.find(p=>{if(k&&p.trackingNum&&p.trackingNum.toUpperCase().trim()===k)return true;if(co&&p.pickupCode&&p.pickupCode.toUpperCase().trim()===co&&p.carrier===pkg.carrier)return true;return false;});}
+function findDup(pkg){
+  const k=(pkg.trackingNum||'').toUpperCase().trim();
+  const co=(pkg.pickupCode||'').toUpperCase().trim();
+  const fbId=pkg.gmailMsgId||pkg._fbId||'';
+  return D.packages.find(p=>{
+    // 1. Même gmailMsgId → doublon garanti
+    if(fbId&&fbId===p.gmailMsgId&&fbId!=='')return true;
+    // 2. Même numéro de tracking (même transporteur pour éviter faux positifs)
+    if(k&&k.length>=6&&p.trackingNum&&p.trackingNum.toUpperCase().trim()===k)return true;
+    // 3. Même code retrait + même transporteur
+    if(co&&co.length>=4&&p.pickupCode&&
+       p.pickupCode.toUpperCase().trim()===co&&
+       p.carrier===pkg.carrier)return true;
+    return false;
+  });
+}
 function mrg(ex,nw){const O={pending:0,out_for_delivery:1,ready:2,failed:2,delivered:3,expired:4,collected:4};if((O[nw.status]||0)>(O[ex.status]||0))ex.status=nw.status;ex.pickupCode=nw.pickupCode||ex.pickupCode;ex.lockerAddress=nw.lockerAddress||ex.lockerAddress;ex.expiryDate=nw.expiryDate||ex.expiryDate;ex.deliverySlot=nw.deliverySlot||ex.deliverySlot;ex.trackingLink=nw.trackingLink||ex.trackingLink;ex.trackingNum=nw.trackingNum||ex.trackingNum;ex.sender=nw.sender||ex.sender;ex._fbId=ex._fbId||nw._fbId;if(!ex.events)ex.events=[];if(nw.status&&nw.status!==ex.status){
     ex.events.unshift({date:new Date().toISOString(),status:nw.status,desc:'Mise à jour'});
   }if(ex.events.length>10)ex.events=ex.events.slice(0,10);// Garder la date d'arrivée la plus ancienne (pas écraser par une re-lecture)
@@ -613,7 +628,9 @@ async function readSMS(silent=false){
       const status=detSt(body);
       // Date = timestamp réel du SMS reçu sur le téléphone
       const smsDate=sms.date?new Date(parseInt(sms.date)).toISOString():new Date().toISOString();
-      const fbId='sms_'+String(sms.date||Date.now())+'_'+btoa(encodeURIComponent((sender+'|'+(body||'').substring(0,20)))).substring(0,16);
+      // Hash stable basé sur le tracking number ou le body tronqué
+const _trkForHash=(tr||co||'').substring(0,20)||body.replace(/\s+/g,'').substring(0,30);
+const fbId='sms_'+(sms.date||Date.now())+'_'+btoa(encodeURIComponent(_trkForHash)).replace(/[^A-Za-z0-9]/g,'').substring(0,16);
       const pkg={id:Math.round(D.nextId++),_fbId:fbId,carrier:c,trackingNum:tr,pickupCode:co,lockerAddress:ad,trackingLink:xL(body),deliverySlot:xSl(body),sender:xSd(body)||sender,arrivalDate:smsDate,expiryDate:xEx(body,smsDate,c),status,emailSubject:'SMS — '+(sender||'transporteur'),gmailLink:'',account:'Guillaume',source:'sms',gmailMsgId:fbId,note:'',lastUpdated:smsDate,events:[{date:smsDate,status:status,desc:'SMS — '+(sender||'')}]};
       const dup=findDup(pkg);if(dup){mrg(dup,pkg);up++;}else{D.packages.unshift(pkg);fbW(fbId,pkg).catch(()=>{});nw++;}
     }
@@ -891,52 +908,6 @@ function toggleTheme(){const d=document.documentElement.getAttribute('data-theme
 function initTheme(){const s=localStorage.getItem('lt_th');if(s){applyTheme(s);return;}const sys=window.matchMedia('(prefers-color-scheme: dark)');applyTheme(sys.matches?'dark':'light');sys.addEventListener('change',e=>{if(!localStorage.getItem('lt_th'))applyTheme(e.matches?'dark':'light');});}
 
 // ── Dispatcher global : gère TOUS les data-action ──
-// Remplace tous les onclick= pour compatibilité Capacitor WebView Android
-document.addEventListener('click', function(e){
-  const el=e.target.closest('[data-action]');
-  if(!el)return;
-  const action=el.getAttribute('data-action');
-  const ds=el.dataset;
-
-  // Empêcher la propagation pour les actions sur les cartes
-  const cardActions=['cpT','showQR','shareP','copyAll','markDone','delPkg','stopProp','toggleDisabled'];
-  if(cardActions.includes(action)) e.stopPropagation();
-
-  switch(action){
-    // ── Top bar & navigation ──
-    case 'openSync':    openSync();break;
-    case 'openAdd':     openAdd();break;
-    case 'toggleTheme': toggleTheme();break;
-    case 'clearSearch': clearSearch();break;
-    // ── Filtres ──
-    case 'setFilter':   setF(ds.filter,el);break;
-    // ── Sheets ──
-    case 'closeSheet':  closeS(ds.sheet);break;
-    // ── Transporteurs ──
-    case 'selCarrier':  selC(ds.carrier,el);break;
-    // ── Formulaire ajout ──
-    case 'addPkg':      addPkg();break;
-    // ── Sync ──
-    case 'syncFB':      syncFB();break;
-    case 'saveFB':      saveFB();break;
-    case 'readSMS':     readSMS();break;
-    case 'parseMan':    parseMan();break;
-    // ── Config ──
-    case 'saveRet':     saveRet();break;
-    case 'resetAll':    resetAll();break;
-    case 'showTab':     showT(ds.tab,el);break;
-    case 'toggleDisabled': toggleDisabled(ds.carrier,el);break;
-    // ── Actions cartes (générées dynamiquement via innerHTML) ──
-    case 'tog':         tog(ds.id);break;
-    case 'cpT':         cpT(ds.val,ds.lbl,e);break;
-    case 'showQR':      showQR(Math.round(Number(ds.id)),e);break;
-    case 'shareP':      shareP(Math.round(Number(ds.id)),e);break;
-    case 'copyAll':     copyAll(Math.round(Number(ds.id)),e);break;
-    case 'markDone':    markDone(Math.round(Number(ds.id)),e);break;
-    case 'delPkg':      delPkg(Math.round(Number(ds.id)),e);break;
-    case 'stopProp':    e.stopPropagation();break;
-  }
-});
 
 // Inputs avec data-action
 document.addEventListener('input', function(e){
@@ -954,15 +925,64 @@ document.addEventListener('keydown', function(e){
   if(el.getAttribute('data-action')==='addOnEnter') addPkg();
 });
 
-// Fermer les sheets en cliquant dehors
-document.addEventListener('click', function(e){
-  if(e.target.classList.contains('sov'))closeS(e.target.id);
-});
 
 // Restaurer le filtre de la session précédente
 try{const sf=sessionStorage.getItem('fh_filter');if(sf)flt=sf;}catch(_){}
 
+
+// ── Listeners directs (compatible Capacitor WebView Android) ──
+function attachHandlers(){
+  document.querySelectorAll('[data-action]').forEach(function(el){
+    el.addEventListener('click',function(e){
+      const a=el.getAttribute('data-action');
+      const ds=el.dataset;
+      const cardActions=['cpT','showQR','shareP','copyAll','markDone','delPkg','stopProp','toggleDisabled'];
+      if(cardActions.includes(a))e.stopPropagation();
+      switch(a){
+        // ── Navigation ──
+        case 'openSync':    openSync();break;
+        case 'openAdd':     openAdd();break;
+        case 'toggleTheme': toggleTheme();break;
+        case 'clearSearch': clearSearch();break;
+        // ── Filtres ──
+        case 'setFilter':   setF(ds.filter,el);break;
+        // ── Sheets ──
+        case 'closeSheet':  closeS(ds.sheet);break;
+        // ── Transporteurs ──
+        case 'selCarrier':  selC(ds.carrier,el);break;
+        // ── Ajout ──
+        case 'addPkg':      addPkg();break;
+        // ── Sync ──
+        case 'syncFB':      syncFB();break;
+        case 'saveFB':      saveFB();break;
+        case 'readSMS':     readSMS();break;
+        case 'parseMan':    parseMan();break;
+        // ── Config ──
+        case 'saveRet':     saveRet();break;
+        case 'resetAll':    resetAll();break;
+        case 'showTab':     showT(ds.tab,el);break;
+        case 'toggleDisabled': toggleDisabled(ds.carrier,el);break;
+        // ── Cartes ──
+        case 'tog':         tog(ds.id);break;
+        case 'cpT':         cpT(ds.val,ds.lbl,e);break;
+        case 'showQR':      showQR(Math.round(Number(ds.id)),e);break;
+        case 'shareP':      shareP(Math.round(Number(ds.id)),e);break;
+        case 'copyAll':     copyAll(Math.round(Number(ds.id)),e);break;
+        case 'markDone':    markDone(Math.round(Number(ds.id)),e);break;
+        case 'delPkg':      delPkg(Math.round(Number(ds.id)),e);break;
+        case 'stopProp':    e.stopPropagation();break;
+      }
+    });
+  });
+  document.querySelectorAll('.sov').forEach(function(sov){
+    sov.addEventListener('click',function(e){
+      if(e.target===sov)closeS(sov.id);
+    });
+  });
+}
+
 initTheme();purge();renderSS();render();autoSync();
+attachHandlers();
 
 // Activer le chip du filtre courant après render
 setTimeout(()=>{

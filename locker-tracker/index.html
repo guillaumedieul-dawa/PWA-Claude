@@ -379,9 +379,13 @@ function esc(s){
 // Version pour attributs onclick (escape les guillemets simples)
 function escAttr(s){
   if(!s)return'';
-  return String(s).replace(/'/g,"\'").replace(/
-/g,' ').replace(/
-/g,'');
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/'/g,'&#39;')
+    .replace(/"/g,'&quot;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/[\r\n]+/g,' ');
 }
 const DK='lt_disabled'; // clés des transporteurs désactivés
 function getDisabled(){try{return new Set(JSON.parse(localStorage.getItem(DK)||'[]'));}catch{return new Set();}}
@@ -956,10 +960,8 @@ document.addEventListener('click', function(e){
 });
 
 // Restaurer le filtre de la session précédente
-// filtre restauré dans init()
+try{const sf=sessionStorage.getItem('fh_filter');if(sf)flt=sf;}catch(_){}
 
-// Restaurer filtre précédent (try/catch car sessionStorage peut être indisponible)
-try{const sf=sessionStorage.getItem('fh_filter');if(sf)flt=sf;}catch(e){}
 initTheme();purge();renderSS();render();autoSync();
 
 // Activer le chip du filtre courant après render

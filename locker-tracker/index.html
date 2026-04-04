@@ -956,9 +956,10 @@ document.addEventListener('click', function(e){
 });
 
 // Restaurer le filtre de la session précédente
-const savedFilter=sessionStorage.getItem('fh_filter');
-if(savedFilter) flt=savedFilter;
+// filtre restauré dans init()
 
+// Restaurer filtre précédent (try/catch car sessionStorage peut être indisponible)
+try{const sf=sessionStorage.getItem('fh_filter');if(sf)flt=sf;}catch(e){}
 initTheme();purge();renderSS();render();autoSync();
 
 // Activer le chip du filtre courant après render

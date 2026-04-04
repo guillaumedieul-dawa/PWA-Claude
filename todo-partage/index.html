@@ -265,10 +265,13 @@ document.addEventListener('click', function(e){
     case 'toggleTheme': toggleTheme();break;
     case 'closeSheet':  closeS(d.sheet||d.id||el.closest('.sov')?.id);break;
     case 'setFilter':
+      {
       const fa=el.getAttribute('data-filter');
       flt=fa;
       document.querySelectorAll('.chip').forEach(b=>b.classList.remove('sel'));
-      el.classList.add('sel');render();break;
+      el.classList.add('sel');render();
+      break;
+    }
     case 'quickAdd':   quickAdd();break;
     case 'openAdd':    document.getElementById('shAdd').classList.add('on');document.body.style.overflow='hidden';break;
     case 'addTask':    addTask();break;

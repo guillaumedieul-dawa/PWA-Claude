@@ -69,11 +69,9 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 .toast{position:fixed;bottom:calc(var(--bot)+100px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--ob);color:var(--bg);padding:12px 20px;border-radius:28px;font-family:'Google Sans',sans-serif;font-size:14px;font-weight:500;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;max-width:88vw;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.2)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 /* Sheet */
-.sov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s}
-.sov.on{opacity:1;pointer-events:all}
-.sht{background:var(--sf);border-radius:28px 28px 0 0;padding:12px 24px calc(var(--bot)+24px);width:100%;max-width:520px;max-height:92dvh;overflow-y:auto;transform:translateY(100%);transition:transform .35s cubic-bezier(.32,1,.23,1)}
-.sov.on .sht{transform:none}
-.shnd{width:32px;height:4px;background:var(--olv);border-radius:2px;margin:0 auto 18px;cursor:pointer}
+.sov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center}
+.sov.on{display:flex}
+.sht{background:var(--sf);border-radius:28px 28px 0 0;padding:12px 24px calc(var(--bot)+24px);width:100%;max-width:520px;max-height:92dvh;overflow-y:auto;transform:translateY(0);height:4px;background:var(--olv);border-radius:2px;margin:0 auto 18px;cursor:pointer}
 .shtit{font-family:'Google Sans',sans-serif;font-size:20px;font-weight:700;color:var(--ob);margin-bottom:18px}
 .slbl{font-size:12px;color:var(--osv);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px;font-family:'Google Sans',sans-serif}
 .slbl.ft{margin-top:0}
@@ -105,7 +103,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 
   <div class="qadd">
     <input class="qadd-in" id="qi" placeholder="Ajouter une tâche…" data-action="qaEnter">
-    <button class="qadd-btn" data-action="quickAdd" id="btn-quickadd">＋</button>
+    <button class="qadd-btn" data-action="quickAdd">＋</button>
   </div>
 
   <div class="chips">
@@ -119,13 +117,13 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
   <div class="tlist" id="TL"></div>
 </div>
 
-<button class="fab" data-action="openAdd" id="btn-fab-add">＋</button>
+<button class="fab" data-action="openAdd">＋</button>
 <div class="toast" id="toast"></div>
 
 <!-- Sheet ajout détaillé -->
 <div class="sov" id="shAdd">
   <div class="sht">
-    <div class="shnd" data-action="closeSheet" data-sheet="shAdd" id="btn-close-add"></div>
+    <div class="shnd" data-action="closeSheet" data-sheet="shAdd"></div>
     <div class="shtit">Nouvelle tâche</div>
     <div class="slbl ft">Tâche</div>
     <input class="fin" id="aText" placeholder="Que faut-il faire ?">
@@ -143,8 +141,8 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
     </select>
     <div class="slbl">Note (optionnel)</div>
     <input class="fin" id="aNote" placeholder="Détails…">
-    <button class="bfill" data-action="addTask" id="btn-add-task">Enregistrer</button>
-    <button class="bout" data-action="closeSheet" data-sheet="shAdd" id="btn-cancel-add">Annuler</button>
+    <button class="bfill" data-action="addTask">Enregistrer</button>
+    <button class="bout" data-action="closeSheet" data-sheet="shAdd">Annuler</button>
   </div>
 </div>
 
@@ -254,67 +252,9 @@ function applyTheme(t){document.documentElement.setAttribute('data-theme',t);doc
 function toggleTheme(){const d=document.documentElement.getAttribute('data-theme')==='dark';const n=d?'light':'dark';localStorage.setItem('lt_th',n);applyTheme(n);}
 function initTheme(){const s=localStorage.getItem('lt_th');if(s){applyTheme(s);return;}const sys=window.matchMedia('(prefers-color-scheme: dark)');applyTheme(sys.matches?'dark':'light');sys.addEventListener('change',e=>{if(!localStorage.getItem('lt_th'))applyTheme(e.matches?'dark':'light');});}
 
+// ── Dispatcher global : gère data-action sans onclick inline ──
 
 initTheme();render();
-
-
-// ── Handlers directs par ID (méthode garantie Capacitor WebView) ──
-(function() {
-  function attachAll() {
-    var el;
-    // Thème
-    el=document.getElementById('thbtn');
-    if(el) el.addEventListener('click', function(){toggleTheme();});
-    // Ajout rapide
-    el=document.getElementById('btn-quickadd');
-    if(el) el.addEventListener('click', function(){quickAdd();});
-    // FAB +
-    el=document.getElementById('btn-fab-add');
-    if(el) el.addEventListener('click', function(){openAdd();});
-    // Fermer sheet
-    var closes=document.querySelectorAll('#btn-close-add, #btn-cancel-add');
-    closes.forEach(function(b){ b.addEventListener('click', function(){closeS('shAdd');}); });
-    // Valider ajout
-    el=document.getElementById('btn-add-task');
-    if(el) el.addEventListener('click', function(){addTask();});
-    // Priorité
-    ['pb-low','pb-mid','pb-high'].forEach(function(id){
-      el=document.getElementById(id);
-      if(el) el.addEventListener('click', function(){
-        prio=el.dataset.prio;
-        document.querySelectorAll('.pbtn').forEach(function(b){b.classList.remove('sel');});
-        el.classList.add('sel');
-      });
-    });
-    // Chips filtres
-    document.querySelectorAll('.chip').forEach(function(chip){
-      chip.addEventListener('click', function(){
-        flt=chip.dataset.filter||'all';
-        document.querySelectorAll('.chip').forEach(function(b){b.classList.remove('sel');});
-        chip.classList.add('sel');
-        render();
-      });
-    });
-    // Fond des sheets
-    document.querySelectorAll('.sov').forEach(function(sov){
-      sov.addEventListener('click', function(e){ if(e.target===sov) closeS(sov.id); });
-    });
-  }
-  attachAll();
-  // Réattacher après chaque render() pour les éléments dynamiques
-  var _origRender=render;
-  render=function(){_origRender();attachDynamic();};
-  function attachDynamic(){
-    document.querySelectorAll('.task[data-id]').forEach(function(el){
-      if(el.dataset.bound) return;
-      el.dataset.bound='1';
-      el.addEventListener('click',function(){toggleDone(parseInt(el.dataset.id));});
-      var del=el.querySelector('.task-del');
-      if(del) del.addEventListener('click',function(e){e.stopPropagation();delTask(parseInt(el.dataset.id),e);});
-    });
-  }
-})();
-
 </script>
 
 <script>
@@ -325,6 +265,56 @@ if ('serviceWorker' in navigator) {
       .catch(e => console.warn('SW erreur', e));
   });
 }
+</script>
+
+<script>
+(function(){
+  function E(id){return document.getElementById(id);}
+  function on(id,fn){var e=E(id);if(e)e.addEventListener('click',fn,false);}
+  on('thbtn', function(){toggleTheme();});
+  // Ajout rapide
+  var qaBtn=document.querySelector('.qadd-btn');
+  if(qaBtn)qaBtn.addEventListener('click',function(){quickAdd();},false);
+  var qi=document.getElementById('qi');
+  if(qi)qi.addEventListener('keydown',function(e){if(e.key==='Enter')quickAdd();},false);
+  // FAB +
+  var fab=document.querySelector('.fab');
+  if(fab)fab.addEventListener('click',function(){openAdd();},false);
+  // Chips filtres
+  document.querySelectorAll('.chip').forEach(function(b){b.addEventListener('click',function(){
+    flt=b.dataset.filter||'all';
+    document.querySelectorAll('.chip').forEach(function(x){x.classList.remove('sel');});
+    b.classList.add('sel');render();
+  },false);});
+  // Priorité
+  document.querySelectorAll('.pbtn').forEach(function(b){b.addEventListener('click',function(){
+    prio=b.dataset.prio;
+    document.querySelectorAll('.pbtn').forEach(function(x){x.classList.remove('sel');});
+    b.classList.add('sel');
+  },false);});
+  // Boutons sheet
+  var addBtn=document.querySelector('[data-action="addTask"],.bfill');
+  if(addBtn)addBtn.addEventListener('click',function(){addTask();},false);
+  document.querySelectorAll('[data-action="closeSheet"],.shnd,.bout').forEach(function(b){
+    b.addEventListener('click',function(){closeS('shAdd');},false);
+  });
+  // Fond sheet
+  document.querySelectorAll('.sov').forEach(function(s){
+    s.addEventListener('click',function(e){if(e.target===s)closeS(s.id);},false);
+  });
+  // Cartes tâches (dynamiques)
+  var _R=render;
+  render=function(){
+    _R();
+    document.querySelectorAll('.task').forEach(function(card){
+      if(card._h)return;card._h=1;
+      var tid=parseInt(card.dataset.id||card.getAttribute('onclick')?.match(/\d+/)?.[0]||0);
+      card.addEventListener('click',function(){toggleDone(tid);},false);
+      var del=card.querySelector('.task-del');
+      if(del)del.addEventListener('click',function(e){e.stopPropagation();delTask(tid,e);},false);
+    });
+  };
+})();
 </script>
 </body>
 </html>

@@ -61,7 +61,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 @keyframes fu{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .dcard{animation:fu .25s ease both}
-.sov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center}.sov.on{display:flex}.sht{background:var(--sf);border-radius:28px 28px 0 0;padding:16px 24px calc(var(--bot)+24px);width:100%;max-width:520px;max-height:92dvh;overflow-y:auto}
+.sov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center}.sov.on{display:flex}.sht{background:var(--sf);border-radius:28px 28px 0 0;padding:16px 24px calc(var(--bot)+24px);width:100%;max-width:520px;max-height:92dvh;overflow-y:auto}.shnd{width:32px;height:4px;background:var(--olv);border-radius:2px;margin:0 auto 18px;cursor:pointer}.suggest-btn{width:calc(100% - 32px);margin:0 16px 12px;padding:12px 16px;border-radius:var(--rm);border:1px dashed var(--p);background:var(--pc)33;color:var(--p);font-family:"Google Sans",sans-serif;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:8px}.lvl-btns{display:flex;gap:8px;margin-bottom:16px}.lvl-btn{flex:1;padding:10px;border-radius:var(--rs);border:2px solid var(--olv);background:var(--s1);cursor:pointer;font-family:"Google Sans",sans-serif;font-size:13px;font-weight:600;color:var(--osv)}.lvl-btn.sel{border-color:var(--p);background:var(--pc);color:var(--opc)}.meal-grid{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}.meal-item{background:var(--s1);border-radius:var(--rs);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;font-size:13px}.apply-btn{width:100%;padding:13px;border-radius:var(--rl);background:var(--p);color:var(--op);border:none;font-family:"Google Sans",sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px}.cancel-btn{width:100%;padding:12px;border-radius:var(--rl);border:1px solid var(--olv);background:transparent;color:var(--osv);font-family:"Google Sans",sans-serif;font-size:14px;cursor:pointer;margin-top:6px}
 </style>
 </head>
 <body>
@@ -82,7 +82,8 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
     <button class="wnav-btn" data-action="nextWeek">›</button>
   </div>
 
-  <div class="dlist" id="DL"></div>
+  <button class="suggest-btn" id="btn-suggest">✨ Propositions de repas</button>
+<div class="dlist" id="DL"></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -197,6 +198,48 @@ function initTheme(){const s=localStorage.getItem('lt_th');if(s){applyTheme(s);r
 // ── Dispatcher global : gère data-action sans onclick inline ──
 
 initTheme();render();
+
+
+var MEALS={
+  classique:{
+    midi:['Poulet rôti','Steak frites','Saumon grillé','Quiche lorraine','Côtes de porc','Pot-au-feu','Rôti de bœuf'],
+    soir:['Pâtes bolognaise','Pizza maison','Soupe et tartines','Omelette','Gratin dauphinois','Blanquette de veau','Risotto']
+  },
+  vegetarien:{
+    midi:['Quiche légumes','Curry pois chiches','Salade composée','Tartelettes chèvre','Buddha bowl','Soupe minestrone','Gratin courgettes'],
+    soir:['Pasta primavera','Galettes de légumes','Soupe potiron','Tarte aux poireaux','Falafels','Wok de tofu','Lentilles']
+  },
+  enfants:{
+    midi:['Nuggets frites','Pizza margherita','Spaghettis bolo','Croque-monsieur','Poisson pané purée','Hamburger maison','Hot-dogs crudités'],
+    soir:['Pâtes fromage','Crêpes','Soupe légumes','Jambon baguette','Mac and cheese','Nuggets riz','Saucisse purée']
+  }
+};
+var _suggestLvl='classique';
+function showSuggest(){
+  updateMealPreview();
+  document.getElementById('shSuggest').classList.add('on');
+}
+function updateMealPreview(){
+  var m=MEALS[_suggestLvl];
+  var dates=getWeekDates(weekOffset);
+  var days=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+  var html=dates.map(function(d,i){
+    return '<div class="meal-item"><span>'+days[i]+' - Midi</span><span style="font-weight:600">'+m.midi[i%7]+'</span></div>'+
+           '<div class="meal-item"><span>'+days[i]+' - Soir</span><span style="font-weight:600">'+m.soir[i%7]+'</span></div>';
+  }).join('');
+  document.getElementById('meal-grid').innerHTML=html;
+}
+function applySuggest(){
+  var m=MEALS[_suggestLvl];
+  var dates=getWeekDates(weekOffset);
+  dates.forEach(function(d,i){
+    D[dayKey(d)]={midi:m.midi[i%7],soir:m.soir[i%7],note:''};
+  });
+  saveD(D);
+  document.getElementById('shSuggest').classList.remove('on');
+  render();
+  showToast('✓ Repas appliqués pour la semaine');
+}
 </script>
 
 <script>
@@ -209,21 +252,58 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 
+<div class="sov" id="shSuggest">
+  <div class="sht">
+    <div class="shnd" id="shnd-sug"></div>
+    <div style="font-family:'Google Sans',sans-serif;font-size:18px;font-weight:700;margin-bottom:14px">✨ Propositions de repas</div>
+    <div class="lvl-btns">
+      <button class="lvl-btn sel" id="lvl-c" data-lvl="classique">🍽 Classique</button>
+      <button class="lvl-btn" id="lvl-v" data-lvl="vegetarien">🥦 Végétarien</button>
+      <button class="lvl-btn" id="lvl-e" data-lvl="enfants">👶 Enfants</button>
+    </div>
+    <div class="meal-grid" id="meal-grid"></div>
+    <button class="apply-btn" id="btn-apply-sug">✓ Appliquer à la semaine</button>
+    <button class="cancel-btn" id="btn-cancel-sug">Annuler</button>
+  </div>
+</div>
+
 <script>
 
 (function(){
   function on(id,fn){var e=document.getElementById(id);if(e)e.addEventListener('click',fn,false);}
   on('thbtn',function(){toggleTheme();});
   on('btn-suggest',function(){showSuggest();});
-  on('btn-apply-suggest',function(){applySuggest();});
-  on('btn-cancel-suggest',function(){document.getElementById('shSuggest').classList.remove('on');});
-  on('shnd-suggest',function(){document.getElementById('shSuggest').classList.remove('on');});
-  ['lvl-classique','lvl-vegetarien','lvl-enfants'].forEach(function(id){on(id,function(){_suggestLvl=document.getElementById(id).dataset.lvl;document.querySelectorAll('.lvl-btn').forEach(function(b){b.classList.remove('sel');});document.getElementById(id).classList.add('sel');updatePreview();});});
+  on('btn-apply-sug',function(){applySuggest();});
+  on('btn-cancel-sug',function(){document.getElementById('shSuggest').classList.remove('on');});
+  on('shnd-sug',function(){document.getElementById('shSuggest').classList.remove('on');});
+  ['lvl-c','lvl-v','lvl-e'].forEach(function(id){
+    on(id,function(){
+      _suggestLvl=document.getElementById(id).dataset.lvl;
+      document.querySelectorAll('.lvl-btn').forEach(function(b){b.classList.remove('sel');});
+      document.getElementById(id).classList.add('sel');
+      updateMealPreview();
+    });
+  });
   var bp=document.querySelector('.wnav-btn:first-of-type');if(bp)bp.addEventListener('click',function(){prevWeek();},false);
   var bn=document.querySelector('.wnav-btn:last-of-type');if(bn)bn.addEventListener('click',function(){nextWeek();},false);
   var bt=document.querySelector('.week-today');if(bt)bt.addEventListener('click',function(){goToday();},false);
-  document.querySelectorAll('.sov').forEach(function(s){s.addEventListener('click',function(e){if(e.target===s)s.classList.remove('on');},false);});
-  var _R=render;render=function(){_R();document.querySelectorAll('.dcard').forEach(function(card){if(card._h)return;card._h=1;var k=card.id.replace('dc_','');var hdr=card.querySelector('.dhdr');if(hdr)hdr.addEventListener('click',function(){togDay(k);},false);var sv=card.querySelector('.btn-ok,[data-action="saveDay"]');if(sv)sv.addEventListener('click',function(){saveDay(k);},false);var cn=card.querySelector('.btn-cl,[data-action="cancelDay"]');if(cn)cn.addEventListener('click',function(){togDay(k);},false);});};
+  document.querySelectorAll('.sov').forEach(function(s){
+    s.addEventListener('click',function(e){if(e.target===s)s.classList.remove('on');},false);
+  });
+  var _R=render;
+  render=function(){
+    _R();
+    document.querySelectorAll('.dcard[id]').forEach(function(card){
+      if(card._h)return;card._h=1;
+      var k=card.id.replace('dc_','');
+      var hdr=card.querySelector('.dhdr');
+      if(hdr)hdr.addEventListener('click',function(){togDay(k);},false);
+      var sv=card.querySelector('.btn-ok');
+      if(sv)sv.addEventListener('click',function(){saveDay(k);},false);
+      var cn=card.querySelector('.btn-cl');
+      if(cn)cn.addEventListener('click',function(){togDay(k);},false);
+    });
+  };
 })();
 
 </script>

@@ -161,11 +161,9 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* Bottom Sheet */
-.sov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s}
-.sov.on{opacity:1;pointer-events:all}
-.sht{background:var(--sf);border-radius:28px 28px 0 0;padding:12px 24px calc(var(--bot) + 24px);width:100%;max-width:520px;max-height:92dvh;overflow-y:auto;transform:translateY(100%);transition:transform .35s cubic-bezier(.32,1,.23,1)}
-.sov.on .sht{transform:none}
-.shnd{width:32px;height:4px;background:var(--olv);border-radius:2px;margin:0 auto 18px;cursor:pointer}
+.sov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center}
+.sov.on{display:flex}
+.sht{background:var(--sf);border-radius:28px 28px 0 0;padding:12px 24px calc(var(--bot) + 24px);width:100%;max-width:520px;max-height:92dvh;overflow-y:auto;transform:translateY(0);height:4px;background:var(--olv);border-radius:2px;margin:0 auto 18px;cursor:pointer}
 .shtit{font-family:'Google Sans',sans-serif;font-size:20px;font-weight:700;color:var(--ob);margin-bottom:18px}
 .slbl{font-size:12px;color:var(--osv);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px;font-family:'Google Sans',sans-serif}
 .slbl.ft{margin-top:0}
@@ -230,7 +228,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
       <div class="tlbl">Famille Dieul-Gandet</div>
       <div class="th">📦 Mes colis <span id="totalBadge" style="font-size:14px;font-weight:400;color:var(--osv)"></span></div>
     </div>
-    <button class="ibtn" id="btn-sync" data-action="openSync">⟳<div class="ndot" id="sd" style="display:none"></div></button>
+    <button id="btn-sync" class="ibtn" data-action="openSync">⟳<div class="ndot" id="sd" style="display:none"></div></button>
     <button class="ibtn" data-action="toggleTheme" id="thbtn">🌙</button>
   </div>
 
@@ -252,7 +250,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
   <div class="plist" id="PL"></div>
 </div>
 
-<button class="fab" id="btn-fab-add" data-action="openAdd">＋</button>
+<button id="btn-fab" class="fab" data-action="openAdd">＋</button>
 <div class="toast" id="toast"></div>
 
 <!-- SHEET AJOUT -->
@@ -377,10 +375,7 @@ function esc(s){
     .replace(/'/g,'&#39;');
 }
 // Version pour attributs onclick (escape les guillemets simples)
-function escAttr(s){
-  if(!s)return'';
-  return String(s).replace(/&/g,'&amp;').replace(/'/g,'&#39;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
-}
+function escAttr(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/'/g,'&#39;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');}
 const DK='lt_disabled'; // clés des transporteurs désactivés
 function getDisabled(){try{return new Set(JSON.parse(localStorage.getItem(DK)||'[]'));}catch{return new Set();}}
 function isDisabled(c){return getDisabled().has(c);}
@@ -932,30 +927,34 @@ if ('serviceWorker' in navigator) {
 
 <script>
 (function(){
-  function _on(id,fn){var e=document.getElementById(id);if(e)e.addEventListener('click',fn,false);}
-  _on('btn-sync',    function(){openSync();});
-  _on('btn-fab-add', function(){openAdd();});
-  _on('thbtn',       function(){toggleTheme();});
-  _on('srchClr',     function(){clearSearch();});
+  function E(id){return document.getElementById(id);}
+  function on(id,fn){var e=E(id);if(e)e.addEventListener('click',fn,false);}
+  on('btn-sync',   function(){openSync();});
+  on('btn-fab',    function(){openAdd();});
+  on('thbtn',      function(){toggleTheme();});
+  on('srchClr',    function(){clearSearch();});
   document.querySelectorAll('.chip').forEach(function(b){b.addEventListener('click',function(){setF(b.dataset.filter,b);},false);});
   document.querySelectorAll('.cb').forEach(function(b){b.addEventListener('click',function(){selC(b.dataset.carrier,b);},false);});
   document.querySelectorAll('.stab').forEach(function(b){b.addEventListener('click',function(){showT(b.dataset.tab,b);},false);});
-  var _sbt={addPkg:addPkg,syncFB:syncFB,saveFB:saveFB,readSMS:readSMS,parseMan:parseMan,saveRet:saveRet,resetAll:resetAll};
+  var _acts={addPkg:function(){addPkg();},syncFB:function(){syncFB();},saveFB:function(){saveFB();},
+    readSMS:function(){readSMS();},parseMan:function(){parseMan();},saveRet:function(){saveRet();},resetAll:function(){resetAll();}};
   document.querySelectorAll('[data-action]').forEach(function(el){
     var a=el.getAttribute('data-action');
-    if(_sbt[a])el.addEventListener('click',_sbt[a],false);
+    if(_acts[a])el.addEventListener('click',_acts[a],false);
     else if(a==='closeSheet')el.addEventListener('click',function(){closeS(el.dataset.sheet);},false);
   });
-  document.querySelectorAll('.sov').forEach(function(s){s.addEventListener('click',function(e){if(e.target===s)closeS(s.id);},false);});
+  document.querySelectorAll('.sov').forEach(function(s){
+    s.addEventListener('click',function(e){if(e.target===s)closeS(s.id);},false);
+  });
   var _R=render;
   render=function(){
     _R();
     document.querySelectorAll('.pcard').forEach(function(card){
-      if(card._h)return; card._h=1;
+      if(card._h)return;card._h=1;
       var pid=parseInt(card.id.replace('pc',''));
       card.addEventListener('click',function(){tog(pid);},false);
       card.querySelectorAll('[data-action]').forEach(function(btn){
-        if(btn._h)return; btn._h=1;
+        if(btn._h)return;btn._h=1;
         var ba=btn.getAttribute('data-action'),bid=Math.round(Number(btn.dataset.id));
         if(ba==='cpT')btn.addEventListener('click',function(e){e.stopPropagation();cpT(btn.dataset.val,btn.dataset.lbl,e);},false);
         else if(ba==='showQR')btn.addEventListener('click',function(e){e.stopPropagation();showQR(bid,e);},false);
@@ -963,12 +962,12 @@ if ('serviceWorker' in navigator) {
         else if(ba==='copyAll')btn.addEventListener('click',function(e){e.stopPropagation();copyAll(bid,e);},false);
         else if(ba==='markDone')btn.addEventListener('click',function(e){e.stopPropagation();markDone(bid,e);},false);
         else if(ba==='delPkg')btn.addEventListener('click',function(e){e.stopPropagation();delPkg(bid,e);},false);
-        else if(ba==='toggleDisabled')btn.addEventListener('click',function(){toggleDisabled(btn.dataset.carrier,btn);},false);
         else if(ba==='stopProp')btn.addEventListener('click',function(e){e.stopPropagation();},false);
+        else if(ba==='toggleDisabled')btn.addEventListener('click',function(){toggleDisabled(btn.dataset.carrier,btn);},false);
       });
     });
     document.querySelectorAll('[data-action="toggleDisabled"]').forEach(function(btn){
-      if(btn._h)return; btn._h=1;
+      if(btn._h)return;btn._h=1;
       btn.addEventListener('click',function(){toggleDisabled(btn.dataset.carrier,btn);},false);
     });
   };

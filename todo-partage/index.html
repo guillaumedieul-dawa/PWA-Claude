@@ -71,8 +71,8 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 /* Sheet */
 .sov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center}
 .sov.on{display:flex}
-.sht{background:var(--sf);border-radius:28px 28px 0 0;padding:12px 24px calc(var(--bot)+24px);width:100%;max-width:520px;max-height:92dvh;overflow-y:auto;}
-.sov.on .sht{transform:none}
+.sht{background:var(--sf);border-radius:28px 28px 0 0;padding:12px 24px calc(var(--bot)+24px);width:100%;max-width:520px;max-height:92dvh;overflow-y:auto}
+.sov.on .sht{}
 .shnd{width:32px;height:4px;background:var(--olv);border-radius:2px;margin:0 auto 18px;cursor:pointer}
 .shtit{font-family:'Google Sans',sans-serif;font-size:20px;font-weight:700;color:var(--ob);margin-bottom:18px}
 .slbl{font-size:12px;color:var(--osv);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px;font-family:'Google Sans',sans-serif}
@@ -272,17 +272,47 @@ if ('serviceWorker' in navigator) {
 <script>
 
 (function(){
-  function on(sel,fn){var e=typeof sel==='string'?document.querySelector(sel):sel;if(e)e.addEventListener('click',fn,false);}
+  function Q(sel){return document.querySelector(sel);}
+  function on(sel,fn){var e=Q(sel);if(e)e.addEventListener('click',fn,false);}
   on('#thbtn',function(){toggleTheme();});
   on('.qadd-btn',function(){quickAdd();});
-  var qi=document.getElementById('qi');if(qi)qi.addEventListener('keydown',function(e){if(e.key==='Enter')quickAdd();},false);
   on('.fab',function(){openAdd();});
-  document.querySelectorAll('.chip').forEach(function(b){b.addEventListener('click',function(){flt=b.dataset.filter||'all';document.querySelectorAll('.chip').forEach(function(x){x.classList.remove('sel');});b.classList.add('sel');render();},false);});
-  document.querySelectorAll('.pbtn').forEach(function(b){b.addEventListener('click',function(){prio=b.dataset.prio;document.querySelectorAll('.pbtn').forEach(function(x){x.classList.remove('sel');});b.classList.add('sel');},false);});
-  document.querySelectorAll('.bfill').forEach(function(b){b.addEventListener('click',function(){addTask();},false);});
-  document.querySelectorAll('.shnd,.bout').forEach(function(b){b.addEventListener('click',function(){closeS('shAdd');},false);});
-  document.querySelectorAll('.sov').forEach(function(s){s.addEventListener('click',function(e){if(e.target===s)closeS(s.id);},false);});
-  var _R=render;render=function(){_R();document.querySelectorAll('.task').forEach(function(card){if(card._h)return;card._h=1;var tid=parseInt(card.dataset.id||0);card.addEventListener('click',function(){toggleDone(tid);},false);var d=card.querySelector('.task-del');if(d)d.addEventListener('click',function(e){e.stopPropagation();delTask(tid,e);},false);});};
+  var qi=document.getElementById('qi');
+  if(qi)qi.addEventListener('keydown',function(e){if(e.key==='Enter')quickAdd();},false);
+  document.querySelectorAll('.chip').forEach(function(b){
+    b.addEventListener('click',function(){
+      flt=b.dataset.filter||'all';
+      document.querySelectorAll('.chip').forEach(function(x){x.classList.remove('sel');});
+      b.classList.add('sel');render();
+    },false);
+  });
+  document.querySelectorAll('.pbtn').forEach(function(b){
+    b.addEventListener('click',function(){
+      prio=b.dataset.prio;
+      document.querySelectorAll('.pbtn').forEach(function(x){x.classList.remove('sel');});
+      b.classList.add('sel');
+    },false);
+  });
+  document.querySelectorAll('.bfill').forEach(function(b){
+    b.addEventListener('click',function(){addTask();},false);
+  });
+  document.querySelectorAll('.shnd,.bout').forEach(function(b){
+    b.addEventListener('click',function(){closeS('shAdd');},false);
+  });
+  document.querySelectorAll('.sov').forEach(function(s){
+    s.addEventListener('click',function(e){if(e.target===s)closeS(s.id);},false);
+  });
+  var _R=render;
+  render=function(){
+    _R();
+    document.querySelectorAll('.task[data-id]').forEach(function(card){
+      if(card._h)return;card._h=1;
+      var tid=parseInt(card.dataset.id||0);
+      card.addEventListener('click',function(){toggleDone(tid);},false);
+      var d=card.querySelector('.task-del');
+      if(d)d.addEventListener('click',function(e){e.stopPropagation();delTask(tid,e);},false);
+    });
+  };
 })();
 
 </script>

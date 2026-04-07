@@ -100,40 +100,40 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
       <div class="tlbl">FamilyHub</div>
       <div class="th">✅ To-Do partagé</div>
     </div>
-    <button class="ibtn" data-action="toggleTheme" id="thbtn">🌙</button>
+    <button class="ibtn" id="thbtn" onclick="toggleTheme()">🌙</button>
   </div>
 
   <div class="qadd">
-    <input class="qadd-in" id="qi" placeholder="Ajouter une tâche…" data-action="qaEnter">
-    <button class="qadd-btn" data-action="quickAdd">＋</button>
+    <input class="qadd-in" id="qi" placeholder="Ajouter une tâche…" onkeydown="if(event.key==='Enter')quickAdd()">
+    <button class="qadd-btn" onclick="quickAdd()">＋</button>
   </div>
 
   <div class="chips">
-    <button class="chip sel" data-action="setFilter" data-filter="all">Toutes <span id="bA">0</span></button>
-    <button class="chip" data-action="setFilter" data-filter="todo">À faire <span id="bT">0</span></button>
-    <button class="chip" data-action="setFilter" data-filter="done">Terminées <span id="bD">0</span></button>
-    <button class="chip" data-action="setFilter" data-filter="g">Guillaume</button>
-    <button class="chip" data-action="setFilter" data-filter="m">Michèle</button>
+    <button class="chip sel" data-filter="all" onclick="setFlt('all',this)">Toutes <span id="bA">0</span></button>
+    <button class="chip" data-filter="todo" onclick="setFlt('todo',this)">À faire <span id="bT">0</span></button>
+    <button class="chip" data-filter="done" onclick="setFlt('done',this)">Terminées <span id="bD">0</span></button>
+    <button class="chip" data-filter="g" onclick="setFlt('g',this)">Guillaume</button>
+    <button class="chip" data-filter="m" onclick="setFlt('m',this)">Michèle</button>
   </div>
 
   <div class="tlist" id="TL"></div>
 </div>
 
-<button class="fab" data-action="openAdd">＋</button>
+<button class="fab" onclick="openAdd()">＋</button>
 <div class="toast" id="toast"></div>
 
 <!-- Sheet ajout détaillé -->
 <div class="sov" id="shAdd">
   <div class="sht">
-    <div class="shnd" data-action="closeSheet" data-sheet="shAdd"></div>
+    <div class="shnd" onclick="closeS('shAdd')"></div>
     <div class="shtit">Nouvelle tâche</div>
     <div class="slbl ft">Tâche</div>
     <input class="fin" id="aText" placeholder="Que faut-il faire ?">
     <div class="slbl">Priorité</div>
     <div class="prio-btns">
-      <button class="pbtn sel" id="pb-low" data-action="selPrio" data-prio="low" style="border-color:#C4EFAD;background:#C4EFAD20;color:#1A6500">🟢 Basse</button>
-      <button class="pbtn" id="pb-mid" data-action="selPrio" data-prio="mid" style="border-color:#FFDDB4">🟡 Moyenne</button>
-      <button class="pbtn" id="pb-high" data-action="selPrio" data-prio="high" style="border-color:#FFDAD6">🔴 Haute</button>
+      <button class="pbtn sel" id="pb-low" data-prio="low" onclick="selPri('low',this)" style="border-color:#C4EFAD;background:#C4EFAD20;color:#1A6500">🟢 Basse</button>
+      <button class="pbtn" id="pb-mid" data-prio="mid" onclick="selPri('mid',this)" style="border-color:#FFDDB4">🟡 Moyenne</button>
+      <button class="pbtn" id="pb-high" data-prio="high" onclick="selPri('high',this)" style="border-color:#FFDAD6">🔴 Haute</button>
     </div>
     <div class="slbl">Assigné à</div>
     <select class="fsel" id="aWho" style="margin-bottom:8px">
@@ -143,8 +143,8 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
     </select>
     <div class="slbl">Note (optionnel)</div>
     <input class="fin" id="aNote" placeholder="Détails…">
-    <button class="bfill" data-action="addTask">Enregistrer</button>
-    <button class="bout" data-action="closeSheet" data-sheet="shAdd">Annuler</button>
+    <button class="bfill" onclick="addTask()">Enregistrer</button>
+    <button class="bout" onclick="closeS('shAdd')">Annuler</button>
   </div>
 </div>
 
@@ -256,7 +256,24 @@ function initTheme(){const s=localStorage.getItem('lt_th');if(s){applyTheme(s);r
 
 // ── Dispatcher global : gère data-action sans onclick inline ──
 
-initTheme();render();
+
+function setFlt(f,btn){flt=f;document.querySelectorAll('.chip').forEach(function(b){b.classList.remove('sel');});if(btn)btn.classList.add('sel');render();}
+function selPri(p,btn){prio=p;document.querySelectorAll('.pbtn').forEach(function(b){b.classList.remove('sel');});if(btn)btn.classList.add('sel');}
+initTheme();
+(function(){
+  var _R=render;
+  render=function(){
+    _R();
+    document.querySelectorAll('.task[data-id]').forEach(function(card){
+      if(card._b)return;card._b=1;
+      var tid=parseInt(card.dataset.id||0);
+      card.setAttribute('onclick','toggleDone('+tid+')');
+      var d=card.querySelector('.task-del');
+      if(d)d.setAttribute('onclick','event.stopPropagation();delTask('+tid+',event)');
+    });
+  };
+})();
+render();
 </script>
 
 <script>
@@ -269,52 +286,5 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 
-<script>
-
-(function(){
-  function Q(sel){return document.querySelector(sel);}
-  function on(sel,fn){var e=Q(sel);if(e)e.addEventListener('click',fn,false);}
-  on('#thbtn',function(){toggleTheme();});
-  on('.qadd-btn',function(){quickAdd();});
-  on('.fab',function(){openAdd();});
-  var qi=document.getElementById('qi');
-  if(qi)qi.addEventListener('keydown',function(e){if(e.key==='Enter')quickAdd();},false);
-  document.querySelectorAll('.chip').forEach(function(b){
-    b.addEventListener('click',function(){
-      flt=b.dataset.filter||'all';
-      document.querySelectorAll('.chip').forEach(function(x){x.classList.remove('sel');});
-      b.classList.add('sel');render();
-    },false);
-  });
-  document.querySelectorAll('.pbtn').forEach(function(b){
-    b.addEventListener('click',function(){
-      prio=b.dataset.prio;
-      document.querySelectorAll('.pbtn').forEach(function(x){x.classList.remove('sel');});
-      b.classList.add('sel');
-    },false);
-  });
-  document.querySelectorAll('.bfill').forEach(function(b){
-    b.addEventListener('click',function(){addTask();},false);
-  });
-  document.querySelectorAll('.shnd,.bout').forEach(function(b){
-    b.addEventListener('click',function(){closeS('shAdd');},false);
-  });
-  document.querySelectorAll('.sov').forEach(function(s){
-    s.addEventListener('click',function(e){if(e.target===s)closeS(s.id);},false);
-  });
-  var _R=render;
-  render=function(){
-    _R();
-    document.querySelectorAll('.task[data-id]').forEach(function(card){
-      if(card._h)return;card._h=1;
-      var tid=parseInt(card.dataset.id||0);
-      card.addEventListener('click',function(){toggleDone(tid);},false);
-      var d=card.querySelector('.task-del');
-      if(d)d.addEventListener('click',function(e){e.stopPropagation();delTask(tid,e);},false);
-    });
-  };
-})();
-
-</script>
 </body>
 </html>

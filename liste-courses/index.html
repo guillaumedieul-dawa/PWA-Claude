@@ -94,7 +94,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 
   <div class="qadd">
     <input class="qadd-in" id="qi" placeholder="Ajouter un article…">
-    <button class="qadd-btn" data-action="quickAdd">＋</button>
+    <button class="qadd-btn" data-action="quickAdd"><span style="pointer-events:none">＋</span></button>
   </div>
 
   <div class="prog-wrap" id="progWrap"></div>
@@ -110,7 +110,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
   <div id="IL"></div>
 </div>
 
-<button class="fab" data-action="openAdd">＋</button>
+<button class="fab" data-action="openAdd"><span style="pointer-events:none">＋</span></button>
 <div class="toast" id="toast"></div>
 
 <div class="sov" id="shAdd">
@@ -318,7 +318,7 @@ function initTheme() {
 
 // ── Dispatcher global data-action ─────────────────────────────
 document.addEventListener('click', function(e) {
-  const el = e.target.closest('[data-action]');
+  const el = findAction(e.target);
   if (!el) return;
   const action = el.getAttribute('data-action');
   const ds = el.dataset;
@@ -361,6 +361,19 @@ document.addEventListener('keydown', function(e) {
   if (e.key === 'Enter' && e.target.id === 'qi') quickAdd();
 });
 
+
+// Remonter le DOM pour trouver un ancêtre avec data-action
+// Robuste avec les TextNodes dans WebView Android
+function findAction(target) {
+  var el = target;
+  // Remonter jusqu'à trouver un Element (pas un TextNode)
+  while (el && !el.getAttribute) { el = el.parentElement || el.parentNode; }
+  while (el && el !== document) {
+    if (el.getAttribute && el.getAttribute('data-action')) return el;
+    el = el.parentElement;
+  }
+  return null;
+}
 // ── Initialisation unique ─────────────────────────────────────
 function init() {
   document.querySelectorAll('.sov').forEach(el => { el.style.display = 'none'; });

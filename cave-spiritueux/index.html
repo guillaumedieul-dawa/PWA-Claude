@@ -75,7 +75,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 .toast{position:fixed;bottom:calc(var(--bot)+100px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--ob);color:var(--bg);padding:12px 20px;border-radius:28px;font-family:'Google Sans',sans-serif;font-size:14px;font-weight:500;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;max-width:88vw;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 /* Sheet */
-.sov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:flex-end;justify-content:center}
+.sov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center}
 
 .sht{background:var(--sf);border-radius:28px 28px 0 0;padding:12px 24px calc(var(--bot)+24px);width:100%;max-width:520px;max-height:92dvh;overflow-y:auto}
 .sov.on .sht{}
@@ -268,8 +268,8 @@ function render(){
 
 function setF(f,btn){flt=f;document.querySelectorAll('.chip').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');render();}
 function onSrch(v){srch=v;render();}
-function openAdd(){var el=document.getElementById('shAdd');if(el){el.style.display='flex';el.style.alignItems='flex-end';el.style.justifyContent='center';}document.body.style.overflow='hidden';}
-function closeS(id){var el=document.getElementById(id);if(el)el.style.display='none';document.body.style.overflow='';}
+
+
 document.querySelectorAll('.sov').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)closeS(o.id);}));
 let _tt;function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('show'),3000);}
 function applyTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('thbtn').textContent=t==='dark'?'🌙':'☀️';}
@@ -280,6 +280,10 @@ function initTheme(){const s=localStorage.getItem('lt_th');if(s){applyTheme(s);r
 
 // Masquer toutes les sheets au démarrage
 document.querySelectorAll('.sov').forEach(function(el){el.style.display='none';});
+function openAdd(){openSheet('shAdd');}
+
+function closeS(id){closeSheet(id);}
+function openS(id){openSheet(id);}
 initTheme();
 (function(){
   var _R=render;
@@ -310,5 +314,24 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 
+
+<script>
+/* ── Sheets : mutualisé Capacitor WebView ── */
+function openSheet(id){
+  var el=document.getElementById(id);
+  if(!el)return;
+  el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;';
+  try{document.body.style.overflow='hidden';}catch(e){}
+}
+function closeSheet(id){
+  var el=document.getElementById(id);
+  if(!el)return;
+  el.style.display='none';
+  try{document.body.style.overflow='';}catch(e){}
+}
+document.querySelectorAll('.sov').forEach(function(sov){
+  sov.addEventListener('click',function(e){if(e.target===sov)closeSheet(sov.id);},false);
+});
+</script>
 </body>
 </html>

@@ -24,26 +24,22 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 .th{font-family:'Google Sans',sans-serif;font-size:22px;font-weight:700;color:var(--ob);letter-spacing:-.3px;line-height:1.1}
 .ibtn{width:40px;height:40px;border-radius:50%;border:none;background:var(--s1);color:var(--os);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;position:relative}
 .ibtn:active{background:var(--s2)}
-/* Chips */
 .chips{display:flex;gap:8px;padding:8px 16px 12px;overflow-x:auto;scrollbar-width:none}
 .chips::-webkit-scrollbar{display:none}
 .chip{flex-shrink:0;padding:7px 14px;border-radius:8px;border:1px solid var(--olv);background:transparent;color:var(--osv);font-family:'Google Sans Text',sans-serif;font-size:13px;cursor:pointer;white-space:nowrap;transition:all .2s}
 .chip.sel{background:var(--pc);border-color:var(--pc);color:var(--opc);font-weight:500}
-/* Quick add */
 .qadd{display:flex;gap:10px;padding:0 16px 12px;align-items:center}
 .qadd-in{flex:1;padding:12px 16px;border-radius:28px;border:1px solid var(--olv);background:var(--sf);color:var(--ob);font-family:'Google Sans Text',sans-serif;font-size:15px;outline:none;transition:border-color .2s}
 .qadd-in:focus{border-color:var(--p)}
 .qadd-in::placeholder{color:var(--osv)}
 .qadd-btn{width:44px;height:44px;border-radius:50%;border:none;background:var(--p);color:var(--op);font-size:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
 .qadd-btn:active{opacity:.8}
-/* Task list */
 .tlist{padding:0 12px;display:flex;flex-direction:column;gap:6px}
-/* Task card */
-.task{background:var(--sf);border-radius:var(--rm);padding:14px 16px;display:flex;align-items:flex-start;gap:12px;box-shadow:0 1px 2px var(--sh);border:1px solid transparent;transition:all .2s;cursor:pointer}
+.task{background:var(--sf);border-radius:var(--rm);padding:14px 16px;display:flex;align-items:flex-start;gap:12px;box-shadow:0 1px 2px var(--sh);border:1px solid transparent;cursor:pointer}
 .task:active{transform:scale(.99)}
 .task.done{opacity:.55}
 .task.done .task-text{text-decoration:line-through;color:var(--osv)}
-.chk{width:22px;height:22px;border-radius:50%;border:2px solid var(--olv);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s;margin-top:1px}
+.chk{width:22px;height:22px;border-radius:50%;border:2px solid var(--olv);flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px}
 .chk.done{background:var(--p);border-color:var(--p)}
 .task-body{flex:1;min-width:0}
 .task-text{font-size:15px;color:var(--os);line-height:1.4;word-break:break-word}
@@ -53,26 +49,19 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 .task-prio{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}
 .task-del{padding:4px 6px;border-radius:8px;border:none;background:transparent;color:var(--osv);font-size:14px;cursor:pointer;opacity:.6;flex-shrink:0}
 .task-del:active{opacity:1;color:var(--cf)}
-/* Priority legend */
-.prio-row{display:flex;gap:12px;padding:4px 16px 12px;align-items:center}
-.prio-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--osv)}
-.prio-dot{width:10px;height:10px;border-radius:50%}
-/* Empty */
+.prio-btns{display:flex;gap:8px;margin-bottom:8px}
+.pbtn{flex:1;padding:10px;border-radius:var(--rs);border:1px solid var(--olv);background:var(--s1);cursor:pointer;text-align:center;font-family:'Google Sans',sans-serif;font-size:12px;font-weight:500;color:var(--osv)}
+.pbtn.sel{border-width:2px}
 .empty{text-align:center;padding:60px 24px}
 .eico{font-size:56px;margin-bottom:12px;opacity:.5}
 .etit{font-family:'Google Sans',sans-serif;font-size:20px;font-weight:700;color:var(--ob);margin-bottom:6px}
 .esub{font-size:14px;color:var(--osv)}
-/* FAB */
-.fab{position:fixed;bottom:calc(var(--bot)+28px);right:20px;width:56px;height:56px;border-radius:18px;background:var(--pc);color:var(--opc);border:none;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px var(--sh);z-index:49;transition:all .2s}
+.fab{position:fixed;bottom:calc(var(--bot)+28px);right:20px;width:56px;height:56px;border-radius:18px;background:var(--pc);color:var(--opc);border:none;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px var(--sh);z-index:49}
 .fab:active{transform:scale(.92)}
-/* Toast */
 .toast{position:fixed;bottom:calc(var(--bot)+100px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--ob);color:var(--bg);padding:12px 20px;border-radius:28px;font-family:'Google Sans',sans-serif;font-size:14px;font-weight:500;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;max-width:88vw;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.2)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-/* Sheet */
 .sov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center}
-
 .sht{background:var(--sf);border-radius:28px 28px 0 0;padding:12px 24px calc(var(--bot)+24px);width:100%;max-width:520px;max-height:92dvh;overflow-y:auto}
-.sov.on .sht{}
 .shnd{width:32px;height:4px;background:var(--olv);border-radius:2px;margin:0 auto 18px;cursor:pointer}
 .shtit{font-family:'Google Sans',sans-serif;font-size:20px;font-weight:700;color:var(--ob);margin-bottom:18px}
 .slbl{font-size:12px;color:var(--osv);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px;font-family:'Google Sans',sans-serif}
@@ -84,10 +73,6 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 .bfill{width:100%;padding:14px;border-radius:var(--rl);background:var(--p);color:var(--op);border:none;font-family:'Google Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px}
 .bfill:active{opacity:.85}
 .bout{width:100%;padding:13px;border-radius:var(--rl);background:transparent;border:1px solid var(--olv);color:var(--osv);font-family:'Google Sans',sans-serif;font-size:15px;cursor:pointer;margin-top:8px}
-/* Prio buttons */
-.prio-btns{display:flex;gap:8px;margin-bottom:8px}
-.pbtn{flex:1;padding:10px;border-radius:var(--rs);border:1px solid var(--olv);background:var(--s1);cursor:pointer;text-align:center;font-family:'Google Sans',sans-serif;font-size:12px;font-weight:500;color:var(--osv);transition:all .2s}
-.pbtn.sel{border-width:2px}
 @keyframes fu{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .task{animation:fu .25s ease both}
 </style>
@@ -100,40 +85,39 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
       <div class="tlbl">FamilyHub</div>
       <div class="th">✅ To-Do partagé</div>
     </div>
-    <button class="ibtn" id="thbtn" onclick="toggleTheme()">🌙</button>
+    <button class="ibtn" id="thbtn" data-action="toggleTheme">🌙</button>
   </div>
 
   <div class="qadd">
-    <input class="qadd-in" id="qi" placeholder="Ajouter une tâche…" onkeydown="if(event.key==='Enter')quickAdd()">
-    <button class="qadd-btn" onclick="quickAdd()">＋</button>
+    <input class="qadd-in" id="qi" placeholder="Ajouter une tâche…">
+    <button class="qadd-btn" data-action="quickAdd">＋</button>
   </div>
 
   <div class="chips">
-    <button class="chip sel" data-filter="all" onclick="setFlt('all',this)">Toutes <span id="bA">0</span></button>
-    <button class="chip" data-filter="todo" onclick="setFlt('todo',this)">À faire <span id="bT">0</span></button>
-    <button class="chip" data-filter="done" onclick="setFlt('done',this)">Terminées <span id="bD">0</span></button>
-    <button class="chip" data-filter="g" onclick="setFlt('g',this)">Guillaume</button>
-    <button class="chip" data-filter="m" onclick="setFlt('m',this)">Michèle</button>
+    <button class="chip sel" data-filter="all" data-action="setFilter">Toutes <span id="bA">0</span></button>
+    <button class="chip" data-filter="todo" data-action="setFilter">À faire <span id="bT">0</span></button>
+    <button class="chip" data-filter="done" data-action="setFilter">Terminées <span id="bD">0</span></button>
+    <button class="chip" data-filter="g" data-action="setFilter">Guillaume</button>
+    <button class="chip" data-filter="m" data-action="setFilter">Michèle</button>
   </div>
 
   <div class="tlist" id="TL"></div>
 </div>
 
-<button class="fab" onclick="openAdd()">＋</button>
+<button class="fab" data-action="openAdd">＋</button>
 <div class="toast" id="toast"></div>
 
-<!-- Sheet ajout détaillé -->
 <div class="sov" id="shAdd">
   <div class="sht">
-    <div class="shnd" onclick="closeS('shAdd')"></div>
+    <div class="shnd" data-action="closeAdd"></div>
     <div class="shtit">Nouvelle tâche</div>
     <div class="slbl ft">Tâche</div>
     <input class="fin" id="aText" placeholder="Que faut-il faire ?">
     <div class="slbl">Priorité</div>
     <div class="prio-btns">
-      <button class="pbtn sel" id="pb-low" data-prio="low" onclick="selPri('low',this)" style="border-color:#C4EFAD;background:#C4EFAD20;color:#1A6500">🟢 Basse</button>
-      <button class="pbtn" id="pb-mid" data-prio="mid" onclick="selPri('mid',this)" style="border-color:#FFDDB4">🟡 Moyenne</button>
-      <button class="pbtn" id="pb-high" data-prio="high" onclick="selPri('high',this)" style="border-color:#FFDAD6">🔴 Haute</button>
+      <button class="pbtn sel" id="pb-low" data-prio="low" data-action="selPrio" style="border-color:#C4EFAD;background:#C4EFAD20;color:#1A6500">🟢 Basse</button>
+      <button class="pbtn" id="pb-mid" data-prio="mid" data-action="selPrio" style="border-color:#FFDDB4">🟡 Moyenne</button>
+      <button class="pbtn" id="pb-high" data-prio="high" data-action="selPrio" style="border-color:#FFDAD6">🔴 Haute</button>
     </div>
     <div class="slbl">Assigné à</div>
     <select class="fsel" id="aWho" style="margin-bottom:8px">
@@ -143,93 +127,107 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
     </select>
     <div class="slbl">Note (optionnel)</div>
     <input class="fin" id="aNote" placeholder="Détails…">
-    <button class="bfill" onclick="addTask()">Enregistrer</button>
-    <button class="bout" onclick="closeS('shAdd')">Annuler</button>
+    <button class="bfill" data-action="addTask">Enregistrer</button>
+    <button class="bout" data-action="closeAdd">Annuler</button>
   </div>
 </div>
 
 <script>
-const SK='fh_todo';
-const PRIO_COLORS={high:'#cf0000',mid:'#7B4F00',low:'#1A6500'};
-const PRIO_BG={high:'#FFDAD6',mid:'#FFDDB4',low:'#C4EFAD'};
+'use strict';
+// ── Constantes ──────────────────────────────────────────────
+const SK = 'fh_todo';
+const PRIO_COLORS = {high:'#cf0000', mid:'#7B4F00', low:'#1A6500'};
+const PRIO_BG     = {high:'#FFDAD6', mid:'#FFDDB4', low:'#C4EFAD'};
 
-function loadD(){try{const d=JSON.parse(localStorage.getItem(SK));if(d?.tasks)return d;}catch{}return{tasks:[],nextId:1};}
-function saveD(d){localStorage.setItem(SK,JSON.stringify(d));}
+// ── État (mémoire uniquement pour l'UI, localStorage pour les données) ──
+let D    = loadD();      // données persistées
+let flt  = 'all';        // filtre courant — mémoire uniquement
+let prio = 'low';        // priorité sélectionnée — mémoire uniquement
+let _tt;                 // timer toast
 
-let D=loadD(),flt='all',prio='low';
+// ── Stockage ────────────────────────────────────────────────
+function loadD() {
+  try {
+    const d = JSON.parse(localStorage.getItem(SK));
+    if (d && d.tasks) return d;
+  } catch(e) {}
+  return {tasks:[], nextId:1};
+}
+function saveD(d) { localStorage.setItem(SK, JSON.stringify(d)); }
 
-function quickAdd(){
-  const v=document.getElementById('qi').value.trim();
-  if(!v)return;
-  D.tasks.unshift({id:D.nextId++,text:v,done:false,prio:'mid',who:'Tous',note:'',date:new Date().toISOString()});
-  saveD(D);render();document.getElementById('qi').value='';
+// ── Données ─────────────────────────────────────────────────
+function quickAdd() {
+  const el = document.getElementById('qi');
+  const v = el.value.trim();
+  if (!v) return;
+  D.tasks.unshift({id:D.nextId++, text:v, done:false, prio:'mid', who:'Tous', note:'', date:new Date().toISOString()});
+  saveD(D); render(); el.value = '';
   showToast('✓ Tâche ajoutée');
 }
 
-function selPrio(p,el){
-  prio=p;
-  document.querySelectorAll('.pbtn').forEach(b=>b.classList.remove('sel'));
-  el.classList.add('sel');
-}
-
-function addTask(){
-  const text=document.getElementById('aText').value.trim();
-  if(!text){showToast('⚠️ Saisissez une tâche');return;}
+function addTask() {
+  const text = document.getElementById('aText').value.trim();
+  if (!text) { showToast('⚠️ Saisissez une tâche'); return; }
   D.tasks.unshift({
-    id:D.nextId++,text,done:false,
-    prio,who:document.getElementById('aWho').value,
-    note:document.getElementById('aNote').value.trim(),
-    date:new Date().toISOString()
+    id: D.nextId++, text, done: false,
+    prio, who: document.getElementById('aWho').value,
+    note: document.getElementById('aNote').value.trim(),
+    date: new Date().toISOString()
   });
-  saveD(D);render();closeS('shAdd');showToast('✓ Tâche ajoutée');
-  ['aText','aNote'].forEach(id=>document.getElementById(id).value='');
+  saveD(D); render(); closeSheet('shAdd');
+  showToast('✓ Tâche ajoutée');
+  ['aText','aNote'].forEach(id => document.getElementById(id).value = '');
 }
 
-function toggleDone(id){
-  const t=D.tasks.find(x=>x.id===id);if(!t)return;
-  t.done=!t.done;t.doneAt=t.done?new Date().toISOString():null;
-  saveD(D);render();
-  showToast(t.done?'✓ Tâche terminée':'↩ Tâche réactivée');
+function toggleDone(id) {
+  const t = D.tasks.find(x => x.id === id);
+  if (!t) return;
+  t.done = !t.done;
+  t.doneAt = t.done ? new Date().toISOString() : null;
+  saveD(D); render();
+  showToast(t.done ? '✓ Tâche terminée' : '↩ Tâche réactivée');
 }
 
-function delTask(id,e){
-  e.stopPropagation();
-  D.tasks=D.tasks.filter(t=>t.id!==id);
-  saveD(D);render();
+function delTask(id) {
+  D.tasks = D.tasks.filter(t => t.id !== id);
+  saveD(D); render();
 }
 
-function getFilt(){
-  let tasks=[...D.tasks];
-  if(flt==='todo')tasks=tasks.filter(t=>!t.done);
-  else if(flt==='done')tasks=tasks.filter(t=>t.done);
-  else if(flt==='g')tasks=tasks.filter(t=>t.who==='Guillaume'||t.who==='Tous');
-  else if(flt==='m')tasks=tasks.filter(t=>t.who==='Michele'||t.who==='Tous');
-  return tasks.sort((a,b)=>{
-    if(a.done!==b.done)return a.done?1:-1;
-    const po={high:0,mid:1,low:2};
-    return(po[a.prio]||1)-(po[b.prio]||1);
+// ── Filtrage ─────────────────────────────────────────────────
+function getFilt() {
+  let tasks = [...D.tasks];
+  if      (flt === 'todo') tasks = tasks.filter(t => !t.done);
+  else if (flt === 'done') tasks = tasks.filter(t =>  t.done);
+  else if (flt === 'g')    tasks = tasks.filter(t => t.who === 'Guillaume' || t.who === 'Tous');
+  else if (flt === 'm')    tasks = tasks.filter(t => t.who === 'Michele'   || t.who === 'Tous');
+  return tasks.sort((a, b) => {
+    if (a.done !== b.done) return a.done ? 1 : -1;
+    const po = {high:0, mid:1, low:2};
+    return (po[a.prio]||1) - (po[b.prio]||1);
   });
 }
 
-function fmtDate(iso){
-  if(!iso)return'';
-  const d=new Date(iso);
-  const now=new Date();
-  if(d.toDateString()===now.toDateString())return'Aujourd\'hui '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-  return d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+function fmtDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso), now = new Date();
+  if (d.toDateString() === now.toDateString())
+    return 'Aujourd\'hui ' + d.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+  return d.toLocaleDateString('fr-FR', {day:'numeric', month:'short'});
 }
 
-function render(){
-  const tasks=getFilt();
-  const all=D.tasks;
-  document.getElementById('bA').textContent=all.length;
-  document.getElementById('bT').textContent=all.filter(t=>!t.done).length;
-  document.getElementById('bD').textContent=all.filter(t=>t.done).length;
-  const el=document.getElementById('TL');
-  if(!tasks.length){
-    el.innerHTML=`<div class="empty"><div class="eico">✅</div><div class="etit">${flt==='done'?'Aucune tâche terminée':'Tout est fait !'}</div><div class="esub">Appuyez sur + pour ajouter une tâche</div></div>`;return;
+// ── Rendu ────────────────────────────────────────────────────
+function render() {
+  const tasks = getFilt();
+  const all   = D.tasks;
+  document.getElementById('bA').textContent = all.length;
+  document.getElementById('bT').textContent = all.filter(t => !t.done).length;
+  document.getElementById('bD').textContent = all.filter(t =>  t.done).length;
+  const el = document.getElementById('TL');
+  if (!tasks.length) {
+    el.innerHTML = `<div class="empty"><div class="eico">✅</div><div class="etit">${flt==='done'?'Aucune tâche terminée':'Tout est fait !'}</div><div class="esub">Appuyez sur + pour ajouter une tâche</div></div>`;
+    return;
   }
-  el.innerHTML=tasks.map((t,i)=>`
+  el.innerHTML = tasks.map((t,i) => `
     <div class="task${t.done?' done':''}" data-action="toggleDone" data-id="${t.id}" style="animation-delay:${i*.03}s">
       <div class="chk${t.done?' done':''}">${t.done?'<span style="color:#fff;font-size:13px">✓</span>':''}</div>
       <div class="task-body">
@@ -245,43 +243,105 @@ function render(){
     </div>`).join('');
 }
 
-function setF(f,btn){flt=f;document.querySelectorAll('.chip').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');render();}
+// ── Sheets (mutualisé) ───────────────────────────────────────
+function openSheet(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;';
+  try { document.body.style.overflow = 'hidden'; } catch(e) {}
+}
+function closeSheet(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.display = 'none';
+  try { document.body.style.overflow = ''; } catch(e) {}
+}
 
+// ── UI ───────────────────────────────────────────────────────
+function showToast(m) {
+  const t = document.getElementById('toast');
+  t.textContent = m; t.classList.add('show');
+  clearTimeout(_tt); _tt = setTimeout(() => t.classList.remove('show'), 3000);
+}
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  document.getElementById('thbtn').textContent = t === 'dark' ? '🌙' : '☀️';
+}
+function toggleTheme() {
+  const d = document.documentElement.getAttribute('data-theme') === 'dark';
+  const n = d ? 'light' : 'dark';
+  localStorage.setItem('lt_th', n); applyTheme(n);
+}
+function initTheme() {
+  const s = localStorage.getItem('lt_th');
+  if (s) { applyTheme(s); return; }
+  const sys = window.matchMedia('(prefers-color-scheme: dark)');
+  applyTheme(sys.matches ? 'dark' : 'light');
+  sys.addEventListener('change', e => { if (!localStorage.getItem('lt_th')) applyTheme(e.matches?'dark':'light'); });
+}
 
-document.querySelectorAll('.sov').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)closeS(o.id);}));
-let _tt;function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('show'),3000);}
-function applyTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('thbtn').textContent=t==='dark'?'🌙':'☀️';}
-function toggleTheme(){const d=document.documentElement.getAttribute('data-theme')==='dark';const n=d?'light':'dark';localStorage.setItem('lt_th',n);applyTheme(n);}
-function initTheme(){const s=localStorage.getItem('lt_th');if(s){applyTheme(s);return;}const sys=window.matchMedia('(prefers-color-scheme: dark)');applyTheme(sys.matches?'dark':'light');sys.addEventListener('change',e=>{if(!localStorage.getItem('lt_th'))applyTheme(e.matches?'dark':'light');});}
+// ── Dispatcher global data-action ────────────────────────────
+// Toute interaction passe ici — aucun onclick= dans le HTML
+document.addEventListener('click', function(e) {
+  const el = e.target.closest('[data-action]');
+  if (!el) return;
+  const action = el.getAttribute('data-action');
+  const ds = el.dataset;
 
-// ── Dispatcher global : gère data-action sans onclick inline ──
+  switch (action) {
+    // Navigation / UI
+    case 'toggleTheme': toggleTheme(); break;
+    case 'openAdd':     openSheet('shAdd'); break;
+    case 'closeAdd':    closeSheet('shAdd'); break;
 
+    // Filtre
+    case 'setFilter':
+      flt = ds.filter || 'all';
+      document.querySelectorAll('.chip').forEach(b => b.classList.remove('sel'));
+      el.classList.add('sel');
+      render();
+      break;
 
-function setFlt(f,btn){flt=f;document.querySelectorAll('.chip').forEach(function(b){b.classList.remove('sel');});if(btn)btn.classList.add('sel');render();}
-function selPri(p,btn){prio=p;document.querySelectorAll('.pbtn').forEach(function(b){b.classList.remove('sel');});if(btn)btn.classList.add('sel');}
-// Masquer toutes les sheets au démarrage
-document.querySelectorAll('.sov').forEach(function(el){el.style.display='none';});
-function openAdd(){openSheet('shAdd');}
+    // Priorité
+    case 'selPrio':
+      prio = ds.prio;
+      document.querySelectorAll('.pbtn').forEach(b => b.classList.remove('sel'));
+      el.classList.add('sel');
+      break;
 
-function closeS(id){closeSheet(id);}
-function openS(id){openSheet(id);}
-initTheme();
-(function(){
-  var _R=render;
-  render=function(){
-    _R();
-    document.querySelectorAll('.task[data-id]').forEach(function(card){
-      if(card._b)return;card._b=1;
-      var tid=parseInt(card.dataset.id||0);
-      card.setAttribute('onclick','toggleDone('+tid+')');
-      var d=card.querySelector('.task-del');
-      if(d)d.setAttribute('onclick','event.stopPropagation();delTask('+tid+',event)');
-    });
-  };
-})();
-render();
+    // Formulaire
+    case 'quickAdd': quickAdd(); break;
+    case 'addTask':  addTask();  break;
+
+    // Cartes tâches
+    case 'toggleDone': toggleDone(parseInt(ds.id)); break;
+    case 'delTask':
+      e.stopPropagation();
+      delTask(parseInt(ds.id));
+      break;
+  }
+});
+
+// Fermer sheet en cliquant le fond
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('sov')) closeSheet(e.target.id);
+});
+
+// Touche Entrée sur le champ ajout rapide
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && e.target.id === 'qi') quickAdd();
+});
+
+// ── Initialisation unique ────────────────────────────────────
+function init() {
+  // Masquer toutes les sheets
+  document.querySelectorAll('.sov').forEach(el => { el.style.display = 'none'; });
+  initTheme();
+  render();
+}
+
+init();
 </script>
-
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -290,26 +350,6 @@ if ('serviceWorker' in navigator) {
       .catch(e => console.warn('SW erreur', e));
   });
 }
-</script>
-
-
-<script>
-/* ── Sheets : mutualisé Capacitor WebView ── */
-function openSheet(id){
-  var el=document.getElementById(id);
-  if(!el)return;
-  el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;';
-  try{document.body.style.overflow='hidden';}catch(e){}
-}
-function closeSheet(id){
-  var el=document.getElementById(id);
-  if(!el)return;
-  el.style.display='none';
-  try{document.body.style.overflow='';}catch(e){}
-}
-document.querySelectorAll('.sov').forEach(function(sov){
-  sov.addEventListener('click',function(e){if(e.target===sov)closeSheet(sov.id);},false);
-});
 </script>
 </body>
 </html>

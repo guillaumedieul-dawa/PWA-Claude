@@ -162,7 +162,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 
 /* Bottom Sheet */
 .sov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center}
-.sov.on{display:flex}
+
 .sht{background:var(--sf);border-radius:28px 28px 0 0;padding:12px 24px calc(var(--bot) + 24px);width:100%;max-width:520px;max-height:92dvh;overflow-y:auto}
 .sov.on .sht{}
 .shnd{width:32px;height:4px;background:var(--olv);border-radius:2px;margin:0 auto 18px;cursor:pointer}
@@ -751,35 +751,41 @@ function getFilt(){
 }
 function updBadges(){
   const p=D.packages;
+  const DIS=getDisabled();
+  // Utiliser les mêmes règles d'exclusion que getFilt
+  function countFilt(statusFn){
+    return p.filter(function(x){
+      if(DIS.has(x.carrier))return false;
+      if(x.status==='out_for_delivery'){
+        const arr=x.arrivalDate?new Date(x.arrivalDate).getTime():0;
+        if(arr>0&&arr<Date.now()-5*86400000)return false;
+      }
+      return statusFn(x);
+    }).length;
+  }
   const tb=document.getElementById('totalBadge');
-  if(tb){const r=p.filter(x=>x.status==='ready').length;tb.textContent=r>0?r+' à retirer':p.length>0?p.length+' colis':'';}
-  // Mettre à jour les compteurs dans les chips (spans avec id bA, bR, etc.)
+  const rCount=countFilt(function(x){return x.status==='ready';});
+  const total=countFilt(function(x){return true;});
+  if(tb){tb.textContent=rCount>0?rCount+' à retirer':total>0?total+' colis':'';}
   const cnts={
-    bA:p.length,
-    bR:p.filter(x=>x.status==='ready').length,
-    bO:p.filter(x=>x.status==='out_for_delivery').length,
-    bP:p.filter(x=>x.status==='pending').length,
-    bF:p.filter(x=>x.status==='failed').length,
-    bD:p.filter(x=>x.status==='delivered'||x.status==='collected').length,
-    bX:p.filter(x=>x.status==='expired').length,
+    bA:total,
+    bR:rCount,
+    bO:countFilt(function(x){return x.status==='out_for_delivery';}),
+    bP:countFilt(function(x){return x.status==='pending';}),
+    bF:countFilt(function(x){return x.status==='failed';}),
+    bD:countFilt(function(x){return x.status==='delivered'||x.status==='collected';}),
+    bX:countFilt(function(x){return x.status==='expired';}),
   };
   for(const[id,val]of Object.entries(cnts)){
-    const el=document.getElementById(id);
-    if(el)el.textContent=val;
+    const el=document.getElementById(id);if(el)el.textContent=val;
   }
-  // Aussi mettre à jour via data-filter sur les chips si pas d'id
   document.querySelectorAll('.chip[data-filter]').forEach(function(chip){
     const filter=chip.getAttribute('data-filter');
     const span=chip.querySelector('span');
     if(!span)return;
     const statusMap={
-      all:p.length,
-      ready:p.filter(x=>x.status==='ready').length,
-      out_for_delivery:p.filter(x=>x.status==='out_for_delivery').length,
-      pending:p.filter(x=>x.status==='pending').length,
-      failed:p.filter(x=>x.status==='failed').length,
-      delivered:p.filter(x=>x.status==='delivered'||x.status==='collected').length,
-      expired:p.filter(x=>x.status==='expired').length,
+      all:cnts.bA,ready:cnts.bR,out_for_delivery:cnts.bO,
+      pending:cnts.bP,failed:cnts.bF,delivered:cnts.bD,expired:cnts.bX,
     };
     if(statusMap[filter]!==undefined)span.textContent=statusMap[filter];
   });
@@ -921,8 +927,8 @@ function clearSearch(){
   render();
 }
 
-function openS(id){document.getElementById(id).classList.add('on');document.body.style.overflow='hidden';}
-function closeS(id){document.getElementById(id).classList.remove('on');document.body.style.overflow='';}
+function openS(id){var el=document.getElementById(id);if(el){el.style.display='flex';el.style.alignItems='flex-end';el.style.justifyContent='center';}document.body.style.overflow='hidden';}
+function closeS(id){var el=document.getElementById(id);if(el)el.style.display='none';document.body.style.overflow='';}
 function openAdd(){openS('shAdd');}
 function openSync(){openS('shSync');renderSS();renderLogs();}
 // Fermeture sheets gérée par le dispatcher global
@@ -972,6 +978,7 @@ document.addEventListener('keydown', function(e){
 // Restaurer le filtre de la session précédente
 try{var _sf=sessionStorage.getItem('fh_filter');if(_sf)flt=_sf;}catch(_){}
 
+document.querySelectorAll('.sov').forEach(function(el){el.style.display='none';});
 initTheme();purge();renderSS();render();autoSync();
 
 (function(){

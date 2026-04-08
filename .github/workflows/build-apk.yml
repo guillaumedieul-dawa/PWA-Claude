@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE22: true
 
 jobs:
   build:
@@ -16,12 +16,12 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: '22'
 
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
 
       # Cache Gradle + node_modules pour accélérer le build (5-7min → 1-2min)
       - uses: actions/cache@v4
@@ -34,9 +34,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-node-
 
-      - name: Install Capacitor 5
+      - name: Install Capacitor 8
         run: |
-          npm install @capacitor/core@5.7.0 @capacitor/cli@5.7.0 @capacitor/android@5.7.0 \
+          npm install @capacitor/core@8.0.0 @capacitor/cli@8.0.0 @capacitor/android@8.0.0 \
             --no-audit --no-fund --prefer-offline
           # capacitor.config.json géré dans le repo — pas besoin de npx cap init
 
@@ -44,9 +44,8 @@ jobs:
         run: |
           mkdir -p www
           # capacitor.config.json doit rester à la racine (Capacitor le lit depuis là)
-          # Vérifier qu'il existe, sinon le créer
           if [ ! -f capacitor.config.json ]; then
-            echo '{"appId":"com.famille.dieulgandet","appName":"FamilyHub","webDir":"www","android":{"allowMixedContent":true,"captureInput":true,"webContentsDebuggingEnabled":false},"plugins":{"SplashScreen":{"launchShowDuration":0}}}' > capacitor.config.json
+            echo '{"appId":"com.famille.dieulgandet","appName":"FamilyHub","webDir":"www","android":{"allowMixedContent":true,"webContentsDebuggingEnabled":false},"plugins":{"SplashScreen":{"launchShowDuration":0}}}' > capacitor.config.json
           fi
           cp -f index.html www/ 2>/dev/null || true
           cp -f manifest.json www/ 2>/dev/null || true
@@ -119,7 +118,7 @@ jobs:
         run: |
           # versionCode = YYYYMMDDNN (date + numéro de run)
           VERSION_CODE=$(date +%Y%m%d)$(printf "%02d" $((GITHUB_RUN_NUMBER % 100)))
-          VERSION_NAME="1.$(date +%Y%m%d)"
+          VERSION_NAME="2.$(date +%Y%m%d)"
           echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_ENV
           echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
           echo "✓ versionCode: $VERSION_CODE, versionName: $VERSION_NAME"
@@ -131,7 +130,7 @@ jobs:
           path = "android/app/build.gradle"
           with open(path) as f: content = f.read()
           vc = os.environ.get('VERSION_CODE','10000')
-          vn = os.environ.get('VERSION_NAME','1.0')
+          vn = os.environ.get('VERSION_NAME','2.0')
           content = re.sub(r'versionCode\s+\d+', f'versionCode {vc}', content)
           content = re.sub(r'versionName\s+"[^"]+"', f'versionName "{vn}"', content)
           with open(path,'w') as f: f.write(content)

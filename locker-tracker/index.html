@@ -927,9 +927,9 @@ function clearSearch(){
   render();
 }
 
-function openS(id){var el=document.getElementById(id);if(el){el.style.display='flex';el.style.alignItems='flex-end';el.style.justifyContent='center';}document.body.style.overflow='hidden';}
-function closeS(id){var el=document.getElementById(id);if(el)el.style.display='none';document.body.style.overflow='';}
-function openAdd(){openS('shAdd');}
+
+
+
 function openSync(){openS('shSync');renderSS();renderLogs();}
 // Fermeture sheets gérée par le dispatcher global
 
@@ -979,6 +979,10 @@ document.addEventListener('keydown', function(e){
 try{var _sf=sessionStorage.getItem('fh_filter');if(_sf)flt=_sf;}catch(_){}
 
 document.querySelectorAll('.sov').forEach(function(el){el.style.display='none';});
+function openAdd(){openSheet('shAdd');}
+function openSync(){openSheet('shSync');renderSS();renderLogs();}
+function closeS(id){closeSheet(id);}
+function openS(id){openSheet(id);}
 initTheme();purge();renderSS();render();autoSync();
 
 (function(){
@@ -1034,5 +1038,24 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 
+
+<script>
+/* ── Sheets : mutualisé Capacitor WebView ── */
+function openSheet(id){
+  var el=document.getElementById(id);
+  if(!el)return;
+  el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;';
+  try{document.body.style.overflow='hidden';}catch(e){}
+}
+function closeSheet(id){
+  var el=document.getElementById(id);
+  if(!el)return;
+  el.style.display='none';
+  try{document.body.style.overflow='';}catch(e){}
+}
+document.querySelectorAll('.sov').forEach(function(sov){
+  sov.addEventListener('click',function(e){if(e.target===sov)closeSheet(sov.id);},false);
+});
+</script>
 </body>
 </html>

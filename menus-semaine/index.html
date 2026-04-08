@@ -197,6 +197,8 @@ function initTheme(){const s=localStorage.getItem('lt_th');if(s){applyTheme(s);r
 
 // ── Dispatcher global : gère data-action sans onclick inline ──
 
+function showSuggestSheet(){openSheet('shSuggest');}
+function hideSuggestSheet(){closeSheet('shSuggest');}
 initTheme();render();
 
 
@@ -306,6 +308,25 @@ if ('serviceWorker' in navigator) {
   };
 })();
 
+</script>
+
+<script>
+/* ── Sheets : mutualisé Capacitor WebView ── */
+function openSheet(id){
+  var el=document.getElementById(id);
+  if(!el)return;
+  el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;';
+  try{document.body.style.overflow='hidden';}catch(e){}
+}
+function closeSheet(id){
+  var el=document.getElementById(id);
+  if(!el)return;
+  el.style.display='none';
+  try{document.body.style.overflow='';}catch(e){}
+}
+document.querySelectorAll('.sov').forEach(function(sov){
+  sov.addEventListener('click',function(e){if(e.target===sov)closeSheet(sov.id);},false);
+});
 </script>
 </body>
 </html>

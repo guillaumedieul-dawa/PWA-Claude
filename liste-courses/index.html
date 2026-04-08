@@ -24,32 +24,27 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 .th{font-family:'Google Sans',sans-serif;font-size:22px;font-weight:700;color:var(--ob);letter-spacing:-.3px;line-height:1.1}
 .ibtn{width:40px;height:40px;border-radius:50%;border:none;background:var(--s1);color:var(--os);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
 .ibtn:active{background:var(--s2)}
-/* Quick add */
 .qadd{display:flex;gap:10px;padding:4px 16px 12px;align-items:center}
 .qadd-in{flex:1;padding:12px 16px;border-radius:28px;border:1px solid var(--olv);background:var(--sf);color:var(--ob);font-family:'Google Sans Text',sans-serif;font-size:15px;outline:none;transition:border-color .2s}
 .qadd-in:focus{border-color:var(--p)}
 .qadd-in::placeholder{color:var(--osv)}
 .qadd-btn{width:44px;height:44px;border-radius:50%;border:none;background:var(--p);color:var(--op);font-size:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
 .qadd-btn:active{opacity:.8}
-/* Progress bar */
 .prog-wrap{padding:0 16px 8px}
 .prog-lbl{display:flex;justify-content:space-between;font-size:12px;color:var(--osv);margin-bottom:6px}
 .prog-bar{height:6px;border-radius:3px;background:var(--s2);overflow:hidden}
 .prog-fill{height:100%;border-radius:3px;background:var(--p);transition:width .4s}
-/* Chips */
 .chips{display:flex;gap:8px;padding:0 16px 12px;overflow-x:auto;scrollbar-width:none}
 .chips::-webkit-scrollbar{display:none}
 .chip{flex-shrink:0;padding:7px 14px;border-radius:8px;border:1px solid var(--olv);background:transparent;color:var(--osv);font-family:'Google Sans Text',sans-serif;font-size:13px;cursor:pointer;white-space:nowrap;transition:all .2s}
 .chip.sel{background:var(--pc);border-color:var(--pc);color:var(--opc);font-weight:500}
-/* Category heading */
 .cat-head{display:flex;align-items:center;gap:8px;padding:8px 16px 4px;font-family:'Google Sans',sans-serif;font-size:12px;font-weight:600;color:var(--osv);text-transform:uppercase;letter-spacing:.6px}
-/* Item list */
 .ilist{padding:0 12px;display:flex;flex-direction:column;gap:6px}
-.icard{background:var(--sf);border-radius:var(--rm);padding:12px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 2px var(--sh);transition:all .2s;cursor:pointer}
+.icard{background:var(--sf);border-radius:var(--rm);padding:12px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 2px var(--sh);cursor:pointer}
 .icard.done{opacity:.5}
 .icard.done .iname{text-decoration:line-through;color:var(--osv)}
 .icard:active{transform:scale(.99)}
-.chk{width:22px;height:22px;border-radius:6px;border:2px solid var(--olv);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.chk{width:22px;height:22px;border-radius:6px;border:2px solid var(--olv);flex-shrink:0;display:flex;align-items:center;justify-content:center}
 .chk.done{background:var(--p);border-color:var(--p)}
 .ibody{flex:1;min-width:0}
 .iname{font-size:15px;color:var(--os);font-weight:500}
@@ -57,25 +52,18 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 .iwho{font-size:11px;font-weight:600;padding:2px 7px;border-radius:8px;font-family:'Google Sans',sans-serif}
 .idel{padding:4px 8px;border-radius:8px;border:none;background:transparent;color:var(--osv);font-size:14px;cursor:pointer;opacity:.6;flex-shrink:0}
 .idel:active{opacity:1;color:#93000A}
-/* Clear done btn */
 .clear-btn{display:flex;align-items:center;justify-content:center;gap:6px;margin:12px 16px;padding:12px;border-radius:var(--rs);border:1px solid var(--olv);background:transparent;color:var(--osv);font-family:'Google Sans',sans-serif;font-size:14px;cursor:pointer;width:calc(100% - 32px)}
 .clear-btn:active{background:var(--s1)}
-/* Empty */
 .empty{text-align:center;padding:60px 24px}
 .eico{font-size:56px;margin-bottom:12px;opacity:.5}
 .etit{font-family:'Google Sans',sans-serif;font-size:20px;font-weight:700;color:var(--ob);margin-bottom:6px}
 .esub{font-size:14px;color:var(--osv)}
-/* FAB */
-.fab{position:fixed;bottom:calc(var(--bot)+28px);right:20px;width:56px;height:56px;border-radius:18px;background:var(--p);color:var(--op);border:none;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.2);z-index:49;transition:all .2s}
+.fab{position:fixed;bottom:calc(var(--bot)+28px);right:20px;width:56px;height:56px;border-radius:18px;background:var(--p);color:var(--op);border:none;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.2);z-index:49}
 .fab:active{transform:scale(.92)}
-/* Toast */
 .toast{position:fixed;bottom:calc(var(--bot)+100px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--ob);color:var(--bg);padding:12px 20px;border-radius:28px;font-family:'Google Sans',sans-serif;font-size:14px;font-weight:500;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;max-width:88vw;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-/* Sheet */
 .sov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center}
-
 .sht{background:var(--sf);border-radius:28px 28px 0 0;padding:12px 24px calc(var(--bot)+24px);width:100%;max-width:520px;max-height:92dvh;overflow-y:auto}
-.sov.on .sht{}
 .shnd{width:32px;height:4px;background:var(--olv);border-radius:2px;margin:0 auto 18px;cursor:pointer}
 .shtit{font-family:'Google Sans',sans-serif;font-size:20px;font-weight:700;color:var(--ob);margin-bottom:18px}
 .slbl{font-size:12px;color:var(--osv);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px;font-family:'Google Sans',sans-serif}
@@ -101,40 +89,43 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
       <div class="tlbl">FamilyHub</div>
       <div class="th">🛒 Liste de courses</div>
     </div>
-    <button class="ibtn" id="thbtn" onclick="toggleTheme()">🌙</button>
+    <button class="ibtn" id="thbtn" data-action="toggleTheme">🌙</button>
   </div>
 
   <div class="qadd">
-    <input class="qadd-in" id="qi" placeholder="Ajouter un article…" onkeydown="if(event.key==='Enter')quickAdd()">
-    <button class="qadd-btn" onclick="quickAdd()">＋</button>
+    <input class="qadd-in" id="qi" placeholder="Ajouter un article…">
+    <button class="qadd-btn" data-action="quickAdd">＋</button>
   </div>
 
   <div class="prog-wrap" id="progWrap"></div>
 
   <div class="chips">
-    <button class="chip sel" data-filter="all" onclick="setFlt('all',this)">Tout</button>
-    <button class="chip" data-filter="todo" onclick="setFlt('todo',this)">À acheter</button>
-    <button class="chip" data-filter="done" onclick="setFlt('done',this)">Achetés</button>
-    <button class="chip" data-filter="g" onclick="setFlt('g',this)">Guillaume</button>
-    <button class="chip" data-filter="m" onclick="setFlt('m',this)">Michèle</button>
+    <button class="chip sel" data-filter="all"  data-action="setFilter">Tout</button>
+    <button class="chip"     data-filter="todo" data-action="setFilter">À acheter</button>
+    <button class="chip"     data-filter="done" data-action="setFilter">Achetés</button>
+    <button class="chip"     data-filter="g"    data-action="setFilter">Guillaume</button>
+    <button class="chip"     data-filter="m"    data-action="setFilter">Michèle</button>
   </div>
 
   <div id="IL"></div>
 </div>
 
-<button class="fab" onclick="openAdd()">＋</button>
+<button class="fab" data-action="openAdd">＋</button>
 <div class="toast" id="toast"></div>
 
-<!-- Sheet ajout détaillé -->
 <div class="sov" id="shAdd">
   <div class="sht">
-    <div class="shnd" onclick="closeS('shAdd')"></div>
+    <div class="shnd" data-action="closeAdd"></div>
     <div class="shtit">Ajouter un article</div>
     <div class="slbl ft">Article</div>
     <input class="fin" id="aNom" placeholder="Lait, pain, fromage…">
     <div class="row2">
-      <div><div class="slbl ft">Quantité</div><input class="fin" id="aQty" placeholder="2 litres, 500g…"></div>
-      <div><div class="slbl ft">Rayon</div>
+      <div>
+        <div class="slbl ft">Quantité</div>
+        <input class="fin" id="aQty" placeholder="2 litres, 500g…">
+      </div>
+      <div>
+        <div class="slbl ft">Rayon</div>
         <select class="fsel" id="aCat">
           <option value="🥩 Viandes">🥩 Viandes</option>
           <option value="🥦 Légumes">🥦 Légumes</option>
@@ -154,99 +145,123 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
       <option value="Guillaume">Guillaume</option>
       <option value="Michele">Michèle</option>
     </select>
-    <button class="bfill" onclick="addItem()">Enregistrer</button>
-    <button class="bout" onclick="closeS('shAdd')">Annuler</button>
+    <button class="bfill" data-action="addItem">Enregistrer</button>
+    <button class="bout"  data-action="closeAdd">Annuler</button>
   </div>
 </div>
 
 <script>
-const SK='fh_courses';
-const WHO_COLORS={Guillaume:'#D7E3FF',Michele:'#ECDCFF'};
-const WHO_TC={Guillaume:'#001849',Michele:'#1D0160'};
+'use strict';
+// ── Constantes ──────────────────────────────────────────────
+const SK         = 'fh_courses';
+const WHO_COLORS = {Guillaume:'#D7E3FF', Michele:'#ECDCFF'};
+const WHO_TC     = {Guillaume:'#001849', Michele:'#1D0160'};
 
-function loadD(){try{const d=JSON.parse(localStorage.getItem(SK));if(d?.items)return d;}catch{}return{items:[],nextId:1};}
-function saveD(d){localStorage.setItem(SK,JSON.stringify(d));}
+// ── État ─────────────────────────────────────────────────────
+let D   = loadD();   // données persistées
+let flt = 'all';     // filtre courant — mémoire uniquement
+let _tt;             // timer toast
 
-let D=loadD(),flt='all';
+// ── Stockage ─────────────────────────────────────────────────
+function loadD() {
+  try {
+    const d = JSON.parse(localStorage.getItem(SK));
+    if (d && d.items) return d;
+  } catch(e) {}
+  return {items:[], nextId:1};
+}
+function saveD(d) { localStorage.setItem(SK, JSON.stringify(d)); }
 
-function quickAdd(){
-  const v=document.getElementById('qi').value.trim();if(!v)return;
-  D.items.push({id:D.nextId++,nom:v,qty:'',cat:'🛒 Autre',who:'Guillaume',done:false,date:new Date().toISOString()});
-  saveD(D);render();document.getElementById('qi').value='';showToast('✓ Ajouté');
+// ── Données ──────────────────────────────────────────────────
+function quickAdd() {
+  const el = document.getElementById('qi');
+  const v = el.value.trim();
+  if (!v) return;
+  D.items.push({id:D.nextId++, nom:v, qty:'', cat:'🛒 Autre', who:'Guillaume', done:false, date:new Date().toISOString()});
+  saveD(D); render(); el.value = '';
+  showToast('✓ Ajouté');
 }
 
-function addItem(){
-  const nom=document.getElementById('aNom').value.trim();if(!nom){showToast('⚠️ Saisissez un article');return;}
+function addItem() {
+  const nom = document.getElementById('aNom').value.trim();
+  if (!nom) { showToast('⚠️ Saisissez un article'); return; }
   D.items.push({
-    id:D.nextId++,nom,
-    qty:document.getElementById('aQty').value.trim(),
-    cat:document.getElementById('aCat').value,
-    who:document.getElementById('aWho').value,
-    done:false,date:new Date().toISOString()
+    id: D.nextId++, nom,
+    qty: document.getElementById('aQty').value.trim(),
+    cat: document.getElementById('aCat').value,
+    who: document.getElementById('aWho').value,
+    done: false, date: new Date().toISOString()
   });
-  saveD(D);render();closeS('shAdd');showToast('✓ Ajouté à la liste');
-  ['aNom','aQty'].forEach(id=>document.getElementById(id).value='');
+  saveD(D); render(); closeSheet('shAdd');
+  showToast('✓ Ajouté à la liste');
+  ['aNom','aQty'].forEach(id => document.getElementById(id).value = '');
 }
 
-function toggleItem(id){
-  const t=D.items.find(x=>x.id===id);if(!t)return;
-  t.done=!t.done;saveD(D);render();
+function toggleItem(id) {
+  const t = D.items.find(x => x.id === id);
+  if (!t) return;
+  t.done = !t.done; saveD(D); render();
 }
 
-function delItem(id,e){
-  e.stopPropagation();D.items=D.items.filter(x=>x.id!==id);saveD(D);render();
+function delItem(id) {
+  D.items = D.items.filter(x => x.id !== id);
+  saveD(D); render();
 }
 
-function clearDone(){
-  const n=D.items.filter(x=>x.done).length;
-  if(!n)return;
-  if(confirm(`Supprimer les ${n} article(s) achetés ?`)){
-    D.items=D.items.filter(x=>!x.done);saveD(D);render();showToast(`✓ ${n} article(s) supprimés`);
+function clearDone() {
+  const n = D.items.filter(x => x.done).length;
+  if (!n) return;
+  if (confirm(`Supprimer les ${n} article(s) achetés ?`)) {
+    D.items = D.items.filter(x => !x.done);
+    saveD(D); render();
+    showToast(`✓ ${n} article(s) supprimés`);
   }
 }
 
-function getFilt(){
-  let items=[...D.items];
-  if(flt==='todo')items=items.filter(x=>!x.done);
-  else if(flt==='done')items=items.filter(x=>x.done);
-  else if(flt==='g')items=items.filter(x=>x.who==='Guillaume');
-  else if(flt==='m')items=items.filter(x=>x.who==='Michele');
+// ── Filtrage ──────────────────────────────────────────────────
+function getFilt() {
+  let items = [...D.items];
+  if      (flt === 'todo') items = items.filter(x => !x.done);
+  else if (flt === 'done') items = items.filter(x =>  x.done);
+  else if (flt === 'g')    items = items.filter(x => x.who === 'Guillaume');
+  else if (flt === 'm')    items = items.filter(x => x.who === 'Michele');
   return items;
 }
 
-function renderProg(){
-  const total=D.items.length;
-  const done=D.items.filter(x=>x.done).length;
-  if(!total){document.getElementById('progWrap').innerHTML='';return;}
-  const pct=Math.round(done/total*100);
-  document.getElementById('progWrap').innerHTML=`
+// ── Rendu ─────────────────────────────────────────────────────
+function renderProg() {
+  const total = D.items.length;
+  const done  = D.items.filter(x => x.done).length;
+  if (!total) { document.getElementById('progWrap').innerHTML = ''; return; }
+  const pct = Math.round(done / total * 100);
+  document.getElementById('progWrap').innerHTML = `
     <div class="prog-lbl"><span>${done}/${total} articles</span><span>${pct}%</span></div>
     <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>`;
 }
 
-function render(){
+function render() {
   renderProg();
-  const items=getFilt();
-  const el=document.getElementById('IL');
-  if(!items.length){
-    el.innerHTML=`<div class="ilist"><div class="empty"><div class="eico">🛒</div><div class="etit">${flt==='done'?'Aucun achat':flt==='todo'?'Liste vide':'Liste vide'}</div><div class="esub">Appuyez sur + pour ajouter un article</div></div></div>`;return;
+  const items = getFilt();
+  const el    = document.getElementById('IL');
+  if (!items.length) {
+    el.innerHTML = `<div class="ilist"><div class="empty"><div class="eico">🛒</div><div class="etit">${flt==='done'?'Aucun achat':'Liste vide'}</div><div class="esub">Appuyez sur + pour ajouter un article</div></div></div>`;
+    return;
   }
   // Grouper par catégorie
-  const cats={};
-  items.forEach(item=>{
-    const c=item.cat||'🛒 Autre';
-    if(!cats[c])cats[c]=[];
+  const cats = {};
+  items.forEach(item => {
+    const c = item.cat || '🛒 Autre';
+    if (!cats[c]) cats[c] = [];
     cats[c].push(item);
   });
-  // Trier : todo d'abord, done ensuite
-  Object.values(cats).forEach(arr=>arr.sort((a,b)=>a.done-b.done));
+  Object.values(cats).forEach(arr => arr.sort((a,b) => a.done - b.done));
 
-  const doneCnt=items.filter(x=>x.done).length;
-  let html='<div class="ilist">';
-  for(const [cat,arr] of Object.entries(cats)){
-    html+=`<div class="cat-head">${cat}</div>`;
-    arr.forEach((item,i)=>{
-      html+=`<div class="icard${item.done?' done':''}" data-action="toggleItem" data-id="${item.id}" style="animation-delay:${i*.02}s">
+  const doneCnt = items.filter(x => x.done).length;
+  let html = '<div class="ilist">';
+  for (const [cat, arr] of Object.entries(cats)) {
+    html += `<div class="cat-head">${cat}</div>`;
+    arr.forEach((item, i) => {
+      html += `<div class="icard${item.done?' done':''}" data-action="toggleItem" data-id="${item.id}" style="animation-delay:${i*.02}s">
         <div class="chk${item.done?' done':''}">${item.done?'<span style="color:#fff;font-size:12px">✓</span>':''}</div>
         <div class="ibody">
           <div class="iname">${item.nom}</div>
@@ -257,51 +272,104 @@ function render(){
       </div>`;
     });
   }
-  html+='</div>';
-  if(doneCnt>0){
-    html+=`<button class="clear-btn" onclick="clearDone()">🗑 Supprimer les ${doneCnt} article(s) achetés</button>`;
+  html += '</div>';
+  if (doneCnt > 0) {
+    html += `<button class="clear-btn" data-action="clearDone">🗑 Supprimer les ${doneCnt} article(s) achetés</button>`;
   }
-  el.innerHTML=html;
+  el.innerHTML = html;
 }
 
-function setF(f,btn){flt=f;document.querySelectorAll('.chip').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');render();}
+// ── Sheets (mutualisé) ────────────────────────────────────────
+function openSheet(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;';
+  try { document.body.style.overflow = 'hidden'; } catch(e) {}
+}
+function closeSheet(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.display = 'none';
+  try { document.body.style.overflow = ''; } catch(e) {}
+}
 
+// ── UI ────────────────────────────────────────────────────────
+function showToast(m) {
+  const t = document.getElementById('toast');
+  t.textContent = m; t.classList.add('show');
+  clearTimeout(_tt); _tt = setTimeout(() => t.classList.remove('show'), 3000);
+}
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  document.getElementById('thbtn').textContent = t === 'dark' ? '🌙' : '☀️';
+}
+function toggleTheme() {
+  const d = document.documentElement.getAttribute('data-theme') === 'dark';
+  const n = d ? 'light' : 'dark';
+  localStorage.setItem('lt_th', n); applyTheme(n);
+}
+function initTheme() {
+  const s = localStorage.getItem('lt_th');
+  if (s) { applyTheme(s); return; }
+  const sys = window.matchMedia('(prefers-color-scheme: dark)');
+  applyTheme(sys.matches ? 'dark' : 'light');
+  sys.addEventListener('change', e => { if (!localStorage.getItem('lt_th')) applyTheme(e.matches?'dark':'light'); });
+}
 
-document.querySelectorAll('.sov').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)closeS(o.id);}));
-let _tt;function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('show'),3000);}
-function applyTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('thbtn').textContent=t==='dark'?'🌙':'☀️';}
-function toggleTheme(){const d=document.documentElement.getAttribute('data-theme')==='dark';const n=d?'light':'dark';localStorage.setItem('lt_th',n);applyTheme(n);}
-function initTheme(){const s=localStorage.getItem('lt_th');if(s){applyTheme(s);return;}const sys=window.matchMedia('(prefers-color-scheme: dark)');applyTheme(sys.matches?'dark':'light');sys.addEventListener('change',e=>{if(!localStorage.getItem('lt_th'))applyTheme(e.matches?'dark':'light');});}
+// ── Dispatcher global data-action ─────────────────────────────
+document.addEventListener('click', function(e) {
+  const el = e.target.closest('[data-action]');
+  if (!el) return;
+  const action = el.getAttribute('data-action');
+  const ds = el.dataset;
 
-// ── Dispatcher global : gère data-action sans onclick inline ──
+  switch (action) {
+    // Navigation / UI
+    case 'toggleTheme': toggleTheme(); break;
+    case 'openAdd':     openSheet('shAdd'); break;
+    case 'closeAdd':    closeSheet('shAdd'); break;
 
+    // Filtre
+    case 'setFilter':
+      flt = ds.filter || 'all';
+      document.querySelectorAll('.chip').forEach(b => b.classList.remove('sel'));
+      el.classList.add('sel');
+      render();
+      break;
 
-function setFlt(f,btn){flt=f;document.querySelectorAll('.chip').forEach(function(b){b.classList.remove('sel');});if(btn)btn.classList.add('sel');render();}
-// Masquer toutes les sheets au démarrage
-document.querySelectorAll('.sov').forEach(function(el){el.style.display='none';});
-function openAdd(){openSheet('shAdd');}
+    // Formulaire
+    case 'quickAdd': quickAdd(); break;
+    case 'addItem':  addItem();  break;
 
-function closeS(id){closeSheet(id);}
-function openS(id){openSheet(id);}
-initTheme();
-(function(){
-  var _R=render;
-  render=function(){
-    _R();
-    document.querySelectorAll('.icard[data-id]').forEach(function(card){
-      if(card._b)return;card._b=1;
-      var iid=parseInt(card.dataset.id||0);
-      card.setAttribute('onclick','toggleItem('+iid+')');
-      var d=card.querySelector('.idel');
-      if(d)d.setAttribute('onclick','event.stopPropagation();delItem('+iid+',event)');
-    });
-    var clr=document.querySelector('.clear-btn');
-    if(clr&&!clr._b){clr._b=1;clr.setAttribute('onclick','clearDone()');}
-  };
-})();
-render();
+    // Articles
+    case 'toggleItem': toggleItem(parseInt(ds.id)); break;
+    case 'delItem':
+      e.stopPropagation();
+      delItem(parseInt(ds.id));
+      break;
+    case 'clearDone': clearDone(); break;
+  }
+});
+
+// Fermer sheet en cliquant le fond
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('sov')) closeSheet(e.target.id);
+});
+
+// Touche Entrée sur le champ ajout rapide
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && e.target.id === 'qi') quickAdd();
+});
+
+// ── Initialisation unique ─────────────────────────────────────
+function init() {
+  document.querySelectorAll('.sov').forEach(el => { el.style.display = 'none'; });
+  initTheme();
+  render();
+}
+
+init();
 </script>
-
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -310,26 +378,6 @@ if ('serviceWorker' in navigator) {
       .catch(e => console.warn('SW erreur', e));
   });
 }
-</script>
-
-
-<script>
-/* ── Sheets : mutualisé Capacitor WebView ── */
-function openSheet(id){
-  var el=document.getElementById(id);
-  if(!el)return;
-  el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;';
-  try{document.body.style.overflow='hidden';}catch(e){}
-}
-function closeSheet(id){
-  var el=document.getElementById(id);
-  if(!el)return;
-  el.style.display='none';
-  try{document.body.style.overflow='';}catch(e){}
-}
-document.querySelectorAll('.sov').forEach(function(sov){
-  sov.addEventListener('click',function(e){if(e.target===sov)closeSheet(sov.id);},false);
-});
 </script>
 </body>
 </html>

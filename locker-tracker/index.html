@@ -979,6 +979,19 @@ document.addEventListener('keydown', function(e){
 try{var _sf=sessionStorage.getItem('fh_filter');if(_sf)flt=_sf;}catch(_){}
 
 document.querySelectorAll('.sov').forEach(function(el){el.style.display='none';});
+
+function openSheet(id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;';
+  try { document.body.style.overflow = 'hidden'; } catch(e) {}
+}
+function closeSheet(id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.style.display = 'none';
+  try { document.body.style.overflow = ''; } catch(e) {}
+}
 function openAdd(){openSheet('shAdd');}
 function openSync(){openSheet('shSync');renderSS();renderLogs();}
 function closeS(id){closeSheet(id);}

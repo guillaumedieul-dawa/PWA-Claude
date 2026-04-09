@@ -16,7 +16,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
 
       - uses: actions/setup-java@v4
         with:
@@ -96,23 +96,15 @@ jobs:
           print("Permissions ajoutees :", permissions)
           PYEOF
 
-      - name: Setup keystore stable (KEYSTORE_BASE64 secret)
+      - name: Setup keystore fixe (embarqué dans le workflow)
         run: |
           KEYSTORE_DIR="$HOME/.android"
           mkdir -p "$KEYSTORE_DIR"
-          if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
-            echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > "$KEYSTORE_DIR/debug.keystore"
-            echo "✓ Keystore restauré depuis KEYSTORE_BASE64"
-          else
-            echo "⚠️  KEYSTORE_BASE64 manquant — APK non updatable sans désinstall"
-            keytool -genkeypair -v \
-              -keystore "$KEYSTORE_DIR/debug.keystore" \
-              -storepass android -keypass android \
-              -alias androiddebugkey \
-              -keyalg RSA -keysize 2048 -validity 10000 \
-              -dname "CN=FamilyHub,O=Famille Dieul-Gandet,C=FR" \
-              2>/dev/null || true
-          fi
+          # Keystore fixe embarqué — garantit la même signature à chaque build
+          # Remplace l'ancien système qui générait un nouveau keystore à chaque fois
+          echo "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" | base64 --decode > "$KEYSTORE_DIR/debug.keystore"
+          echo "✓ Keystore FamilyHub restauré"
+
 
       - name: Set versionCode auto (évite les conflits de version)
         run: |

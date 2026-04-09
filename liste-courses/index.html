@@ -24,12 +24,10 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 .th{font-family:'Google Sans',sans-serif;font-size:22px;font-weight:700;color:var(--ob);letter-spacing:-.3px;line-height:1.1}
 .ibtn{width:40px;height:40px;border-radius:50%;border:none;background:var(--s1);color:var(--os);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
 .ibtn:active{background:var(--s2)}
-.qadd{display:flex;gap:10px;padding:4px 16px 12px;align-items:center}
-.qadd-in{flex:1;padding:12px 16px;border-radius:28px;border:1px solid var(--olv);background:var(--sf);color:var(--ob);font-family:'Google Sans Text',sans-serif;font-size:15px;outline:none;transition:border-color .2s}
+.qadd{display:flex;gap:0;padding:4px 16px 12px;align-items:center}
+.qadd-in{flex:1;width:100%;padding:12px 16px;border-radius:28px;border:1px solid var(--olv);background:var(--sf);color:var(--ob);font-family:'Google Sans Text',sans-serif;font-size:15px;outline:none;transition:border-color .2s}
 .qadd-in:focus{border-color:var(--p)}
 .qadd-in::placeholder{color:var(--osv)}
-.qadd-btn{width:44px;height:44px;border-radius:50%;border:none;background:var(--p);color:var(--op);font-size:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
-.qadd-btn:active{opacity:.8}
 .prog-wrap{padding:0 16px 8px}
 .prog-lbl{display:flex;justify-content:space-between;font-size:12px;color:var(--osv);margin-bottom:6px}
 .prog-bar{height:6px;border-radius:3px;background:var(--s2);overflow:hidden}
@@ -38,7 +36,6 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 .chips::-webkit-scrollbar{display:none}
 .chip{flex-shrink:0;padding:7px 14px;border-radius:8px;border:1px solid var(--olv);background:transparent;color:var(--osv);font-family:'Google Sans Text',sans-serif;font-size:13px;cursor:pointer;white-space:nowrap;transition:all .2s}
 .chip.sel{background:var(--pc);border-color:var(--pc);color:var(--opc);font-weight:500}
-.cat-head{display:flex;align-items:center;gap:8px;padding:8px 16px 4px;font-family:'Google Sans',sans-serif;font-size:12px;font-weight:600;color:var(--osv);text-transform:uppercase;letter-spacing:.6px}
 .ilist{padding:0 12px;display:flex;flex-direction:column;gap:6px}
 .icard{background:var(--sf);border-radius:var(--rm);padding:12px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 2px var(--sh);cursor:pointer}
 .icard.done{opacity:.5}
@@ -49,9 +46,10 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 .ibody{flex:1;min-width:0}
 .iname{font-size:15px;color:var(--os);font-weight:500}
 .iqty{font-size:12px;color:var(--osv);margin-top:2px;font-family:'Roboto Mono',monospace}
-.iwho{font-size:11px;font-weight:600;padding:2px 7px;border-radius:8px;font-family:'Google Sans',sans-serif}
-.idel{padding:4px 8px;border-radius:8px;border:none;background:transparent;color:var(--osv);font-size:14px;cursor:pointer;opacity:.6;flex-shrink:0}
-.idel:active{opacity:1;color:#93000A}
+.iwho{font-size:11px;font-weight:600;padding:2px 7px;border-radius:8px;font-family:'Google Sans',sans-serif;flex-shrink:0}
+.icard-actions{display:flex;gap:4px;flex-shrink:0}
+.icard-btn{padding:4px 6px;border-radius:8px;border:none;background:transparent;color:var(--osv);font-size:14px;cursor:pointer;opacity:.6}
+.icard-btn:active{opacity:1}
 .clear-btn{display:flex;align-items:center;justify-content:center;gap:6px;margin:12px 16px;padding:12px;border-radius:var(--rs);border:1px solid var(--olv);background:transparent;color:var(--osv);font-family:'Google Sans',sans-serif;font-size:14px;cursor:pointer;width:calc(100% - 32px)}
 .clear-btn:active{background:var(--s1)}
 .empty{text-align:center;padding:60px 24px}
@@ -62,8 +60,8 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 .fab:active{transform:scale(.92)}
 .toast{position:fixed;bottom:calc(var(--bot)+100px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--ob);color:var(--bg);padding:12px 20px;border-radius:28px;font-family:'Google Sans',sans-serif;font-size:14px;font-weight:500;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;max-width:88vw;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.sov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center}
-.sht{background:var(--sf);border-radius:28px 28px 0 0;padding:12px 24px calc(var(--bot)+24px);width:100%;max-width:520px;max-height:92dvh;overflow-y:auto}
+.sov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center;padding:0 8px}
+.sht{background:var(--sf);border-radius:28px 28px 0 0;padding:20px 28px calc(var(--bot)+28px);width:100%;max-width:520px;max-height:92dvh;overflow-y:auto}
 .shnd{width:32px;height:4px;background:var(--olv);border-radius:2px;margin:0 auto 18px;cursor:pointer}
 .shtit{font-family:'Google Sans',sans-serif;font-size:20px;font-weight:700;color:var(--ob);margin-bottom:18px}
 .slbl{font-size:12px;color:var(--osv);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px;font-family:'Google Sans',sans-serif}
@@ -75,8 +73,6 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 .bfill{width:100%;padding:14px;border-radius:var(--rl);background:var(--p);color:var(--op);border:none;font-family:'Google Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px}
 .bfill:active{opacity:.85}
 .bout{width:100%;padding:13px;border-radius:var(--rl);background:transparent;border:1px solid var(--olv);color:var(--osv);font-family:'Google Sans',sans-serif;font-size:15px;cursor:pointer;margin-top:8px}
-.row2{display:flex;gap:10px}
-.row2>*{flex:1}
 @keyframes fu{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .icard{animation:fu .2s ease both}
 </style>
@@ -93,8 +89,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
   </div>
 
   <div class="qadd">
-    <input class="qadd-in" id="qi" placeholder="Ajouter un article…">
-    <button class="qadd-btn" data-action="quickAdd"><span style="pointer-events:none">＋</span></button>
+    <input class="qadd-in" id="qi" placeholder="Ajouter rapidement un article…">
   </div>
 
   <div class="prog-wrap" id="progWrap"></div>
@@ -113,93 +108,91 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 <button class="fab" data-action="openAdd"><span style="pointer-events:none">＋</span></button>
 <div class="toast" id="toast"></div>
 
+<!-- Sheet ajout / édition -->
 <div class="sov" id="shAdd">
   <div class="sht">
     <div class="shnd" data-action="closeAdd"></div>
-    <div class="shtit">Ajouter un article</div>
+    <div class="shtit" id="shAddTitle">Ajouter un article</div>
     <div class="slbl ft">Article</div>
     <input class="fin" id="aNom" placeholder="Lait, pain, fromage…">
-    <div class="row2">
-      <div>
-        <div class="slbl ft">Quantité</div>
-        <input class="fin" id="aQty" placeholder="2 litres, 500g…">
-      </div>
-      <div>
-        <div class="slbl ft">Rayon</div>
-        <select class="fsel" id="aCat">
-          <option value="🥩 Viandes">🥩 Viandes</option>
-          <option value="🥦 Légumes">🥦 Légumes</option>
-          <option value="🍎 Fruits">🍎 Fruits</option>
-          <option value="🥛 Laitages">🥛 Laitages</option>
-          <option value="🍞 Boulangerie">🍞 Boulangerie</option>
-          <option value="🥫 Épicerie">🥫 Épicerie</option>
-          <option value="🧊 Surgelés">🧊 Surgelés</option>
-          <option value="🧴 Hygiène">🧴 Hygiène</option>
-          <option value="🍷 Boissons">🍷 Boissons</option>
-          <option value="🛒 Autre">🛒 Autre</option>
-        </select>
-      </div>
-    </div>
+    <div class="slbl">Quantité</div>
+    <input class="fin" id="aQty" placeholder="2 litres, 500g… (optionnel)">
     <div class="slbl">Ajouté par</div>
     <select class="fsel" id="aWho">
       <option value="Guillaume">Guillaume</option>
       <option value="Michele">Michèle</option>
     </select>
-    <button class="bfill" data-action="addItem">Enregistrer</button>
+    <button class="bfill" data-action="saveItem">Enregistrer</button>
     <button class="bout"  data-action="closeAdd">Annuler</button>
   </div>
 </div>
 
 <script>
 'use strict';
-// ── Constantes ──────────────────────────────────────────────
 const SK         = 'fh_courses';
 const WHO_COLORS = {Guillaume:'#D7E3FF', Michele:'#ECDCFF'};
 const WHO_TC     = {Guillaume:'#001849', Michele:'#1D0160'};
 
-// ── État ─────────────────────────────────────────────────────
-let D   = loadD();   // données persistées
-let flt = 'all';     // filtre courant — mémoire uniquement
-let _tt;             // timer toast
+let D      = loadD();
+let flt    = 'all';
+let editId = null;
+let _tt;
 
-// ── Stockage ─────────────────────────────────────────────────
 function loadD() {
-  try {
-    const d = JSON.parse(localStorage.getItem(SK));
-    if (d && d.items) return d;
-  } catch(e) {}
+  try { const d = JSON.parse(localStorage.getItem(SK)); if (d && d.items) return d; } catch(e) {}
   return {items:[], nextId:1};
 }
 function saveD(d) { localStorage.setItem(SK, JSON.stringify(d)); }
 
-// ── Données ──────────────────────────────────────────────────
+// ── CRUD ────────────────────────────────────────────────────
 function quickAdd() {
   const el = document.getElementById('qi');
-  const v = el.value.trim();
-  if (!v) return;
-  D.items.push({id:D.nextId++, nom:v, qty:'', cat:'🛒 Autre', who:'Guillaume', done:false, date:new Date().toISOString()});
+  const v = el.value.trim(); if (!v) return;
+  D.items.push({id:D.nextId++, nom:v, qty:'', who:'Guillaume', done:false, date:new Date().toISOString()});
   saveD(D); render(); el.value = '';
   showToast('✓ Ajouté');
 }
 
-function addItem() {
+function openAddSheet() {
+  editId = null;
+  document.getElementById('shAddTitle').textContent = 'Ajouter un article';
+  document.getElementById('aNom').value = '';
+  document.getElementById('aQty').value = '';
+  document.getElementById('aWho').value = 'Guillaume';
+  openSheet('shAdd');
+}
+
+function openEditSheet(id) {
+  const item = D.items.find(x => x.id === id); if (!item) return;
+  editId = id;
+  document.getElementById('shAddTitle').textContent = 'Modifier l\'article';
+  document.getElementById('aNom').value = item.nom;
+  document.getElementById('aQty').value = item.qty || '';
+  document.getElementById('aWho').value = item.who;
+  openSheet('shAdd');
+}
+
+function saveItem() {
   const nom = document.getElementById('aNom').value.trim();
   if (!nom) { showToast('⚠️ Saisissez un article'); return; }
-  D.items.push({
-    id: D.nextId++, nom,
-    qty: document.getElementById('aQty').value.trim(),
-    cat: document.getElementById('aCat').value,
-    who: document.getElementById('aWho').value,
-    done: false, date: new Date().toISOString()
-  });
+  const qty = document.getElementById('aQty').value.trim();
+  const who = document.getElementById('aWho').value;
+
+  if (editId !== null) {
+    const item = D.items.find(x => x.id === editId); if (!item) return;
+    item.nom = nom; item.qty = qty; item.who = who;
+    showToast('✓ Article modifié');
+  } else {
+    D.items.push({id:D.nextId++, nom, qty, who, done:false, date:new Date().toISOString()});
+    showToast('✓ Ajouté à la liste');
+  }
   saveD(D); render(); closeSheet('shAdd');
-  showToast('✓ Ajouté à la liste');
-  ['aNom','aQty'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('aNom').value = '';
+  document.getElementById('aQty').value = '';
 }
 
 function toggleItem(id) {
-  const t = D.items.find(x => x.id === id);
-  if (!t) return;
+  const t = D.items.find(x => x.id === id); if (!t) return;
   t.done = !t.done; saveD(D); render();
 }
 
@@ -209,16 +202,14 @@ function delItem(id) {
 }
 
 function clearDone() {
-  const n = D.items.filter(x => x.done).length;
-  if (!n) return;
+  const n = D.items.filter(x => x.done).length; if (!n) return;
   if (confirm(`Supprimer les ${n} article(s) achetés ?`)) {
     D.items = D.items.filter(x => !x.done);
-    saveD(D); render();
-    showToast(`✓ ${n} article(s) supprimés`);
+    saveD(D); render(); showToast(`✓ ${n} article(s) supprimés`);
   }
 }
 
-// ── Filtrage ──────────────────────────────────────────────────
+// ── Filtrage ─────────────────────────────────────────────────
 function getFilt() {
   let items = [...D.items];
   if      (flt === 'todo') items = items.filter(x => !x.done);
@@ -247,31 +238,24 @@ function render() {
     el.innerHTML = `<div class="ilist"><div class="empty"><div class="eico">🛒</div><div class="etit">${flt==='done'?'Aucun achat':'Liste vide'}</div><div class="esub">Appuyez sur + pour ajouter un article</div></div></div>`;
     return;
   }
-  // Grouper par catégorie
-  const cats = {};
-  items.forEach(item => {
-    const c = item.cat || '🛒 Autre';
-    if (!cats[c]) cats[c] = [];
-    cats[c].push(item);
-  });
-  Object.values(cats).forEach(arr => arr.sort((a,b) => a.done - b.done));
-
+  // Liste plate (sans groupement par rayon)
+  items.sort((a,b) => a.done - b.done);
   const doneCnt = items.filter(x => x.done).length;
   let html = '<div class="ilist">';
-  for (const [cat, arr] of Object.entries(cats)) {
-    html += `<div class="cat-head">${cat}</div>`;
-    arr.forEach((item, i) => {
-      html += `<div class="icard${item.done?' done':''}" data-action="toggleItem" data-id="${item.id}" style="animation-delay:${i*.02}s">
-        <div class="chk${item.done?' done':''}">${item.done?'<span style="color:#fff;font-size:12px">✓</span>':''}</div>
-        <div class="ibody">
-          <div class="iname">${item.nom}</div>
-          ${item.qty?`<div class="iqty">${item.qty}</div>`:''}
-        </div>
-        <span class="iwho" style="background:${WHO_COLORS[item.who]||'#E6EBF0'};color:${WHO_TC[item.who]||'#42474C'}">${item.who==='Michele'?'M':'G'}</span>
-        <button class="idel" data-action="delItem" data-id="${item.id}">🗑</button>
-      </div>`;
-    });
-  }
+  items.forEach((item, i) => {
+    html += `<div class="icard${item.done?' done':''}" data-action="toggleItem" data-id="${item.id}" style="animation-delay:${i*.02}s">
+      <div class="chk${item.done?' done':''}">${item.done?'<span style="color:#fff;font-size:12px">✓</span>':''}</div>
+      <div class="ibody">
+        <div class="iname">${item.nom}</div>
+        ${item.qty?`<div class="iqty">${item.qty}</div>`:''}
+      </div>
+      <span class="iwho" style="background:${WHO_COLORS[item.who]||'#E6EBF0'};color:${WHO_TC[item.who]||'#42474C'}">${item.who==='Michele'?'M':'G'}</span>
+      <div class="icard-actions">
+        <button class="icard-btn" data-action="editItem" data-id="${item.id}" title="Modifier">✏️</button>
+        <button class="icard-btn" data-action="delItem"  data-id="${item.id}" title="Supprimer">🗑</button>
+      </div>
+    </div>`;
+  });
   html += '</div>';
   if (doneCnt > 0) {
     html += `<button class="clear-btn" data-action="clearDone">🗑 Supprimer les ${doneCnt} article(s) achetés</button>`;
@@ -279,16 +263,14 @@ function render() {
   el.innerHTML = html;
 }
 
-// ── Sheets (mutualisé) ────────────────────────────────────────
+// ── Sheets ──────────────────────────────────────────────────
 function openSheet(id) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;';
+  const el = document.getElementById(id); if (!el) return;
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;padding:0 8px;';
   try { document.body.style.overflow = 'hidden'; } catch(e) {}
 }
 function closeSheet(id) {
-  const el = document.getElementById(id);
-  if (!el) return;
+  const el = document.getElementById(id); if (!el) return;
   el.style.display = 'none';
   try { document.body.style.overflow = ''; } catch(e) {}
 }
@@ -316,57 +298,9 @@ function initTheme() {
   sys.addEventListener('change', e => { if (!localStorage.getItem('lt_th')) applyTheme(e.matches?'dark':'light'); });
 }
 
-// ── Dispatcher global data-action ─────────────────────────────
-document.addEventListener('click', function(e) {
-  const el = findAction(e.target);
-  if (!el) return;
-  const action = el.getAttribute('data-action');
-  const ds = el.dataset;
-
-  switch (action) {
-    // Navigation / UI
-    case 'toggleTheme': toggleTheme(); break;
-    case 'openAdd':     openSheet('shAdd'); break;
-    case 'closeAdd':    closeSheet('shAdd'); break;
-
-    // Filtre
-    case 'setFilter':
-      flt = ds.filter || 'all';
-      document.querySelectorAll('.chip').forEach(b => b.classList.remove('sel'));
-      el.classList.add('sel');
-      render();
-      break;
-
-    // Formulaire
-    case 'quickAdd': quickAdd(); break;
-    case 'addItem':  addItem();  break;
-
-    // Articles
-    case 'toggleItem': toggleItem(parseInt(ds.id)); break;
-    case 'delItem':
-      e.stopPropagation();
-      delItem(parseInt(ds.id));
-      break;
-    case 'clearDone': clearDone(); break;
-  }
-});
-
-// Fermer sheet en cliquant le fond
-document.addEventListener('click', function(e) {
-  if (e.target.classList.contains('sov')) closeSheet(e.target.id);
-});
-
-// Touche Entrée sur le champ ajout rapide
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Enter' && e.target.id === 'qi') quickAdd();
-});
-
-
-// Remonter le DOM pour trouver un ancêtre avec data-action
-// Robuste avec les TextNodes dans WebView Android
+// ── Dispatcher ────────────────────────────────────────────────
 function findAction(target) {
   var el = target;
-  // Remonter jusqu'à trouver un Element (pas un TextNode)
   while (el && !el.getAttribute) { el = el.parentElement || el.parentNode; }
   while (el && el !== document) {
     if (el.getAttribute && el.getAttribute('data-action')) return el;
@@ -374,13 +308,44 @@ function findAction(target) {
   }
   return null;
 }
-// ── Initialisation unique ─────────────────────────────────────
+
+document.addEventListener('click', function(e) {
+  const el = findAction(e.target); if (!el) return;
+  const action = el.getAttribute('data-action');
+  const ds = el.dataset;
+  switch (action) {
+    case 'toggleTheme': toggleTheme(); break;
+    case 'openAdd':     openAddSheet(); break;
+    case 'closeAdd':    closeSheet('shAdd'); break;
+    case 'setFilter':
+      flt = ds.filter || 'all';
+      document.querySelectorAll('.chip').forEach(b => b.classList.remove('sel'));
+      el.classList.add('sel'); render(); break;
+    case 'saveItem':    saveItem(); break;
+    case 'toggleItem':  toggleItem(parseInt(ds.id)); break;
+    case 'editItem':
+      e.stopPropagation();
+      openEditSheet(parseInt(ds.id)); break;
+    case 'delItem':
+      e.stopPropagation();
+      delItem(parseInt(ds.id)); break;
+    case 'clearDone':   clearDone(); break;
+  }
+});
+
+document.addEventListener('click', function(e) {
+  if (e.target.classList && e.target.classList.contains('sov')) closeSheet(e.target.id);
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && e.target.id === 'qi') quickAdd();
+});
+
+// ── Init ──────────────────────────────────────────────────────
 function init() {
   document.querySelectorAll('.sov').forEach(el => { el.style.display = 'none'; });
-  initTheme();
-  render();
+  initTheme(); render();
 }
-
 init();
 </script>
 <script>

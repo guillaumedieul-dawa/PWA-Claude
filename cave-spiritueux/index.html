@@ -70,7 +70,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 .etit{font-family:'Google Sans',sans-serif;font-size:20px;font-weight:700;color:var(--ob);margin-bottom:6px}
 .esub{font-size:14px;color:var(--osv)}
 /* FAB & Toast */
-.fab{position:fixed;bottom:calc(var(--bot)+28px);right:20px;width:56px;height:56px;border-radius:18px;background:var(--p);color:var(--op);border:none;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.2);z-index:49;transition:all .2s}
+.fab{position:fixed;bottom:calc(var(--bot) + 28px);right:20px;width:56px;height:56px;border-radius:18px;background:var(--pc);color:var(--opc);border:none;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px var(--sh);transition:all .2s;z-index:49}
 .fab:active{transform:scale(.92)}
 .toast{position:fixed;bottom:calc(var(--bot)+100px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--ob);color:var(--bg);padding:12px 20px;border-radius:28px;font-family:'Google Sans',sans-serif;font-size:14px;font-weight:500;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;max-width:88vw;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}

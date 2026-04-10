@@ -161,9 +161,9 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* Bottom Sheet */
-.sov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center}
+.sov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center;padding:0 8px}
 
-.sht{background:var(--sf);border-radius:28px 28px 0 0;padding:12px 24px calc(var(--bot) + 24px);width:100%;max-width:520px;max-height:92dvh;overflow-y:auto}
+.sht{background:var(--sf);border-radius:28px 28px 0 0;padding:20px 28px calc(var(--bot)+28px);width:100%;max-width:520px;max-height:92dvh;overflow-y:auto}
 .sov.on .sht{}
 .shnd{width:32px;height:4px;background:var(--olv);border-radius:2px;margin:0 auto 18px;cursor:pointer}
 .shtit{font-family:'Google Sans',sans-serif;font-size:20px;font-weight:700;color:var(--ob);margin-bottom:18px}
@@ -379,7 +379,7 @@ function esc(s){
 // Version pour attributs onclick (escape les guillemets simples)
 function escAttr(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/'/g,'&#39;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');}
 const DK='lt_disabled'; // clés des transporteurs désactivés
-function getDisabled(){try{return new Set(JSON.parse(localStorage.getItem(DK)||'[]'));}catch{return new Set();}}
+function getDisabled(){try{if(!localStorage.getItem(DK))localStorage.setItem(DK,JSON.stringify(['amazon']));return new Set(JSON.parse(localStorage.getItem(DK)||'[]'));}catch{return new Set();}}
 function isDisabled(c){return getDisabled().has(c);}
 const DR={chronopost:8,chronofresh:5,mondialrelay:5,colissimo:15,laposte:15,vintedgo:14,amazon:3,dpd:14,ups:10,gls:7,relaiscolis:10,other:14};
 const CL={chronopost:'#003087',chronofresh:'#005fa3',mondialrelay:'#e2001a',colissimo:'#f5c400',laposte:'#f5c400',vintedgo:'#09b1ba',amazon:'#ff9900',dpd:'#dc0032',ups:'#6b4226',gls:'#005ca9',relaiscolis:'#e8621a',other:'#888'};
@@ -888,9 +888,19 @@ function renderRetCf(){
       <div class="cfgl">${LB[c]||c}</div>
       <input class="cfgi" type="number" min="1" max="60" id="r_${c}" value="${R[c]||d}" ${dis?'disabled':''}>
       <span style="font-size:12px;color:var(--osv)"> j</span>
-      <button onclick="toggleDisabled('"+c+"',this)" style="padding:4px 8px;border-radius:8px;border:1px solid var(--olv);background:${dis?'var(--cfb)':'var(--s2)'};color:${dis?'var(--cf)':'var(--osv)'};font-size:11px;cursor:pointer;white-space:nowrap;font-family:'Google Sans',sans-serif" title="${dis?'Réactiver':'Désactiver'}">${dis?'✕ OFF':'✓ ON'}</button>
+      <button data-carrier="${c}" style="padding:4px 8px;border-radius:8px;border:1px solid var(--olv);background:${dis?'var(--cfb)':'var(--s2)'};color:${dis?'var(--cf)':'var(--osv)'};font-size:11px;cursor:pointer;white-space:nowrap;font-family:'Google Sans',sans-serif" title="${dis?'Réactiver':'Désactiver'}">${dis?'✕ OFF':'✓ ON'}</button>
     </div>`;
   }).join('');
+  // Rebinding explicit — inline onclick non fiable dans Capacitor WebView
+  var cfgEl = document.getElementById('retCf');
+  if (cfgEl) {
+    cfgEl.querySelectorAll('[data-carrier]').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        toggleDisabled(btn.getAttribute('data-carrier'), btn);
+      }, false);
+    });
+  }
 }
 function toggleDisabled(c,btn){
   const d=getDisabled();

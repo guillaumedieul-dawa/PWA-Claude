@@ -472,7 +472,7 @@ async function fetchGmailLog(){
   }
 }
 
-function purge(){
+function purge(){const _O={pending:0,out_for_delivery:1,ready:2,failed:2,delivered:3,expired:4,collected:4};const _seen={};D.packages=D.packages.filter(function(p){const k=(p.trackingNum||'').toUpperCase().trim();if(!k)return true;if(!_seen[k]){_seen[k]=p;return true;}const ex=_seen[k];if((_O[p.status]||0)>(_O[ex.status]||0))ex.status=p.status;ex.pickupCode=ex.pickupCode||p.pickupCode;ex.lockerAddress=ex.lockerAddress||p.lockerAddress;ex.expiryDate=ex.expiryDate||p.expiryDate;ex.sender=ex.sender||p.sender;return false;});
   const L=20*86400000,now=Date.now();let changed=false;
   // Auto-expiration : si date dépassée et statut actif → expired
   D.packages.forEach(p=>{
@@ -588,7 +588,7 @@ const SM={
 function detSt(t){if(!t)return'pending';const lo=t.toLowerCase();for(const s of['delivered','expired','failed','out_for_delivery','ready','pending'])if(SM[s].some(k=>lo.includes(k)))return s;return'pending';}
 
 function xT(c,t){if(!t)return'';const P={ups:[/\b(1Z[A-Z0-9]{16})\b/i],chronopost:[/\b([A-Z]{2}\d{9}[A-Z]{2})\b/,/\b(PP\d{9}FR)\b/i,/\b(\d{13}[A-Z])\b/],chronofresh:[/\b([A-Z]{2}\d{9}[A-Z]{2})\b/],colissimo:[/\b(6[A-Z]\d{11})\b/,/\b(8[A-Z]\d{11})\b/,/\bn[°o]\s*([A-Z0-9]{9,15})\b/i],mondialrelay:[/\b(\d{8})\b/,/\b(\d{5,7})\b/],vintedgo:[/\b(1UW[A-Z0-9]{9,})\b/i,/\b(\d{13,19})\b/,/suivi\s*:\s*([A-Z0-9]{8,})/i],dpd:[/\b(\d{14})\b/,/colis n[°o]\s*(\d{10,})/i],gls:[/colis\s+([0-9A-Z]{6,10})\b/i],relaiscolis:[/\b(VD[A-Z0-9]{8,})\b/i],laposte:[/\b(6[A-Z]\d{11})\b/,/\b(8[A-Z]\d{11})\b/],amazon:[/\b(\d{3}-\d{7}-\d{7})\b/]};for(const r of(P[c]||[])){const m=t.match(r);if(m?.[1])return m[1].toUpperCase().trim();}return'';}
-function xC(t){if(!t)return'';
+function xC(t){if(!t)return'';var _mic=t.match(/identifiant\s*[:\-]\s*(\d{3,6})[\s\S]*?(?:code\s+d.ouverture|ouverture)\s*[:\-]\s*(\d{3,6})/i);if(_mic)return _mic[1]+' / '+_mic[2];
   // Vos codes X puis Y (Pickup)
   const m1=t.match(/(?:vos\s+)?codes?\s+(\d{4})\s+puis\s+(\d{4})/i);if(m1)return m1[1]+' / '+m1[2];
   // Identifiant + code d'ouverture (consigne)
@@ -817,7 +817,7 @@ function render(){
     }
     const sum=parts.join('  ');
 
-    return`<div class="pcard${isOut?' open':''}" id="pc${p.id}" data-action="tog" data-id="${p.id}" style="animation-delay:${i*0.04}s">
+    return`<div class="pcard${isOut?' open':''}" id="pc${p.id}" data-action="tog" data-id="${p.id}" >
       <div class="ptint" style="background:${color}"></div>
       <div class="phdr">
         <div class="cbadge" style="background:${color}18;display:flex;align-items:center;justify-content:center">${carrierLogo(p.carrier,26)}</div>
@@ -901,7 +901,8 @@ function renderRetCf(){
       }, false);
     });
   }
-}
+
+var _cfgEl=document.getElementById('retCf');if(_cfgEl){_cfgEl.querySelectorAll('[data-carrier]').forEach(function(btn){btn.addEventListener('click',function(ev){ev.stopPropagation();toggleDisabled(btn.getAttribute('data-carrier'),btn);},false);});}}
 function toggleDisabled(c,btn){
   const d=getDisabled();
   if(d.has(c))d.delete(c);else d.add(c);

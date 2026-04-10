@@ -56,6 +56,10 @@ jobs:
           cp -rf cave-spiritueux/ www/ 2>/dev/null || true
           cp -rf menus-semaine/ www/ 2>/dev/null || true
           cp -rf liste-courses/ www/ 2>/dev/null || true
+          # Injecter la date de build dans index.html
+          if [ -f www/index.html ]; then
+            sed -i "s/__BUILD_DATE__/$BUILD_DATE/g" www/index.html
+          fi
 
       - name: Add Android platform
         run: |
@@ -113,6 +117,8 @@ jobs:
           VERSION_NAME="2.$(date +%Y%m%d)"
           echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_ENV
           echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
+          BUILD_DATE=$(date '+%d/%m/%Y %H:%M')
+          echo "BUILD_DATE=$BUILD_DATE" >> $GITHUB_ENV
           echo "✓ versionCode: $VERSION_CODE, versionName: $VERSION_NAME"
 
       - name: Inject versionCode in build.gradle

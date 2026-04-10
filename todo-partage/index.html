@@ -311,6 +311,7 @@ function render() {
       <div class="task-prio" style="background:${PRIO_COLORS[t.prio]||PRIO_COLORS.mid}"></div>
       <div class="task-actions">
         <button class="task-btn edit" data-action="editTask" data-id="${t.id}" title="Modifier">✏️</button>
+        <button class="task-btn cal"  data-action="calTask"  data-id="${t.id}" title="Ajouter à l'agenda">📅</button>
         <button class="task-btn del"  data-action="delTask"  data-id="${t.id}" title="Supprimer">🗑</button>
       </div>
     </div>`).join('');
@@ -352,6 +353,30 @@ function initTheme() {
 }
 
 // ── Dispatcher ───────────────────────────────────────────────
+
+// ── Créer invitation agenda Google Calendar ─────────────────
+function createCalEvent(id) {
+  var t = D.tasks.find(function(x){return x.id===id;});
+  if (!t) return;
+  var title = encodeURIComponent(t.text || 'Tâche FamilyHub');
+  var desc  = encodeURIComponent((t.note||'') + (t.note?'\n':'') + 'Priorité: '+(t.prio||'') + '\nAssigné: '+(t.who||''));
+  var url   = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + title + '&details=' + desc;
+  if (t.deadline) {
+    // Format YYYYMMDD pour Google Calendar
+    var d  = t.deadline.replace(/-/g,'');
+    // date end = deadline + 1 jour (all-day event)
+    var dt = new Date(t.deadline); dt.setDate(dt.getDate()+1);
+    var de = dt.toISOString().slice(0,10).replace(/-/g,'');
+    url += '&dates=' + d + '/' + de;
+  }
+  // Ouvrir dans le navigateur / WebView
+  if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser) {
+    window.Capacitor.Plugins.Browser.open({url:url});
+  } else {
+    window.open(url, '_blank');
+  }
+  showToast('📅 Agenda ouvert');
+}
 function findAction(target) {
   var el = target;
   while (el && !el.getAttribute) { el = el.parentElement || el.parentNode; }
@@ -386,6 +411,9 @@ document.addEventListener('click', function(e) {
     case 'delTask':
       e.stopPropagation();
       delTask(parseInt(ds.id)); break;
+    case 'calTask':
+      e.stopPropagation();
+      createCalEvent(parseInt(ds.id)); break;
   }
 });
 

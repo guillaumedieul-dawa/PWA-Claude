@@ -50,6 +50,14 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 .icard-actions{display:flex;gap:4px;flex-shrink:0}
 .icard-btn{padding:4px 6px;border-radius:8px;border:none;background:transparent;color:var(--osv);font-size:14px;cursor:pointer;opacity:.6}
 .icard-btn:active{opacity:1}
+.shop-chips{display:flex;gap:8px;padding:0 16px 8px;overflow-x:auto;scrollbar-width:none}
+.shop-chips::-webkit-scrollbar{display:none}
+.shop-chip{flex-shrink:0;padding:6px 12px;border-radius:8px;border:1px solid var(--olv);background:transparent;color:var(--osv);font-size:12px;cursor:pointer;white-space:nowrap}
+.shop-chip.sel{background:var(--pc);border-color:var(--pc);color:var(--opc);font-weight:500}
+.inote{font-size:11px;color:var(--osv);margin-top:2px;font-style:italic}
+.ishop{font-size:11px;color:var(--osv);margin-top:1px}
+.shop-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--olv)}
+.shop-del{padding:4px 10px;border:none;background:var(--cfb);color:var(--cf);border-radius:8px;cursor:pointer;font-size:12px}
 .clear-btn{display:flex;align-items:center;justify-content:center;gap:6px;margin:12px 16px;padding:12px;border-radius:var(--rs);border:1px solid var(--olv);background:transparent;color:var(--osv);font-family:'Google Sans',sans-serif;font-size:14px;cursor:pointer;width:calc(100% - 32px)}
 .clear-btn:active{background:var(--s1)}
 .empty{text-align:center;padding:60px 24px}
@@ -85,6 +93,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
       <div class="tlbl">FamilyHub</div>
       <div class="th">🛒 Liste de courses</div>
     </div>
+    <button class="ibtn" data-action="openShopMgr" title="Gérer les magasins">🏪</button>
     <button class="ibtn" id="thbtn" data-action="toggleTheme">🌙</button>
   </div>
 
@@ -102,6 +111,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
     <button class="chip"     data-filter="m"    data-action="setFilter">Michèle</button>
   </div>
 
+  <div id="shopChips" class="shop-chips"></div>
   <div id="IL"></div>
 </div>
 
@@ -122,6 +132,12 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
       <option value="Guillaume">Guillaume</option>
       <option value="Michele">Michèle</option>
     </select>
+    <div class="slbl">Magasin <span style="color:var(--cf)">*</span></div>
+    <select class="fsel" id="aShop"><option value="">— Choisir —</option></select>
+    <div class="slbl" style="display:flex;justify-content:space-between;align-items:center">
+      Note <span style="font-size:11px;color:var(--osv);text-transform:none">(optionnel)</span>
+    </div>
+    <input class="fin" id="aItemNote" placeholder="Marque, remarque…">
     <button class="bfill" data-action="saveItem">Enregistrer</button>
     <button class="bout"  data-action="closeAdd">Annuler</button>
   </div>
@@ -129,11 +145,14 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 
 <script>
 'use strict';
-const SK         = 'fh_courses';
+const SK = 'fh_courses';
+const SK_SHOPS = 'fh_shops';
 const WHO_COLORS = {Guillaume:'#D7E3FF', Michele:'#ECDCFF'};
 const WHO_TC     = {Guillaume:'#001849', Michele:'#1D0160'};
 
 let D      = loadD();
+let shops  = loadShops();
+let shopFlt = 'all';
 let flt    = 'all';
 let editId = null;
 let _tt;
@@ -143,6 +162,11 @@ function loadD() {
   return {items:[], nextId:1};
 }
 function saveD(d) { localStorage.setItem(SK, JSON.stringify(d)); }
+function loadShops() {
+  try { const s = JSON.parse(localStorage.getItem(SK_SHOPS)); if (Array.isArray(s)) return s; } catch(e) {}
+  return ['Carrefour','Super U','Picard','Natureo','Lidl','Biocoop'];
+}
+function saveShops(s) { shops=s; localStorage.setItem(SK_SHOPS, JSON.stringify(s)); }
 
 // ── CRUD ────────────────────────────────────────────────────
 function quickAdd() {
@@ -159,7 +183,15 @@ function openAddSheet() {
   document.getElementById('aNom').value = '';
   document.getElementById('aQty').value = '';
   document.getElementById('aWho').value = 'Guillaume';
+  document.getElementById('aItemNote').value = '';
+  rebuildShopSelect('');
   openSheet('shAdd');
+}
+function rebuildShopSelect(selected) {
+  var el = document.getElementById('aShop');
+  if (!el) return;
+  el.innerHTML = '<option value="">— Choisir un magasin —</option>' +
+    shops.map(function(s){return '<option value="'+s+'"'+(s===selected?' selected':'')+'>'+s+'</option>';}).join('');
 }
 
 function openEditSheet(id) {
@@ -175,20 +207,24 @@ function openEditSheet(id) {
 function saveItem() {
   const nom = document.getElementById('aNom').value.trim();
   if (!nom) { showToast('⚠️ Saisissez un article'); return; }
-  const qty = document.getElementById('aQty').value.trim();
-  const who = document.getElementById('aWho').value;
+  const qty   = document.getElementById('aQty').value.trim();
+  const who   = document.getElementById('aWho').value;
+  const note  = document.getElementById('aItemNote').value.trim();
+  const shop  = document.getElementById('aShop').value;
+  if (!shop) { showToast('⚠️ Sélectionnez un magasin'); return; }
 
   if (editId !== null) {
     const item = D.items.find(x => x.id === editId); if (!item) return;
-    item.nom = nom; item.qty = qty; item.who = who;
+    item.nom = nom; item.qty = qty; item.who = who; item.note = note; item.shop = shop;
     showToast('✓ Article modifié');
   } else {
-    D.items.push({id:D.nextId++, nom, qty, who, done:false, date:new Date().toISOString()});
+    D.items.push({id:D.nextId++, nom, qty, who, note, shop, done:false, date:new Date().toISOString()});
     showToast('✓ Ajouté à la liste');
   }
   saveD(D); render(); closeSheet('shAdd');
   document.getElementById('aNom').value = '';
   document.getElementById('aQty').value = '';
+  document.getElementById('aItemNote').value = '';
 }
 
 function toggleItem(id) {
@@ -216,6 +252,7 @@ function getFilt() {
   else if (flt === 'done') items = items.filter(x =>  x.done);
   else if (flt === 'g')    items = items.filter(x => x.who === 'Guillaume');
   else if (flt === 'm')    items = items.filter(x => x.who === 'Michele');
+  if (shopFlt !== 'all')   items = items.filter(x => x.shop === shopFlt);
   return items;
 }
 
@@ -330,6 +367,22 @@ document.addEventListener('click', function(e) {
       e.stopPropagation();
       delItem(parseInt(ds.id)); break;
     case 'clearDone':   clearDone(); break;
+    case 'setShopFilter':
+      shopFlt = el.dataset.shop || 'all';
+      document.querySelectorAll('.shop-chip').forEach(b => b.classList.remove('sel'));
+      el.classList.add('sel');
+      render();
+      break;
+    case 'openShopMgr': openSheet('shShops'); break;
+    case 'closeShops':  closeSheet('shShops'); break;
+    case 'addShop': {
+      var sv = document.getElementById('newShopName');
+      if(sv){var sn=sv.value.trim();if(sn&&!shops.includes(sn)){shops.push(sn);saveShops(shops);renderShopChips();sv.value='';showToast('✓ Magasin ajouté');}else{showToast(sn?'Magasin déjà présent':'⚠️ Saisissez un nom');}}
+      break;
+    }
+    case 'delShop': {
+      var sd=el.dataset.shop;shops=shops.filter(function(x){return x!==sd;});saveShops(shops);renderShopChips();render();showToast('Magasin supprimé');break;
+    }
   }
 });
 
@@ -341,9 +394,26 @@ document.addEventListener('keydown', function(e) {
   if (e.key === 'Enter' && e.target.id === 'qi') quickAdd();
 });
 
+
+function renderShopChips() {
+  var el = document.getElementById('shopChips');
+  if (!el) return;
+  el.innerHTML = '<button class="shop-chip sel" data-action="setShopFilter" data-shop="all">Tous 🏪</button>' +
+    shops.map(function(s){
+      return '<button class="shop-chip'+(shopFlt===s?' sel':'')+ '" data-action="setShopFilter" data-shop="'+s+'">'+s+'</button>';
+    }).join('');
+  // Sheet gestion magasins
+  var ml = document.getElementById('shopList');
+  if (ml) {
+    ml.innerHTML = shops.map(function(s){
+      return '<div class="shop-item"><span>'+s+'</span><button class="shop-del" data-action="delShop" data-shop="'+s+'">✕</button></div>';
+    }).join('');
+  }
+}
 // ── Init ──────────────────────────────────────────────────────
 function init() {
   document.querySelectorAll('.sov').forEach(el => { el.style.display = 'none'; });
+  renderShopChips();
   initTheme(); render();
 }
 init();
@@ -357,5 +427,21 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
+
+<!-- Sheet gestion des magasins -->
+<div class="sov" id="shShops">
+  <div class="sht">
+    <div class="shnd" data-action="closeShops"></div>
+    <div class="shtit">Mes magasins</div>
+    <div class="slbl ft">Ajouter un magasin</div>
+    <div style="display:flex;gap:8px">
+      <input class="fin" id="newShopName" placeholder="Natureo, Picard…" style="margin-bottom:0;flex:1">
+      <button class="bfill" data-action="addShop" style="width:auto;padding:14px 20px;margin-top:0">＋</button>
+    </div>
+    <div class="slbl" style="margin-top:16px">Liste actuelle</div>
+    <div id="shopList"></div>
+    <button class="bout" data-action="closeShops" style="margin-top:16px">Fermer</button>
+  </div>
+</div>
 </body>
 </html>

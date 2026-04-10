@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f8fb">
-<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1a1c1e">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#fff8f7">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#201a1a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Cave">
 <title>Cave à spiritueux</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Text:wght@400;500&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
-:root{--p:#5B0000;--op:#FFF;--pc:#FFDAD6;--opc:#410002;--bg:#FFF8F7;--sf:#FFF;--s1:#FFF0EE;--s2:#FFE5E2;--s3:#FFD8D5;--ol:#938383;--olv:#E8D5D5;--ob:#201A1A;--os:#201A1A;--osv:#534343;--sh:rgba(0,0,0,0.07);--cr:#1A6500;--crb:#C4EFAD;--cd:#0A5C00;--cdb:#B7F397;--cf:#93000A;--cfb:#FFDAD6;--top:env(safe-area-inset-top,0px);--bot:env(safe-area-inset-bottom,0px);--rl:28px;--rm:16px;--rs:12px}
+:root{--p:#5B0000;--op:#FFF;--pc:#FFDAD6;--opc:#410002;--bg:#FFF8F7;--sf:#FFF;--s1:#FFF0EE;--s2:#FFE5E2;--s3:#FFD8D5;--ol:#938383;--olv:#E8D5D5;--ob:#201A1A;--os:#201A1A;--osv:#534343;--sh:rgba(0,0,0,0.07);--cf:#93000A;--cfb:#FFDAD6;--top:env(safe-area-inset-top,0px);--bot:env(safe-area-inset-bottom,0px);--rl:28px;--rm:16px;--rs:12px}
 [data-theme="dark"]{--p:#FFB4AB;--op:#690005;--pc:#93000A;--opc:#FFDAD6;--bg:#201A1A;--sf:#201A1A;--s1:#2D2020;--s2:#3A2828;--s3:#443030;--ol:#B09090;--olv:#534343;--ob:#EDE0DF;--os:#EDE0DF;--osv:#D7C3C2;--sh:rgba(0,0,0,0.3)}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Google Sans Text',sans-serif;overflow-x:hidden;transition:background .3s,color .3s}
@@ -24,23 +24,19 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 .th{font-family:'Google Sans',sans-serif;font-size:22px;font-weight:700;color:var(--ob);letter-spacing:-.3px;line-height:1.1}
 .ibtn{width:40px;height:40px;border-radius:50%;border:none;background:var(--s1);color:var(--os);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
 .ibtn:active{background:var(--s2)}
-/* Stats */
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 16px 16px}
 .stat{background:var(--sf);border-radius:var(--rm);padding:14px 12px;text-align:center;box-shadow:0 1px 2px var(--sh)}
 .stat-n{font-family:'Google Sans',sans-serif;font-size:24px;font-weight:700;color:var(--p)}
 .stat-l{font-size:11px;color:var(--osv);margin-top:2px}
-/* Chips */
 .chips{display:flex;gap:8px;padding:0 16px 12px;overflow-x:auto;scrollbar-width:none}
 .chips::-webkit-scrollbar{display:none}
 .chip{flex-shrink:0;padding:7px 14px;border-radius:8px;border:1px solid var(--olv);background:transparent;color:var(--osv);font-family:'Google Sans Text',sans-serif;font-size:13px;cursor:pointer;white-space:nowrap;transition:all .2s}
 .chip.sel{background:var(--pc);border-color:var(--pc);color:var(--opc);font-weight:500}
-/* Search */
 .swrap{padding:0 16px 8px;position:relative}
 .sfield{width:100%;padding:11px 16px 11px 44px;border-radius:28px;border:none;background:var(--s1);color:var(--ob);font-family:'Google Sans Text',sans-serif;font-size:16px;outline:none}
 .sfield:focus{background:var(--s2)}
 .sfield::placeholder{color:var(--osv)}
 .sico{position:absolute;left:28px;top:50%;transform:translateY(-50%);color:var(--osv);font-size:18px;pointer-events:none}
-/* Bottle list */
 .blist{padding:0 12px;display:flex;flex-direction:column;gap:8px}
 .bcard{background:var(--sf);border-radius:var(--rl);padding:16px;box-shadow:0 1px 3px var(--sh);display:flex;gap:14px;align-items:flex-start;cursor:pointer;transition:all .2s;border:1px solid transparent}
 .bcard:active{transform:scale(.98);border-color:var(--olv)}
@@ -51,7 +47,6 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 .bsub{font-size:13px;color:var(--osv);margin-top:2px}
 .bqty{font-family:'Roboto Mono',monospace;font-size:18px;font-weight:700;color:var(--p);text-align:right}
 .bqty-lbl{font-size:10px;color:var(--osv);text-align:right;margin-top:1px}
-/* Expand */
 .bdetail{padding:12px 0 0;border-top:1px solid var(--olv);margin-top:12px;display:none}
 .bdetail.on{display:block}
 .field-lbl{font-size:11px;color:var(--osv);letter-spacing:.5px;text-transform:uppercase;margin-bottom:3px;font-family:'Google Sans',sans-serif}
@@ -64,21 +59,17 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 .qty-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--olv);background:var(--s1);color:var(--os);font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .qty-btn:active{background:var(--s2)}
 .qty-val{font-family:'Roboto Mono',monospace;font-size:20px;font-weight:700;color:var(--p);min-width:40px;text-align:center}
-/* Empty */
 .empty{text-align:center;padding:60px 24px}
 .eico{font-size:56px;margin-bottom:12px;opacity:.5}
 .etit{font-family:'Google Sans',sans-serif;font-size:20px;font-weight:700;color:var(--ob);margin-bottom:6px}
 .esub{font-size:14px;color:var(--osv)}
-/* FAB & Toast */
 .fab{position:fixed;bottom:calc(var(--bot) + 28px);right:20px;width:56px;height:56px;border-radius:18px;background:var(--pc);color:var(--opc);border:none;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px var(--sh);transition:all .2s;z-index:49}
 .fab:active{transform:scale(.92)}
 .toast{position:fixed;bottom:calc(var(--bot)+100px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--ob);color:var(--bg);padding:12px 20px;border-radius:28px;font-family:'Google Sans',sans-serif;font-size:14px;font-weight:500;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;max-width:88vw;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-/* Sheet */
-.sov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center}
-
-.sht{background:var(--sf);border-radius:28px 28px 0 0;padding:12px 24px calc(var(--bot)+24px);width:100%;max-width:520px;max-height:92dvh;overflow-y:auto}
-.sov.on .sht{}
+/* Sheet — aligné sur todo/courses */
+.sov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center;padding:0 8px}
+.sht{background:var(--sf);border-radius:28px 28px 0 0;padding:20px 28px calc(var(--bot)+28px);width:100%;max-width:520px;max-height:92dvh;overflow-y:auto}
 .shnd{width:32px;height:4px;background:var(--olv);border-radius:2px;margin:0 auto 18px;cursor:pointer}
 .shtit{font-family:'Google Sans',sans-serif;font-size:20px;font-weight:700;color:var(--ob);margin-bottom:18px}
 .slbl{font-size:12px;color:var(--osv);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px;font-family:'Google Sans',sans-serif}
@@ -104,40 +95,40 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
       <div class="tlbl">FamilyHub</div>
       <div class="th">🍷 Cave à spiritueux</div>
     </div>
-    <button class="ibtn" id="thbtn" onclick="toggleTheme()">🌙</button>
+    <button class="ibtn" id="thbtn" data-action="toggleTheme">🌙</button>
   </div>
 
   <div class="stats" id="stats"></div>
 
   <div class="swrap">
     <span class="sico">🔍</span>
-    <input class="sfield" placeholder="Nom, cépage, région…" oninput="onSrch(this.value)">
+    <input class="sfield" id="searchField" placeholder="Nom, cépage, région…">
   </div>
 
   <div class="chips">
-    <button class="chip sel" data-filter="all" onclick="setF('all',this)">Tout</button>
-    <button class="chip" data-filter="vin" onclick="setF('vin',this)">🍷 Vins</button>
-    <button class="chip" data-filter="rhum" onclick="setF('rhum',this)">🥃 Rhums</button>
-    <button class="chip" data-filter="whisky" onclick="setF('whisky',this)">🥃 Whiskys</button>
-    <button class="chip" data-filter="autre" onclick="setF('autre',this)">🍾 Autres</button>
+    <button class="chip sel" data-filter="all"    data-action="setFilter">Tout</button>
+    <button class="chip"     data-filter="vin"    data-action="setFilter">🍷 Vins</button>
+    <button class="chip"     data-filter="rhum"   data-action="setFilter">🥃 Rhums</button>
+    <button class="chip"     data-filter="whisky" data-action="setFilter">🥃 Whiskys</button>
+    <button class="chip"     data-filter="autre"  data-action="setFilter">🍾 Autres</button>
   </div>
 
   <div class="blist" id="BL"></div>
 </div>
 
-<button class="fab" onclick="openAdd()">＋</button>
-<button class="fab" id="btn-fab-cave" style="background:var(--p);color:var(--op)">＋</button>
+<button class="fab" data-action="openAdd"><span style="pointer-events:none">＋</span></button>
 <div class="toast" id="toast"></div>
 
-<!-- Sheet ajout -->
+<!-- Sheet ajout bouteille -->
 <div class="sov" id="shAdd">
   <div class="sht">
-    <div class="shnd" onclick="closeS('shAdd')"></div>
+    <div class="shnd" data-action="closeAdd"></div>
     <div class="shtit">Ajouter une bouteille</div>
     <div class="slbl ft">Nom</div>
     <input class="fin" id="aNom" placeholder="Château Margaux, Zacapa 23…">
     <div class="row2">
-      <div><div class="slbl ft">Type</div>
+      <div>
+        <div class="slbl ft">Type</div>
         <select class="fsel" id="aType">
           <option value="vin">🍷 Vin rouge</option>
           <option value="vinb">🥂 Vin blanc</option>
@@ -148,7 +139,8 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
           <option value="autre">🍶 Autre</option>
         </select>
       </div>
-      <div><div class="slbl ft">Quantité</div>
+      <div>
+        <div class="slbl ft">Quantité</div>
         <input class="fin" id="aQty" type="number" min="1" value="1" placeholder="1">
       </div>
     </div>
@@ -160,86 +152,110 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
     <input class="fin" id="aRegion" placeholder="Bordeaux, Barbade…">
     <div class="slbl">Commentaire</div>
     <input class="fin" id="aComment" placeholder="Arômes, accords mets…">
-    <button class="bfill" onclick="addBottle()">Enregistrer</button>
-    <button class="bout" onclick="closeS('shAdd')">Annuler</button>
+    <button class="bfill" data-action="addBottle">Enregistrer</button>
+    <button class="bout"  data-action="closeAdd">Annuler</button>
   </div>
 </div>
 
 <script>
-const SK='fh_cave';
-const TYPES={vin:'🍷 Vin rouge',vinb:'🥂 Vin blanc',vinr:'🌸 Vin rosé',rhum:'🥃 Rhum',whisky:'🥃 Whisky',champagne:'🍾 Champagne',autre:'🍶 Autre'};
-const ICONS={vin:'🍷',vinb:'🥂',vinr:'🌸',rhum:'🥃',whisky:'🥃',champagne:'🍾',autre:'🍶'};
-const COLORS={vin:'#FFDAD6',vinb:'#FFDDB4',vinr:'#FFD0E8',rhum:'#ECDCFF',whisky:'#D7E3FF',champagne:'#C4EFAD',autre:'#E6EBF0'};
+'use strict';
+// ── Constantes ──────────────────────────────────────────────
+const SK     = 'fh_cave';
+const TYPES  = {vin:'🍷 Vin rouge',vinb:'🥂 Vin blanc',vinr:'🌸 Vin rosé',rhum:'🥃 Rhum',whisky:'🥃 Whisky',champagne:'🍾 Champagne',autre:'🍶 Autre'};
+const ICONS  = {vin:'🍷',vinb:'🥂',vinr:'🌸',rhum:'🥃',whisky:'🥃',champagne:'🍾',autre:'🍶'};
+const COLORS = {vin:'#FFDAD6',vinb:'#FFDDB4',vinr:'#FFD0E8',rhum:'#ECDCFF',whisky:'#D7E3FF',champagne:'#C4EFAD',autre:'#E6EBF0'};
 
-function loadD(){try{const d=JSON.parse(localStorage.getItem(SK));if(d?.bottles)return d;}catch{}return{bottles:[],nextId:1};}
-function saveD(d){localStorage.setItem(SK,JSON.stringify(d));}
+// ── État ─────────────────────────────────────────────────────
+let D    = loadD();
+let flt  = 'all';
+let srch = '';
+let _tt;
 
-let D=loadD(),flt='all',srch='';
+// ── Stockage ─────────────────────────────────────────────────
+function loadD() {
+  try { const d = JSON.parse(localStorage.getItem(SK)); if (d && d.bottles) return d; } catch(e) {}
+  return {bottles:[], nextId:1};
+}
+function saveD(d) { localStorage.setItem(SK, JSON.stringify(d)); }
 
-function addBottle(){
-  const nom=document.getElementById('aNom').value.trim();
-  if(!nom){showToast('⚠️ Saisissez un nom');return;}
+// ── CRUD ─────────────────────────────────────────────────────
+function addBottle() {
+  const nom = document.getElementById('aNom').value.trim();
+  if (!nom) { showToast('⚠️ Saisissez un nom'); return; }
   D.bottles.unshift({
-    id:D.nextId++,
-    nom,
-    type:document.getElementById('aType').value,
-    qty:parseInt(document.getElementById('aQty').value)||1,
-    year:document.getElementById('aYear').value||'',
-    note:document.getElementById('aNote').value||'',
-    region:document.getElementById('aRegion').value.trim(),
-    comment:document.getElementById('aComment').value.trim(),
-    date:new Date().toISOString()
+    id: D.nextId++, nom,
+    type:    document.getElementById('aType').value,
+    qty:     parseInt(document.getElementById('aQty').value) || 1,
+    year:    document.getElementById('aYear').value    || '',
+    note:    document.getElementById('aNote').value    || '',
+    region:  document.getElementById('aRegion').value.trim(),
+    comment: document.getElementById('aComment').value.trim(),
+    date:    new Date().toISOString()
   });
-  saveD(D);render();closeS('shAdd');showToast('✓ Ajouté à la cave');
-  ['aNom','aYear','aNote','aRegion','aComment'].forEach(id=>document.getElementById(id).value='');
+  saveD(D); render(); closeSheet('shAdd');
+  showToast('✓ Ajouté à la cave');
+  ['aNom','aYear','aNote','aRegion','aComment'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('aQty').value = '1';
 }
 
-function changeQty(id,delta,e){
-  e.stopPropagation();
-  const b=D.bottles.find(x=>x.id===id);if(!b)return;
-  b.qty=Math.max(0,b.qty+delta);
-  if(b.qty===0&&confirm('Stock à 0 — supprimer la bouteille ?'))D.bottles=D.bottles.filter(x=>x.id!==id);
-  saveD(D);render();
+function changeQty(id, delta) {
+  const b = D.bottles.find(x => x.id === id); if (!b) return;
+  b.qty = Math.max(0, b.qty + delta);
+  if (b.qty === 0 && confirm('Stock à 0 — supprimer la bouteille ?'))
+    D.bottles = D.bottles.filter(x => x.id !== id);
+  saveD(D); render();
 }
 
-function delBottle(id,e){
-  e.stopPropagation();if(!confirm('Supprimer ?'))return;
-  D.bottles=D.bottles.filter(x=>x.id!==id);saveD(D);render();
+function delBottle(id) {
+  if (!confirm('Supprimer cette bouteille ?')) return;
+  D.bottles = D.bottles.filter(x => x.id !== id);
+  saveD(D); render();
 }
 
-function tog(id){
-  const el=document.getElementById('bd'+id);
-  if(el)el.classList.toggle('on');
-  document.getElementById('bc'+id)?.classList.toggle('open',el?.classList.contains('on'));
+function togBottle(id) {
+  const detail = document.getElementById('bd' + id);
+  const card   = document.getElementById('bc' + id);
+  if (detail) detail.classList.toggle('on');
+  if (card)   card.classList.toggle('open', detail && detail.classList.contains('on'));
 }
 
-function getFilt(){
-  let b=[...D.bottles];
-  if(flt==='vin')b=b.filter(x=>['vin','vinb','vinr'].includes(x.type));
-  else if(flt==='rhum')b=b.filter(x=>x.type==='rhum');
-  else if(flt==='whisky')b=b.filter(x=>x.type==='whisky');
-  else if(flt!=='all')b=b.filter(x=>x.type===flt);
-  if(srch){const q=srch.toLowerCase();b=b.filter(x=>(x.nom||'').toLowerCase().includes(q)||(x.region||'').toLowerCase().includes(q)||(x.comment||'').toLowerCase().includes(q));}
+// ── Filtrage ─────────────────────────────────────────────────
+function getFilt() {
+  let b = [...D.bottles];
+  if      (flt === 'vin')    b = b.filter(x => ['vin','vinb','vinr'].includes(x.type));
+  else if (flt === 'rhum')   b = b.filter(x => x.type === 'rhum');
+  else if (flt === 'whisky') b = b.filter(x => x.type === 'whisky');
+  else if (flt !== 'all')    b = b.filter(x => x.type === flt);
+  if (srch) {
+    const q = srch.toLowerCase();
+    b = b.filter(x => (x.nom||'').toLowerCase().includes(q) ||
+                      (x.region||'').toLowerCase().includes(q) ||
+                      (x.comment||'').toLowerCase().includes(q));
+  }
   return b;
 }
 
-function renderStats(){
-  const b=D.bottles;
-  const total=b.reduce((s,x)=>s+x.qty,0);
-  const vins=b.filter(x=>['vin','vinb','vinr','champagne'].includes(x.type)).reduce((s,x)=>s+x.qty,0);
-  const spirits=b.filter(x=>['rhum','whisky','autre'].includes(x.type)).reduce((s,x)=>s+x.qty,0);
-  document.getElementById('stats').innerHTML=`
+// ── Rendu ─────────────────────────────────────────────────────
+function renderStats() {
+  const b      = D.bottles;
+  const total  = b.reduce((s,x) => s + x.qty, 0);
+  const vins   = b.filter(x => ['vin','vinb','vinr','champagne'].includes(x.type)).reduce((s,x) => s+x.qty, 0);
+  const spirits= b.filter(x => ['rhum','whisky','autre'].includes(x.type)).reduce((s,x) => s+x.qty, 0);
+  document.getElementById('stats').innerHTML = `
     <div class="stat"><div class="stat-n">${total}</div><div class="stat-l">Total</div></div>
     <div class="stat"><div class="stat-n">${vins}</div><div class="stat-l">Vins</div></div>
     <div class="stat"><div class="stat-n">${spirits}</div><div class="stat-l">Spiritueux</div></div>`;
 }
 
-function render(){
+function render() {
   renderStats();
-  const bottles=getFilt();
-  const el=document.getElementById('BL');
-  if(!bottles.length){el.innerHTML=`<div class="empty"><div class="eico">🍷</div><div class="etit">Cave vide</div><div class="esub">Appuyez sur + pour ajouter une bouteille</div></div>`;return;}
-  el.innerHTML=bottles.map((b,i)=>`
+  const bottles = getFilt();
+  const el = document.getElementById('BL');
+  if (!bottles.length) {
+    el.innerHTML = `<div class="empty"><div class="eico">🍷</div><div class="etit">Cave vide</div><div class="esub">Appuyez sur + pour ajouter une bouteille</div></div>`;
+    return;
+  }
+  el.innerHTML = bottles.map((b,i) => `
     <div class="bcard" id="bc${b.id}" data-action="togBottle" data-id="${b.id}" style="animation-delay:${i*.03}s">
       <div class="bico" style="background:${COLORS[b.type]||'#E6EBF0'}">${ICONS[b.type]||'🍶'}</div>
       <div class="binfo">
@@ -250,9 +266,9 @@ function render(){
           ${b.comment?`<div class="field-lbl">Commentaire</div><div class="field-val">${b.comment}</div>`:''}
           <div class="field-lbl">Quantité en cave</div>
           <div class="qty-ctrl">
-            <button class="qty-btn" data-action="changeQty" data-id="${b.id}" data-delta="-1">−</button>
+            <button class="qty-btn" data-action="qtyMinus" data-id="${b.id}"><span style="pointer-events:none">−</span></button>
             <div class="qty-val">${b.qty}</div>
-            <button class="qty-btn" data-action="changeQty" data-id="${b.id}" data-delta="1">+</button>
+            <button class="qty-btn" data-action="qtyPlus"  data-id="${b.id}"><span style="pointer-events:none">+</span></button>
           </div>
           <div class="bacts">
             <button class="act rd" data-action="delBottle" data-id="${b.id}">🗑 Supprimer</button>
@@ -261,62 +277,102 @@ function render(){
       </div>
       <div>
         <div class="bqty">${b.qty}</div>
-        <div class="bqty-lbl">${b.qty>1?'btl':'btl'}</div>
+        <div class="bqty-lbl">btl</div>
       </div>
     </div>`).join('');
 }
 
-function setF(f,btn){flt=f;document.querySelectorAll('.chip').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');render();}
-function onSrch(v){srch=v;render();}
-
-
-document.querySelectorAll('.sov').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)closeS(o.id);}));
-let _tt;function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('show'),3000);}
-function applyTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('thbtn').textContent=t==='dark'?'🌙':'☀️';}
-function toggleTheme(){const d=document.documentElement.getAttribute('data-theme')==='dark';const n=d?'light':'dark';localStorage.setItem('lt_th',n);applyTheme(n);}
-function initTheme(){const s=localStorage.getItem('lt_th');if(s){applyTheme(s);return;}const sys=window.matchMedia('(prefers-color-scheme: dark)');applyTheme(sys.matches?'dark':'light');sys.addEventListener('change',e=>{if(!localStorage.getItem('lt_th'))applyTheme(e.matches?'dark':'light');});}
-
-// ── Dispatcher global : gère data-action sans onclick inline ──
-
-// Masquer toutes les sheets au démarrage
-document.querySelectorAll('.sov').forEach(function(el){el.style.display='none';});
-
+// ── Sheets ──────────────────────────────────────────────────
 function openSheet(id) {
-  var el = document.getElementById(id);
-  if (!el) return;
-  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;';
+  const el = document.getElementById(id); if (!el) return;
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;padding:0 8px;';
   try { document.body.style.overflow = 'hidden'; } catch(e) {}
 }
 function closeSheet(id) {
-  var el = document.getElementById(id);
-  if (!el) return;
+  const el = document.getElementById(id); if (!el) return;
   el.style.display = 'none';
   try { document.body.style.overflow = ''; } catch(e) {}
 }
-function openAdd(){openSheet('shAdd');}
 
-function closeS(id){closeSheet(id);}
-function openS(id){openSheet(id);}
-initTheme();
-(function(){
-  var _R=render;
-  render=function(){
-    _R();
-    document.querySelectorAll('.bcard[id]').forEach(function(card){
-      if(card._b)return;card._b=1;
-      var bid=parseInt(card.id.replace('bc',''));
-      card.setAttribute('onclick','tog('+bid+')');
-      var btns=card.querySelectorAll('.qty-btn');
-      if(btns[0])btns[0].setAttribute('onclick','event.stopPropagation();changeQty('+bid+',-1,event)');
-      if(btns[1])btns[1].setAttribute('onclick','event.stopPropagation();changeQty('+bid+',1,event)');
-      var d=card.querySelector('.act.rd');
-      if(d)d.setAttribute('onclick','event.stopPropagation();delBottle('+bid+',event)');
-    });
-  };
-})();
-render();
+// ── UI ────────────────────────────────────────────────────────
+function showToast(m) {
+  const t = document.getElementById('toast');
+  t.textContent = m; t.classList.add('show');
+  clearTimeout(_tt); _tt = setTimeout(() => t.classList.remove('show'), 3000);
+}
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  document.getElementById('thbtn').textContent = t === 'dark' ? '🌙' : '☀️';
+}
+function toggleTheme() {
+  const d = document.documentElement.getAttribute('data-theme') === 'dark';
+  const n = d ? 'light' : 'dark';
+  localStorage.setItem('lt_th', n); applyTheme(n);
+}
+function initTheme() {
+  const s = localStorage.getItem('lt_th');
+  if (s) { applyTheme(s); return; }
+  const sys = window.matchMedia('(prefers-color-scheme: dark)');
+  applyTheme(sys.matches ? 'dark' : 'light');
+  sys.addEventListener('change', e => { if (!localStorage.getItem('lt_th')) applyTheme(e.matches?'dark':'light'); });
+}
+
+// ── Dispatcher global data-action ────────────────────────────
+function findAction(target) {
+  var el = target;
+  while (el && !el.getAttribute) { el = el.parentElement || el.parentNode; }
+  while (el && el !== document) {
+    if (el.getAttribute && el.getAttribute('data-action')) return el;
+    el = el.parentElement;
+  }
+  return null;
+}
+
+document.addEventListener('click', function(e) {
+  const el = findAction(e.target); if (!el) return;
+  const action = el.getAttribute('data-action');
+  const ds = el.dataset;
+
+  switch (action) {
+    case 'toggleTheme': toggleTheme(); break;
+    case 'openAdd':     openSheet('shAdd'); break;
+    case 'closeAdd':    closeSheet('shAdd'); break;
+    case 'setFilter':
+      flt = ds.filter || 'all';
+      document.querySelectorAll('.chip').forEach(b => b.classList.remove('sel'));
+      el.classList.add('sel'); render(); break;
+    case 'addBottle':  addBottle(); break;
+    case 'togBottle':  togBottle(parseInt(ds.id)); break;
+    case 'qtyMinus':
+      e.stopPropagation();
+      changeQty(parseInt(ds.id), -1); break;
+    case 'qtyPlus':
+      e.stopPropagation();
+      changeQty(parseInt(ds.id), +1); break;
+    case 'delBottle':
+      e.stopPropagation();
+      delBottle(parseInt(ds.id)); break;
+  }
+});
+
+// Fermer sheet en cliquant le fond
+document.addEventListener('click', function(e) {
+  if (e.target.classList && e.target.classList.contains('sov')) closeSheet(e.target.id);
+});
+
+// Recherche en temps réel
+document.addEventListener('input', function(e) {
+  if (e.target.id === 'searchField') { srch = e.target.value; render(); }
+});
+
+// ── Init ─────────────────────────────────────────────────────
+function init() {
+  document.querySelectorAll('.sov').forEach(el => { el.style.display = 'none'; });
+  initTheme();
+  render();
+}
+init();
 </script>
-
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -325,26 +381,6 @@ if ('serviceWorker' in navigator) {
       .catch(e => console.warn('SW erreur', e));
   });
 }
-</script>
-
-
-<script>
-/* ── Sheets : mutualisé Capacitor WebView ── */
-function openSheet(id){
-  var el=document.getElementById(id);
-  if(!el)return;
-  el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;';
-  try{document.body.style.overflow='hidden';}catch(e){}
-}
-function closeSheet(id){
-  var el=document.getElementById(id);
-  if(!el)return;
-  el.style.display='none';
-  try{document.body.style.overflow='';}catch(e){}
-}
-document.querySelectorAll('.sov').forEach(function(sov){
-  sov.addEventListener('click',function(e){if(e.target===sov)closeSheet(sov.id);},false);
-});
 </script>
 </body>
 </html>

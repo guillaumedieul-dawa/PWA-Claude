@@ -183,7 +183,8 @@ function saveDay(k){
   const note=(document.getElementById(`note_${k}`)?.value||'').trim();
   if(midi||soir||note)D[k]={midi,soir,note};
   else delete D[k];
-  saveD(D);openDay=null;render();showToast('✓ Menu enregistré');
+  saveD(D);
+  fbMenusWrite(k, D[k]||{}).catch(function(){});openDay=null;render();showToast('✓ Menu enregistré');
 }
 
 function prevWeek(){weekOffset--;render();}
@@ -241,6 +242,67 @@ function applySuggest(){
   document.getElementById('shSuggest').classList.remove('on');
   render();
   showToast('✓ Repas appliqués pour la semaine');
+}
+
+// ── Synchronisation Firestore pour les menus ────────────────────
+const FB_MENUS = {
+  projectId: 'familyhub-colis-8abbd',
+  apiKey: ''  // clé publique embarquée dans locker-tracker
+};
+const MENUS_COLL = 'meta/menus';
+
+async function fbMenusWrite(dateKey, data) {
+  try {
+    const url = 'https://firestore.googleapis.com/v1/projects/' + FB_MENUS.projectId +
+      '/databases/(default)/documents/' + MENUS_COLL + '/' + dateKey;
+    const fields = {};
+    for (const k in data) {
+      fields[k] = {stringValue: String(data[k]||'')};
+    }
+    await fetch(url, {
+      method: 'PATCH',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({fields})
+    });
+  } catch(e) { console.warn('fbMenusWrite', e); }
+}
+
+async function fbMenusReadAll() {
+  try {
+    const url = 'https://firestore.googleapis.com/v1/projects/' + FB_MENUS.projectId +
+      '/databases/(default)/documents/' + MENUS_COLL;
+    const r = await fetch(url);
+    if (!r.ok) return {};
+    const data = await r.json();
+    const result = {};
+    (data.documents||[]).forEach(function(doc) {
+      const parts = doc.name.split('/');
+      const dateKey = parts[parts.length-1];
+      const fields = doc.fields||{};
+      result[dateKey] = {};
+      for (const k in fields) {
+        result[dateKey][k] = fields[k].stringValue||'';
+      }
+    });
+    return result;
+  } catch(e) { console.warn('fbMenusReadAll', e); return {}; }
+}
+
+async function syncMenus() {
+  showToast('🔄 Synchronisation…');
+  try {
+    const remote = await fbMenusReadAll();
+    // Merger : remote écrase local si plus récent (on garde tout)
+    let changed = false;
+    for (const k in remote) {
+      if (!D[k] || JSON.stringify(D[k]) !== JSON.stringify(remote[k])) {
+        D[k] = Object.assign(D[k]||{}, remote[k]);
+        changed = true;
+      }
+    }
+    if (changed) { saveD(D); render(); }
+    showToast('✓ Menus synchronisés');
+  } catch(e) { showToast('❌ Sync échouée'); }
 }
 </script>
 

@@ -297,7 +297,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
   <div class="sht">
     <div class="shnd" onclick="closeS('shSync')"></div>
     <div class="shtit">Synchronisation</div>
-    <div class="stabs"><button class="stab" data-tab="tDbg" onclick="showT('tDbg',this)">🔍 Debug</button>
+    <div class="stabs">
       <button class="stab sel" data-tab="tSy" onclick="showT('tSy',this)">Sync</button>
       <button class="stab" data-tab="tSM" onclick="showT('tSM',this)">SMS</button>
       <button class="stab" data-tab="tCf" onclick="showT('tCf',this)">Config</button>
@@ -460,22 +460,6 @@ function saveD(d){
 }
 function reindexPackages(){D.packages.forEach(function(p,i){if(!p.id)p.id=i+1;});D.nextId=Math.max(1,...D.packages.map(p=>Number(p.id)||0))+1;}
 function upsertPackage(pkg,opt={}){
-  const incoming=normalizePkg({...pkg,source:pkg?.source||opt.source||pkg?.source||'unknown'});
-  let ex=findDup(incoming);
-  if(ex){
-    const decision=`MERGE ${ex.source}(${srcScore(ex)}) + ${incoming.source}(${srcScore(incoming)})`;
-    debugMerge(ex, incoming, decision);
-    mrg(ex,incoming);
-    return {pkg:ex,created:false,merged:true,source:incoming.source};
-  }
-  incoming.id=incoming.id||D.nextId++;
-  incoming.lastUpdated=new Date().toISOString();
-  incoming.firstSeenAt=incoming.firstSeenAt||incoming.lastUpdated;
-  incoming.events=uniqEvents([...(incoming.events||[]),{date:new Date().toISOString(),status:incoming.status,desc:'Créé via '+businessSourceLabel(incoming.source)}]).slice(0,12);
-  D.packages.unshift(incoming);
-  debugMerge(null, incoming, `CREATE ${incoming.source}`);
-  return {pkg:incoming,created:true,merged:false,source:incoming.source};
-}{
   const incoming=normalizePkg({...pkg,source:pkg?.source||opt.source||pkg?.source||'unknown'});
   let ex=findDup(incoming);
   if(ex){
@@ -1173,5 +1157,5 @@ document.querySelectorAll('.sov').forEach(function(sov){
 });
 </script>
 </body>
-<!-- patched dedup v4 debug-traceability -->
+<!-- patched dedup v3 source-priority -->
 </html>

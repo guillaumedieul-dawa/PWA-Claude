@@ -161,9 +161,9 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* Bottom Sheet */
-.sov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center;padding:0 8px}
+.sov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center;padding:0 12px}
 
-.sht{background:var(--sf);border-radius:28px 28px 0 0;padding:20px 28px calc(var(--bot)+28px);width:100%;max-width:520px;max-height:92dvh;overflow-y:auto}
+.sht{background:var(--sf);border-radius:28px 28px 0 0;padding:24px 32px calc(var(--bot)+32px);width:100%;max-width:520px;max-height:92dvh;overflow-y:auto}
 .sov.on .sht{}
 .shnd{width:32px;height:4px;background:var(--olv);border-radius:2px;margin:0 auto 18px;cursor:pointer}
 .shtit{font-family:'Google Sans',sans-serif;font-size:20px;font-weight:700;color:var(--ob);margin-bottom:18px}
@@ -410,6 +410,7 @@ function loadD(){
     if(d&&d.packages){
       // Normaliser events : string JSON → array
       d.packages.forEach(function(p){
+        if(typeof p.id==='number')p.id=Math.round(p.id);
         if(typeof p.events==='string'){try{p.events=JSON.parse(p.events);}catch(e){p.events=[];}}
         if(!Array.isArray(p.events))p.events=[];
       });
@@ -609,7 +610,8 @@ function xC(t){if(!t)return'';var _mic=t.match(/identifiant\s*[:\-]\s*(\d{3,6})[
 }
 function xA(t){if(!t)return'';const J=/^(ce message|merci|suivre|téléchargez|pour ne|absent|bonjour)/i;const P=[/consigne\s+pickup\s+(.+?)(?:\.|jusqu|n°|code|\+\s*d)/i,/consigne\s+vinted\s+go\s*:\s*(.+?)(?:\.|suivi)/i,/(?:au\s+)?(?:p\.\s*)?relais\s+([A-Z][A-Z\s]{3,40}?)(?:\.|retirez|avec|$)/i,/disponible\s+au\s+(.+?)(?:\.|retirez|avec|$)/i,/votre\s+point\s+de\s+retrait\s*:\s*\n+(.+?\n.+?\n.+?)(?:\n\n)/is,/sera\s+livré\s+à\s*\n(.+?\n.+?)(?:\n\n|france)/is,/expédier\s+à\s*\n(.+?\n.+?\n.+?)(?:\n\n|ups standard)/is,/informations\s+sur\s+l.adresse\s*\n(.+?\n.+?\n.+?)(?:\n\n)/is];for(const r of P){const m=t.match(r);if(m?.[1]){const ln=m[1].split('\n').map(l=>l.trim()).filter(l=>l.length>2&&!J.test(l));if(ln.length)return ln.slice(0,3).join(', ').substring(0,150);}}return'';}
 function xL(t){if(!t)return'';const ps=[/https?:\/\/(?:n\.pkup\.fr)[^\s<"')]+/i,/https?:\/\/(?:sms\.laposte\.fr)[^\s<"')]+/i,/sms\.laposte\.fr\/[^\s<"')]+/i,/https?:\/\/(?:p\.vintedgo\.com)[^\s<"')]+/i,/https?:\/\/(?:moncolis\.gls-france\.com)[^\s<"')]+/i,/https?:\/\/(?:gls\.tf)[^\s<"')]+/i,/https?:\/\/(?:c\.rcol\.fr)[^\s<"')]+/i,/https?:\/\/(?:my\.dpd\.fr)[^\s<"')]+/i,/my\.dpd\.fr\/[^\s<"')]+/i,/https?:\/\/(?:amzn\.eu)[^\s<"')]+/i,/https?:\/\/(?:www\.chronopost\.fr)[^\s<"')]+/i,/ups\.com\/su\/[^\s<"')]+/i,/https?:\/\/[^\s<"')]{12,60}/];for(const r of ps){const m=t.match(r);if(m){let u=m[0];if(!u.startsWith('http'))u='https://'+u;return u;}}return'';}
-function xSl(t){if(!t)return'';const m1=t.match(/entre\s+(\d{1,2}[h:]\d{2})\s*[-–et]+\s*(\d{1,2}[h:]\d{2})/i);if(m1)return m1[1].replace('h',':')+' — '+m1[2].replace('h',':');const m2=t.match(/(?:livré|livraison|livrera)\s+(?:aujourd.hui\s+)?entre\s+(\d{1,2}[h:]\d{2})[^\d]*(\d{1,2}[h:]\d{2})/i);if(m2)return m2[1].replace('h',':')+' — '+m2[2].replace('h',':');return'';}
+function xSl(t){if(!t)return'';const m0a=t.match(/(?:avant)\s+(\d{1,2}[h:]\d{2})/i);if(m0a)return'avant '+m0a[1].replace('h',':');
+  const m1=t.match(/entre\s+(\d{1,2}[h:]\d{2})\s*[-–et]+\s*(\d{1,2}[h:]\d{2})/i);if(m1)return m1[1].replace('h',':')+' — '+m1[2].replace('h',':');const m2=t.match(/(?:livré|livraison|livrera)\s+(?:aujourd.hui\s+)?entre\s+(\d{1,2}[h:]\d{2})[^\d]*(\d{1,2}[h:]\d{2})/i);if(m2)return m2[1].replace('h',':')+' — '+m2[2].replace('h',':');return'';}
 function xEx(t,arr,c){if(!t)return'';const R=getRet();const d=t.match(/(?:disposez?\s+de|pendant)\s+(\d+)\s+jours?/i);if(d){const x=new Date(arr);x.setDate(x.getDate()+parseInt(d[1]));return x.toISOString().split('T')[0];}const i=t.match(/(?:avant le|jusqu['']au)\s+(\d{4}-\d{2}-\d{2})/i);if(i)return i[1];const M={janvier:1,février:2,mars:3,avril:4,mai:5,juin:6,juillet:7,août:8,septembre:9,octobre:10,novembre:11,décembre:12};const tx=t.match(/(?:jusqu['']au|avant le)\s+(\d{1,2})\s+([a-zé]+)\s+(\d{4})/i);if(tx){const mo=M[tx[2].toLowerCase()];if(mo)return`${tx[3]}-${String(mo).padStart(2,'0')}-${tx[1].padStart(2,'0')}`;}const nm=t.match(/(?:jusqu['']au|avant le)\s+(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/i);if(nm){const y=nm[3]?(nm[3].length===2?'20'+nm[3]:nm[3]):new Date().getFullYear();return`${y}-${nm[2].padStart(2,'0')}-${nm[1].padStart(2,'0')}`;}const days=R[c]||14;const def=new Date(arr);def.setDate(def.getDate()+days);return def.toISOString().split('T')[0];}
 function xSd(t){if(!t)return'';const m1=t.match(/expédié\s+par\s+([A-Z][^\n.]{2,40}?)(?:\n|\.|est)/i);if(m1)return m1[1].trim();const m2=t.match(/de\s+([A-Z][^\n.]{3,40}?)(?:\n|\.|est|\bun)/);if(m2&&m2[1].length<50)return m2[1].trim();return'';}
 
@@ -728,10 +730,14 @@ function fSrc(p){return(p.source?.includes('sms')?'📱':'📧')+' '+fShort(p.ar
 function getFilt(){
   const DIS=getDisabled();
   const now5=Date.now()+5*86400000;
+  const _cut30=Date.now()-30*86400000;
   let pkgs=D.packages.filter(p=>{
     if(DIS.has(p.carrier))return false;
-    // En livraison : exclure si date d'arrivée dépassée de plus de 5 jours
-    if(p.status==='out_for_delivery'&&flt!=='all'){
+    if(p.status!=='ready'&&p.status!=='delivered'&&p.status!=='collected'){
+      const _lu=new Date(p.lastUpdated||p.arrivalDate||0).getTime();
+      if(_lu>0&&_lu<_cut30)return false;
+    }
+    if(p.status==='out_for_delivery'){
       const arr=p.arrivalDate?new Date(p.arrivalDate).getTime():0;
       if(arr>0&&arr<Date.now()-5*86400000)return false;
     }

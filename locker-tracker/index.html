@@ -11,7 +11,33 @@
 <link rel="manifest" href="./manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Text:wght@400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js">
+const DEBUG_MINI = /[?&]debug=1/.test(location.search) || location.hash.includes('debug');
+function dbg(msg){
+  try {
+    const el = document.getElementById('dbgMini');
+    if(!DEBUG_MINI || !el) return;
+    el.classList.add('on');
+    el.textContent = '[DBG] ' + msg;
+    clearTimeout(window.__dbgTimer);
+    window.__dbgTimer = setTimeout(()=>{ el.textContent='[DBG] OK'; }, 2200);
+  } catch(e){}
+}
+window.addEventListener('error', function(e){
+  try {
+    const msg = (e && e.message) ? e.message : 'JS error';
+    dbg(msg);
+  } catch(_){}
+});
+window.addEventListener('unhandledrejection', function(e){
+  try {
+    const msg = e && e.reason && e.reason.message ? e.reason.message : 'Promise rejetée';
+    dbg(msg);
+  } catch(_){}
+});
+setTimeout(()=>dbg('OK'), 300);
+
+</script>
 <style>
 :root {
   --p:#0057A8;--op:#FFF;--pc:#D7E3FF;--opc:#001849;
@@ -219,6 +245,11 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 .cfgi:focus{border-color:var(--p)}
 
 @keyframes fu{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* Debug minimal non intrusif */
+#dbgMini{position:fixed;top:calc(var(--top) + 8px);right:12px;z-index:1200;background:var(--pc);color:var(--opc);border:1px solid var(--olv);border-radius:999px;padding:6px 10px;font-family:'Roboto Mono',monospace;font-size:11px;box-shadow:0 2px 8px var(--sh);display:none}
+#dbgMini.on{display:block}
+
 </style>
 </head>
 <body>
@@ -254,6 +285,8 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 
 <button id="btn-fab" class="fab" onclick="openAdd()">＋</button>
 <div class="toast" id="toast"></div>
+<div id="dbgMini" aria-live="polite"></div>
+
 
 <!-- SHEET AJOUT -->
 <div class="sov" id="shAdd">

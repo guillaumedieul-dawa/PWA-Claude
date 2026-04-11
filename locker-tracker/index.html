@@ -12,30 +12,49 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Text:wght@400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js">
-const DEBUG_MINI = /[?&]debug=1/.test(location.search) || location.hash.includes('debug');
-function dbg(msg){
-  try {
-    const el = document.getElementById('dbgMini');
-    if(!DEBUG_MINI || !el) return;
-    el.classList.add('on');
-    el.textContent = '[DBG] ' + msg;
-    clearTimeout(window.__dbgTimer);
-    window.__dbgTimer = setTimeout(()=>{ el.textContent='[DBG] OK'; }, 2200);
-  } catch(e){}
+function normStatus(p){
+  if(!p) return '';
+  if(p.status==='delivered' && p.events && Array.isArray(p.events)){
+    const txt = JSON.stringify(p.events).toLowerCase();
+    if(txt.includes('récup') || txt.includes('recup') || txt.includes('retir')) return 'collected';
+  }
+  return p.status;
 }
-window.addEventListener('error', function(e){
-  try {
-    const msg = (e && e.message) ? e.message : 'JS error';
-    dbg(msg);
-  } catch(_){}
-});
-window.addEventListener('unhandledrejection', function(e){
-  try {
-    const msg = e && e.reason && e.reason.message ? e.reason.message : 'Promise rejetée';
-    dbg(msg);
-  } catch(_){}
-});
-setTimeout(()=>dbg('OK'), 300);
+function visibleInRecovered(p){
+  const DIS = getDisabled();
+  if(DIS.has(p.carrier)) return false;
+  const st = normStatus(p);
+  return st==='delivered' || st==='collected';
+}
+function renderDiag(){
+  const el = document.getElementById('diagBox');
+  if(!el) return;
+  const rows = (D.packages||[]).map(p=>({
+    carrier:p.carrier||'',
+    track:p.trackingNum||'',
+    code:p.pickupCode||'',
+    status:p.status||'',
+    norm:normStatus(p),
+    src:p.source||'',
+    upd:p.lastUpdated||p.arrivalDate||'',
+    vis:visibleInRecovered(p)
+  })).sort((a,b)=> String(b.upd).localeCompare(String(a.upd)));
+  el.innerHTML = rows.length ? rows.map(r =>
+    '<div style="padding:8px 0;border-bottom:1px solid var(--olv)">'+
+    '<div><b>'+esc(r.carrier||'-')+'</b> — '+esc(r.track||r.code||'-')+'</div>'+
+    '<div style="font-size:11px;color:var(--osv)">status='+esc(r.status)+' | norm='+esc(r.norm)+' | visRecup='+(r.vis?'oui':'non')+' | src='+esc(r.src||'-')+'</div>'+
+    '</div>'
+  ).join('') : '<div style="color:var(--osv)">Aucun colis</div>';
+}
+const _showT = showT;
+showT = function(id, btn){ _showT(id, btn); if(id==='tDs') setTimeout(renderDiag, 50); }
+const _detSt = detSt;
+detSt = function(t){
+  const s = _detSt(t);
+  const lo = (t||'').toLowerCase();
+  if(/récup|recup|retiré|retire|retirée|retiree/.test(lo)) return 'collected';
+  return s;
+}
 
 </script>
 <style>
@@ -245,11 +264,6 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 .cfgi:focus{border-color:var(--p)}
 
 @keyframes fu{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-
-/* Debug minimal non intrusif */
-#dbgMini{position:fixed;top:calc(var(--top) + 8px);right:12px;z-index:1200;background:var(--pc);color:var(--opc);border:1px solid var(--olv);border-radius:999px;padding:6px 10px;font-family:'Roboto Mono',monospace;font-size:11px;box-shadow:0 2px 8px var(--sh);display:none}
-#dbgMini.on{display:block}
-
 </style>
 </head>
 <body>
@@ -285,8 +299,6 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 
 <button id="btn-fab" class="fab" onclick="openAdd()">＋</button>
 <div class="toast" id="toast"></div>
-<div id="dbgMini" aria-live="polite"></div>
-
 
 <!-- SHEET AJOUT -->
 <div class="sov" id="shAdd">
@@ -334,7 +346,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
       <button class="stab sel" data-tab="tSy" onclick="showT('tSy',this)">Sync</button>
       <button class="stab" data-tab="tSM" onclick="showT('tSM',this)">SMS</button>
       <button class="stab" data-tab="tCf" onclick="showT('tCf',this)">Config</button>
-      <button class="stab" data-tab="tLg" onclick="showT('tLg',this)">Logs</button>
+      <button class="stab" data-tab="tLg" onclick="showT('tLg',this)">Logs</button><button class="stab" data-tab="tDs" onclick="showT('tDs',this)">Diag</button>
     </div>
 
     <div class="tpan on" id="tSy">
@@ -371,7 +383,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
       <button class="bdng" onclick="resetAll()">🗑 Réinitialiser toutes les données</button>
     </div>
 
-    <div class="tpan" id="tLg">
+    <div class="tpan" id="tDs"><div class="slbl ft">Diagnostic filtres/statuts</div><div class="ibox">Affiche les colis et leur visibilité dans le filtre Récupéré.</div><div class="lbox" id="diagBox" style="max-height:280px"></div><button class="bfill" style="margin-top:0" onclick="renderDiag()">Rafraîchir le diagnostic</button></div><div class="tpan" id="tLg">
       <div class="slbl ft">📱 Dernier scan SMS</div>
       <div class="lbox" id="logS">—</div>
       <div class="slbl">🔥 Dernière sync Firebase</div>

@@ -26,7 +26,42 @@ function visibleInRecovered(p){
   const st = normStatus(p);
   return st==='delivered' || st==='collected';
 }
-function renderDiag(){
+
+async function renderDiagV8(){
+  const el = document.getElementById("diagBox");
+  if(!el) return el.innerHTML = "<div style=\'color:var(--osv)\'>Chargement Firebase...</div>";
+  try {
+    const c = getFB();
+    if(!c.projectId || !c.apiKey){
+      el.innerHTML = "<div style=\'color:var(--cf)\'>Configurez Firebase d\'abord</div>";
+      return;
+    }
+    const url = `https://firestore.googleapis.com/v1/projects/${c.projectId}/databases/(default)/documents/colis?pageSize=50`;
+    const r = await fetch(url + `?key=${c.apiKey}`);
+    const data = await r.json();
+    const pkgs = data.documents ? data.documents.map(d => frD(d.fields)).map(p => ({
+      carrier: p.carrier || "-",
+      track: p.trackingNum || p.pickupCode || "-",
+      status: p.status || "-",
+      norm: normStatus(p),
+      visRecup: visibleInRecovered(p) ? "oui" : "non",
+      src: p.source || "-",
+      upd: p.lastUpdated || p.arrivalDate || "-",
+      acc: p.account || "-"
+    })).sort((a,b) => b.upd.localeCompare(a.upd)) : [];
+    el.innerHTML = pkgs.length ? pkgs.map(r => 
+      `<div style="padding:8px 0;border-bottom:1px solid var(--olv);font-size:12px">
+        <div><b>${esc(r.carrier)}</b> ${esc(r.track)}</div>
+        <div>status=${esc(r.status)} | norm=${esc(r.norm)} | visRecup=${r.visRecup} | src=${esc(r.src)} | acc=${esc(r.acc)}</div>
+        <div style="font-size:11px;color:var(--osv)">maj: ${esc(r.upd)}</div>
+      </div>`
+    ).join("") : "<div style=\'color:var(--osv)\'>Aucun colis Firebase</div>";
+  } catch(e){
+    el.innerHTML = `<div style=\'color:var(--cf)\'>Erreur Firebase: ${esc(e.message)}</div>`;
+  }
+}
+
+function renderDiag(){ renderDiagV8();
   const el = document.getElementById('diagBox');
   if(!el) return;
   const rows = (D.packages||[]).map(p=>({

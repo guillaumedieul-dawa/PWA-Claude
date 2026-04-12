@@ -27,7 +27,7 @@ function visibleInRecovered(p){
   return st==='delivered' || st==='collected';
 }
 
-async function renderDiagV8(){
+async function renderDiagV9(){
   const el = document.getElementById("diagBox");
   if(!el) return el.innerHTML = "<div style=\'color:var(--osv)\'>Chargement Firebase...</div>";
   try {
@@ -61,7 +61,7 @@ async function renderDiagV8(){
   }
 }
 
-function renderDiag(){ renderDiagV8();
+function renderDiag(){ renderDiagV9();
   const el = document.getElementById('diagBox');
   if(!el) return;
   const rows = (D.packages||[]).map(p=>({
@@ -1239,3 +1239,26 @@ document.querySelectorAll('.sov').forEach(function(sov){
 </body>
 <!-- patched dedup v3 source-priority -->
 </html>
+
+
+async function renderDiagV9(){
+  const el = document.getElementById("diagBox");
+  if(!el) return;
+  try {
+    const total = (D && Array.isArray(D.packages)) ? D.packages.length : 0;
+    const visible = getFilt ? getFilt().length : 0;
+    const recup = (D && Array.isArray(D.packages)) ? D.packages.filter(p => {
+      const s = normStatus(p);
+      return s === 'delivered' || s === 'collected';
+    }).length : 0;
+    el.innerHTML = `
+      <div style="padding:8px 0;border-bottom:1px solid var(--olv)">Total local: <b>${total}</b></div>
+      <div style="padding:8px 0;border-bottom:1px solid var(--olv)">Visibles sur l'écran actuel: <b>${visible}</b></div>
+      <div style="padding:8px 0;border-bottom:1px solid var(--olv)">Candidats Récupéré (delivered/collected): <b>${recup}</b></div>
+      <div style="padding:8px 0;color:var(--osv)">Si total local = 0 mais Firebase affiche des colis, le souci est l’état local de l’APK.</div>
+    `;
+  } catch(e){
+    el.innerHTML = `<div style="color:var(--cf)">Erreur diag: ${esc(e.message)}</div>`;
+  }
+}
+

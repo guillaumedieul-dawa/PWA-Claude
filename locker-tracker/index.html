@@ -899,7 +899,33 @@ function fmtSlotWithDay(slot,arrDate){
 }
 function fSrc(p){return(p.source?.includes('sms')?'📱':'📧')+' '+fShort(p.arrivalDate);}
 
-function getFilt(){
+
+function getFilt(flt) {
+  const DIS = getDisabled();
+  const now = Date.now();
+  const cut30 = Date.now() - 30*86400000;
+  let pkgs = D.packages.filter(p => {
+    if(DIS.has(p.carrier)) return false;
+    const lu = new Date(p.lastUpdated || p.arrivalDate || 0).getTime();
+    if(lu === 0 || lu > cut30) return true;
+    // Exempt delivered/collected de purge si < 60j
+    if((p.status === "delivered" || p.status === "collected") && lu > now - 60*86400000) return true;
+    if(p.status === "outfordelivery") {
+      const arr = new Date(p.arrivalDate || 0).getTime();
+      return arr > 0 && arr > now - 5*86400000;
+    }
+    return false;
+  });
+  if(flt !== "all") {
+    pkgs = pkgs.filter(p => p.status === flt || (flt === "delivered" && (p.status === "delivered" || p.status === "collected")));
+  }
+  if(srch) {
+    const q = srch.toLowerCase();
+    pkgs = pkgs.filter(p => p.carrier.toLowerCase().includes(q) || (p.trackingNum || "").toLowerCase().includes(q));
+  }
+  return pkgs;
+}
+(){
   const DIS=getDisabled();
   const now5=Date.now()+5*86400000;
   const _cut30=Date.now()-30*86400000;

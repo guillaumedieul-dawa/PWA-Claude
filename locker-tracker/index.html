@@ -61,7 +61,30 @@ async function renderDiagV9(){
   }
 }
 
-function renderDiag(){ renderDiagV9();
+
+function testFilterDiag(){
+  const el = document.getElementById("diagBox");
+  if(!el) return;
+  const cards = document.querySelectorAll(".pcard");
+  const total = cards.length;
+  let recup = 0;
+  cards.forEach(card => {
+    const status = card.querySelector(".schip")?.dataset.status || "unknown";
+    if(status === "delivered" || status === "collected") recup++;
+  });
+  el.innerHTML = `
+    <div style="padding:8px 0;border-bottom:1px solid var(--olv)">
+      <b>Colis affichés écran:</b> ${total}<br>
+      <b>Récupéré (delivered/collected):</b> ${recup}
+    </div>
+    <div style="padding:8px;color:var(--osv);font-size:12px">
+      Si 0 candidats mais colis "livré" visibles, bug affichage chips.<br>
+      Sinon, tous tes colis sont ready/pending/outfordelivery.
+    </div>
+  `;
+}
+
+function renderDiag(){ testFilterDiag(); } renderDiagV9();
   const el = document.getElementById('diagBox');
   if(!el) return;
   const rows = (D.packages||[]).map(p=>({
@@ -418,7 +441,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
       <button class="bdng" onclick="resetAll()">🗑 Réinitialiser toutes les données</button>
     </div>
 
-    <div class="tpan" id="tDs"><div class="slbl ft">Diagnostic filtres/statuts</div><div class="ibox">Affiche les colis et leur visibilité dans le filtre Récupéré.</div><div class="lbox" id="diagBox" style="max-height:280px"></div><button class="bfill" style="margin-top:0" onclick="renderDiag()">Rafraîchir le diagnostic</button></div><div class="tpan" id="tLg">
+    <div class="tpan" id="tDs"><div class="slbl ft">Diagnostic filtres/statuts</div><div class="ibox">Affiche les colis et leur visibilité dans le filtre Récupéré.</div><div class="lbox" id="diagBox" style="max-height:280px"></div><button class="bfill" style="margin-top:0" onclick="testFilterDiag()">Rafraîchir le diagnostic</button></div><div class="tpan" id="tLg">
       <div class="slbl ft">📱 Dernier scan SMS</div>
       <div class="lbox" id="logS">—</div>
       <div class="slbl">🔥 Dernière sync Firebase</div>

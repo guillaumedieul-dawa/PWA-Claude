@@ -1,5 +1,4 @@
 
-# (ton contenu YAML complet du workflow corrigé - je mets ici le contenu exact du fichier généré précédemment)
 name: Build APK
 
 on:
@@ -13,6 +12,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -37,8 +37,7 @@ jobs:
 
       - name: Install Capacitor 8
         run: |
-          npm install @capacitor/core@8.0.0 @capacitor/cli@8.0.0 @capacitor/android@8.0.0 \
-            --no-audit --no-fund --prefer-offline
+          npm install @capacitor/core@8.0.0 @capacitor/cli@8.0.0 @capacitor/android@8.0.0             --no-audit --no-fund --prefer-offline
 
       - name: Copy web files to www/
         run: |
@@ -59,10 +58,14 @@ jobs:
             sed -i "s/__BUILD_DATE__/${BUILD_DATE:-unknown}/g" www/index.html
           fi
 
-      - name: Add Android platform
+      - name: Ensure Android platform exists
         run: |
-          rm -rf android
-          npx cap add android
+          if [ ! -d "android" ]; then
+            echo "Android platform not found, adding with Capacitor..."
+            npx cap add android
+          else
+            echo "Android platform already present, keeping local changes"
+          fi
 
       - name: Capacitor sync
         run: |
@@ -75,38 +78,54 @@ jobs:
           cp android-src/SmsPlugin.java "$PLUGIN_DIR/SmsPlugin.java"
           cp android-src/MainActivity.java "$PLUGIN_DIR/MainActivity.java"
 
-      - name: Add SMS permissions in AndroidManifest
+      - name: Add SMS permissions in AndroidManifest (XML-safe)
         run: |
           python3 - << 'PYEOF'
-          import re
+          import xml.etree.ElementTree as ET
+          from xml.dom import minidom
 
           manifest_path = "android/app/src/main/AndroidManifest.xml"
-          with open(manifest_path, "r") as f:
-              content = f.read()
+
+          tree = ET.parse(manifest_path)
+          root = tree.getroot()
+
+          ANDROID_NS = "http://schemas.android.com/apk/res/android"
+          ET.register_namespace('android', ANDROID_NS)
+
+          def has_permission(root, perm_name):
+              android_name = f"{{{ANDROID_NS}}}name"
+              for uses_perm in root.findall("uses-permission"):
+                  if uses_perm.get(android_name) == perm_name:
+                      return True
+              return False
 
           permissions = [
-              'android.permission.READ_SMS',
-              'android.permission.RECEIVE_SMS',
-              'android.permission.INTERNET',
-              'android.permission.ACCESS_NETWORK_STATE',
+              "android.permission.READ_SMS",
+              "android.permission.RECEIVE_SMS",
+              "android.permission.INTERNET",
+              "android.permission.ACCESS_NETWORK_STATE",
           ]
 
+          android_name_attr = f"{{{ANDROID_NS}}}name"
+
           for perm in permissions:
-              tag = f'<uses-permission android:name="{perm}"/>'
-              if perm not in content:
-                  content = content.replace('</manifest>', f'    {tag}
-</manifest>')
+              if not has_permission(root, perm):
+                  uses_perm = ET.Element("uses-permission")
+                  uses_perm.set(android_name_attr, perm)
+                  root.insert(0, uses_perm)
 
-          with open(manifest_path, "w") as f:
-              f.write(content)
+          xml_bytes = ET.tostring(root, encoding="utf-8")
+          pretty = minidom.parseString(xml_bytes).toprettyxml(indent="  ")
 
-          print("Permissions ajoutees :", permissions)
+          with open(manifest_path, "w", encoding="utf-8") as f:
+              f.write(pretty)
+
+          print("Permissions ajoutées (XML-safe) :", permissions)
           PYEOF
 
-      - name: Setup keystore fixe
+      - name: Restore debug keystore
         run: |
-          mkdir -p ~/.android
-          echo "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 | base64 --decode > ~/.android/debug.keystore
+          echo "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... GhYcxFh3wxhs8Wj5+d9cKxzz+wv1d+WbQSoCZdH6HlphZrRIjQZEcK2HGZKlu2LKtPu+x3yLAbjrc7Jbz1h1J2D2q2X8OD+SUWYus29m+00k3VZ3RcdkVlY5cOzeQf1Mo0j2oB0w63t5NYsYMXksz1sYI93YGTh7IigqbhHeRdyUOO1x8TsY9vNXKCrsUFAHwkXLG4RdJmvXOAD/gMT0XeGk9iBXP3fjLJn1MPfg/+YgbbGL5+or3l4VZMVEp8oDbLNBO4jcLmhNwKW0N6zpHJRSCXTmbaTmzgoj5sG/o4bYfofl5H9Jl1ISKwPZU0tSj3sdLWhInNkEqGKCebIF/NVKBEGtqw+dgyC4/k2JuNM/qQM8CiIAqu0+aVIHmDdB8NUrLrOcOlO4d3COU5BpWZfOzCra9hVLZ7q3se2Nt2CwFgPXM2jbiT4HOFOh59y2S4fW7ByflsFLP8gsY09cFvLXnZ3pTQ5ZKQzzucoI8hiT4S62qO1FNr+6LREr+9ztp1orM9x14t5gdbHVw7VjSwc4YyDlwPFKQMuOg/S53DhjRedw7DouIwTTAxMA0GCWCGSAFlAwQCAQUABCDtcRIlAcwCObttt5zdWrdoGcUdrqBPeEzABdsSLZefHgQUjmb7inthcRpo250flp8asptaXdUCAicQ" | base64 --decode > ~/.android/debug.keystore
           echo "✓ Keystore FamilyHub restauré"
 
       - name: Set versionCode auto
@@ -118,19 +137,40 @@ jobs:
           BUILD_DATE=$(date '+%d/%m/%Y %H:%M')
           echo "BUILD_DATE=$BUILD_DATE" >> $GITHUB_ENV
 
-      - name: Inject versionCode in build.gradle
+      - name: Inject versionCode in build.gradle (scoped)
         run: |
           python3 - << 'PYEOF'
           import re, os
+
           path = "android/app/build.gradle"
-          with open(path) as f:
+          with open(path, encoding="utf-8") as f:
               content = f.read()
-          vc = os.environ.get('VERSION_CODE', '10000')
-          vn = os.environ.get('VERSION_NAME', '2.0')
-          content = re.sub(r'versionCode\s+\d+', f'versionCode {vc}', content)
-          content = re.sub(r'versionName\s+"[^"]+"', f'versionName "{vn}"', content)
-          with open(path, 'w') as f:
+
+          vc = os.environ.get("VERSION_CODE", "10000")
+          vn = os.environ.get("VERSION_NAME", "2.0")
+
+          def replace_in_default_config(text, pattern, repl):
+              def _repl(match):
+                  block = match.group(0)
+                  block = re.sub(pattern, repl, block)
+                  return block
+              return re.sub(r"defaultConfig\s*\{[^}]*\}", _repl, text, flags=re.DOTALL)
+
+          content = replace_in_default_config(
+              content,
+              r"versionCode\s+\d+",
+              f"versionCode {vc}",
+          )
+
+          content = replace_in_default_config(
+              content,
+              r'versionName\s+"[^"]+"',
+              f'versionName "{vn}"',
+          )
+
+          with open(path, "w", encoding="utf-8") as f:
               f.write(content)
+
           print(f"✓ versionCode={vc}, versionName={vn}")
           PYEOF
 

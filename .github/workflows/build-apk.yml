@@ -131,9 +131,27 @@ jobs:
             echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > "$KEYSTORE_DIR/debug.keystore"
             echo "✓ Keystore restauré depuis KEYSTORE_BASE64"
           else
-            echo "⚠️  KEYSTORE_BASE64 manquant — APK non updatable sans désinstall"
+            echo "⚠️ KEYSTORE_BASE64 manquant — APK non updatable sans désinstall"
             keytool -genkeypair -v               -keystore "$KEYSTORE_DIR/debug.keystore"               -storepass android -keypass android               -alias androiddebugkey               -keyalg RSA -keysize 2048 -validity 10000               -dname "CN=FamilyHub,O=Famille Dieul-Gandet,C=FR"               2>/dev/null || true
           fi
+
+      - name: Debug keystore artifact (temp)
+        if: always()
+        run: |
+          ls -R "$HOME/.android" || true
+          if [ -f "$HOME/.android/debug.keystore" ]; then
+            cp "$HOME/.android/debug.keystore" debug.keystore
+          else
+            echo "No debug.keystore found in $HOME/.android"
+          fi
+
+      - name: Upload debug.keystore (temp)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-keystore-temp
+          path: debug.keystore
+          retention-days: 1
 
       - name: Set versionCode auto
         run: |

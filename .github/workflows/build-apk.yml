@@ -56,7 +56,6 @@ jobs:
           cp -rf liste-courses/ www/ 2>/dev/null || true
           if [ -f www/index.html ]; then
             sed -i "s/__BUILD_DATE__/${BUILD_DATE:-unknown}/g" www/index.html
-            sed -i "s/__APK_VERSION__/${VERSION_NAME:-unknown}/g" www/index.html
           fi
 
       - name: Ensure Android platform exists

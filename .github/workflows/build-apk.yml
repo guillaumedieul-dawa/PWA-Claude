@@ -38,7 +38,7 @@ jobs:
       run: |
         npm install @capacitor/core@8.0.0 @capacitor/cli@8.0.0 @capacitor/android@8.0.0 --no-audit --no-fund --prefer-offline
 
-    # 1) DÉFINIR LES VARIABLES AVANT LE SED
+    # Définir versionCode / versionName + infos de build
     - name: Set versionCode auto
       run: |
         VERSION_CODE=$(date +%Y%m%d)$(printf "%02d" $((GITHUB_RUN_NUMBER % 100)))
@@ -52,7 +52,6 @@ jobs:
         BUILD_ID=$(date +%Y%m%d-%H%M)-run${GITHUB_RUN_NUMBER}
         echo "BUILD_ID=$BUILD_ID" >> $GITHUB_ENV
 
-    # 2) Puis copier les fichiers et faire le sed
     - name: Copy web files to www/
       run: |
         mkdir -p www
@@ -69,9 +68,10 @@ jobs:
         cp -rf menus-semaine/ www/ 2>/dev/null || true
         cp -rf liste-courses/ www/ 2>/dev/null || true
         if [ -f www/index.html ]; then
-          sed -i "s/__BUILD_DATE__/${BUILD_DATE:-unknown}/g" www/index.html
-          sed -i "s/__BUILD_ID__/${BUILD_ID:-unknown}/g" www/index.html
-          sed -i "s/__VERSION_NAME__/${VERSION_NAME:-unknown}/g" www/index.html
+          # Utilisation de | comme délimiteur pour éviter les conflits avec / dans BUILD_DATE
+          sed -i "s|__BUILD_DATE__|${BUILD_DATE:-unknown}|g" www/index.html
+          sed -i "s|__BUILD_ID__|${BUILD_ID:-unknown}|g" www/index.html
+          sed -i "s|__VERSION_NAME__|${VERSION_NAME:-unknown}|g" www/index.html
         fi
 
     - name: Debug index.html après injection

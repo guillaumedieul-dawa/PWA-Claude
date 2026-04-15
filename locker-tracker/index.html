@@ -1015,37 +1015,65 @@ function closeS(id){closeSheet(id);}
 function openS(id){openSheet(id);}
 initTheme();purge();renderSS();render();autoSync();
 
-(function(){
-  var _R=render;
-  render=function(){
-    _R();
-    // Cartes colis — onclick directement sur l'élément généré
-    document.querySelectorAll('.pcard[id]').forEach(function(card){
-      if(card._b)return;card._b=1;
-      var pid=parseInt(card.id.replace('pc',''));
-      card.setAttribute('onclick','tog('+pid+')');
-      card.querySelectorAll('[data-action]').forEach(function(btn){
-        if(btn._b)return;btn._b=1;
-        var ba=btn.getAttribute('data-action');
-        var bid=Math.round(Number(btn.dataset.id||0));
-        var oc={
-          'cpT':     'event.stopPropagation();cpT("'+btn.dataset.val+'","'+btn.dataset.lbl+'",event)',
-          'showQR':  'event.stopPropagation();showQR('+bid+',event)',
-          'shareP':  'event.stopPropagation();shareP('+bid+',event)',
-          'copyAll': 'event.stopPropagation();copyAll('+bid+',event)',
-          'markDone':'event.stopPropagation();markDone('+bid+',event)',
-          'delPkg':  'event.stopPropagation();delPkg('+bid+',event)',
-          'stopProp':'event.stopPropagation()',
-        }[ba];
-        if(oc)btn.setAttribute('onclick',oc);
-      });
-    });
-    // toggleDisabled dans config transporteurs
-    document.querySelectorAll('[onclick*="toggleDisabled"]').forEach(function(btn){
-      // déjà bindé via onclick= dans le template
-    });
-  };
-})();
+// ── Dispatcher global click — pattern Capacitor WebView ──
+// Remplace le wrapper fragile : gère TOUS les data-action des cartes colis
+// Utilise findAction() pour éviter l'erreur .closest() sur TextNode
+function findAction(el){
+  var cur=el;
+  while(cur&&cur!==document){
+    if(cur.nodeType===1){
+      if(cur.getAttribute('data-action'))return cur;
+    }
+    cur=cur.parentNode;
+  }
+  return null;
+}
+document.addEventListener('click',function(e){
+  var el=findAction(e.target);
+  if(!el)return;
+  var action=el.getAttribute('data-action');
+  var id=Math.round(Number(el.dataset.id||0));
+
+  if(action==='tog'){
+    e.stopPropagation();
+    tog(id);
+    return;
+  }
+  if(action==='cpT'){
+    e.stopPropagation();
+    cpT(el.dataset.val,el.dataset.lbl,e);
+    return;
+  }
+  if(action==='showQR'){
+    e.stopPropagation();
+    showQR(id,e);
+    return;
+  }
+  if(action==='shareP'){
+    e.stopPropagation();
+    shareP(id,e);
+    return;
+  }
+  if(action==='copyAll'){
+    e.stopPropagation();
+    copyAll(id,e);
+    return;
+  }
+  if(action==='markDone'){
+    e.stopPropagation();
+    markDone(id,e);
+    return;
+  }
+  if(action==='delPkg'){
+    e.stopPropagation();
+    delPkg(id,e);
+    return;
+  }
+  if(action==='stopProp'){
+    e.stopPropagation();
+    return;
+  }
+},false);
 
 
 // Activer le chip du filtre courant après render

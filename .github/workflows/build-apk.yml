@@ -38,6 +38,21 @@ jobs:
       run: |
         npm install @capacitor/core@8.0.0 @capacitor/cli@8.0.0 @capacitor/android@8.0.0 --no-audit --no-fund --prefer-offline
 
+    # 1) DÉFINIR LES VARIABLES AVANT LE SED
+    - name: Set versionCode auto
+      run: |
+        VERSION_CODE=$(date +%Y%m%d)$(printf "%02d" $((GITHUB_RUN_NUMBER % 100)))
+        VERSION_NAME="2.$(date +%Y%m%d)"
+        echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_ENV
+        echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
+
+        BUILD_DATE=$(date '+%d/%m/%Y %H:%M')
+        echo "BUILD_DATE=$BUILD_DATE" >> $GITHUB_ENV
+
+        BUILD_ID=$(date +%Y%m%d-%H%M)-run${GITHUB_RUN_NUMBER}
+        echo "BUILD_ID=$BUILD_ID" >> $GITHUB_ENV
+
+    # 2) Puis copier les fichiers et faire le sed
     - name: Copy web files to www/
       run: |
         mkdir -p www
@@ -161,19 +176,6 @@ jobs:
         name: debug-keystore-temp
         path: debug.keystore
         retention-days: 1
-
-    - name: Set versionCode auto
-      run: |
-        VERSION_CODE=$(date +%Y%m%d)$(printf "%02d" $((GITHUB_RUN_NUMBER % 100)))
-        VERSION_NAME="2.$(date +%Y%m%d)"
-        echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_ENV
-        echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
-
-        BUILD_DATE=$(date '+%d/%m/%Y %H:%M')
-        echo "BUILD_DATE=$BUILD_DATE" >> $GITHUB_ENV
-
-        BUILD_ID=$(date +%Y%m%d-%H%M)-run${GITHUB_RUN_NUMBER}
-        echo "BUILD_ID=$BUILD_ID" >> $GITHUB_ENV
 
     - name: Inject versionCode in build.gradle (scoped)
       run: |

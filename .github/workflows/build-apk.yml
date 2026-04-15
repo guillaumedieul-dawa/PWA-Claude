@@ -58,7 +58,14 @@ jobs:
           sed -i "s/__BUILD_ID__/${BUILD_ID:-unknown}/g" www/index.html
           sed -i "s/__VERSION_NAME__/${VERSION_NAME:-unknown}/g" www/index.html
         fi
-
+        
+- name: Debug index.html après injection
+  run: |
+    echo "===== BUILD_DATE=$BUILD_DATE ====="
+    echo "===== BUILD_ID=$BUILD_ID ====="
+    echo "===== VERSION_NAME=$VERSION_NAME ====="
+    echo "===== Contenu de www/index.html ====="
+    sed -n '1,220p' www/index.html || echo "www/index.html introuvable"
     - name: Ensure Android platform exists
       run: |
         if [ ! -d "android" ]; then

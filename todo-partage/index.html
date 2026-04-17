@@ -153,10 +153,69 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 const SK = 'fh_todo';
 const PRIO_COLORS = {high:'#cf0000', mid:'#7B4F00', low:'#1A6500'};
 
+// ── Firestore (source primaire) ──────────────────────────────
+const FB_PROJECT = 'familyhub-colis-8abbd';
+const FB_COLL    = 'meta/todo/tasks';
+function getFBKey() {
+  try { const s = JSON.parse(localStorage.getItem('lt_fb')); return s && s.apiKey ? s.apiKey : ''; } catch { return ''; }
+}
+function fbUrl(path) {
+  return 'https://firestore.googleapis.com/v1/projects/' + FB_PROJECT +
+    '/databases/(default)/documents/' + path + '?key=' + getFBKey();
+}
+function toFields(obj) {
+  const f = {};
+  for (const k in obj) {
+    const v = obj[k];
+    if (v === null || v === undefined) f[k] = {nullValue: null};
+    else if (typeof v === 'boolean')  f[k] = {booleanValue: v};
+    else if (typeof v === 'number')   f[k] = {integerValue: String(v)};
+    else                              f[k] = {stringValue: String(v)};
+  }
+  return f;
+}
+function fromFields(fields) {
+  if (!fields) return {};
+  const obj = {};
+  for (const k in fields) {
+    const v = fields[k];
+    if ('booleanValue' in v)  obj[k] = v.booleanValue;
+    else if ('integerValue' in v) obj[k] = parseInt(v.integerValue);
+    else if ('stringValue' in v)  obj[k] = v.stringValue;
+    else obj[k] = null;
+  }
+  return obj;
+}
+async function fbWriteTask(task) {
+  const key = getFBKey(); if (!key) return;
+  try {
+    await fetch(fbUrl(FB_COLL + '/' + task.id), {
+      method: 'PATCH',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({fields: toFields(task)})
+    });
+  } catch(e) { console.warn('fbWriteTask', e); }
+}
+async function fbDeleteTask(id) {
+  const key = getFBKey(); if (!key) return;
+  try {
+    await fetch(fbUrl(FB_COLL + '/' + id), {method:'DELETE'});
+  } catch(e) { console.warn('fbDeleteTask', e); }
+}
+async function fbLoadAll() {
+  const key = getFBKey(); if (!key) return null;
+  try {
+    const r = await fetch(fbUrl(FB_COLL));
+    if (!r.ok) return null;
+    const data = await r.json();
+    return (data.documents || []).map(doc => fromFields(doc.fields));
+  } catch(e) { console.warn('fbLoadAll', e); return null; }
+}
+
 let D    = loadD();
 let flt  = 'all';
 let prio = 'low';
-let editId = null;   // null = ajout, number = édition
+let editId = null;
 let _tt;
 
 function loadD() {
@@ -190,8 +249,10 @@ function fmtDeadline(iso) {
 function quickAdd() {
   const el = document.getElementById('qi');
   const v = el.value.trim(); if (!v) return;
-  D.tasks.unshift({id:D.nextId++, text:v, done:false, prio:'mid', who:'Tous', note:'', date:new Date().toISOString(), deadline:''});
+  const task = {id:D.nextId++, text:v, done:false, prio:'mid', who:'Tous', note:'', date:new Date().toISOString(), deadline:''};
+  D.tasks.unshift(task);
   saveD(D); render(); el.value = '';
+  fbWriteTask(task);
   showToast('✓ Tâche ajoutée');
 }
 
@@ -234,10 +295,13 @@ function saveTask() {
     // Édition
     const t = D.tasks.find(x => x.id === editId); if (!t) return;
     t.text = text; t.prio = prio; t.who = who; t.note = note; t.deadline = deadline;
+    fbWriteTask(t);
     showToast('✓ Tâche modifiée');
   } else {
     // Ajout
-    D.tasks.unshift({id:D.nextId++, text, done:false, prio, who, note, deadline, date:new Date().toISOString()});
+    const task = {id:D.nextId++, text, done:false, prio, who, note, deadline, date:new Date().toISOString()};
+    D.tasks.unshift(task);
+    fbWriteTask(task);
     showToast('✓ Tâche ajoutée');
   }
   saveD(D); render(); closeSheet('shAdd');
@@ -250,12 +314,14 @@ function toggleDone(id) {
   const t = D.tasks.find(x => x.id === id); if (!t) return;
   t.done = !t.done; t.doneAt = t.done ? new Date().toISOString() : null;
   saveD(D); render();
+  fbWriteTask(t);
   showToast(t.done ? '✓ Tâche terminée' : '↩ Tâche réactivée');
 }
 
 function delTask(id) {
   D.tasks = D.tasks.filter(t => t.id !== id);
   saveD(D); render();
+  fbDeleteTask(id);
 }
 
 // ── Filtrage ────────────────────────────────────────────────
@@ -426,9 +492,20 @@ document.addEventListener('keydown', function(e) {
 });
 
 // ── Init ─────────────────────────────────────────────────────
-function init() {
+async function init() {
   document.querySelectorAll('.sov').forEach(el => { el.style.display = 'none'; });
   initTheme(); render();
+  // Firestore source primaire : hydratation au démarrage
+  const remote = await fbLoadAll();
+  if (remote && remote.length > 0) {
+    // Fusion : Firestore prime, on recalcule nextId
+    const localMap = {};
+    D.tasks.forEach(t => { localMap[t.id] = t; });
+    remote.forEach(t => { localMap[t.id] = t; }); // remote écrase local
+    D.tasks = Object.values(localMap).sort((a,b) => new Date(b.date||0) - new Date(a.date||0));
+    D.nextId = Math.max(D.nextId, ...D.tasks.map(t => t.id + 1));
+    saveD(D); render();
+  }
 }
 init();
 </script>

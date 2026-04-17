@@ -150,6 +150,64 @@ const SK_SHOPS = 'fh_shops';
 const WHO_COLORS = {Guillaume:'#D7E3FF', Michele:'#ECDCFF'};
 const WHO_TC     = {Guillaume:'#001849', Michele:'#1D0160'};
 
+// ── Firestore (source primaire) ──────────────────────────────
+const FB_PROJECT_C = 'familyhub-colis-8abbd';
+const FB_COLL_C    = 'meta/courses/items';
+function getFBKeyC() {
+  try { const s = JSON.parse(localStorage.getItem('lt_fb')); return s && s.apiKey ? s.apiKey : ''; } catch { return ''; }
+}
+function fbUrlC(path) {
+  return 'https://firestore.googleapis.com/v1/projects/' + FB_PROJECT_C +
+    '/databases/(default)/documents/' + path + '?key=' + getFBKeyC();
+}
+function toFieldsC(obj) {
+  const f = {};
+  for (const k in obj) {
+    const v = obj[k];
+    if (v === null || v === undefined) f[k] = {nullValue: null};
+    else if (typeof v === 'boolean')   f[k] = {booleanValue: v};
+    else if (typeof v === 'number')    f[k] = {integerValue: String(v)};
+    else                               f[k] = {stringValue: String(v)};
+  }
+  return f;
+}
+function fromFieldsC(fields) {
+  if (!fields) return {};
+  const obj = {};
+  for (const k in fields) {
+    const v = fields[k];
+    if ('booleanValue' in v)      obj[k] = v.booleanValue;
+    else if ('integerValue' in v) obj[k] = parseInt(v.integerValue);
+    else if ('stringValue' in v)  obj[k] = v.stringValue;
+    else obj[k] = null;
+  }
+  return obj;
+}
+async function fbWriteItem(item) {
+  if (!getFBKeyC()) return;
+  try {
+    await fetch(fbUrlC(FB_COLL_C + '/' + item.id), {
+      method: 'PATCH',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({fields: toFieldsC(item)})
+    });
+  } catch(e) { console.warn('fbWriteItem', e); }
+}
+async function fbDeleteItem(id) {
+  if (!getFBKeyC()) return;
+  try { await fetch(fbUrlC(FB_COLL_C + '/' + id), {method:'DELETE'}); }
+  catch(e) { console.warn('fbDeleteItem', e); }
+}
+async function fbLoadAllC() {
+  if (!getFBKeyC()) return null;
+  try {
+    const r = await fetch(fbUrlC(FB_COLL_C));
+    if (!r.ok) return null;
+    const data = await r.json();
+    return (data.documents || []).map(doc => fromFieldsC(doc.fields));
+  } catch(e) { console.warn('fbLoadAllC', e); return null; }
+}
+
 let D      = loadD();
 let shops  = loadShops();
 let shopFlt = 'all';
@@ -172,8 +230,10 @@ function saveShops(s) { shops=s; localStorage.setItem(SK_SHOPS, JSON.stringify(s
 function quickAdd() {
   const el = document.getElementById('qi');
   const v = el.value.trim(); if (!v) return;
-  D.items.push({id:D.nextId++, nom:v, qty:'', who:'Guillaume', done:false, date:new Date().toISOString()});
+  const item = {id:D.nextId++, nom:v, qty:'', who:'Guillaume', done:false, date:new Date().toISOString()};
+  D.items.push(item);
   saveD(D); render(); el.value = '';
+  fbWriteItem(item);
   showToast('✓ Ajouté');
 }
 
@@ -216,9 +276,12 @@ function saveItem() {
   if (editId !== null) {
     const item = D.items.find(x => x.id === editId); if (!item) return;
     item.nom = nom; item.qty = qty; item.who = who; item.note = note; item.shop = shop;
+    fbWriteItem(item);
     showToast('✓ Article modifié');
   } else {
-    D.items.push({id:D.nextId++, nom, qty, who, note, shop, done:false, date:new Date().toISOString()});
+    const item = {id:D.nextId++, nom, qty, who, note, shop, done:false, date:new Date().toISOString()};
+    D.items.push(item);
+    fbWriteItem(item);
     showToast('✓ Ajouté à la liste');
   }
   saveD(D); render(); closeSheet('shAdd');
@@ -230,18 +293,23 @@ function saveItem() {
 function toggleItem(id) {
   const t = D.items.find(x => x.id === id); if (!t) return;
   t.done = !t.done; saveD(D); render();
+  fbWriteItem(t);
 }
 
 function delItem(id) {
   D.items = D.items.filter(x => x.id !== id);
   saveD(D); render();
+  fbDeleteItem(id);
 }
 
 function clearDone() {
   const n = D.items.filter(x => x.done).length; if (!n) return;
   if (confirm(`Supprimer les ${n} article(s) achetés ?`)) {
+    const toDelete = D.items.filter(x => x.done).map(x => x.id);
     D.items = D.items.filter(x => !x.done);
-    saveD(D); render(); showToast(`✓ ${n} article(s) supprimés`);
+    saveD(D); render();
+    toDelete.forEach(id => fbDeleteItem(id));
+    showToast(`✓ ${n} article(s) supprimés`);
   }
 }
 
@@ -411,10 +479,20 @@ function renderShopChips() {
   }
 }
 // ── Init ──────────────────────────────────────────────────────
-function init() {
+async function init() {
   document.querySelectorAll('.sov').forEach(el => { el.style.display = 'none'; });
   renderShopChips();
   initTheme(); render();
+  // Firestore source primaire
+  const remote = await fbLoadAllC();
+  if (remote && remote.length > 0) {
+    const localMap = {};
+    D.items.forEach(t => { localMap[t.id] = t; });
+    remote.forEach(t => { localMap[t.id] = t; });
+    D.items = Object.values(localMap).sort((a,b) => new Date(b.date||0) - new Date(a.date||0));
+    D.nextId = Math.max(D.nextId, ...D.items.map(t => t.id + 1));
+    saveD(D); render();
+  }
 }
 init();
 </script>

@@ -200,7 +200,23 @@ function initTheme(){const s=localStorage.getItem('lt_th');if(s){applyTheme(s);r
 
 function showSuggestSheet(){openSheet('shSuggest');}
 function hideSuggestSheet(){closeSheet('shSuggest');}
-initTheme();render();
+// ── Init ─────────────────────────────────────────────────────
+async function init() {
+  initTheme(); render();
+  // Firestore source primaire : hydratation silencieuse au démarrage
+  try {
+    const remote = await fbMenusReadAll();
+    let changed = false;
+    for (const k in remote) {
+      if (!D[k] || JSON.stringify(D[k]) !== JSON.stringify(remote[k])) {
+        D[k] = Object.assign(D[k]||{}, remote[k]);
+        changed = true;
+      }
+    }
+    if (changed) { saveD(D); render(); }
+  } catch(e) { /* réseau indisponible, fallback local */ }
+}
+init();
 
 
 var MEALS={
@@ -245,21 +261,22 @@ function applySuggest(){
 }
 
 // ── Synchronisation Firestore pour les menus ────────────────────
-const FB_MENUS = {
-  projectId: 'familyhub-colis-8abbd',
-  apiKey: ''  // clé publique embarquée dans locker-tracker
-};
+const FB_MENUS = { projectId: 'familyhub-colis-8abbd' };
 const MENUS_COLL = 'meta/menus';
+function getFBKeyM() {
+  try { const s = JSON.parse(localStorage.getItem('lt_fb')); return s && s.apiKey ? s.apiKey : ''; } catch { return ''; }
+}
+function fbMenusUrl(path) {
+  return 'https://firestore.googleapis.com/v1/projects/' + FB_MENUS.projectId +
+    '/databases/(default)/documents/' + path + '?key=' + getFBKeyM();
+}
 
 async function fbMenusWrite(dateKey, data) {
+  if (!getFBKeyM()) return;
   try {
-    const url = 'https://firestore.googleapis.com/v1/projects/' + FB_MENUS.projectId +
-      '/databases/(default)/documents/' + MENUS_COLL + '/' + dateKey;
     const fields = {};
-    for (const k in data) {
-      fields[k] = {stringValue: String(data[k]||'')};
-    }
-    await fetch(url, {
+    for (const k in data) { fields[k] = {stringValue: String(data[k]||'')}; }
+    await fetch(fbMenusUrl(MENUS_COLL + '/' + dateKey), {
       method: 'PATCH',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({fields})
@@ -268,10 +285,9 @@ async function fbMenusWrite(dateKey, data) {
 }
 
 async function fbMenusReadAll() {
+  if (!getFBKeyM()) return {};
   try {
-    const url = 'https://firestore.googleapis.com/v1/projects/' + FB_MENUS.projectId +
-      '/databases/(default)/documents/' + MENUS_COLL;
-    const r = await fetch(url);
+    const r = await fetch(fbMenusUrl(MENUS_COLL));
     if (!r.ok) return {};
     const data = await r.json();
     const result = {};
@@ -280,9 +296,7 @@ async function fbMenusReadAll() {
       const dateKey = parts[parts.length-1];
       const fields = doc.fields||{};
       result[dateKey] = {};
-      for (const k in fields) {
-        result[dateKey][k] = fields[k].stringValue||'';
-      }
+      for (const k in fields) { result[dateKey][k] = fields[k].stringValue||''; }
     });
     return result;
   } catch(e) { console.warn('fbMenusReadAll', e); return {}; }
@@ -292,7 +306,6 @@ async function syncMenus() {
   showToast('🔄 Synchronisation…');
   try {
     const remote = await fbMenusReadAll();
-    // Merger : remote écrase local si plus récent (on garde tout)
     let changed = false;
     for (const k in remote) {
       if (!D[k] || JSON.stringify(D[k]) !== JSON.stringify(remote[k])) {

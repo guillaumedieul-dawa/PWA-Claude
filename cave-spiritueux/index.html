@@ -165,6 +165,64 @@ const TYPES  = {vin:'🍷 Vin rouge',vinb:'🥂 Vin blanc',vinr:'🌸 Vin rosé'
 const ICONS  = {vin:'🍷',vinb:'🥂',vinr:'🌸',rhum:'🥃',whisky:'🥃',champagne:'🍾',autre:'🍶'};
 const COLORS = {vin:'#FFDAD6',vinb:'#FFDDB4',vinr:'#FFD0E8',rhum:'#ECDCFF',whisky:'#D7E3FF',champagne:'#C4EFAD',autre:'#E6EBF0'};
 
+// ── Firestore (source primaire) ──────────────────────────────
+const FB_PROJECT_V = 'familyhub-colis-8abbd';
+const FB_COLL_V    = 'meta/cave/bottles';
+function getFBKeyV() {
+  try { const s = JSON.parse(localStorage.getItem('lt_fb')); return s && s.apiKey ? s.apiKey : ''; } catch { return ''; }
+}
+function fbUrlV(path) {
+  return 'https://firestore.googleapis.com/v1/projects/' + FB_PROJECT_V +
+    '/databases/(default)/documents/' + path + '?key=' + getFBKeyV();
+}
+function toFieldsV(obj) {
+  const f = {};
+  for (const k in obj) {
+    const v = obj[k];
+    if (v === null || v === undefined) f[k] = {nullValue: null};
+    else if (typeof v === 'boolean')   f[k] = {booleanValue: v};
+    else if (typeof v === 'number')    f[k] = {integerValue: String(v)};
+    else                               f[k] = {stringValue: String(v)};
+  }
+  return f;
+}
+function fromFieldsV(fields) {
+  if (!fields) return {};
+  const obj = {};
+  for (const k in fields) {
+    const v = fields[k];
+    if ('booleanValue' in v)      obj[k] = v.booleanValue;
+    else if ('integerValue' in v) obj[k] = parseInt(v.integerValue);
+    else if ('stringValue' in v)  obj[k] = v.stringValue;
+    else obj[k] = null;
+  }
+  return obj;
+}
+async function fbWriteBottle(bottle) {
+  if (!getFBKeyV()) return;
+  try {
+    await fetch(fbUrlV(FB_COLL_V + '/' + bottle.id), {
+      method: 'PATCH',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({fields: toFieldsV(bottle)})
+    });
+  } catch(e) { console.warn('fbWriteBottle', e); }
+}
+async function fbDeleteBottle(id) {
+  if (!getFBKeyV()) return;
+  try { await fetch(fbUrlV(FB_COLL_V + '/' + id), {method:'DELETE'}); }
+  catch(e) { console.warn('fbDeleteBottle', e); }
+}
+async function fbLoadAllV() {
+  if (!getFBKeyV()) return null;
+  try {
+    const r = await fetch(fbUrlV(FB_COLL_V));
+    if (!r.ok) return null;
+    const data = await r.json();
+    return (data.documents || []).map(doc => fromFieldsV(doc.fields));
+  } catch(e) { console.warn('fbLoadAllV', e); return null; }
+}
+
 // ── État ─────────────────────────────────────────────────────
 let D    = loadD();
 let flt  = 'all';
@@ -182,7 +240,7 @@ function saveD(d) { localStorage.setItem(SK, JSON.stringify(d)); }
 function addBottle() {
   const nom = document.getElementById('aNom').value.trim();
   if (!nom) { showToast('⚠️ Saisissez un nom'); return; }
-  D.bottles.unshift({
+  const bottle = {
     id: D.nextId++, nom,
     type:    document.getElementById('aType').value,
     qty:     parseInt(document.getElementById('aQty').value) || 1,
@@ -191,8 +249,10 @@ function addBottle() {
     region:  document.getElementById('aRegion').value.trim(),
     comment: document.getElementById('aComment').value.trim(),
     date:    new Date().toISOString()
-  });
+  };
+  D.bottles.unshift(bottle);
   saveD(D); render(); closeSheet('shAdd');
+  fbWriteBottle(bottle);
   showToast('✓ Ajouté à la cave');
   ['aNom','aYear','aNote','aRegion','aComment'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('aQty').value = '1';
@@ -201,15 +261,21 @@ function addBottle() {
 function changeQty(id, delta) {
   const b = D.bottles.find(x => x.id === id); if (!b) return;
   b.qty = Math.max(0, b.qty + delta);
-  if (b.qty === 0 && confirm('Stock à 0 — supprimer la bouteille ?'))
+  if (b.qty === 0 && confirm('Stock à 0 — supprimer la bouteille ?')) {
     D.bottles = D.bottles.filter(x => x.id !== id);
+    saveD(D); render();
+    fbDeleteBottle(id);
+    return;
+  }
   saveD(D); render();
+  fbWriteBottle(b);
 }
 
 function delBottle(id) {
   if (!confirm('Supprimer cette bouteille ?')) return;
   D.bottles = D.bottles.filter(x => x.id !== id);
   saveD(D); render();
+  fbDeleteBottle(id);
 }
 
 function togBottle(id) {
@@ -366,10 +432,20 @@ document.addEventListener('input', function(e) {
 });
 
 // ── Init ─────────────────────────────────────────────────────
-function init() {
+async function init() {
   document.querySelectorAll('.sov').forEach(el => { el.style.display = 'none'; });
   initTheme();
   render();
+  // Firestore source primaire
+  const remote = await fbLoadAllV();
+  if (remote && remote.length > 0) {
+    const localMap = {};
+    D.bottles.forEach(b => { localMap[b.id] = b; });
+    remote.forEach(b => { localMap[b.id] = b; });
+    D.bottles = Object.values(localMap).sort((a,b) => new Date(b.date||0) - new Date(a.date||0));
+    D.nextId = Math.max(D.nextId, ...D.bottles.map(b => b.id + 1));
+    saveD(D); render();
+  }
 }
 init();
 </script>

@@ -52,27 +52,22 @@ jobs:
         BUILD_ID=$(date +%Y%m%d-%H%M)-run${GITHUB_RUN_NUMBER}
         echo "BUILD_ID=$BUILD_ID" >> $GITHUB_ENV
 
-    - name: Copy web files to www/
-      run: |
-        mkdir -p www
-        if [ ! -f capacitor.config.json ]; then
-          echo '{"appId":"com.famille.dieulgandet","appName":"FamilyHub","webDir":"www","android":{"allowMixedContent":true,"webContentsDebuggingEnabled":false},"plugins":{"SplashScreen":{"launchShowDuration":0}}}' > capacitor.config.json
-        fi
-        cp -f index.html www/ 2>/dev/null || true
-        cp -f manifest.json www/ 2>/dev/null || true
-        cp -f sw.js www/ 2>/dev/null || true
-        cp -rf icons/ www/ 2>/dev/null || true
-        cp -rf locker-tracker/ www/ 2>/dev/null || true
-        cp -rf todo-partage/ www/ 2>/dev/null || true
-        cp -rf cave-spiritueux/ www/ 2>/dev/null || true
-        cp -rf menus-semaine/ www/ 2>/dev/null || true
-        cp -rf liste-courses/ www/ 2>/dev/null || true
-        if [ -f www/index.html ]; then
-          # Utilisation de | comme délimiteur pour éviter les conflits avec / dans BUILD_DATE
-          sed -i "s|__BUILD_DATE__|${BUILD_DATE:-unknown}|g" www/index.html
-          sed -i "s|__BUILD_ID__|${BUILD_ID:-unknown}|g" www/index.html
-          sed -i "s|__VERSION_NAME__|${VERSION_NAME:-unknown}|g" www/index.html
-        fi
+- name: Copy web files to www
+  run: |
+    mkdir -p www
+    if ! [ -f capacitor.config.json ]; then
+      echo '{"appId":"com.famille.dieulgandet","appName":"FamilyHub","webDir":"www","android":{"allowMixedContent":true},"webContentsDebuggingEnabled":false,"plugins":{"SplashScreen":{"launchShowDuration":0}}}' > capacitor.config.json
+    fi
+    cp -f index.html www 2>/dev/null || true
+    cp -f manifest.json www 2>/dev/null || true
+    cp -f sw.js www 2>/dev/null || true
+    cp -f storage.js www 2>/dev/null || true
+    cp -rf icons www 2>/dev/null || true
+    cp -rf locker-tracker www 2>/dev/null || true
+    cp -rf todo-partage www 2>/dev/null || true
+    cp -rf cave-spiritueux www 2>/dev/null || true
+    cp -rf menus-semaine www 2>/dev/null || true
+    cp -rf liste-courses www 2>/dev/null || true
 
     - name: Debug index.html après injection
       run: |

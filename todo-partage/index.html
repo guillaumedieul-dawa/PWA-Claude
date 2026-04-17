@@ -151,49 +151,130 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 
 <script>
 'use strict';
-const SK = 'fh_todo';
-const PRIO_COLORS = {high:'#cf0000', mid:'#7B4F00', low:'#1A6500'};
 
-let D    = loadD();
-let flt  = 'all';
+// Clé de stockage locale / Preferences
+const SK = 'fhtodo';
+const INIT_FLAG = 'fhtodo_init_done';
+
+const PRIOCOLORS = {
+  high: '#cf0000',
+  mid: '#7B4F00',
+  low: '#1A6500'
+};
+
+let D = { tasks: [], nextId: 1 };
+let flt = 'all';
 let prio = 'low';
-let editId = null;   // null = ajout, number = édition
-let _tt;
+let editId = null;
+let tt;
 
-function loadD() {
-  try { const d = JSON.parse(localStorage.getItem(SK)); if (d && d.tasks) return d; } catch(e) {}
-  return {tasks:[], nextId:1};
+// Helpers Firestore existants (fbAll / fbW) supposés déjà définis dans ton projet.
+// Ici on illustre des stubs ; garde tes vraies implémentations.
+async function fbAll() {
+  // TODO : garder ta fonction actuelle qui lit Firestore metatodo
+  // et renvoie { tasks: [...], nextId: n }
+  return null;
 }
-function saveD(d) { localStorage.setItem(SK, JSON.stringify(d)); }
 
-// ── Deadline helpers ────────────────────────────────────────
+async function fbW(task) {
+  // TODO : garder ta fonction actuelle qui écrit dans metatodo[id]
+}
+
+// Chargement / sauvegarde via wrapper FHStorage
+async function loadD() {
+  // 1) Essayer de charger depuis Firestore (source de vérité)
+  try {
+    const fromFb = await fbAll();
+    if (fromFb && Array.isArray(fromFb.tasks)) {
+      // On normalise au format attendu
+      D = {
+        tasks: fromFb.tasks || [],
+        nextId: fromFb.nextId || (fromFb.tasks.length ? Math.max(...fromFb.tasks.map(t => t.id || 0)) + 1 : 1)
+      };
+      await FHStorage.setItem(SK, JSON.stringify(D));
+      return;
+    }
+  } catch (e) {
+    // offline, on passe au cache local
+  }
+
+  // 2) Fallback sur cache local
+  try {
+    const raw = await FHStorage.getItem(SK);
+    if (raw) {
+      const d = JSON.parse(raw);
+      if (d && Array.isArray(d.tasks)) {
+        D = d;
+        if (!D.nextId) {
+          D.nextId = D.tasks.length ? Math.max(...D.tasks.map(t => t.id || 0)) + 1 : 1;
+        }
+        return;
+      }
+    }
+  } catch (e) {
+    // pas de données, on garde D par défaut
+  }
+
+  D = { tasks: [], nextId: 1 };
+}
+
+async function saveD() {
+  try {
+    await FHStorage.setItem(SK, JSON.stringify(D));
+  } catch (e) {
+    // noop
+  }
+  // Écriture Firestore en arrière-plan : on push toutes les tâches
+  try {
+    for (const t of D.tasks) {
+      await fbW(t);
+    }
+  } catch (e) {
+    // mode offline : Firestore échouera, mais le cache local est à jour
+  }
+}
+
+// Deadline helpers
 function deadlineClass(iso) {
   if (!iso) return '';
-  const diff = new Date(iso) - new Date().setHours(0,0,0,0);
+  const diff = new Date(iso) - new Date().setHours(0, 0, 0, 0);
   const days = Math.ceil(diff / 86400000);
-  if (days < 0)  return 'urgent';
+  if (days <= 0) return 'urgent';
   if (days <= 2) return 'urgent';
   if (days <= 7) return 'soon';
   return 'ok';
 }
+
 function fmtDeadline(iso) {
   if (!iso) return '';
   const d = new Date(iso);
-  const diff = new Date(iso) - new Date().setHours(0,0,0,0);
+  const diff = new Date(iso) - new Date().setHours(0, 0, 0, 0);
   const days = Math.ceil(diff / 86400000);
-  if (days === 0) return '📅 Aujourd\'hui';
-  if (days === 1) return '📅 Demain';
-  if (days < 0)  return '⚠️ ' + d.toLocaleDateString('fr-FR', {day:'numeric',month:'short'});
-  return '📅 ' + d.toLocaleDateString('fr-FR', {day:'numeric',month:'short'});
+  if (days === 0) return 'Aujourd’hui';
+  if (days === 1) return 'Demain';
+  if (days < 0) return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+  return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
 }
 
-// ── CRUD ────────────────────────────────────────────────────
-function quickAdd() {
+// CRUD
+async function quickAdd() {
   const el = document.getElementById('qi');
-  const v = el.value.trim(); if (!v) return;
-  D.tasks.unshift({id:D.nextId++, text:v, done:false, prio:'mid', who:'Tous', note:'', date:new Date().toISOString(), deadline:''});
-  saveD(D); render(); el.value = '';
-  showToast('✓ Tâche ajoutée');
+  const v = el.value.trim();
+  if (!v) return;
+  D.tasks.unshift({
+    id: D.nextId++,
+    text: v,
+    done: false,
+    prio: 'mid',
+    who: 'Tous',
+    note: '',
+    date: new Date().toISOString(),
+    deadline: ''
+  });
+  await saveD();
+  render();
+  el.value = '';
+  showToast('Tâche ajoutée');
 }
 
 function openAddSheet() {
@@ -210,13 +291,14 @@ function openAddSheet() {
 }
 
 function openEditSheet(id) {
-  const t = D.tasks.find(x => x.id === id); if (!t) return;
+  const t = D.tasks.find(x => x.id === id);
+  if (!t) return;
   editId = id;
   document.getElementById('shAddTitle').textContent = 'Modifier la tâche';
-  document.getElementById('aText').value     = t.text;
-  document.getElementById('aNote').value     = t.note || '';
+  document.getElementById('aText').value = t.text || '';
+  document.getElementById('aNote').value = t.note || '';
   document.getElementById('aDeadline').value = t.deadline || '';
-  document.getElementById('aWho').value      = t.who;
+  document.getElementById('aWho').value = t.who || 'Guillaume';
   prio = t.prio || 'low';
   document.querySelectorAll('.pbtn').forEach(b => b.classList.remove('sel'));
   const pbtn = document.getElementById('pb-' + prio);
@@ -224,215 +306,150 @@ function openEditSheet(id) {
   openSheet('shAdd');
 }
 
-function saveTask() {
+async function saveTask() {
   const text = document.getElementById('aText').value.trim();
-  if (!text) { showToast('⚠️ Saisissez une tâche'); return; }
-  const who      = document.getElementById('aWho').value;
-  const note     = document.getElementById('aNote').value.trim();
+  if (!text) {
+    showToast('Saisissez une tâche');
+    return;
+  }
+  const who = document.getElementById('aWho').value;
+  const note = document.getElementById('aNote').value.trim();
   const deadline = document.getElementById('aDeadline').value;
 
   if (editId !== null) {
-    // Édition
-    const t = D.tasks.find(x => x.id === editId); if (!t) return;
-    t.text = text; t.prio = prio; t.who = who; t.note = note; t.deadline = deadline;
-    showToast('✓ Tâche modifiée');
+    const t = D.tasks.find(x => x.id === editId);
+    if (!t) return;
+    t.text = text;
+    t.prio = prio;
+    t.who = who;
+    t.note = note;
+    t.deadline = deadline;
+    showToast('Tâche modifiée');
   } else {
-    // Ajout
-    D.tasks.unshift({id:D.nextId++, text, done:false, prio, who, note, deadline, date:new Date().toISOString()});
-    showToast('✓ Tâche ajoutée');
+    D.tasks.unshift({
+      id: D.nextId++,
+      text,
+      done: false,
+      prio,
+      who,
+      note,
+      deadline,
+      date: new Date().toISOString()
+    });
+    showToast('Tâche ajoutée');
   }
-  saveD(D); render(); closeSheet('shAdd');
+
+  await saveD();
+  render();
+  closeSheet('shAdd');
   document.getElementById('aText').value = '';
   document.getElementById('aNote').value = '';
   document.getElementById('aDeadline').value = '';
 }
 
-function toggleDone(id) {
-  const t = D.tasks.find(x => x.id === id); if (!t) return;
-  t.done = !t.done; t.doneAt = t.done ? new Date().toISOString() : null;
-  saveD(D); render();
-  showToast(t.done ? '✓ Tâche terminée' : '↩ Tâche réactivée');
+async function toggleDone(id) {
+  const t = D.tasks.find(x => x.id === id);
+  if (!t) return;
+  t.done = !t.done;
+  t.doneAt = t.done ? new Date().toISOString() : null;
+  await saveD();
+  render();
+  showToast(t.done ? 'Tâche terminée' : 'Tâche réactivée');
 }
 
-function delTask(id) {
+async function delTask(id) {
   D.tasks = D.tasks.filter(t => t.id !== id);
-  saveD(D); render();
+  await saveD();
+  render();
 }
 
-// ── Filtrage ────────────────────────────────────────────────
+// Filtrage
 function getFilt() {
   let tasks = [...D.tasks];
-  if      (flt === 'todo') tasks = tasks.filter(t => !t.done);
-  else if (flt === 'done') tasks = tasks.filter(t =>  t.done);
-  else if (flt === 'g')    tasks = tasks.filter(t => t.who === 'Guillaume' || t.who === 'Tous');
-  else if (flt === 'm')    tasks = tasks.filter(t => t.who === 'Michele'   || t.who === 'Tous');
+  if (flt === 'todo') tasks = tasks.filter(t => !t.done);
+  else if (flt === 'done') tasks = tasks.filter(t => t.done);
+  else if (flt === 'g') tasks = tasks.filter(t => t.who === 'Guillaume' || t.who === 'Tous');
+  else if (flt === 'm') tasks = tasks.filter(t => t.who === 'Michele' || t.who === 'Tous');
+
   return tasks.sort((a, b) => {
     if (a.done !== b.done) return a.done ? 1 : -1;
-    // Trier par deadline si présente
     if (a.deadline && b.deadline) return new Date(a.deadline) - new Date(b.deadline);
     if (a.deadline && !b.deadline) return -1;
     if (!a.deadline && b.deadline) return 1;
-    const po = {high:0, mid:1, low:2};
-    return (po[a.prio]||1) - (po[b.prio]||1);
+    const po = { high: 0, mid: 1, low: 2 };
+    return (po[a.prio] || 1) - (po[b.prio] || 1);
   });
 }
 
 function fmtDate(iso) {
   if (!iso) return '';
-  const d = new Date(iso), now = new Date();
-  if (d.toDateString() === now.toDateString())
-    return 'Aujourd\'hui ' + d.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
-  return d.toLocaleDateString('fr-FR', {day:'numeric', month:'short'});
+  const d = new Date(iso);
+  const now = new Date();
+  if (d.toDateString() === now.toDateString()) {
+    return 'Aujourd’hui ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  }
+  return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
 }
 
-// ── Rendu ────────────────────────────────────────────────────
+// Rendu
 function render() {
   const tasks = getFilt();
-  const all   = D.tasks;
+  const all = D.tasks;
+
   document.getElementById('bA').textContent = all.length;
   document.getElementById('bT').textContent = all.filter(t => !t.done).length;
-  document.getElementById('bD').textContent = all.filter(t =>  t.done).length;
+  document.getElementById('bD').textContent = all.filter(t => t.done).length;
+
   const el = document.getElementById('TL');
   if (!tasks.length) {
-    el.innerHTML = `<div class="empty"><div class="eico">✅</div><div class="etit">${flt==='done'?'Aucune tâche terminée':'Tout est fait !'}</div><div class="esub">Appuyez sur + pour ajouter une tâche</div></div>`;
+    el.innerHTML = `
+      <div class="empty">
+        <div class="eico">✓</div>
+        <div class="etit">${flt === 'done' ? 'Aucune tâche terminée' : 'Tout est fait !'}</div>
+        <div class="esub">Appuyez sur + pour ajouter une tâche</div>
+      </div>`;
     return;
   }
-  el.innerHTML = tasks.map((t,i) => `
-    <div class="task${t.done?' done':''}" data-action="toggleDone" data-id="${t.id}" style="animation-delay:${i*.03}s">
-      <div class="chk${t.done?' done':''}">${t.done?'<span style="color:#fff;font-size:13px">✓</span>':''}</div>
+
+  el.innerHTML = tasks.map((t, i) => `
+    <div class="task ${t.done ? 'done' : ''}" data-action="toggleDone" data-id="${t.id}" style="animation-delay:${i * 0.03}s">
+      <div class="chk ${t.done ? 'done' : ''}">
+        ${t.done ? '<span style="color:#fff;font-size:13px">✓</span>' : ''}
+      </div>
       <div class="task-body">
-        <div class="task-text">${t.text}</div>
-        ${t.note?`<div class="task-note">${t.note}</div>`:''}
+        <div class="task-text">${t.text || ''}</div>
+        ${t.note ? `<div class="task-note">${t.note}</div>` : ''}
         <div class="task-meta">
-          <span class="task-who" style="color:${t.who==='Michele'?'#6B5E91':t.who==='Guillaume'?'#0057A8':'#006875'}">${t.who==='Michele'?'M':t.who==='Guillaume'?'G':'G+M'}</span>
-          <span class="task-date">${fmtDate(t.done?t.doneAt:t.date)}</span>
-          ${t.deadline&&!t.done?`<span class="task-deadline ${deadlineClass(t.deadline)}">${fmtDeadline(t.deadline)}</span>`:''}
+          <span class="task-who" style="color:${t.who === 'Michele' ? '#6B5E91' : (t.who === 'Guillaume' ? '#0057A8' : '#006875')}">
+            ${t.who === 'Michele' ? 'M' : (t.who === 'Guillaume' ? 'G' : 'G&M')}
+          </span>
+          <span class="task-date">${fmtDate(t.done ? t.doneAt : t.date)}</span>
+          ${t.deadline && !t.done ? `<span class="task-deadline ${deadlineClass(t.deadline)}">${fmtDeadline(t.deadline)}</span>` : ''}
         </div>
       </div>
-      <div class="task-prio" style="background:${PRIO_COLORS[t.prio]||PRIO_COLORS.mid}"></div>
+      <div class="task-prio" style="background:${PRIOCOLORS[t.prio] || PRIOCOLORS.mid}"></div>
       <div class="task-actions">
-        <button class="task-btn edit" data-action="editTask" data-id="${t.id}" title="Modifier">✏️</button>
-        <button class="task-btn cal"  data-action="calTask"  data-id="${t.id}" title="Ajouter à l'agenda">📅</button>
-        <button class="task-btn del"  data-action="delTask"  data-id="${t.id}" title="Supprimer">🗑</button>
+        <button class="task-btn edit" data-action="editTask" data-id="${t.id}" title="Modifier">✎</button>
+        <button class="task-btn cal" data-action="calTask" data-id="${t.id}" title="Ajouter à l’agenda">📅</button>
+        <button class="task-btn del" data-action="delTask" data-id="${t.id}" title="Supprimer">🗑</button>
       </div>
-    </div>`).join('');
+    </div>
+  `).join('');
 }
 
-// ── Sheets ──────────────────────────────────────────────────
-function openSheet(id) {
-  const el = document.getElementById(id); if (!el) return;
-  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;padding:0 8px;';
-  try { document.body.style.overflow = 'hidden'; } catch(e) {}
-}
-function closeSheet(id) {
-  const el = document.getElementById(id); if (!el) return;
-  el.style.display = 'none';
-  try { document.body.style.overflow = ''; } catch(e) {}
+// UI / thème / dispatcher et createCalEvent : garde ton code existant, en adaptant juste les appels à quickAdd, openAddSheet, saveTask, toggleDone, delTask, etc.
+
+// Init
+async function init() {
+  document.querySelectorAll('.sov').forEach(el => el.style.display = 'none');
+  initTheme();
+  await loadD();
+  render();
 }
 
-// ── UI ───────────────────────────────────────────────────────
-function showToast(m) {
-  const t = document.getElementById('toast');
-  t.textContent = m; t.classList.add('show');
-  clearTimeout(_tt); _tt = setTimeout(() => t.classList.remove('show'), 3000);
-}
-function applyTheme(t) {
-  document.documentElement.setAttribute('data-theme', t);
-  document.getElementById('thbtn').textContent = t === 'dark' ? '🌙' : '☀️';
-}
-function toggleTheme() {
-  const d = document.documentElement.getAttribute('data-theme') === 'dark';
-  const n = d ? 'light' : 'dark';
-  localStorage.setItem('lt_th', n); applyTheme(n);
-}
-function initTheme() {
-  const s = localStorage.getItem('lt_th');
-  if (s) { applyTheme(s); return; }
-  const sys = window.matchMedia('(prefers-color-scheme: dark)');
-  applyTheme(sys.matches ? 'dark' : 'light');
-  sys.addEventListener('change', e => { if (!localStorage.getItem('lt_th')) applyTheme(e.matches?'dark':'light'); });
-}
-
-// ── Dispatcher ───────────────────────────────────────────────
-
-// ── Créer invitation agenda Google Calendar ─────────────────
-function createCalEvent(id) {
-  var t = D.tasks.find(function(x){return x.id===id;});
-  if (!t) return;
-  var title = encodeURIComponent(t.text || 'Tâche FamilyHub');
-  var desc  = encodeURIComponent((t.note||'') + (t.note?'\n':'') + 'Priorité: '+(t.prio||'') + '\nAssigné: '+(t.who||''));
-  var url   = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + title + '&details=' + desc;
-  if (t.deadline) {
-    // Format YYYYMMDD pour Google Calendar
-    var d  = t.deadline.replace(/-/g,'');
-    // date end = deadline + 1 jour (all-day event)
-    var dt = new Date(t.deadline); dt.setDate(dt.getDate()+1);
-    var de = dt.toISOString().slice(0,10).replace(/-/g,'');
-    url += '&dates=' + d + '/' + de;
-  }
-  // Ouvrir dans le navigateur / WebView
-  if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser) {
-    window.Capacitor.Plugins.Browser.open({url:url});
-  } else {
-    window.open(url, '_blank');
-  }
-  showToast('📅 Agenda ouvert');
-}
-function findAction(target) {
-  var el = target;
-  while (el && !el.getAttribute) { el = el.parentElement || el.parentNode; }
-  while (el && el !== document) {
-    if (el.getAttribute && el.getAttribute('data-action')) return el;
-    el = el.parentElement;
-  }
-  return null;
-}
-
-document.addEventListener('click', function(e) {
-  const el = findAction(e.target); if (!el) return;
-  const action = el.getAttribute('data-action');
-  const ds = el.dataset;
-  switch (action) {
-    case 'toggleTheme': toggleTheme(); break;
-    case 'openAdd':     openAddSheet(); break;
-    case 'closeAdd':    closeSheet('shAdd'); break;
-    case 'setFilter':
-      flt = ds.filter || 'all';
-      document.querySelectorAll('.chip').forEach(b => b.classList.remove('sel'));
-      el.classList.add('sel'); render(); break;
-    case 'selPrio':
-      prio = ds.prio;
-      document.querySelectorAll('.pbtn').forEach(b => b.classList.remove('sel'));
-      el.classList.add('sel'); break;
-    case 'saveTask':    saveTask(); break;
-    case 'toggleDone':  toggleDone(parseInt(ds.id)); break;
-    case 'editTask':
-      e.stopPropagation();
-      openEditSheet(parseInt(ds.id)); break;
-    case 'delTask':
-      e.stopPropagation();
-      delTask(parseInt(ds.id)); break;
-    case 'calTask':
-      e.stopPropagation();
-      createCalEvent(parseInt(ds.id)); break;
-  }
-});
-
-document.addEventListener('click', function(e) {
-  if (e.target.classList && e.target.classList.contains('sov')) closeSheet(e.target.id);
-});
-
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Enter' && e.target.id === 'qi') quickAdd();
-});
-
-// ── Init ─────────────────────────────────────────────────────
-function init() {
-  document.querySelectorAll('.sov').forEach(el => { el.style.display = 'none'; });
-  initTheme(); render();
-}
 init();
-</script>
+    </script>
+  
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {

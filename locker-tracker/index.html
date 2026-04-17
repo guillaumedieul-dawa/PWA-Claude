@@ -218,6 +218,21 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 .cfgi{width:64px;padding:6px 10px;border-radius:8px;border:1px solid var(--olv);background:var(--s1);color:var(--ob);font-family:'Roboto Mono',monospace;font-size:13px;text-align:center;outline:none}
 .cfgi:focus{border-color:var(--p)}
 
+/* Debug panel */
+#fh-dbg{position:fixed;bottom:0;left:0;right:0;height:42vh;background:#0d1117;border-top:2px solid #30363d;z-index:9999;flex-direction:column;font-family:'Roboto Mono',monospace;font-size:11px;color:#c9d1d9;display:none}
+.dbg-h{display:flex;justify-content:space-between;align-items:center;padding:4px 10px;background:#161b22;border-bottom:1px solid #30363d;flex-shrink:0}
+.dbg-ti{font-weight:bold;color:#58a6ff;font-size:12px}
+.dbg-ac{display:flex;gap:6px}
+.dbg-b{background:#21262d;border:1px solid #30363d;color:#c9d1d9;padding:2px 8px;border-radius:4px;font-size:10px;cursor:pointer}
+.dbg-sc{flex:1;overflow-y:auto;padding:2px 0}
+.dbg-e{display:flex;gap:6px;padding:2px 10px;border-bottom:1px solid #0d1117;flex-wrap:wrap;align-items:baseline}
+.dbg-e:hover{background:#161b22}
+.dbg-t{color:#6e7681;flex-shrink:0;font-size:10px}
+.dbg-c{font-weight:bold;width:42px;flex-shrink:0;font-size:10px}
+.dbg-m{color:#e6edf3;flex:1;min-width:80px}
+.dbg-d{color:#8b949e;font-size:10px;width:100%;padding-left:90px;word-break:break-all}
+.dbg-ft{padding:3px 10px;background:#161b22;border-top:1px solid #30363d;color:#6e7681;font-size:10px;flex-shrink:0}
+
 @keyframes fu{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 </style>
 </head>
@@ -230,7 +245,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
       <div class="tlbl">Famille Dieul-Gandet</div>
       <div class="th">📦 Mes colis <span id="totalBadge" style="font-size:14px;font-weight:400;color:var(--osv)"></span></div>
     </div>
-    <button id="btn-sync" class="ibtn" onclick="openSync()">⟳<div class="ndot" id="sd" style="display:none"></div></button>
+    <button id="btn-sync" class="ibtn" onclick="openSync()" title="BDD / Sync">⟳<div class="ndot" id="sd" style="display:none"></div></button>
     <button class="ibtn" id="thbtn" onclick="toggleTheme()">🌙</button>
   </div>
 
@@ -296,9 +311,9 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 <div class="sov" id="shSync">
   <div class="sht">
     <div class="shnd" onclick="closeS('shSync')"></div>
-    <div class="shtit">Synchronisation</div>
+    <div class="shtit">BDD &amp; Synchronisation</div>
     <div class="stabs">
-      <button class="stab sel" data-tab="tSy" onclick="showT('tSy',this)">Sync</button>
+      <button class="stab sel" data-tab="tSy" onclick="showT('tSy',this)">BDD</button>
       <button class="stab" data-tab="tSM" onclick="showT('tSM',this)">SMS</button>
       <button class="stab" data-tab="tCf" onclick="showT('tCf',this)">Config</button>
       <button class="stab" data-tab="tLg" onclick="showT('tLg',this)">Logs</button>
@@ -335,6 +350,16 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
       <div style="font-size:13px;color:var(--osv);margin-bottom:12px">Délai d'expiration par transporteur (jours)</div>
       <div id="retCf"></div>
       <button class="bfill" onclick="saveRet()">✓ Sauvegarder</button>
+      <div class="slbl" style="margin-top:16px">Purge automatique</div>
+      <div style="font-size:13px;color:var(--osv);margin-bottom:10px">Supprimer les colis livrés/expirés après :</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <input class="cfgi" type="number" min="1" max="365" id="cfgPurgeDays" value="" inputmode="numeric" style="width:72px;text-align:center">
+        <span style="font-size:14px;color:var(--os)">jours</span>
+        <button class="bfill" style="flex:1;margin:0;padding:10px 12px;font-size:13px" onclick="savePurgeDays()">✓ OK</button>
+      </div>
+      <div style="font-size:11px;color:var(--osv);margin-bottom:16px">Défaut : 20 jours. S'applique aux colis avec statut Livré, Récupéré ou Expiré.</div>
+      <div class="slbl">Outils développeur</div>
+      <button class="bout" style="margin-top:0;display:flex;align-items:center;gap:6px;justify-content:center" onclick="toggleDebugPanel()">🔍 Panel debug</button>
       <button class="bdng" onclick="resetAll()">🗑 Réinitialiser toutes les données</button>
     </div>
 
@@ -473,8 +498,14 @@ async function fetchGmailLog(){
   }
 }
 
+// ── Purge paramétrable ──
+const PKK='lt_purge_days';
+const PURGE_DEF=20;
+function getPurgeDays(){var v=parseInt(localStorage.getItem(PKK),10);return(!isNaN(v)&&v>0)?v:PURGE_DEF;}
+function setPurgeDays(v){var n=parseInt(v,10);if(!isNaN(n)&&n>0)localStorage.setItem(PKK,n);}
+
 function purge(){const _O={pending:0,out_for_delivery:1,ready:2,failed:2,delivered:3,expired:4,collected:4};const _seen={};D.packages=D.packages.filter(function(p){const k=(p.trackingNum||'').toUpperCase().trim();if(!k)return true;if(!_seen[k]){_seen[k]=p;return true;}const ex=_seen[k];if((_O[p.status]||0)>(_O[ex.status]||0))ex.status=p.status;ex.pickupCode=ex.pickupCode||p.pickupCode;ex.lockerAddress=ex.lockerAddress||p.lockerAddress;ex.expiryDate=ex.expiryDate||p.expiryDate;ex.sender=ex.sender||p.sender;return false;});
-  const L=20*86400000,now=Date.now();let changed=false;
+  const L=getPurgeDays()*86400000,now=Date.now();let changed=false;
   // Auto-expiration : si date dépassée et statut actif → expired
   D.packages.forEach(p=>{
     if(['ready'].includes(p.status)&&p.expiryDate){
@@ -526,11 +557,13 @@ async function fbDel(id){await fetch(fbU(`colis/${id}`),{method:'DELETE',redirec
 async function fbAll(){const r=await fetch(fbU('colis')+'&pageSize=500',{redirect:'follow'});if(!r.ok)throw new Error('Firebase '+r.status);const d=await r.json();return(d.documents||[]).map(x=>({...frD(x),_fbId:x.name.split('/').pop()}));}
 
 async function syncFB(){
+  DBG.lifecycle('syncFB START');
   const pg=document.getElementById('fbPg'),rs=document.getElementById('fbRes'),st=document.getElementById('fbSt');
   if(pg){pg.style.transition='width 3s linear';pg.style.width='75%';}
   if(rs)rs.textContent='Connexion…';if(st){st.textContent='Sync…';st.className='sbg bwt';}
   try{
     const rem=await fbAll();let n=0;
+    DBG.read('colis',rem.length);
     for(const p of rem){
       const ex=D.packages.find(x=>x._fbId===p._fbId);
       if(ex){
@@ -544,6 +577,7 @@ async function syncFB(){
     if(rs)rs.textContent=msg;if(st){st.textContent='Connecté';st.className='sbg bok';}
     document.getElementById('sd').style.display='block';
     updLs();wlog('firebase',msg);renderLogs();showToast(msg);
+    DBG.lifecycle('syncFB OK',{new:n,total:rem.length});
   }catch(e){
     if(rs)rs.textContent='❌ '+e.message;if(pg)pg.style.width='0%';
     if(st){st.textContent='Erreur';st.className='sbg ber';}
@@ -917,6 +951,8 @@ function toggleDisabled(c,btn){
   showToast(d.has(c)?`${LB[c]} désactivé`:`${LB[c]} réactivé`);
 }
 function saveRet(){const nr={};Object.keys(DR).forEach(c=>{const e=document.getElementById('r_'+c);if(e)nr[c]=Math.max(1,Math.min(60,parseInt(e.value)||DR[c]));});localStorage.setItem(RK,JSON.stringify(nr));showToast('✓ Délais sauvegardés');}
+function savePurgeDays(){const el=document.getElementById('cfgPurgeDays');if(!el)return;const v=parseInt(el.value,10);if(isNaN(v)||v<1){showToast('⚠️ Valeur invalide');return;}setPurgeDays(v);showToast('✓ Purge : '+v+' jours');}
+function bindPurgeCfg(){const el=document.getElementById('cfgPurgeDays');if(el)el.value=getPurgeDays();}
 
 function setF(f,btn){
   flt=f;
@@ -960,7 +996,7 @@ function showT(id,btn){
     const tab=document.querySelector('.stab[data-tab="'+id+'"]');
     if(tab)tab.classList.add('sel');
   }
-  if(id==='tCf')renderRetCf();
+  if(id==='tCf'){renderRetCf();bindPurgeCfg();}
   if(id==='tLg')renderLogs();
 }
 
@@ -1033,6 +1069,7 @@ document.addEventListener('click',function(e){
   if(!el)return;
   var action=el.getAttribute('data-action');
   var id=Math.round(Number(el.dataset.id||0));
+  DBG.dispatch(e,action);
 
   if(action==='tog'){
     e.stopPropagation();
@@ -1084,6 +1121,61 @@ setTimeout(()=>{
     chip.classList.add('sel');
   }
 },0);
+</script>
+
+<!-- DEBUG PANEL -->
+<div id="fh-dbg">
+  <div class="dbg-h">
+    <span class="dbg-ti">🔍 Debug — Suivi Colis</span>
+    <div class="dbg-ac">
+      <button class="dbg-b" onclick="DBG.clear()">Vider</button>
+      <button class="dbg-b" style="color:#f85149" onclick="toggleDebugPanel()">✕</button>
+    </div>
+  </div>
+  <div class="dbg-sc" id="dbg-sc"></div>
+  <div class="dbg-ft" id="dbg-ft">0 entrée</div>
+</div>
+
+<script>
+// ── Debug Panel ── activé via Config, masqué par défaut
+var DBG=(function(){
+  var CAT={EVENT:{l:'EVENT',c:'#4fc3f7'},BDD:{l:'BDD',c:'#a5d6a7'},PARSE:{l:'PARSE',c:'#fff176'},LIFE:{l:'LIFE',c:'#ce93d8'},ERR:{l:'ERROR',c:'#ef9a9a'},PURGE:{l:'PURGE',c:'#ffb74d'}};
+  var entries=[],MAX=80,on=false;
+  var DBK='fh_dbg_on';
+  function _ts(){return new Date().toISOString().slice(11,23);}
+  function log(cat,msg,data){
+    if(!on)return;
+    entries.unshift({t:_ts(),cat:cat,msg:msg,d:data!=null?JSON.stringify(data,null,0):null});
+    if(entries.length>MAX)entries.pop();
+    _render();
+  }
+  function _render(){
+    var sc=document.getElementById('dbg-sc'),ft=document.getElementById('dbg-ft');
+    if(!sc)return;
+    sc.innerHTML=entries.map(function(e){
+      return'<div class="dbg-e"><span class="dbg-t">'+e.t+'</span><span class="dbg-c" style="color:'+e.cat.c+'">'+e.cat.l+'</span><span class="dbg-m">'+e.msg+'</span>'+(e.d?'<span class="dbg-d">'+e.d+'</span>':'')+'</div>';
+    }).join('');
+    if(ft)ft.textContent=entries.length+' entrée'+(entries.length>1?'s':'');
+  }
+  function show(){on=true;localStorage.setItem(DBK,'1');var el=document.getElementById('fh-dbg');if(el)el.style.display='flex';log(CAT.LIFE,'debug panel ouvert');}
+  function hide(){var el=document.getElementById('fh-dbg');if(el)el.style.display='none';on=false;localStorage.setItem(DBK,'0');}
+  function toggle(){on?hide():show();}
+  function clear(){entries=[];_render();}
+  function init(){if(localStorage.getItem(DBK)==='1')show();}
+  // Points d'instrumentation
+  function dispatch(e,action){log(CAT.EVENT,'dispatch → "'+action+'"',{tag:e.target&&e.target.tagName,ok:!!action});}
+  function action(el,result){log(CAT.EVENT,'findAction',{el:el&&el.tagName,res:result||'null'});}
+  function sheet(state,id){log(CAT.EVENT,'sheet '+state+': #'+id);}
+  function read(col,n){log(CAT.BDD,'read '+col,{docs:n});}
+  function write(col,id,op){log(CAT.BDD,op+' → '+col+'/'+id);}
+  function fbErr(fn,err){log(CAT.ERR,'Firebase @ '+fn,{code:err&&err.code,msg:err&&err.message});}
+  function parse(src,res){log(res&&res.matched?CAT.PARSE:CAT.ERR,res&&res.matched?'✓ '+res.carrier:'✗ no match',{src:src&&src.slice(0,50)});}
+  function lifecycle(msg,d){log(CAT.LIFE,msg,d||null);}
+  function purge(del,days){log(CAT.PURGE,'purge',{deleted:del,threshold:days});}
+  return{init,toggle,show,hide,clear,dispatch,action,sheet,read,write,fbErr,parse,lifecycle,purge,log:function(msg,d){log(CAT.EVENT,msg,d);}};
+})();
+function toggleDebugPanel(){DBG.toggle();}
+DBG.init();
 </script>
 
 <script>

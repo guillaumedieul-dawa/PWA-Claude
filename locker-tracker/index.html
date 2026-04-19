@@ -2,436 +2,359 @@
 <html lang="fr" data-theme="light">
 <head>
 <meta charset="UTF-8">
+<meta name="build-date" content="__BUILD_DATE__">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#faf7f2">
 <meta name="theme-color" media="(prefers-color-scheme: dark)"  content="#1a1714">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Colis">
-<title>Suivi Colis</title>
+<meta name="apple-mobile-web-app-title" content="FamilyHub">
+<title>FamilyHub</title>
+<link rel="manifest" href="./manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fragment+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
-  --p:#2563eb;--pc:#dbeafe;--opc:#1e3a8a;
-  --bg:#faf7f2;--sf:#fff;--s1:#f0ebe2;--s2:#e8e2d8;--olv:#e0d9cf;
+  --bg:#faf7f2;--sf:#ffffff;--s1:#f0ebe2;--s2:#e8e2d8;--olv:#e0d9cf;
   --ob:#1c1410;--os:#1c1410;--osv:#7a6a5a;--sh:rgba(0,0,0,.05);
-  --cf:#9f1239;--cfb:#ffe4e6;
   --top:env(safe-area-inset-top,0px);--bot:env(safe-area-inset-bottom,0px);
-  --rl:20px;--rm:16px;--rs:12px;
 }
 [data-theme="dark"]{
-  --p:#60a5fa;--pc:#1e3a8a;--opc:#dbeafe;
   --bg:#1a1714;--sf:#231e1a;--s1:#2c2620;--s2:#352e27;--olv:#3e352d;
   --ob:#f0ebe2;--os:#f0ebe2;--osv:#a09080;--sh:rgba(0,0,0,.3);
-  --cf:#fca5a5;--cfb:#450a0a;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Plus Jakarta Sans',sans-serif;overflow-x:hidden;transition:background .3s,color .3s}
-#app{max-width:520px;margin:0 auto;min-height:100dvh;padding-bottom:calc(var(--bot)+96px)}
-.tbar{position:sticky;top:0;z-index:100;background:var(--bg);padding:calc(var(--top)+14px) 16px 10px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--olv)}
-.ihome{width:36px;height:36px;border-radius:10px;border:none;background:var(--s1);color:var(--os);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none;flex-shrink:0}
-.ihome:active{background:var(--s2)}
-.ttl{flex:1;min-width:0}
-.tlbl{font-size:10px;color:var(--osv);letter-spacing:.3px;font-weight:500}
-.th{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;color:var(--ob);line-height:1}
-.ibtn{width:36px;height:36px;border-radius:10px;border:none;background:var(--s1);color:var(--os);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
-.ibtn:active{background:var(--s2)}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px 16px 8px}
-.stat{background:var(--sf);border-radius:14px;padding:11px 8px;text-align:center;border:1px solid var(--olv);box-shadow:0 1px 3px var(--sh)}
-.stat-n{font-family:'Bebas Neue',sans-serif;font-size:24px;line-height:1}
-.stat-l{font-size:9px;color:var(--osv);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
-.stat-n.ready{color:#2563eb}.stat-n.transit{color:#d97706}.stat-n.done{color:#059669}
-.swrap{padding:4px 16px 8px;position:relative}
-.sfield{width:100%;padding:10px 16px 10px 40px;border-radius:28px;border:1px solid var(--olv);background:var(--sf);color:var(--ob);font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;outline:none;transition:border-color .2s}
-.sfield:focus{border-color:var(--p)}
-.sfield::placeholder{color:var(--osv)}
-.sico{position:absolute;left:28px;top:50%;transform:translateY(-50%);font-size:15px;pointer-events:none;color:var(--osv)}
-.chips{display:flex;gap:8px;padding:0 16px 10px;overflow-x:auto;scrollbar-width:none}
-.chips::-webkit-scrollbar{display:none}
-.chip{flex-shrink:0;padding:6px 14px;border-radius:8px;border:1px solid var(--olv);background:transparent;color:var(--osv);font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;transition:all .15s}
-.chip.sel{background:var(--pc);border-color:var(--p);color:var(--opc);font-weight:600}
-.plist{padding:0 12px;display:flex;flex-direction:column;gap:8px}
-.pcard{background:var(--sf);border-radius:var(--rm);border:1px solid var(--olv);box-shadow:0 1px 4px var(--sh);overflow:hidden;animation:fu .22s ease both;position:relative}
-.pcard::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--sc)}
-@keyframes fu{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-.pcard-hdr{padding:13px 14px 12px 18px;display:flex;align-items:flex-start;gap:12px;cursor:pointer}
-.pcard-hdr:active{background:var(--s1)}
-.pcard-carrier{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
-.pcard-body{flex:1;min-width:0}
-.pcard-title{font-size:14px;font-weight:700;color:var(--os);letter-spacing:-.2px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pcard-tracking{font-family:'Fragment Mono',monospace;font-size:10px;color:var(--osv);margin-top:2px}
-.pcard-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
-.status-badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;letter-spacing:.3px}
-.sb-ready{background:#dbeafe;color:#1e3a8a}
-.sb-transit{background:#fef3c7;color:#78350f}
-.sb-delivered{background:#d1fae5;color:#064e3b}
-.sb-collected{background:#f3f4f6;color:#6b7280}
-.sb-unknown{background:#f5f5f5;color:#9ca3af}
-[data-theme="dark"] .sb-ready{background:#1e3a8a;color:#93c5fd}
-[data-theme="dark"] .sb-transit{background:#78350f;color:#fde68a}
-[data-theme="dark"] .sb-delivered{background:#064e3b;color:#6ee7b7}
-[data-theme="dark"] .sb-collected{background:#374151;color:#9ca3af}
-.pcard-date{font-family:'Fragment Mono',monospace;font-size:9px;color:var(--osv)}
-.pcard-detail{padding:0 18px 14px;border-top:1px solid var(--olv);display:none}
-.pcard-detail.on{display:block}
-.detail-row{display:flex;flex-direction:column;gap:2px;margin-top:10px}
-.detail-lbl{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--osv)}
-.detail-val{font-size:13px;color:var(--os);line-height:1.4}
-.code-box{background:var(--pc);border:1px solid var(--p);border-radius:10px;padding:10px 14px;margin-top:10px;display:flex;align-items:center;gap:10px}
-.code-val{font-family:'Fragment Mono',monospace;font-size:20px;font-weight:700;color:var(--p);letter-spacing:3px;flex:1}
-.code-copy{padding:5px 10px;border-radius:8px;border:1px solid var(--p);background:transparent;color:var(--p);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:'Plus Jakarta Sans',sans-serif}
-.code-copy:active{background:var(--pc)}
-.pcard-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-.pact{padding:6px 12px;border-radius:20px;border:1px solid var(--olv);background:transparent;color:var(--osv);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px;font-family:'Plus Jakarta Sans',sans-serif}
-.pact:active{background:var(--s2)}
-.pact.del{background:var(--cfb);border-color:transparent;color:var(--cf)}
-.pact.collect{background:#d1fae5;border-color:transparent;color:#065f46}
-.empty{text-align:center;padding:60px 24px}
-.eico{font-size:52px;margin-bottom:12px;opacity:.4}
-.etit{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;color:var(--ob);margin-bottom:6px}
-.esub{font-size:13px;color:var(--osv)}
-.fab{position:fixed;bottom:calc(var(--bot)+28px);right:20px;width:56px;height:56px;border-radius:18px;background:var(--p);color:#fff;border:none;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(37,99,235,.3);transition:transform .15s;z-index:49}
-.fab:active{transform:scale(.92)}
-.toast{position:fixed;bottom:calc(var(--bot)+100px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--ob);color:var(--bg);padding:12px 20px;border-radius:28px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;max-width:88vw;text-align:center}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.sov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:none;align-items:flex-end;justify-content:center;padding:0 8px}
-.sht{background:var(--sf);border-radius:24px 24px 0 0;padding:20px 24px calc(var(--bot)+28px);width:100%;max-width:520px;max-height:92dvh;overflow-y:auto}
-.shnd{width:32px;height:4px;background:var(--olv);border-radius:2px;margin:0 auto 16px;cursor:pointer}
-.shtit{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;color:var(--ob);margin-bottom:18px}
-.slbl{font-size:11px;color:var(--osv);text-transform:uppercase;letter-spacing:.8px;margin:14px 0 6px;font-weight:600}
-.slbl.ft{margin-top:0}
-.slbl.opt::after{content:' (optionnel)';font-weight:400;text-transform:none;font-size:10px}
-.fin{width:100%;padding:13px 16px;border-radius:var(--rs);border:1px solid var(--olv);background:var(--s1);color:var(--ob);font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;outline:none;transition:border-color .2s;margin-bottom:4px}
-.fin:focus{border-color:var(--p);background:var(--sf)}
-.fin::placeholder{color:var(--osv)}
-.fsel{width:100%;padding:13px 16px;border-radius:var(--rs);border:1px solid var(--olv);background:var(--s1);color:var(--ob);font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;appearance:none;outline:none;margin-bottom:4px}
-.bfill{width:100%;padding:14px;border-radius:28px;background:var(--p);color:#fff;border:none;font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px}
-.bfill:active{opacity:.85}
-.bout{width:100%;padding:13px;border-radius:28px;background:transparent;border:1px solid var(--olv);color:var(--osv);font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;cursor:pointer;margin-top:8px}
-.set-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--olv)}
-.set-row:last-child{border-bottom:none}
-.set-label{font-size:13px;color:var(--os);font-weight:600}
-.set-sub{font-size:11px;color:var(--osv);margin-top:2px}
-.toggle{width:44px;height:24px;border-radius:12px;background:var(--s2);border:none;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
-.toggle.on{background:var(--p)}
-.toggle::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s}
-.toggle.on::after{transform:translateX(20px)}
+#app{max-width:520px;margin:0 auto;min-height:100dvh;padding-bottom:calc(var(--bot)+24px)}
+
+/* ── Header ── */
+.hdr{
+  padding:calc(var(--top)+28px) 22px 20px;
+  background:var(--bg);
+  display:flex;align-items:flex-end;justify-content:space-between;
+  border-bottom:1px solid var(--olv);
+  position:sticky;top:0;z-index:50;
+}
+.hdr-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:42px;letter-spacing:4px;
+  color:var(--ob);line-height:1;
+}
+.hdr-right{display:flex;flex-direction:column;align-items:flex-end;gap:7px;padding-bottom:4px}
+.thbtn{
+  width:32px;height:32px;border-radius:10px;
+  background:var(--s1);border:none;color:var(--osv);font-size:14px;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+}
+.thbtn:active{background:var(--s2)}
+.hdr-date{font-family:'Fragment Mono',monospace;font-size:9px;color:var(--olv);letter-spacing:.5px}
+
+/* ── Body ── */
+.body{padding:16px 16px 0;display:flex;flex-direction:column;gap:10px}
+
+/* Alert */
+.alert{
+  background:#fff8ed;border:1px solid #fddba0;border-radius:14px;
+  padding:12px 14px;display:flex;gap:10px;align-items:flex-start;
+}
+[data-theme="dark"] .alert{background:#2a2010;border-color:#7a5a10}
+.alert-dot{
+  width:8px;height:8px;border-radius:50%;background:#f59e0b;
+  box-shadow:0 0 8px rgba(245,158,11,.5);flex-shrink:0;margin-top:3px;
+  animation:blink 1.4s infinite;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.alert-txt{font-size:12px;color:#92400e;line-height:1.5}
+[data-theme="dark"] .alert-txt{color:#fbbf24}
+.alert-txt strong{font-weight:700}
+.alert-none{display:none}
+
+/* Section label */
+.sec{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--olv);padding:2px 2px 0}
+
+/* Cards */
+.cards{display:flex;flex-direction:column;gap:8px}
+.card{
+  background:var(--sf);border-radius:16px;padding:14px 16px;
+  display:flex;align-items:center;gap:14px;
+  text-decoration:none;
+  border:1px solid var(--olv);
+  box-shadow:0 1px 4px var(--sh);
+  position:relative;overflow:hidden;
+  transition:transform .15s,box-shadow .15s;
+}
+.card::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;
+  width:4px;background:var(--lc);
+}
+.card:active{transform:scale(.98);box-shadow:none}
+.card-icon{
+  width:40px;height:40px;border-radius:12px;
+  background:var(--ib);display:flex;align-items:center;justify-content:center;
+  font-size:20px;flex-shrink:0;
+}
+.card-info{flex:1}
+.card-name{font-size:14px;font-weight:700;color:var(--os);letter-spacing:-.3px}
+.card-sub{font-size:10px;color:var(--osv);margin-top:2px}
+.card-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.card-count{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--lc);line-height:1}
+.card-unit{font-size:9px;color:var(--olv);text-transform:uppercase;letter-spacing:1px}
+
+.l-colis   {--lc:#2563eb;--ib:rgba(37,99,235,.1)}
+.l-courses {--lc:#059669;--ib:rgba(5,150,105,.1)}
+.l-todo    {--lc:#7c3aed;--ib:rgba(124,58,237,.1)}
+.l-cave    {--lc:#d97706;--ib:rgba(217,119,6,.1)}
+.l-menus   {--lc:#dc2626;--ib:rgba(220,38,38,.1)}
+
+/* ── Footer ── */
+.footer{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 2px 0;
+  border-top:1px solid var(--olv);
+  margin:10px 16px 0;
+}
+.footer-left{display:flex;flex-direction:column;gap:3px}
+.footer-fam{display:flex;align-items:center;gap:6px}
+.fav{
+  width:20px;height:20px;border-radius:50%;
+  border:1.5px solid var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:700;
+}
+.fav+.fav{margin-left:-5px}
+.fav-g{background:#dbeafe;color:#1d4ed8}
+.fav-m{background:#fce7f3;color:#9d174d}
+.footer-name{font-size:10px;font-weight:600;color:var(--osv);letter-spacing:.2px}
+.footer-version{font-family:'Fragment Mono',monospace;font-size:8px;color:var(--olv);letter-spacing:.5px}
+.footer-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.footer-sync{
+  font-family:'Fragment Mono',monospace;font-size:9px;color:#059669;
+  display:flex;align-items:center;gap:4px;
+}
+.footer-sync::before{content:'';width:5px;height:5px;border-radius:50%;background:#059669;animation:blink 1.4s infinite}
+.footer-build{font-family:'Fragment Mono',monospace;font-size:8px;color:var(--olv)}
 </style>
 </head>
 <body>
 <div id="app">
-  <div class="tbar">
-    <a href="../index.html" class="ihome">🏠</a>
-    <div class="ttl">
-      <div class="tlbl">FamilyHub</div>
-      <div class="th">SUIVI COLIS</div>
+
+  <div class="hdr">
+    <div class="hdr-title">FamilyHub</div>
+    <div class="hdr-right">
+      <button class="thbtn" id="thbtn" data-action="toggleTheme">🌙</button>
+      <div class="hdr-date" id="hdrDate"></div>
     </div>
-    <button class="ibtn" id="thbtn" data-action="toggleTheme">🌙</button>
-    <button class="ibtn" data-action="openSettings">⚙️</button>
   </div>
 
-  <div class="stats">
-    <div class="stat"><div class="stat-n ready" id="stReady">0</div><div class="stat-l">À retirer</div></div>
-    <div class="stat"><div class="stat-n transit" id="stTransit">0</div><div class="stat-l">En transit</div></div>
-    <div class="stat"><div class="stat-n done" id="stDone">0</div><div class="stat-l">Livrés</div></div>
-  </div>
+  <div class="body">
 
-  <div class="swrap">
-    <span class="sico">🔍</span>
-    <input class="sfield" id="searchField" placeholder="Rechercher un colis, transporteur…">
-  </div>
+    <div class="alert alert-none" id="alertBox">
+      <div class="alert-dot"></div>
+      <div class="alert-txt" id="alertTxt"></div>
+    </div>
 
-  <div class="chips">
-    <button class="chip sel" data-filter="all"       data-action="setFilter">Tous</button>
-    <button class="chip"     data-filter="ready"     data-action="setFilter">À retirer</button>
-    <button class="chip"     data-filter="transit"   data-action="setFilter">En transit</button>
-    <button class="chip"     data-filter="delivered" data-action="setFilter">Livrés</button>
-    <button class="chip"     data-filter="collected" data-action="setFilter">Récupérés</button>
-  </div>
+    <div class="sec">Applications</div>
 
-  <div class="plist" id="PL"></div>
-</div>
+    <div class="cards">
+      <a href="./locker-tracker/index.html" class="card l-colis">
+        <div class="card-icon">📦</div>
+        <div class="card-info">
+          <div class="card-name">Suivi Colis</div>
+          <div class="card-sub">SMS · Gmail · Codes retrait</div>
+        </div>
+        <div class="card-right">
+          <div class="card-count" id="badgeColis">—</div>
+          <div class="card-unit">colis</div>
+        </div>
+      </a>
+      <a href="./liste-courses/index.html" class="card l-courses">
+        <div class="card-icon">🛒</div>
+        <div class="card-info">
+          <div class="card-name">Liste de courses</div>
+          <div class="card-sub">Partagée · Synchronisée</div>
+        </div>
+        <div class="card-right">
+          <div class="card-count" id="badgeCourses">—</div>
+          <div class="card-unit">articles</div>
+        </div>
+      </a>
+      <a href="./todo-partage/index.html" class="card l-todo">
+        <div class="card-icon">✅</div>
+        <div class="card-info">
+          <div class="card-name">To-Do partagé</div>
+          <div class="card-sub">Tâches communes</div>
+        </div>
+        <div class="card-right">
+          <div class="card-count" id="badgeTodo">—</div>
+          <div class="card-unit">tâches</div>
+        </div>
+      </a>
+      <a href="./cave-spiritueux/index.html" class="card l-cave">
+        <div class="card-icon">🍷</div>
+        <div class="card-info">
+          <div class="card-name">Cave à spiritueux</div>
+          <div class="card-sub">Vins · Rhums · Whiskys</div>
+        </div>
+        <div class="card-right">
+          <div class="card-count" id="badgeCave">—</div>
+          <div class="card-unit">bouteilles</div>
+        </div>
+      </a>
+      <a href="./menus-semaine/index.html" class="card l-menus">
+        <div class="card-icon">🍽️</div>
+        <div class="card-info">
+          <div class="card-name">Menus de la semaine</div>
+          <div class="card-sub">Planification repas</div>
+        </div>
+        <div class="card-right">
+          <div class="card-count">7j</div>
+          <div class="card-unit">planif.</div>
+        </div>
+      </a>
+    </div>
 
-<button class="fab" data-action="openAdd"><span style="pointer-events:none">＋</span></button>
-<div class="toast" id="toast"></div>
+    <div class="footer">
+      <div class="footer-left">
+        <div class="footer-fam">
+          <div class="fav fav-g">G</div>
+          <div class="fav fav-m">M</div>
+          <div class="footer-name">Guillaume &amp; Michèle</div>
+        </div>
+        <div class="footer-version" id="footerVersion">FamilyHub v2</div>
+      </div>
+      <div class="footer-right">
+        <div class="footer-sync">Sync OK</div>
+        <div class="footer-build" id="footerBuild"></div>
+      </div>
+    </div>
 
-<!-- Sheet ajout/édition -->
-<div class="sov" id="shAdd">
-  <div class="sht">
-    <div class="shnd" data-action="closeAdd"></div>
-    <div class="shtit" id="shAddTitle">Nouveau colis</div>
-    <div class="slbl ft">Transporteur</div>
-    <select class="fsel" id="aCarrier">
-      <option value="colissimo">📦 Colissimo / La Poste</option>
-      <option value="chronopost">⚡ Chronopost</option>
-      <option value="ups">🟤 UPS</option>
-      <option value="dpd">🔴 DPD</option>
-      <option value="mondialrelay">🔵 Mondial Relay</option>
-      <option value="relaiscolis">🟣 Relais Colis</option>
-      <option value="gls">🟡 GLS</option>
-      <option value="amazon">📦 Amazon</option>
-      <option value="vintedgo">👗 Vinted Go</option>
-      <option value="autre">📫 Autre</option>
-    </select>
-    <div class="slbl">Description</div>
-    <input class="fin" id="aDesc" placeholder="Ex: Commande Vinted, Colis Maitrox…">
-    <div class="slbl opt">Numéro de suivi</div>
-    <input class="fin" id="aTracking" placeholder="Ex: 6M22213721169">
-    <div class="slbl">Statut</div>
-    <select class="fsel" id="aStatus">
-      <option value="transit">En transit</option>
-      <option value="ready">Prêt à retirer</option>
-      <option value="delivered">Livré à domicile</option>
-    </select>
-    <div class="slbl opt">Code de retrait</div>
-    <input class="fin" id="aCode" placeholder="Ex: 9491 ou 6684 puis 7785">
-    <div class="slbl opt">Lieu de retrait</div>
-    <input class="fin" id="aLocation" placeholder="Ex: Consigne Grand Frais Herblay">
-    <div class="slbl opt">Date limite de retrait</div>
-    <input class="fin" id="aDeadline" type="date">
-    <div class="slbl opt">Note</div>
-    <input class="fin" id="aNote" placeholder="Infos supplémentaires…">
-    <div class="slbl ft" style="margin-top:14px">Pour qui</div>
-    <select class="fsel" id="aWho">
-      <option value="Guillaume">Guillaume</option>
-      <option value="Michele">Michèle</option>
-      <option value="Tous">Tous les deux</option>
-    </select>
-    <button class="bfill" data-action="savePkg">Enregistrer</button>
-    <button class="bout" data-action="closeAdd">Annuler</button>
-  </div>
-</div>
-
-<!-- Sheet settings -->
-<div class="sov" id="shSettings">
-  <div class="sht">
-    <div class="shnd" data-action="closeSettings"></div>
-    <div class="shtit">Paramètres</div>
-    <div class="slbl ft">Clé API Firebase</div>
-    <input class="fin" id="apiKeyInput" placeholder="Collez votre clé API Firestore…" type="password">
-    <button class="bfill" data-action="saveApiKey">Enregistrer la clé</button>
-    <div class="slbl" style="margin-top:20px">Transporteurs affichés</div>
-    <div id="carrierToggles"></div>
-    <div class="slbl" style="margin-top:20px">Données</div>
-    <button class="bout" data-action="resetAll" style="color:var(--cf);border-color:var(--cf)">🗑 Réinitialiser tous les colis</button>
   </div>
 </div>
 
 <script>
-'use strict';
-const SK='lt_v3', SK_DIS='lt_disabled', SK_FB='lt_fb';
-const FB_PROJ='familyhub-colis-8abbd', FB_COLL='meta/colis/packages';
-
-const CARRIERS={
-  colissimo:   {label:'Colissimo',     emoji:'📦',bg:'#dbeafe',color:'#1e3a8a'},
-  chronopost:  {label:'Chronopost',    emoji:'⚡',bg:'#fef3c7',color:'#78350f'},
-  ups:         {label:'UPS',           emoji:'🟤',bg:'#fef3c7',color:'#78350f'},
-  dpd:         {label:'DPD',           emoji:'🔴',bg:'#ffe4e6',color:'#9f1239'},
-  mondialrelay:{label:'Mondial Relay', emoji:'🔵',bg:'#dbeafe',color:'#1e3a8a'},
-  relaiscolis: {label:'Relais Colis',  emoji:'🟣',bg:'#ede9fe',color:'#2e1065'},
-  gls:         {label:'GLS',           emoji:'🟡',bg:'#fef3c7',color:'#78350f'},
-  amazon:      {label:'Amazon',        emoji:'📦',bg:'#fef3c7',color:'#78350f'},
-  vintedgo:    {label:'Vinted Go',     emoji:'👗',bg:'#fce7f3',color:'#9d174d'},
-  autre:       {label:'Autre',         emoji:'📫',bg:'#f0ebe2',color:'#7a6a5a'},
-};
-const STATUS={
-  transit:   {label:'En transit',cls:'sb-transit'},
-  ready:     {label:'À retirer', cls:'sb-ready'},
-  delivered: {label:'Livré',     cls:'sb-delivered'},
-  collected: {label:'Récupéré',  cls:'sb-collected'},
-  unknown:   {label:'Inconnu',   cls:'sb-unknown'},
-};
-
-let D=loadD(), flt='all', query='', editId=null, openId=null, _tt;
-
-function loadD(){
-  try{const r=localStorage.getItem(SK);if(r){const d=JSON.parse(r);if(d&&Array.isArray(d.packages))return d;}}catch(e){}
-  return{packages:[],nextId:1};
+// ── Thème ────────────────────────────────────────────────────
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  document.getElementById('thbtn').textContent=t==='dark'?'🌙':'☀️';
 }
-function saveD(){localStorage.setItem(SK,JSON.stringify(D));}
-function getDisabled(){try{return new Set(JSON.parse(localStorage.getItem(SK_DIS)||'["amazon"]'));}catch{return new Set(['amazon']);}}
-function setDisabled(s){localStorage.setItem(SK_DIS,JSON.stringify([...s]));}
-function getFBKey(){try{const s=JSON.parse(localStorage.getItem(SK_FB));return s&&s.apiKey?s.apiKey:'';}catch{return '';}}
-
-function fbUrl(p){return'https://firestore.googleapis.com/v1/projects/'+FB_PROJ+'/databases/(default)/documents/'+p+'?key='+getFBKey();}
-function toFields(obj){const f={};for(const k in obj){const v=obj[k];if(v===null||v===undefined)f[k]={nullValue:null};else if(typeof v==='boolean')f[k]={booleanValue:v};else if(typeof v==='number')f[k]={integerValue:String(v)};else f[k]={stringValue:String(v)};}return f;}
-function fromFields(fields){if(!fields)return{};const obj={};for(const k in fields){const v=fields[k];if('booleanValue' in v)obj[k]=v.booleanValue;else if('integerValue' in v)obj[k]=parseInt(v.integerValue);else if('stringValue' in v)obj[k]=v.stringValue;else obj[k]=null;}return obj;}
-async function fbWrite(p){const key=getFBKey();if(!key)return;try{await fetch(fbUrl(FB_COLL+'/'+p.id),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({fields:toFields(p)})});}catch(e){console.warn('fbWrite',e);}}
-async function fbDelete(id){const key=getFBKey();if(!key)return;try{await fetch(fbUrl(FB_COLL+'/'+id),{method:'DELETE'});}catch(e){console.warn('fbDelete',e);}}
-async function fbLoadAll(){const key=getFBKey();if(!key)return null;try{const r=await fetch(fbUrl(FB_COLL));if(!r.ok)return null;const d=await r.json();return(d.documents||[]).map(doc=>fromFields(doc.fields));}catch(e){return null;}}
-
-function fmtDate(iso){if(!iso)return'';const d=new Date(iso),now=new Date();if(d.toDateString()===now.toDateString())return'Aujourd\'hui';const diff=Math.round((d-now)/86400000);if(diff===1)return'Demain';if(diff===-1)return'Hier';return d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'});}
-function dlUrgency(iso){if(!iso)return'';const diff=Math.ceil((new Date(iso)-new Date().setHours(0,0,0,0))/86400000);if(diff<0)return'overdue';if(diff<=2)return'urgent';if(diff<=5)return'soon';return'ok';}
-function fmtDeadline(iso){if(!iso)return'';const diff=Math.ceil((new Date(iso)-new Date().setHours(0,0,0,0))/86400000);const d=new Date(iso).toLocaleDateString('fr-FR',{day:'numeric',month:'short'});if(diff<0)return'⚠️ Expiré le '+d;if(diff===0)return'⏰ Aujourd\'hui dernier délai';if(diff===1)return'⏰ Demain dernier délai';return'📅 Retrait avant le '+d;}
-
-function openAddSheet(id){
-  editId=id||null;
-  const p=id?D.packages.find(x=>x.id===id):null;
-  document.getElementById('shAddTitle').textContent=p?'Modifier le colis':'Nouveau colis';
-  document.getElementById('aCarrier').value  =p?(p.carrier||'autre'):'colissimo';
-  document.getElementById('aDesc').value     =p?(p.desc||''):'';
-  document.getElementById('aTracking').value =p?(p.tracking||''):'';
-  document.getElementById('aStatus').value   =p?(p.status||'transit'):'transit';
-  document.getElementById('aCode').value     =p?(p.code||''):'';
-  document.getElementById('aLocation').value =p?(p.location||''):'';
-  document.getElementById('aDeadline').value =p?(p.deadline||''):'';
-  document.getElementById('aNote').value     =p?(p.note||''):'';
-  document.getElementById('aWho').value      =p?(p.who||'Guillaume'):'Guillaume';
-  openSheet('shAdd');
+function toggleTheme(){
+  const d=document.documentElement.getAttribute('data-theme')==='dark';
+  const n=d?'light':'dark';
+  localStorage.setItem('lt_th',n);applyTheme(n);
+}
+function initTheme(){
+  const s=localStorage.getItem('lt_th');
+  if(s){applyTheme(s);return;}
+  const sys=window.matchMedia('(prefers-color-scheme: dark)');
+  applyTheme(sys.matches?'dark':'light');
+  sys.addEventListener('change',e=>{if(!localStorage.getItem('lt_th'))applyTheme(e.matches?'dark':'light');});
 }
 
-function savePkg(){
-  const carrier=document.getElementById('aCarrier').value;
-  const desc=document.getElementById('aDesc').value.trim();
-  const tracking=document.getElementById('aTracking').value.trim();
-  const status=document.getElementById('aStatus').value;
-  const code=document.getElementById('aCode').value.trim();
-  const location=document.getElementById('aLocation').value.trim();
-  const deadline=document.getElementById('aDeadline').value;
-  const note=document.getElementById('aNote').value.trim();
-  const who=document.getElementById('aWho').value;
-  if(!desc&&!tracking){showToast('⚠️ Saisissez une description ou un N° de suivi');return;}
-  if(editId!==null){
-    const p=D.packages.find(x=>x.id===editId);if(!p)return;
-    Object.assign(p,{carrier,desc,tracking,status,code,location,deadline,note,who,lastUpdated:new Date().toISOString()});
-    fbWrite(p);showToast('✓ Colis modifié');
-  }else{
-    const pkg={id:D.nextId++,carrier,desc,tracking,status,code,location,deadline,note,who,arrivalDate:new Date().toISOString(),lastUpdated:new Date().toISOString()};
-    D.packages.unshift(pkg);fbWrite(pkg);showToast('✓ Colis ajouté');
-  }
-  saveD();render();closeSheet('shAdd');
+// ── Date header ──────────────────────────────────────────────
+function initDate(){
+  const d=new Date();
+  const days=['Dim.','Lun.','Mar.','Mer.','Jeu.','Ven.','Sam.'];
+  const months=['jan.','fév.','mars','avr.','mai','juin','juil.','août','sep.','oct.','nov.','déc.'];
+  document.getElementById('hdrDate').textContent=
+    days[d.getDay()]+' '+d.getDate()+' '+months[d.getMonth()];
 }
 
-function markCollected(id){
-  const p=D.packages.find(x=>x.id===id);if(!p)return;
-  p.status='collected';p.lastUpdated=new Date().toISOString();
-  saveD();render();fbWrite(p);showToast('✓ Marqué comme récupéré');
-}
-function delPkg(id){D.packages=D.packages.filter(p=>p.id!==id);saveD();render();fbDelete(id);showToast('🗑 Colis supprimé');}
-function copyCode(code){try{navigator.clipboard.writeText(code).then(()=>showToast('📋 Code copié : '+code));}catch(e){showToast('Code : '+code);}}
-
-function getFiltered(){
-  const dis=getDisabled();
-  let pkgs=D.packages.filter(p=>!dis.has(p.carrier));
-  if(flt!=='all')pkgs=pkgs.filter(p=>p.status===flt);
-  if(query){const q=query.toLowerCase();pkgs=pkgs.filter(p=>(p.desc||'').toLowerCase().includes(q)||(p.tracking||'').toLowerCase().includes(q)||(p.carrier||'').toLowerCase().includes(q)||(p.location||'').toLowerCase().includes(q));}
-  const ord={ready:0,transit:1,delivered:2,collected:3,unknown:4};
-  return pkgs.sort((a,b)=>{const od=(ord[a.status]||4)-(ord[b.status]||4);if(od!==0)return od;return new Date(b.lastUpdated||b.arrivalDate||0)-new Date(a.lastUpdated||a.arrivalDate||0);});
+// ── Firestore badges ─────────────────────────────────────────
+const FB_PROJ='familyhub-colis-8abbd';
+function getFBKey(){try{const s=JSON.parse(localStorage.getItem('lt_fb'));return s&&s.apiKey?s.apiKey:'';}catch{return '';}}
+function fbUrl(coll){return 'https://firestore.googleapis.com/v1/projects/'+FB_PROJ+'/databases/(default)/documents/'+coll+'?key='+getFBKey();}
+async function fbDocs(coll){
+  try{const r=await fetch(fbUrl(coll));if(!r.ok)return null;const d=await r.json();return d.documents||[];}catch{return null;}
 }
 
-function render(){
-  const all=D.packages.filter(p=>!getDisabled().has(p.carrier));
-  document.getElementById('stReady').textContent  =all.filter(p=>p.status==='ready').length;
-  document.getElementById('stTransit').textContent=all.filter(p=>p.status==='transit').length;
-  document.getElementById('stDone').textContent   =all.filter(p=>p.status==='delivered'||p.status==='collected').length;
-  const pkgs=getFiltered();
-  const el=document.getElementById('PL');
-  if(!pkgs.length){
-    el.innerHTML=`<div class="empty"><div class="eico">📦</div><div class="etit">${flt==='all'?'Aucun colis':'Aucun résultat'}</div><div class="esub">Appuyez sur + pour ajouter un colis</div></div>`;
-    return;
-  }
-  const scMap={ready:'#2563eb',transit:'#d97706',delivered:'#059669',collected:'#9ca3af'};
-  el.innerHTML=pkgs.map((p,i)=>{
-    const c=CARRIERS[p.carrier]||CARRIERS.autre;
-    const st=STATUS[p.status]||STATUS.unknown;
-    const isOpen=p.id===openId;
-    const dlc=dlUrgency(p.deadline);
-    const dlColor=dlc==='overdue'||dlc==='urgent'?'#dc2626':dlc==='soon'?'#d97706':'#059669';
-    return`<div class="pcard" style="--sc:${scMap[p.status]||'#9ca3af'}" data-id="${p.id}">
-      <div class="pcard-hdr" data-action="toggleCard" data-id="${p.id}" style="animation-delay:${i*.03}s">
-        <div class="pcard-carrier" style="background:${c.bg}">${c.emoji}</div>
-        <div class="pcard-body">
-          <div class="pcard-title">${p.desc||p.tracking||c.label}</div>
-          <div class="pcard-tracking">${c.label}${p.tracking?' · '+p.tracking:''}</div>
-        </div>
-        <div class="pcard-right">
-          <span class="status-badge ${st.cls}">${st.label}</span>
-          <div class="pcard-date">${fmtDate(p.lastUpdated||p.arrivalDate)}</div>
-        </div>
-      </div>
-      <div class="pcard-detail${isOpen?' on':''}">
-        ${p.code?`<div class="code-box"><div class="code-val">${p.code}</div><button class="code-copy" data-action="copyCode" data-code="${p.code}">Copier</button></div>`:''}
-        ${p.location?`<div class="detail-row"><div class="detail-lbl">Lieu de retrait</div><div class="detail-val">${p.location}</div></div>`:''}
-        ${p.deadline?`<div class="detail-row"><div class="detail-lbl">Délai</div><div class="detail-val" style="color:${dlColor}">${fmtDeadline(p.deadline)}</div></div>`:''}
-        ${p.note?`<div class="detail-row"><div class="detail-lbl">Note</div><div class="detail-val">${p.note}</div></div>`:''}
-        ${p.who?`<div class="detail-row"><div class="detail-lbl">Pour</div><div class="detail-val">${p.who}</div></div>`:''}
-        <div class="pcard-actions">
-          ${p.status!=='collected'?`<button class="pact collect" data-action="markCollected" data-id="${p.id}">✓ Récupéré</button>`:''}
-          <button class="pact" data-action="editPkg" data-id="${p.id}">✏️ Modifier</button>
-          <button class="pact del" data-action="delPkg" data-id="${p.id}">🗑 Supprimer</button>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
+async function loadBadges(){
+  // Colis
+  try{
+    const c=JSON.parse(localStorage.getItem('lt_v3')||'{}');
+    const pkgs=c.packages||[];
+    const dis=new Set(JSON.parse(localStorage.getItem('lt_disabled')||'["amazon"]'));
+    const c30=Date.now()-30*86400000;
+    const active=pkgs.filter(p=>{
+      if(dis.has(p.carrier))return false;
+      if(p.status!=='ready'&&p.status!=='delivered'&&p.status!=='collected'){
+        const lu=new Date(p.lastUpdated||p.arrivalDate||0).getTime();
+        if(lu>0&&lu<c30)return false;
+      }return true;
+    });
+    const ready=active.filter(p=>p.status==='ready').length;
+    const el=document.getElementById('badgeColis');
+    if(el)el.textContent=ready>0?ready:active.length||'0';
+    // Alerte si colis à retirer
+    if(ready>0){
+      document.getElementById('alertBox').classList.remove('alert-none');
+      document.getElementById('alertTxt').innerHTML=
+        '<strong>'+ready+' colis à retirer</strong> — Consultez Suivi Colis pour les codes';
+    }
+  }catch(e){}
+
+  // Todo
+  try{
+    const todo=JSON.parse(localStorage.getItem('fh_todo')||'{}');
+    let tasks=todo.tasks||[];
+    if(!tasks.length&&getFBKey()){
+      const docs=await fbDocs('meta/todo/tasks');
+      if(docs&&docs.length)tasks=docs.map(d=>{const f=d.fields||{};return{done:f.done&&f.done.booleanValue===true};});
+    }
+    const pending=tasks.filter(t=>!t.done).length;
+    const el=document.getElementById('badgeTodo');
+    if(el)el.textContent=pending||'0';
+  }catch(e){}
+
+  // Cave
+  try{
+    const cave=JSON.parse(localStorage.getItem('fh_cave')||'{}');
+    let bottles=cave.bottles||[];
+    if(!bottles.length&&getFBKey()){
+      const docs=await fbDocs('meta/cave/bottles');
+      if(docs&&docs.length)bottles=docs;
+    }
+    const el=document.getElementById('badgeCave');
+    if(el)el.textContent=bottles.length||'0';
+  }catch(e){}
+
+  // Courses
+  try{
+    const courses=JSON.parse(localStorage.getItem('fh_courses')||'{}');
+    let items=courses.items||[];
+    if(!items.length&&getFBKey()){
+      const docs=await fbDocs('meta/courses/items');
+      if(docs&&docs.length)items=docs.map(d=>{const f=d.fields||{};return{done:f.done&&f.done.booleanValue===true};});
+    }
+    const rem=items.filter(i=>!i.done).length;
+    const el=document.getElementById('badgeCourses');
+    if(el)el.textContent=rem||'0';
+  }catch(e){}
 }
 
-function openSettingsSheet(){
-  const key=getFBKey();
-  const inp=document.getElementById('apiKeyInput');if(inp)inp.value=key||'';
-  const dis=getDisabled();
-  document.getElementById('carrierToggles').innerHTML=Object.entries(CARRIERS).map(([id,c])=>
-    `<div class="set-row"><div><div class="set-label">${c.emoji} ${c.label}</div></div>
-     <button class="toggle${dis.has(id)?'':' on'}" data-action="toggleCarrier" data-carrier="${id}"></button></div>`
-  ).join('');
-  openSheet('shSettings');
-}
-function saveApiKey(){const v=document.getElementById('apiKeyInput').value.trim();if(!v){showToast('⚠️ Clé vide');return;}localStorage.setItem(SK_FB,JSON.stringify({apiKey:v}));showToast('✓ Clé API enregistrée');}
-function toggleCarrier(id){const dis=getDisabled();if(dis.has(id))dis.delete(id);else dis.add(id);setDisabled(dis);openSettingsSheet();render();}
-function resetAll(){if(!confirm('Supprimer tous les colis ?'))return;D={packages:[],nextId:1};saveD();render();showToast('✓ Données réinitialisées');}
-
-function openSheet(id){const el=document.getElementById(id);if(!el)return;el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:flex;align-items:flex-end;justify-content:center;padding:0 8px;';try{document.body.style.overflow='hidden';}catch(e){}}
-function closeSheet(id){const el=document.getElementById(id);if(!el)return;el.style.display='none';try{document.body.style.overflow='';}catch(e){}}
-function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('show'),3000);}
-function applyTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('thbtn').textContent=t==='dark'?'🌙':'☀️';}
-function toggleTheme(){const d=document.documentElement.getAttribute('data-theme')==='dark';const n=d?'light':'dark';localStorage.setItem('lt_th',n);applyTheme(n);}
-function initTheme(){const s=localStorage.getItem('lt_th');if(s){applyTheme(s);return;}const sys=window.matchMedia('(prefers-color-scheme: dark)');applyTheme(sys.matches?'dark':'light');sys.addEventListener('change',e=>{if(!localStorage.getItem('lt_th'))applyTheme(e.matches?'dark':'light');});}
-
-function findAction(target){
-  var el=target;
-  while(el&&!el.getAttribute){el=el.parentElement||el.parentNode;}
-  while(el&&el!==document){if(el.getAttribute&&el.getAttribute('data-action'))return el;el=el.parentElement;}
-  return null;
+// ── Build info ───────────────────────────────────────────────
+function initBuildInfo(){
+  const meta=document.querySelector('meta[name="build-date"]');
+  const bd=meta?meta.getAttribute('content'):'';
+  const vEl=document.getElementById('footerVersion');
+  const bEl=document.getElementById('footerBuild');
+  if(vEl)vEl.textContent='FamilyHub v__VERSION_NAME__';
+  if(bEl&&bd&&bd!=='__BUILD_DATE__')bEl.textContent='Build __BUILD_ID__ · '+bd;
 }
 
+// ── Dispatcher ───────────────────────────────────────────────
 document.addEventListener('click',function(e){
-  const el=findAction(e.target);if(!el)return;
-  const action=el.getAttribute('data-action'),ds=el.dataset;
-  switch(action){
-    case 'toggleTheme':   toggleTheme();break;
-    case 'openAdd':       openAddSheet();break;
-    case 'closeAdd':      closeSheet('shAdd');break;
-    case 'savePkg':       savePkg();break;
-    case 'editPkg':       e.stopPropagation();openAddSheet(parseInt(ds.id));break;
-    case 'delPkg':        e.stopPropagation();delPkg(parseInt(ds.id));break;
-    case 'markCollected': e.stopPropagation();markCollected(parseInt(ds.id));break;
-    case 'copyCode':      e.stopPropagation();copyCode(ds.code);break;
-    case 'toggleCard':    openId=openId===parseInt(ds.id)?null:parseInt(ds.id);render();break;
-    case 'setFilter':     flt=ds.filter||'all';document.querySelectorAll('.chip').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');render();break;
-    case 'openSettings':  openSettingsSheet();break;
-    case 'closeSettings': closeSheet('shSettings');break;
-    case 'saveApiKey':    saveApiKey();break;
-    case 'toggleCarrier': toggleCarrier(ds.carrier);break;
-    case 'resetAll':      resetAll();break;
-  }
+  let el=e.target;
+  while(el&&el!==document){if(el.getAttribute&&el.getAttribute('data-action'))break;el=el.parentElement;}
+  if(!el||el===document)return;
+  if(el.getAttribute('data-action')==='toggleTheme')toggleTheme();
 });
-document.addEventListener('click',function(e){if(e.target.classList&&e.target.classList.contains('sov'))closeSheet(e.target.id);});
-document.addEventListener('input',function(e){if(e.target.id==='searchField'){query=e.target.value.trim();render();}});
 
-async function init(){
-  document.querySelectorAll('.sov').forEach(el=>{el.style.display='none';});
-  initTheme();render();
-  const remote=await fbLoadAll();
-  if(remote&&remote.length>0){
-    const map={};
-    D.packages.forEach(p=>{map[p.id]=p;});
-    remote.forEach(p=>{map[p.id]=p;});
-    D.packages=Object.values(map).sort((a,b)=>new Date(b.lastUpdated||b.arrivalDate||0)-new Date(a.lastUpdated||a.arrivalDate||0));
-    D.nextId=Math.max(D.nextId,...D.packages.map(p=>p.id+1));
-    saveD();render();
-  }
-}
-init();
+// ── Init ─────────────────────────────────────────────────────
+initTheme();
+initDate();
+initBuildInfo();
+loadBadges();
 </script>
+
 <script>
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{

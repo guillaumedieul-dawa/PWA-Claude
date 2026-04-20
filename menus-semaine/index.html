@@ -17,7 +17,7 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Plus Jakarta Sans',sans-serif;overflow-x:hidden;transition:background .3s,color .3s}
 #app{max-width:520px;margin:0 auto;min-height:100dvh;padding-bottom:calc(var(--bot)+96px)}
-.tbar{position:sticky;top:0;z-index:100;background:var(--bg);padding:calc(var(--top)+14px) 16px 10px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--olv)}
+.tbar{position:sticky;top:0;z-index:100;background:var(--bg);padding:calc(var(--top)+16px) 20px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--olv)}
 .ihome{width:36px;height:36px;border-radius:10px;border:none;background:var(--s1);color:var(--os);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none;flex-shrink:0}
 .ihome:active{background:var(--s2)}
 .ttl{flex:1;min-width:0}.tlbl{font-size:10px;color:var(--osv);letter-spacing:.3px;font-weight:500}
@@ -37,7 +37,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Pl
 .toast{position:fixed;bottom:calc(var(--bot)+100px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--ob);color:var(--bg);padding:12px 20px;border-radius:28px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;max-width:88vw;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .sov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:none;align-items:flex-end;justify-content:center;padding:0 8px}
-.sht{background:var(--sf);border-radius:24px 24px 0 0;padding:20px 24px calc(var(--bot)+28px);width:100%;max-width:520px;max-height:92dvh;overflow-y:auto}
+.sht{background:var(--sf);border-radius:24px 24px 0 0;padding:24px 28px calc(var(--bot)+32px);width:100%;max-width:520px;max-height:92dvh;overflow-y:auto}
 .shnd{width:32px;height:4px;background:var(--olv);border-radius:2px;margin:0 auto 16px;cursor:pointer}
 .shtit{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;color:var(--ob);margin-bottom:18px}
 .slbl{font-size:11px;color:var(--osv);text-transform:uppercase;letter-spacing:.8px;margin:14px 0 6px;font-weight:600}
@@ -58,7 +58,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Pl
 .wnav-btn{width:34px;height:34px;border-radius:10px;border:1px solid var(--olv);background:transparent;color:var(--os);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .wnav-btn:active{background:var(--s2)}
 .week-today{padding:6px 14px;border-radius:20px;border:none;background:var(--pc);color:var(--opc);font-size:12px;font-weight:600;cursor:pointer}
-.dlist{padding:0 12px;display:flex;flex-direction:column;gap:8px}
+.dlist{padding:0 14px;display:flex;flex-direction:column;gap:8px}
 .dcard{background:var(--sf);border-radius:var(--rm);overflow:hidden;box-shadow:0 1px 3px var(--sh);transition:all .2s;border:1px solid var(--olv)}
 .dcard.today{border-color:var(--p);border-width:2px}
 .dhdr{padding:13px 16px;display:flex;align-items:center;gap:12px;cursor:pointer}
@@ -83,6 +83,15 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Pl
 .btn-cl{background:var(--s2);color:var(--osv);border:1px solid var(--olv)!important}
 
 
+
+.dslot-add{font-size:13px;color:var(--p);cursor:pointer;font-style:italic}
+.meal-grid{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.meal-item{background:var(--s1);border-radius:var(--rs);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;font-size:13px}
+.suggest-btn{width:calc(100% - 32px);margin:0 16px 12px;padding:12px 16px;border-radius:var(--rm);border:1px dashed var(--p);background:rgba(37,99,235,.06);color:var(--p);font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:8px}
+.lvl-btns{display:flex;gap:8px;margin-bottom:16px}
+.lvl-btn{flex:1;padding:10px;border-radius:var(--rs);border:2px solid var(--olv);background:var(--s1);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;color:var(--osv)}
+.apply-btn{width:100%;padding:13px;border-radius:28px;background:var(--p);color:#fff;border:none;font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px}
+.cancel-btn{width:100%;padding:12px;border-radius:28px;border:1px solid var(--olv);background:transparent;color:var(--osv);font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;cursor:pointer;margin-top:6px}
 </style>
 </head>
 <body>

@@ -950,7 +950,7 @@ function renderRetCf(){
       <div class="cfgl">${LB[c]||c}</div>
       <input class="cfgi" type="number" min="1" max="60" id="r_${c}" value="${R[c]||d}" ${dis?'disabled':''}>
       <span style="font-size:12px;color:var(--osv)"> j</span>
-      <button data-carrier="${c}" style="padding:4px 8px;border-radius:8px;border:1px solid var(--olv);background:${dis?'var(--cfb)':'var(--s2)'};color:${dis?'var(--cf)':'var(--osv)'};font-size:11px;cursor:pointer;white-space:nowrap;font-family:'Google Sans',sans-serif" title="${dis?'Réactiver':'Désactiver'}">${dis?'✕ OFF':'✓ ON'}</button>
+      <button data-carrier="${c}" class="ci-toggle${dis?' ':' on'}" title="${dis?'Réactiver':'Désactiver'}"></button>
     </div>`;
   }).join('');
   // Rebinding explicit — inline onclick non fiable dans Capacitor WebView

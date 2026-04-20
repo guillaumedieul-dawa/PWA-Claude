@@ -245,6 +245,13 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Pl
 .th{font-family:'Plus Jakarta Sans',sans-serif;font-size:20px;font-weight:800;color:var(--ob);letter-spacing:-.3px;line-height:1.1}
 .tlbl{font-size:10px;color:var(--osv);letter-spacing:.3px;font-weight:500}
 .shtit{font-family:'Plus Jakarta Sans',sans-serif;font-size:20px;font-weight:800;color:var(--ob);margin-bottom:18px}
+
+/* CI Toggle slider — remplace les boutons ON/OFF dans les settings */
+.ci-toggle{width:48px;height:26px;border-radius:13px;background:var(--s2);border:none;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.ci-toggle.on{background:var(--p)}
+.ci-toggle::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.ci-toggle.on::after{transform:translateX(22px)}
+
 </style>
 </head>
 <body>

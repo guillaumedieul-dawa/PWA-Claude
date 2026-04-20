@@ -34,11 +34,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Pl
   border-bottom:1px solid var(--olv);
   position:sticky;top:0;z-index:50;
 }
-.hdr-title{
-  font-family:'Bebas Neue',sans-serif;
-  font-size:42px;letter-spacing:4px;
-  color:var(--ob);line-height:1;
-}
+.hdr-title{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:2px;color:var(--ob);line-height:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70%}
 .hdr-right{display:flex;flex-direction:column;align-items:flex-end;gap:7px;padding-bottom:4px}
 .thbtn{
   width:32px;height:32px;border-radius:10px;
@@ -219,11 +215,11 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Pl
           <div class="fav fav-m">M</div>
           <div class="footer-name">Guillaume &amp; Michèle</div>
         </div>
-        <div class="footer-version" id="footerVersion">FamilyHub v2</div>
+        <div class="footer-version" id="footerVersion">FamilyHub v__VERSION_NAME__</div>
       </div>
       <div class="footer-right">
         <div class="footer-sync">Sync OK</div>
-        <div class="footer-build" id="footerBuild"></div>
+        <div class="footer-build" id="footerBuild">__BUILD_ID__ · __BUILD_DATE__</div>
       </div>
     </div>
 
@@ -365,7 +361,4 @@ if('serviceWorker' in navigator){
 }
 </script>
 </body>
-  <footer style="font-size: 11px; text-align: center; margin: 16px 0 8px; color: var(--olv); font-family: 'Fragment Mono', monospace;">
-  v__VERSION_NAME__ · Build __BUILD_ID__ · __BUILD_DATE__
-</footer>
 </html>

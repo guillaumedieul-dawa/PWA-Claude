@@ -17,7 +17,7 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Plus Jakarta Sans',sans-serif;overflow-x:hidden;transition:background .3s,color .3s}
 #app{max-width:520px;margin:0 auto;min-height:100dvh;padding-bottom:calc(var(--bot)+96px)}
-.tbar{position:sticky;top:0;z-index:100;background:var(--bg);padding:calc(var(--top)+14px) 16px 10px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--olv)}
+.tbar{position:sticky;top:0;z-index:100;background:var(--bg);padding:calc(var(--top)+16px) 20px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--olv)}
 .ihome{width:36px;height:36px;border-radius:10px;border:none;background:var(--s1);color:var(--os);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none;flex-shrink:0}
 .ihome:active{background:var(--s2)}
 .ttl{flex:1;min-width:0}.tlbl{font-size:10px;color:var(--osv);letter-spacing:.3px;font-weight:500}
@@ -37,7 +37,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Pl
 .toast{position:fixed;bottom:calc(var(--bot)+100px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--ob);color:var(--bg);padding:12px 20px;border-radius:28px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;max-width:88vw;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .sov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:none;align-items:flex-end;justify-content:center;padding:0 8px}
-.sht{background:var(--sf);border-radius:24px 24px 0 0;padding:20px 24px calc(var(--bot)+28px);width:100%;max-width:520px;max-height:92dvh;overflow-y:auto}
+.sht{background:var(--sf);border-radius:24px 24px 0 0;padding:24px 28px calc(var(--bot)+32px);width:100%;max-width:520px;max-height:92dvh;overflow-y:auto}
 .shnd{width:32px;height:4px;background:var(--olv);border-radius:2px;margin:0 auto 16px;cursor:pointer}
 .shtit{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;color:var(--ob);margin-bottom:18px}
 .slbl{font-size:11px;color:var(--osv);text-transform:uppercase;letter-spacing:.8px;margin:14px 0 6px;font-weight:600}
@@ -61,8 +61,8 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Pl
 .prog-lbl{display:flex;justify-content:space-between;font-size:11px;color:var(--osv);margin-bottom:5px}
 .prog-bar{height:5px;border-radius:3px;background:var(--s2);overflow:hidden}
 .prog-fill{height:100%;border-radius:3px;background:var(--p);transition:width .4s}
-.ilist{padding:0 12px;display:flex;flex-direction:column;gap:6px}
-.icard{background:var(--sf);border-radius:var(--rm);padding:12px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 2px var(--sh);border:1px solid var(--olv);cursor:pointer;transition:all .15s}
+.ilist{padding:0 14px;display:flex;flex-direction:column;gap:6px}
+.icard{background:var(--sf);border-radius:var(--rm);padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 2px var(--sh);border:1px solid var(--olv);cursor:pointer;transition:all .15s}
 .icard.done{opacity:.45}
 .icard.done .iname{text-decoration:line-through;color:var(--osv)}
 .icard:active{transform:scale(.99)}
@@ -85,6 +85,9 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Pl
 .clear-btn:active{background:var(--s1)}
 
 
+
+.shop-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--olv)}
+.shop-del{padding:4px 10px;border:none;background:var(--cfb);color:var(--cf);border-radius:8px;cursor:pointer;font-size:12px}
 </style>
 </head>
 <body>

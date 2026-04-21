@@ -32,7 +32,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Pl
 .eico{font-size:52px;margin-bottom:12px;opacity:.4}
 .etit{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;color:var(--ob);margin-bottom:6px}
 .esub{font-size:13px;color:var(--osv)}
-.fab{position:fixed;bottom:calc(var(--bot)+28px);right:20px;width:56px;height:56px;border-radius:18px;background:var(--p);color:#fff;border:none;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(5,150,105,.3);transition:transform .15s;z-index:49}
+.fab{position:fixed;bottom:calc(var(--bot) + 80px);right:20px;width:56px;height:56px;border-radius:18px;background:#059669;color:#fff;border:none;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(5,150,105,.3);transition:transform .15s;z-index:99;will-change:transform;-webkit-transform:translateZ(0);transform:translateZ(0)}
 .fab:active{transform:scale(.92)}
 .toast{position:fixed;bottom:calc(var(--bot)+100px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--ob);color:var(--bg);padding:12px 20px;border-radius:28px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;max-width:88vw;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -123,7 +123,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Pl
   <div id="IL"></div>
 </div>
 
-<button class="fab" data-action="openAdd"><span style="pointer-events:none">＋</span></button>
+<button class="fab" data-action="openAdd" style="background:#059669;color:#fff"><span style="pointer-events:none">＋</span></button>
 <div class="toast" id="toast"></div>
 
 <!-- Sheet ajout / édition -->

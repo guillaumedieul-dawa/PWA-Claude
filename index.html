@@ -120,14 +120,14 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Pl
 .fav-g{background:#dbeafe;color:#1d4ed8}
 .fav-m{background:#fce7f3;color:#9d174d}
 .footer-name{font-size:10px;font-weight:600;color:var(--osv);letter-spacing:.2px}
-.footer-version{font-family:'Fragment Mono',monospace;font-size:8px;color:var(--olv);letter-spacing:.5px}
+.footer-version{font-family:'Fragment Mono',monospace;font-size:10px;color:var(--osv);letter-spacing:.3px;font-weight:500}
 .footer-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
 .footer-sync{
   font-family:'Fragment Mono',monospace;font-size:9px;color:#059669;
   display:flex;align-items:center;gap:4px;
 }
 .footer-sync::before{content:'';width:5px;height:5px;border-radius:50%;background:#059669;animation:blink 1.4s infinite}
-.footer-build{font-family:'Fragment Mono',monospace;font-size:8px;color:var(--olv)}
+.footer-build{font-family:'Fragment Mono',monospace;font-size:10px;color:var(--osv)}
 </style>
 </head>
 <body>
@@ -218,7 +218,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Pl
         <div class="footer-version" id="footerVersion">FamilyHub v__VERSION_NAME__</div>
       </div>
       <div class="footer-right">
-        <div class="footer-sync">Sync OK</div>
+        <div class="footer-sync" id="footerSync">—</div>
         <div class="footer-build" id="footerBuild">__BUILD_ID__ · __BUILD_DATE__</div>
       </div>
     </div>
@@ -327,6 +327,21 @@ async function loadBadges(){
 }
 
 // ── Build info ───────────────────────────────────────────────
+function updateSyncStatus(){
+  var el=document.getElementById('footerSync');
+  if(!el)return;
+  var key='';
+  try{var s=JSON.parse(localStorage.getItem('lt_fb'));key=s&&s.apiKey?s.apiKey:'';}catch{}
+  if(!key){el.textContent='Local uniquement';el.style.color='var(--osv)';return;}
+  var lastSync=localStorage.getItem('lt_last_sync');
+  if(lastSync){
+    var d=new Date(lastSync);
+    el.textContent='Sync '+d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  }else{
+    el.textContent='Firebase configuré';
+  }
+  el.style.color='#059669';
+}
 function initBuildInfo(){
   const meta=document.querySelector('meta[name="build-date"]');
   const bd=meta?meta.getAttribute('content'):'';
@@ -349,6 +364,7 @@ initTheme();
 initDate();
 initBuildInfo();
 loadBadges();
+updateSyncStatus();
 </script>
 
 <script>

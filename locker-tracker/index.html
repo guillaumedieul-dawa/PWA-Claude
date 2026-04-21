@@ -964,7 +964,7 @@ function renderRetCf(){
     });
   }
 
-var _cfgEl=document.getElementById('retCf');if(_cfgEl){_cfgEl.querySelectorAll('[data-carrier]').forEach(function(btn){btn.addEventListener('click',function(ev){ev.stopPropagation();toggleDisabled(btn.getAttribute('data-carrier'),btn);},false);});}}
+}
 function toggleDisabled(c,btn){
   const d=getDisabled();
   if(d.has(c))d.delete(c);else d.add(c);

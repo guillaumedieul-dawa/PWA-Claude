@@ -37,7 +37,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Pl
 .toast{position:fixed;bottom:calc(var(--bot)+100px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--ob);color:var(--bg);padding:12px 20px;border-radius:28px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;max-width:88vw;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .sov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:none;align-items:flex-end;justify-content:center;padding:0 8px}
-.sht{background:var(--sf);border-radius:24px 24px 0 0;padding:24px 28px calc(var(--bot)+32px);width:100%;max-width:520px;max-height:92dvh;overflow-y:auto}
+.sht{background:var(--sf);border-radius:24px 24px 0 0;padding:28px 32px calc(var(--bot)+32px);width:100%;max-width:520px;max-height:92dvh;overflow-y:auto}
 .shnd{width:32px;height:4px;background:var(--olv);border-radius:2px;margin:0 auto 16px;cursor:pointer}
 .shtit{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;color:var(--ob);margin-bottom:18px}
 .slbl{font-size:11px;color:var(--osv);text-transform:uppercase;letter-spacing:.8px;margin:14px 0 6px;font-weight:600}
@@ -380,7 +380,7 @@ function render() {
 // ── Sheets ──────────────────────────────────────────────────
 function openSheet(id) {
   const el = document.getElementById(id); if (!el) return;
-  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;padding:0 8px;';
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;padding:0 16px;';
   try { document.body.style.overflow = 'hidden'; } catch(e) {}
 }
 function closeSheet(id) {

@@ -22,10 +22,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Pl
 .ttl{flex:1;min-width:0}
 .tlbl{font-size:10px;color:var(--osv);letter-spacing:.3px;font-weight:500}
 .th{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;color:var(--ob);line-height:1}
-.ibtn{width:36px;height:36px;border-radius:10px;border:none;background:var(--s1);color:var(--os);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
-.ibtn:active{background:var(--s2)}
-.qadd{display:flex;padding:10px 16px 0}
-.qadd-in{flex:1;padding:11px 16px;border-radius:28px;border:1px solid var(--olv);background:var(--sf);color:var(--ob);font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;outline:none;transition:border-color .2s}
+.ibtn{width:36px;height:36px;border-radius:10px;border:none;background:var(--s1);color:var(--os);font-size:16px;display:flex;align-items:center;justify-content:center;padding:11px 16px;border-radius:28px;border:1px solid var(--olv);background:var(--sf);color:var(--ob);font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;outline:none;transition:border-color .2s}
 .qadd-in:focus{border-color:var(--p)}
 .qadd-in::placeholder{color:var(--osv)}
 .chips{display:flex;gap:8px;padding:10px 16px 12px;overflow-x:auto;scrollbar-width:none}
@@ -58,12 +55,8 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Pl
 .eico{font-size:52px;margin-bottom:12px;opacity:.4}
 .etit{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;color:var(--ob);margin-bottom:6px}
 .esub{font-size:13px;color:var(--osv)}
-.fab{position:fixed;bottom:calc(var(--bot) + 80px);right:20px;width:56px;height:56px;border-radius:18px;background:#7c3aed;color:#fff;border:none;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(124,58,237,.3);transition:transform .15s;z-index:99;will-change:transform;-webkit-transform:translateZ(0);transform:translateZ(0)}
-.fab:active{transform:scale(.92)}
-.toast{position:fixed;bottom:calc(var(--bot)+100px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--ob);color:var(--bg);padding:12px 20px;border-radius:28px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;max-width:88vw;text-align:center}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.sov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:none;align-items:flex-end;justify-content:center;padding:0}
-.sht{background:var(--sf);border-radius:20px 20px 0 0;padding:28px 28px calc(var(--bot)+36px);width:calc(100% - 32px);margin:0 auto;max-width:488px;max-height:92dvh;overflow-y:auto;box-shadow:0 -4px 24px rgba(0,0,0,.15)}
+.fab{position:fixed;bottom:calc(var(--bot) + 80px);right:20px;width:56px;height:56px;border-radius:18px;background:#7c3aed;color:#fff;border:none;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:28px 36px calc(var(--bot)+40px);max-height:92dvh;overflow-y:auto;box-shadow:0 -4px 24px rgba(0,0,0,.15);box-sizing:border-box;width:100%}
+.sht{background:var(--sf);border-radius:20px 20px 0 0;padding:28px 36px calc(var(--bot)+40px);width:100%;max-width:520px;box-sizing:border-box;max-height:92dvh;overflow-y:auto}
 .shnd{width:32px;height:4px;background:var(--olv);border-radius:2px;margin:0 auto 16px;cursor:pointer}
 .shtit{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;color:var(--ob);margin-bottom:18px}
 .slbl{font-size:11px;color:var(--osv);text-transform:uppercase;letter-spacing:.8px;margin:14px 0 6px;font-weight:600}
@@ -369,7 +362,7 @@ function render() {
 // ── Sheets ──────────────────────────────────────────────────
 function openSheet(id) {
   const el = document.getElementById(id); if (!el) return;
-  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;padding:0;';
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;;padding:0 20px';
   try { document.body.style.overflow = 'hidden'; } catch(e) {}
 }
 function closeSheet(id) {

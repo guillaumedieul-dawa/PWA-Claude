@@ -1031,17 +1031,32 @@ try{var _sf=sessionStorage.getItem('fh_filter');if(_sf)flt=_sf;}catch(_){}
 
 document.querySelectorAll('.sov').forEach(function(el){el.style.display='none';});
 
-function openSheet(id) {
-  var el = document.getElementById(id);
-  if (!el) return;
-  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;;padding:0 20px';
-  try { document.body.style.overflow = 'hidden'; } catch(e) {}
+function openSheet(id){
+  var el=document.getElementById(id);if(!el)return;
+  el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;';
+  var sht=el.querySelector('.sht');
+  if(sht){
+    sht.style.paddingLeft='32px';
+    sht.style.paddingRight='32px';
+    sht.style.paddingTop='28px';
+    sht.style.paddingBottom='calc(env(safe-area-inset-bottom, 0px) + 40px)';
+    sht.style.width='100%';
+    sht.style.maxWidth='520px';
+    sht.style.boxSizing='border-box';
+    sht.style.maxHeight='92dvh';
+    sht.style.overflowY='auto';
+    sht.style.background='var(--sf,#fff)';
+    sht.style.borderRadius='20px 20px 0 0';
+  }
+  try{document.body.style.overflow='hidden';}catch(e){}
 }
-function closeSheet(id) {
-  var el = document.getElementById(id);
-  if (!el) return;
-  el.style.display = 'none';
-  try { document.body.style.overflow = ''; } catch(e) {}
+function closeSheet(id){
+  var el=document.getElementById(id);if(!el)return;
+  el.style.display='none';
+  var sht=el.querySelector('.sht');
+  if(sht)sht.removeAttribute('style');
+  try{document.body.style.overflow='';}catch(e){}
+} catch(e) {}
 }
 function openAdd(){openSheet('shAdd');}
 function openSync(){openSheet('shSync');renderSS();renderLogs();}
@@ -1190,10 +1205,24 @@ if ('serviceWorker' in navigator) {
 <script>
 /* ── Sheets : mutualisé Capacitor WebView ── */
 function openSheet(id){
-  var el=document.getElementById(id);
-  if(!el)return;
-  el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;;padding:0 20px';
+  var el=document.getElementById(id);if(!el)return;
+  el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;';
+  var sht=el.querySelector('.sht');
+  if(sht){
+    sht.style.paddingLeft='32px';
+    sht.style.paddingRight='32px';
+    sht.style.paddingTop='28px';
+    sht.style.paddingBottom='calc(env(safe-area-inset-bottom, 0px) + 40px)';
+    sht.style.width='100%';
+    sht.style.maxWidth='520px';
+    sht.style.boxSizing='border-box';
+    sht.style.maxHeight='92dvh';
+    sht.style.overflowY='auto';
+    sht.style.background='var(--sf,#fff)';
+    sht.style.borderRadius='20px 20px 0 0';
+  }
   try{document.body.style.overflow='hidden';}catch(e){}
+}catch(e){}
 }
 function closeSheet(id){
   var el=document.getElementById(id);

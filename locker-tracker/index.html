@@ -9,36 +9,13 @@
 <meta name="apple-mobile-web-app-title" content="Colis">
 <title>Suivi Colis</title>
 <link rel="manifest" href="./manifest.json">
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fragment+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fragment+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 
-:root {
-  /* Cream & Ink palette */
-  --p:#2563eb;--op:#fff;--pc:#dbeafe;--opc:#1e3a8a;
-  --s:#059669;--sc:#d1fae5;--t:#7c3aed;--tc:#ede9fe;
-  --err:#9f1239;--ec:#ffe4e6;
-  --bg:#faf7f2;--sf:#ffffff;--s1:#f0ebe2;--s2:#e8e2d8;--s3:#ddd7cc;
-  --ol:#7a6a5a;--olv:#e0d9cf;--ob:#1c1410;--os:#1c1410;--osv:#7a6a5a;
-  --sh:rgba(0,0,0,.05);
-  --cr:#059669;--crb:#d1fae5;--cpd:#d97706;--cpdb:#fef3c7;
-  --co:#ea580c;--cob:#ffedd5;--cd:#059669;--cdb:#d1fae5;
-  --cf:#9f1239;--cfb:#ffe4e6;--cx:#6b7280;--cxb:#f3f4f6;
-  --top:env(safe-area-inset-top,0px);--bot:env(safe-area-inset-bottom,0px);
-  --rl:20px;--rm:16px;--rs:12px;
-}
-[data-theme="dark"]{
-  --p:#60a5fa;--op:#1e3a8a;--pc:#1e3a8a;--opc:#dbeafe;
-  --s:#34d399;--sc:#064e3b;--t:#a78bfa;--tc:#2e1065;
-  --err:#fca5a5;--ec:#450a0a;
-  --bg:#1a1714;--sf:#231e1a;--s1:#2c2620;--s2:#352e27;--s3:#3e352d;
-  --ol:#a09080;--olv:#3e352d;--ob:#f0ebe2;--os:#f0ebe2;--osv:#a09080;
-  --sh:rgba(0,0,0,.3);
-  --cr:#4ade80;--crb:#14532d;--cpd:#fbbf24;--cpdb:#451a03;
-  --co:#fb923c;--cob:#431407;--cd:#4ade80;--cdb:#14532d;
-  --cf:#fca5a5;--cfb:#450a0a;--cx:#9ca3af;--cxb:#1f2937;
-}
+:root{--p:#2563eb;--op:#fff;--pc:#dbeafe;--opc:#1e3a8a;--s:#059669;--sc:#d1fae5;--t:#7c3aed;--tc:#ede9fe;--err:#9f1239;--ec:#ffe4e6;--bg:#faf7f2;--sf:#fff;--s1:#f0ebe2;--s2:#e8e2d8;--olv:#e0d9cf;--ob:#1c1410;--os:#1c1410;--osv:#7a6a5a;--sh:rgba(0,0,0,.05);--top:env(safe-area-inset-top,0px);--bot:env(safe-area-inset-bottom,0px);--cf:#9f1239;--cfb:#ffe4e6;--rl:20px;--rm:16px;--rs:12px}
+[data-theme="dark"]{--p:#60a5fa;--op:#1e3a8a;--pc:#1e3a8a;--opc:#dbeafe;--s:#34d399;--sc:#064e3b;--t:#a78bfa;--tc:#2e1065;--err:#fca5a5;--ec:#450a0a;--bg:#1a1714;--sf:#231e1a;--s1:#2c2620;--s2:#352e27;--olv:#3e352d;--ob:#f0ebe2;--os:#f0ebe2;--osv:#a09080;--sh:rgba(0,0,0,.3)}
 
 
 
@@ -141,7 +118,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Pl
 .esub{font-size:15px;color:var(--osv);line-height:1.6}
 
 /* FAB — en bas à droite, au-dessus du toast */
-.fab{position:fixed;bottom:calc(var(--bot) + 28px);right:20px;width:56px;height:56px;border-radius:18px;background:var(--pc);color:var(--opc);border:none;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:12px 20px;border-radius:28px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:500;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;max-width:88vw;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+.fab{position:fixed;bottom:calc(var(--bot) + 80px);right:20px;width:56px;height:56px;border-radius:18px;background:var(--pc);color:var(--opc);border:none;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:12px 20px;border-radius:28px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:500;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;max-width:88vw;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.2)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* Bottom Sheet */
@@ -224,6 +201,12 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Pl
 
 /* CI Toggle slider — remplace les boutons ON/OFF dans les settings */
 .ci-toggle{width:48px;height:26px;border-radius:13px;background:var(--s2);border:none;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.ci-toggle.on{background:var(--p)}
+.ci-toggle::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.ci-toggle.on::after{transform:translateX(22px)}
+
+
+.ci-toggle{width:48px;height:26px;border-radius:13px;background:var(--s2);border:none;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;display:inline-block}
 .ci-toggle.on{background:var(--p)}
 .ci-toggle::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
 .ci-toggle.on::after{transform:translateX(22px)}

@@ -27,22 +27,7 @@
       "src": "../icons/locker-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "../icons/locker-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "../icons/screenshot-locker-narrow.svg",
-      "sizes": "390x844",
-      "type": "image/svg+xml",
-      "form_factor": "narrow",
-      "label": "LockerTrack — liste des colis"
+      "purpose": "any maskable"
     }
   ],
   "shortcuts": [

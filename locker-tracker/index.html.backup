@@ -527,20 +527,8 @@ function purge(){const _O={pending:0,out_for_delivery:1,ready:2,failed:2,deliver
 }
 function resetAll(){if(!confirm('Supprimer TOUS les colis ?'))return;D={packages:[],nextId:1,lastSync:null};saveD(D);render();closeS('shSync');showToast('✓ Réinitialisé');}
 
-
-<script src="../firebaseSync.js"></script>
-
-// ── Firestore Locker Tracker ─────────────────────────────────────
-// Utilise firebaseSync.js — librairie centralisée avec options
-const lockerSync = fbCreateSyncHandler('meta/colis', {numberType: 'double'});
-
-// Wrapper pour compatibilité (utilise doubleValue comme avant)
 function fbU(p){const c=getFB();return`https://firestore.googleapis.com/v1/projects/${c.projectId}/databases/(default)/documents/${p}?key=${c.apiKey}`;}
-
-// Transformation JS → Firestore fields avec doubleValue
 function toF(o){const f={};for(const[k,v]of Object.entries(o)){if(v==null)continue;if(typeof v==='string')f[k]={stringValue:v};else if(typeof v==='number')f[k]={doubleValue:v};else if(typeof v==='boolean')f[k]={booleanValue:v};}return f;}
-
-// Transformation Firestore fields → JS (inclut arrayValue pour events)
 function frD(doc){
   const o={};
   if(!doc.fields)return o;
@@ -564,24 +552,9 @@ function frD(doc){
   }
   return o;
 }
-
-// CRUD wrappers
-async function fbW(id,obj){
-  const w={...obj};
-  delete w.photo;  // Exclure photo de la sync
-  return await lockerSync.write(id, w);
-}
-
-async function fbDel(id){
-  return await lockerSync.delete(id);
-}
-
-async function fbAll(){
-  const r=await fetch(fbU('colis')+'&pageSize=500',{redirect:'follow'});
-  if(!r.ok)throw new Error('Firebase '+r.status);
-  const d=await r.json();
-  return(d.documents||[]).map(x=>({...frD(x),_fbId:x.name.split('/').pop()}));
-}
+async function fbW(id,obj){const u=fbU(`colis/${id}`);const w={...obj};delete w.photo;await fetch(u,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({fields:toF(w)}),redirect:'follow'}).catch(()=>{});}
+async function fbDel(id){await fetch(fbU(`colis/${id}`),{method:'DELETE',redirect:'follow'}).catch(()=>{});}
+async function fbAll(){const r=await fetch(fbU('colis')+'&pageSize=500',{redirect:'follow'});if(!r.ok)throw new Error('Firebase '+r.status);const d=await r.json();return(d.documents||[]).map(x=>({...frD(x),_fbId:x.name.split('/').pop()}));}
 
 async function syncFB(){
   DBG.lifecycle('syncFB START');

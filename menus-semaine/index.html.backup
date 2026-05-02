@@ -260,19 +260,46 @@ function applySuggest(){
   showToast('✓ Repas appliqués pour la semaine');
 }
 
-
-<script src="../firebaseSync.js"></script>
-
 // ── Synchronisation Firestore pour les menus ────────────────────
-// Utilise firebaseSync.js — librairie centralisée
-const menusSync = fbCreateSyncHandler('meta/menus');
+const FB_MENUS = { projectId: 'familyhub-colis-8abbd' };
+const MENUS_COLL = 'meta/menus';
+function getFBKeyM() {
+  try { const s = JSON.parse(localStorage.getItem('lt_fb')); return s && s.apiKey ? s.apiKey : ''; } catch { return ''; }
+}
+function fbMenusUrl(path) {
+  return 'https://firestore.googleapis.com/v1/projects/' + FB_MENUS.projectId +
+    '/databases/(default)/documents/' + path + '?key=' + getFBKeyM();
+}
 
 async function fbMenusWrite(dateKey, data) {
-  return await menusSync.write(dateKey, data);
+  if (!getFBKeyM()) return;
+  try {
+    const fields = {};
+    for (const k in data) { fields[k] = {stringValue: String(data[k]||'')}; }
+    await fetch(fbMenusUrl(MENUS_COLL + '/' + dateKey), {
+      method: 'PATCH',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({fields})
+    });
+  } catch(e) { console.warn('fbMenusWrite', e); }
 }
 
 async function fbMenusReadAll() {
-  return await menusSync.readAll() || {};
+  if (!getFBKeyM()) return {};
+  try {
+    const r = await fetch(fbMenusUrl(MENUS_COLL));
+    if (!r.ok) return {};
+    const data = await r.json();
+    const result = {};
+    (data.documents||[]).forEach(function(doc) {
+      const parts = doc.name.split('/');
+      const dateKey = parts[parts.length-1];
+      const fields = doc.fields||{};
+      result[dateKey] = {};
+      for (const k in fields) { result[dateKey][k] = fields[k].stringValue||''; }
+    });
+    return result;
+  } catch(e) { console.warn('fbMenusReadAll', e); return {}; }
 }
 
 async function syncMenus() {

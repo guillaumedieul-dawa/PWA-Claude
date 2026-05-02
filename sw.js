@@ -12,6 +12,7 @@ const STATIC_ASSETS = [
   '/index.html',
   '/sw.js',
   '/manifest.json',
+  '/firebaseSync.js',
   '/locker-tracker/index.html',
   '/locker-tracker/manifest.json',
   '/todo-partage/index.html',

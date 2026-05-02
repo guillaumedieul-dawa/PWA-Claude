@@ -165,21 +165,62 @@ const TYPES  = {vin:'🍷 Vin rouge',vinb:'🥂 Vin blanc',vinr:'🌸 Vin rosé'
 const ICONS  = {vin:'🍷',vinb:'🥂',vinr:'🌸',rhum:'🥃',whisky:'🥃',champagne:'🍾',autre:'🍶'};
 const COLORS = {vin:'#FFDAD6',vinb:'#FFDDB4',vinr:'#FFD0E8',rhum:'#ECDCFF',whisky:'#D7E3FF',champagne:'#C4EFAD',autre:'#E6EBF0'};
 
-<script src="../firebaseSync.js"></script>
-
 // ── Firestore (source primaire) ──────────────────────────────
-// Utilise firebaseSync.js — librairie centralisée
-const caveSync = fbCreateSyncHandler('meta/cave/bottles');
-
-// Wrappers pour compatibilité avec le code métier existant
+const FB_PROJECT_V = 'familyhub-colis-8abbd';
+const FB_COLL_V    = 'meta/cave/bottles';
+function getFBKeyV() {
+  try { const s = JSON.parse(localStorage.getItem('lt_fb')); return s && s.apiKey ? s.apiKey : ''; } catch { return ''; }
+}
+function fbUrlV(path) {
+  return 'https://firestore.googleapis.com/v1/projects/' + FB_PROJECT_V +
+    '/databases/(default)/documents/' + path + '?key=' + getFBKeyV();
+}
+function toFieldsV(obj) {
+  const f = {};
+  for (const k in obj) {
+    const v = obj[k];
+    if (v === null || v === undefined) f[k] = {nullValue: null};
+    else if (typeof v === 'boolean')   f[k] = {booleanValue: v};
+    else if (typeof v === 'number')    f[k] = {integerValue: String(v)};
+    else                               f[k] = {stringValue: String(v)};
+  }
+  return f;
+}
+function fromFieldsV(fields) {
+  if (!fields) return {};
+  const obj = {};
+  for (const k in fields) {
+    const v = fields[k];
+    if ('booleanValue' in v)      obj[k] = v.booleanValue;
+    else if ('integerValue' in v) obj[k] = parseInt(v.integerValue);
+    else if ('stringValue' in v)  obj[k] = v.stringValue;
+    else obj[k] = null;
+  }
+  return obj;
+}
 async function fbWriteBottle(bottle) {
-  return await caveSync.write(bottle.id, bottle);
+  if (!getFBKeyV()) return;
+  try {
+    await fetch(fbUrlV(FB_COLL_V + '/' + bottle.id), {
+      method: 'PATCH',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({fields: toFieldsV(bottle)})
+    });
+  } catch(e) { console.warn('fbWriteBottle', e); }
 }
 async function fbDeleteBottle(id) {
-  return await caveSync.delete(id);
+  if (!getFBKeyV()) return;
+  try { await fetch(fbUrlV(FB_COLL_V + '/' + id), {method:'DELETE'}); }
+  catch(e) { console.warn('fbDeleteBottle', e); }
 }
 async function fbLoadAllV() {
-  return await caveSync.readAll();
+  if (!getFBKeyV()) return null;
+  try {
+    const r = await fetch(fbUrlV(FB_COLL_V));
+    if (!r.ok) return null;
+    const data = await r.json();
+    return (data.documents || []).map(doc => fromFieldsV(doc.fields));
+  } catch(e) { console.warn('fbLoadAllV', e); return null; }
 }
 
 // ── État ─────────────────────────────────────────────────────

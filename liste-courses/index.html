@@ -143,6 +143,8 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
   </div>
 </div>
 
+<script src="../firebaseSync.js"></script>
+
 <script>
 'use strict';
 const SK = 'fh_courses';
@@ -151,61 +153,18 @@ const WHO_COLORS = {Guillaume:'#D7E3FF', Michele:'#ECDCFF'};
 const WHO_TC     = {Guillaume:'#001849', Michele:'#1D0160'};
 
 // ── Firestore (source primaire) ──────────────────────────────
-const FB_PROJECT_C = 'familyhub-colis-8abbd';
-const FB_COLL_C    = 'meta/courses/items';
-function getFBKeyC() {
-  try { const s = JSON.parse(localStorage.getItem('lt_fb')); return s && s.apiKey ? s.apiKey : ''; } catch { return ''; }
-}
-function fbUrlC(path) {
-  return 'https://firestore.googleapis.com/v1/projects/' + FB_PROJECT_C +
-    '/databases/(default)/documents/' + path + '?key=' + getFBKeyC();
-}
-function toFieldsC(obj) {
-  const f = {};
-  for (const k in obj) {
-    const v = obj[k];
-    if (v === null || v === undefined) f[k] = {nullValue: null};
-    else if (typeof v === 'boolean')   f[k] = {booleanValue: v};
-    else if (typeof v === 'number')    f[k] = {integerValue: String(v)};
-    else                               f[k] = {stringValue: String(v)};
-  }
-  return f;
-}
-function fromFieldsC(fields) {
-  if (!fields) return {};
-  const obj = {};
-  for (const k in fields) {
-    const v = fields[k];
-    if ('booleanValue' in v)      obj[k] = v.booleanValue;
-    else if ('integerValue' in v) obj[k] = parseInt(v.integerValue);
-    else if ('stringValue' in v)  obj[k] = v.stringValue;
-    else obj[k] = null;
-  }
-  return obj;
-}
+// Utilise firebaseSync.js — librairie centralisée
+const coursesSync = fbCreateSyncHandler('meta/courses/items');
+
+// Wrappers pour compatibilité avec le code métier existant
 async function fbWriteItem(item) {
-  if (!getFBKeyC()) return;
-  try {
-    await fetch(fbUrlC(FB_COLL_C + '/' + item.id), {
-      method: 'PATCH',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({fields: toFieldsC(item)})
-    });
-  } catch(e) { console.warn('fbWriteItem', e); }
+  return await coursesSync.write(item.id, item);
 }
 async function fbDeleteItem(id) {
-  if (!getFBKeyC()) return;
-  try { await fetch(fbUrlC(FB_COLL_C + '/' + id), {method:'DELETE'}); }
-  catch(e) { console.warn('fbDeleteItem', e); }
+  return await coursesSync.delete(id);
 }
 async function fbLoadAllC() {
-  if (!getFBKeyC()) return null;
-  try {
-    const r = await fetch(fbUrlC(FB_COLL_C));
-    if (!r.ok) return null;
-    const data = await r.json();
-    return (data.documents || []).map(doc => fromFieldsC(doc.fields));
-  } catch(e) { console.warn('fbLoadAllC', e); return null; }
+  return await coursesSync.readAll();
 }
 
 let D      = loadD();

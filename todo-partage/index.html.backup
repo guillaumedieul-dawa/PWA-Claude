@@ -148,26 +148,68 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
   </div>
 </div>
 
-<script src="../firebaseSync.js"></script>
-
 <script>
 'use strict';
 const SK = 'fh_todo';
 const PRIO_COLORS = {high:'#cf0000', mid:'#7B4F00', low:'#1A6500'};
 
 // ── Firestore (source primaire) ──────────────────────────────
-// Utilise firebaseSync.js — librairie centralisée
-const todoSync = fbCreateSyncHandler('meta/todo/tasks');
-
-// Wrappers pour compatibilité avec le code métier existant
+const FB_PROJECT = 'familyhub-colis-8abbd';
+const FB_COLL    = 'meta/todo/tasks';
+function getFBKey() {
+  try { const s = JSON.parse(localStorage.getItem('lt_fb')); return s && s.apiKey ? s.apiKey : ''; } catch { return ''; }
+}
+function fbUrl(path) {
+  return 'https://firestore.googleapis.com/v1/projects/' + FB_PROJECT +
+    '/databases/(default)/documents/' + path + '?key=' + getFBKey();
+}
+function toFields(obj) {
+  const f = {};
+  for (const k in obj) {
+    const v = obj[k];
+    if (v === null || v === undefined) f[k] = {nullValue: null};
+    else if (typeof v === 'boolean')  f[k] = {booleanValue: v};
+    else if (typeof v === 'number')   f[k] = {integerValue: String(v)};
+    else                              f[k] = {stringValue: String(v)};
+  }
+  return f;
+}
+function fromFields(fields) {
+  if (!fields) return {};
+  const obj = {};
+  for (const k in fields) {
+    const v = fields[k];
+    if ('booleanValue' in v)  obj[k] = v.booleanValue;
+    else if ('integerValue' in v) obj[k] = parseInt(v.integerValue);
+    else if ('stringValue' in v)  obj[k] = v.stringValue;
+    else obj[k] = null;
+  }
+  return obj;
+}
 async function fbWriteTask(task) {
-  return await todoSync.write(task.id, task);
+  const key = getFBKey(); if (!key) return;
+  try {
+    await fetch(fbUrl(FB_COLL + '/' + task.id), {
+      method: 'PATCH',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({fields: toFields(task)})
+    });
+  } catch(e) { console.warn('fbWriteTask', e); }
 }
 async function fbDeleteTask(id) {
-  return await todoSync.delete(id);
+  const key = getFBKey(); if (!key) return;
+  try {
+    await fetch(fbUrl(FB_COLL + '/' + id), {method:'DELETE'});
+  } catch(e) { console.warn('fbDeleteTask', e); }
 }
 async function fbLoadAll() {
-  return await todoSync.readAll();
+  const key = getFBKey(); if (!key) return null;
+  try {
+    const r = await fetch(fbUrl(FB_COLL));
+    if (!r.ok) return null;
+    const data = await r.json();
+    return (data.documents || []).map(doc => fromFields(doc.fields));
+  } catch(e) { console.warn('fbLoadAll', e); return null; }
 }
 
 let D    = loadD();

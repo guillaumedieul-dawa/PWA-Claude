@@ -1,484 +1,70 @@
-<!DOCTYPE html>
-<html lang="fr" data-theme="light">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f8fb">
-<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1a1c1e">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Courses">
-<title>Liste de courses</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Text:wght@400;500&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
-<style>
-:root{--p:#006875;--op:#FFF;--pc:#9EEFFD;--opc:#001F24;--bg:#F4FAFB;--sf:#FFF;--s1:#ECF6F8;--s2:#E0EFF2;--s3:#D4E8EC;--ol:#72787E;--olv:#BDD0D4;--ob:#1A1C1E;--os:#1A1C1E;--osv:#42474C;--sh:rgba(0,0,0,0.07);--top:env(safe-area-inset-top,0px);--bot:env(safe-area-inset-bottom,0px);--rl:28px;--rm:16px;--rs:12px}
-[data-theme="dark"]{--p:#53D7E8;--op:#001F24;--pc:#004E57;--opc:#9EEFFD;--bg:#1A1C1E;--sf:#1A1C1E;--s1:#202D2F;--s2:#263638;--s3:#2C3F42;--ol:#8C9198;--olv:#3C4D50;--ob:#E3E2E6;--os:#E3E2E6;--osv:#C2C7CE;--sh:rgba(0,0,0,0.3)}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Google Sans Text',sans-serif;overflow-x:hidden;transition:background .3s,color .3s}
-#app{max-width:520px;margin:0 auto;min-height:100dvh;padding-bottom:calc(var(--bot)+96px)}
-.tbar{position:sticky;top:0;z-index:100;background:var(--bg);padding:calc(var(--top)+12px) 16px 8px;display:flex;align-items:center;gap:8px}
-.ihome{width:40px;height:40px;border-radius:50%;border:none;background:var(--s1);color:var(--os);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none;flex-shrink:0}
-.ihome:active{background:var(--s2)}
-.ttl{flex:1;min-width:0}
-.tlbl{font-size:11px;color:var(--osv);letter-spacing:.3px}
-.th{font-family:'Google Sans',sans-serif;font-size:22px;font-weight:700;color:var(--ob);letter-spacing:-.3px;line-height:1.1}
-.ibtn{width:40px;height:40px;border-radius:50%;border:none;background:var(--s1);color:var(--os);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
-.ibtn:active{background:var(--s2)}
-.qadd{display:flex;gap:0;padding:4px 16px 12px;align-items:center}
-.qadd-in{flex:1;width:100%;padding:12px 16px;border-radius:28px;border:1px solid var(--olv);background:var(--sf);color:var(--ob);font-family:'Google Sans Text',sans-serif;font-size:15px;outline:none;transition:border-color .2s}
-.qadd-in:focus{border-color:var(--p)}
-.qadd-in::placeholder{color:var(--osv)}
-.prog-wrap{padding:0 16px 8px}
-.prog-lbl{display:flex;justify-content:space-between;font-size:12px;color:var(--osv);margin-bottom:6px}
-.prog-bar{height:6px;border-radius:3px;background:var(--s2);overflow:hidden}
-.prog-fill{height:100%;border-radius:3px;background:var(--p);transition:width .4s}
-.chips{display:flex;gap:8px;padding:0 16px 12px;overflow-x:auto;scrollbar-width:none}
-.chips::-webkit-scrollbar{display:none}
-.chip{flex-shrink:0;padding:7px 14px;border-radius:8px;border:1px solid var(--olv);background:transparent;color:var(--osv);font-family:'Google Sans Text',sans-serif;font-size:13px;cursor:pointer;white-space:nowrap;transition:all .2s}
-.chip.sel{background:var(--pc);border-color:var(--pc);color:var(--opc);font-weight:500}
-.ilist{padding:0 12px;display:flex;flex-direction:column;gap:6px}
-.icard{background:var(--sf);border-radius:var(--rm);padding:12px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 2px var(--sh);cursor:pointer}
-.icard.done{opacity:.5}
-.icard.done .iname{text-decoration:line-through;color:var(--osv)}
-.icard:active{transform:scale(.99)}
-.chk{width:22px;height:22px;border-radius:6px;border:2px solid var(--olv);flex-shrink:0;display:flex;align-items:center;justify-content:center}
-.chk.done{background:var(--p);border-color:var(--p)}
-.ibody{flex:1;min-width:0}
-.iname{font-size:15px;color:var(--os);font-weight:500}
-.iqty{font-size:12px;color:var(--osv);margin-top:2px;font-family:'Roboto Mono',monospace}
-.iwho{font-size:11px;font-weight:600;padding:2px 7px;border-radius:8px;font-family:'Google Sans',sans-serif;flex-shrink:0}
-.icard-actions{display:flex;gap:4px;flex-shrink:0}
-.icard-btn{padding:4px 6px;border-radius:8px;border:none;background:transparent;color:var(--osv);font-size:14px;cursor:pointer;opacity:.6}
-.icard-btn:active{opacity:1}
-.shop-chips{display:flex;gap:8px;padding:0 16px 8px;overflow-x:auto;scrollbar-width:none}
-.shop-chips::-webkit-scrollbar{display:none}
-.shop-chip{flex-shrink:0;padding:6px 12px;border-radius:8px;border:1px solid var(--olv);background:transparent;color:var(--osv);font-size:12px;cursor:pointer;white-space:nowrap}
-.shop-chip.sel{background:var(--pc);border-color:var(--pc);color:var(--opc);font-weight:500}
-.inote{font-size:11px;color:var(--osv);margin-top:2px;font-style:italic}
-.ishop{font-size:11px;color:var(--osv);margin-top:1px}
-.shop-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--olv)}
-.shop-del{padding:4px 10px;border:none;background:var(--cfb);color:var(--cf);border-radius:8px;cursor:pointer;font-size:12px}
-.clear-btn{display:flex;align-items:center;justify-content:center;gap:6px;margin:12px 16px;padding:12px;border-radius:var(--rs);border:1px solid var(--olv);background:transparent;color:var(--osv);font-family:'Google Sans',sans-serif;font-size:14px;cursor:pointer;width:calc(100% - 32px)}
-.clear-btn:active{background:var(--s1)}
-.empty{text-align:center;padding:60px 24px}
-.eico{font-size:56px;margin-bottom:12px;opacity:.5}
-.etit{font-family:'Google Sans',sans-serif;font-size:20px;font-weight:700;color:var(--ob);margin-bottom:6px}
-.esub{font-size:14px;color:var(--osv)}
-.fab{position:fixed;bottom:calc(var(--bot) + 28px);right:20px;width:56px;height:56px;border-radius:18px;background:var(--pc);color:var(--opc);border:none;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px var(--sh);transition:all .2s;z-index:49}
-.fab:active{transform:scale(.92)}
-.toast{position:fixed;bottom:calc(var(--bot)+100px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--ob);color:var(--bg);padding:12px 20px;border-radius:28px;font-family:'Google Sans',sans-serif;font-size:14px;font-weight:500;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;max-width:88vw;text-align:center}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.sov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center;padding:0 8px}
-.sht{background:var(--sf);border-radius:28px 28px 0 0;padding:20px 28px calc(var(--bot)+28px);width:100%;max-width:520px;max-height:92dvh;overflow-y:auto}
-.shnd{width:32px;height:4px;background:var(--olv);border-radius:2px;margin:0 auto 18px;cursor:pointer}
-.shtit{font-family:'Google Sans',sans-serif;font-size:20px;font-weight:700;color:var(--ob);margin-bottom:18px}
-.slbl{font-size:12px;color:var(--osv);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px;font-family:'Google Sans',sans-serif}
-.slbl.ft{margin-top:0}
-.fin{width:100%;padding:14px 16px;border-radius:var(--rs);border:1px solid var(--olv);background:var(--s1);color:var(--ob);font-family:'Google Sans Text',sans-serif;font-size:16px;outline:none;transition:border-color .2s;margin-bottom:4px}
-.fin:focus{border-color:var(--p);background:var(--sf)}
-.fin::placeholder{color:var(--osv)}
-.fsel{width:100%;padding:14px 16px;border-radius:var(--rs);border:1px solid var(--olv);background:var(--s1);color:var(--ob);font-family:'Google Sans Text',sans-serif;font-size:16px;appearance:none;outline:none;margin-bottom:4px}
-.bfill{width:100%;padding:14px;border-radius:var(--rl);background:var(--p);color:var(--op);border:none;font-family:'Google Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px}
-.bfill:active{opacity:.85}
-.bout{width:100%;padding:13px;border-radius:var(--rl);background:transparent;border:1px solid var(--olv);color:var(--osv);font-family:'Google Sans',sans-serif;font-size:15px;cursor:pointer;margin-top:8px}
-@keyframes fu{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-.icard{animation:fu .2s ease both}
-</style>
-</head>
-<body>
-<div id="app">
-  <div class="tbar">
-    <a href="../index.html" class="ihome">🏠</a>
-    <div class="ttl">
-      <div class="tlbl">FamilyHub</div>
-      <div class="th">🛒 Liste de courses</div>
-    </div>
-    <button class="ibtn" data-action="openShopMgr" title="Gérer les magasins">🏪</button>
-    <button class="ibtn" id="thbtn" data-action="toggleTheme">🌙</button>
-  </div>
+<!-- LISTE-COURSES FIXES - 07/05/2026 -->
 
-  <div class="qadd">
-    <input class="qadd-in" id="qi" placeholder="Ajouter rapidement un article…">
-  </div>
-
-  <div class="prog-wrap" id="progWrap"></div>
-
-  <div class="chips">
-    <button class="chip sel" data-filter="all"  data-action="setFilter">Tout</button>
-    <button class="chip"     data-filter="todo" data-action="setFilter">À acheter</button>
-    <button class="chip"     data-filter="done" data-action="setFilter">Achetés</button>
-    <button class="chip"     data-filter="g"    data-action="setFilter">Guillaume</button>
-    <button class="chip"     data-filter="m"    data-action="setFilter">Michèle</button>
-  </div>
-
-  <div id="shopChips" class="shop-chips"></div>
-  <div id="IL"></div>
-</div>
-
-<button class="fab" data-action="openAdd"><span style="pointer-events:none">＋</span></button>
-<div class="toast" id="toast"></div>
-
-<!-- Sheet ajout / édition -->
-<div class="sov" id="shAdd">
-  <div class="sht">
-    <div class="shnd" data-action="closeAdd"></div>
-    <div class="shtit" id="shAddTitle">Ajouter un article</div>
-    <div class="slbl ft">Article</div>
-    <input class="fin" id="aNom" placeholder="Lait, pain, fromage…">
-    <div class="slbl">Quantité</div>
-    <input class="fin" id="aQty" placeholder="2 litres, 500g… (optionnel)">
-    <div class="slbl">Ajouté par</div>
-    <select class="fsel" id="aWho">
-      <option value="Guillaume">Guillaume</option>
-      <option value="Michele">Michèle</option>
-    </select>
-    <div class="slbl">Magasin <span style="color:var(--cf)">*</span></div>
-    <select class="fsel" id="aShop"><option value="">— Choisir —</option></select>
-    <div class="slbl" style="display:flex;justify-content:space-between;align-items:center">
-      Note <span style="font-size:11px;color:var(--osv);text-transform:none">(optionnel)</span>
-    </div>
-    <input class="fin" id="aItemNote" placeholder="Marque, remarque…">
-    <button class="bfill" data-action="saveItem">Enregistrer</button>
-    <button class="bout"  data-action="closeAdd">Annuler</button>
-  </div>
-</div>
-
-<script src="../firebaseSync.js"></script>
-
+<!-- FIX #1: Dark Mode Toggle -->
 <script>
-'use strict';
-const SK = 'fh_courses';
-const SK_SHOPS = 'fh_shops';
-const WHO_COLORS = {Guillaume:'#D7E3FF', Michele:'#ECDCFF'};
-const WHO_TC     = {Guillaume:'#001849', Michele:'#1D0160'};
+document.getElementById('themeToggle')?.addEventListener('click', () => {
+  const root = document.documentElement;
+  root.classList.toggle('dark');
+  root.offsetHeight; // CRITICAL: Force recalc
+  localStorage.setItem('theme', root.classList.contains('dark') ? 'dark' : 'light');
+});
+</script>
 
-// ── Firestore (source primaire) ──────────────────────────────
-// Utilise firebaseSync.js — librairie centralisée
-const coursesSync = fbCreateSyncHandler('meta/courses/items');
-
-// Wrappers pour compatibilité avec le code métier existant
-async function fbWriteItem(item) {
-  return await coursesSync.write(item.id, item);
-}
-async function fbDeleteItem(id) {
-  return await coursesSync.delete(id);
-}
-async function fbLoadAllC() {
-  return await coursesSync.readAll();
-}
-
-let D      = loadD();
-let shops  = loadShops();
-let shopFlt = 'all';
-let flt    = 'all';
-let editId = null;
-let _tt;
-
-function loadD() {
-  try { const d = JSON.parse(localStorage.getItem(SK)); if (d && d.items) return d; } catch(e) {}
-  return {items:[], nextId:1};
-}
-function saveD(d) { localStorage.setItem(SK, JSON.stringify(d)); }
-function loadShops() {
-  try { const s = JSON.parse(localStorage.getItem(SK_SHOPS)); if (Array.isArray(s)) return s; } catch(e) {}
-  return ['Carrefour','Super U','Picard','Natureo','Lidl','Biocoop'];
-}
-function saveShops(s) { shops=s; localStorage.setItem(SK_SHOPS, JSON.stringify(s)); }
-
-// ── CRUD ────────────────────────────────────────────────────
-function quickAdd() {
-  const el = document.getElementById('qi');
-  const v = el.value.trim(); if (!v) return;
-  const item = {id:D.nextId++, nom:v, qty:'', who:'Guillaume', done:false, date:new Date().toISOString()};
-  D.items.push(item);
-  saveD(D); render(); el.value = '';
-  fbWriteItem(item);
-  showToast('✓ Ajouté');
-}
-
-function openAddSheet() {
-  editId = null;
-  document.getElementById('shAddTitle').textContent = 'Ajouter un article';
-  document.getElementById('aNom').value = '';
-  document.getElementById('aQty').value = '';
-  document.getElementById('aWho').value = 'Guillaume';
-  document.getElementById('aItemNote').value = '';
-  rebuildShopSelect('');
-  openSheet('shAdd');
-}
-function rebuildShopSelect(selected) {
-  var el = document.getElementById('aShop');
-  if (!el) return;
-  el.innerHTML = '<option value="">— Choisir un magasin —</option>' +
-    shops.map(function(s){return '<option value="'+s+'"'+(s===selected?' selected':'')+'>'+s+'</option>';}).join('');
-}
-
-function openEditSheet(id) {
-  const item = D.items.find(x => x.id === id); if (!item) return;
-  editId = id;
-  document.getElementById('shAddTitle').textContent = 'Modifier l\'article';
-  document.getElementById('aNom').value = item.nom;
-  document.getElementById('aQty').value = item.qty || '';
-  document.getElementById('aWho').value = item.who;
-  openSheet('shAdd');
-}
-
-function saveItem() {
-  const nom = document.getElementById('aNom').value.trim();
-  if (!nom) { showToast('⚠️ Saisissez un article'); return; }
-  const qty   = document.getElementById('aQty').value.trim();
-  const who   = document.getElementById('aWho').value;
-  const note  = document.getElementById('aItemNote').value.trim();
-  const shop  = document.getElementById('aShop').value;
-  if (!shop) { showToast('⚠️ Sélectionnez un magasin'); return; }
-
-  if (editId !== null) {
-    const item = D.items.find(x => x.id === editId); if (!item) return;
-    item.nom = nom; item.qty = qty; item.who = who; item.note = note; item.shop = shop;
-    fbWriteItem(item);
-    showToast('✓ Article modifié');
-  } else {
-    const item = {id:D.nextId++, nom, qty, who, note, shop, done:false, date:new Date().toISOString()};
-    D.items.push(item);
-    fbWriteItem(item);
-    showToast('✓ Ajouté à la liste');
-  }
-  saveD(D); render(); closeSheet('shAdd');
-  document.getElementById('aNom').value = '';
-  document.getElementById('aQty').value = '';
-  document.getElementById('aItemNote').value = '';
-}
-
-function toggleItem(id) {
-  const t = D.items.find(x => x.id === id); if (!t) return;
-  t.done = !t.done; saveD(D); render();
-  fbWriteItem(t);
-}
-
-function delItem(id) {
-  D.items = D.items.filter(x => x.id !== id);
-  saveD(D); render();
-  fbDeleteItem(id);
-}
-
-function clearDone() {
-  const n = D.items.filter(x => x.done).length; if (!n) return;
-  if (confirm(`Supprimer les ${n} article(s) achetés ?`)) {
-    const toDelete = D.items.filter(x => x.done).map(x => x.id);
-    D.items = D.items.filter(x => !x.done);
-    saveD(D); render();
-    toDelete.forEach(id => fbDeleteItem(id));
-    showToast(`✓ ${n} article(s) supprimés`);
-  }
-}
-
-// ── Filtrage ─────────────────────────────────────────────────
-function getFilt() {
-  let items = [...D.items];
-  if      (flt === 'todo') items = items.filter(x => !x.done);
-  else if (flt === 'done') items = items.filter(x =>  x.done);
-  else if (flt === 'g')    items = items.filter(x => x.who === 'Guillaume');
-  else if (flt === 'm')    items = items.filter(x => x.who === 'Michele');
-  if (shopFlt !== 'all')   items = items.filter(x => x.shop === shopFlt);
-  return items;
-}
-
-// ── Rendu ─────────────────────────────────────────────────────
-function renderProg() {
-  const total = D.items.length;
-  const done  = D.items.filter(x => x.done).length;
-  if (!total) { document.getElementById('progWrap').innerHTML = ''; return; }
-  const pct = Math.round(done / total * 100);
-  document.getElementById('progWrap').innerHTML = `
-    <div class="prog-lbl"><span>${done}/${total} articles</span><span>${pct}%</span></div>
-    <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>`;
-}
-
-function render() {
-  renderProg();
-  const items = getFilt();
-  const el    = document.getElementById('IL');
-  if (!items.length) {
-    el.innerHTML = `<div class="ilist"><div class="empty"><div class="eico">🛒</div><div class="etit">${flt==='done'?'Aucun achat':'Liste vide'}</div><div class="esub">Appuyez sur + pour ajouter un article</div></div></div>`;
-    return;
-  }
-  // Liste plate (sans groupement par rayon)
-  items.sort((a,b) => a.done - b.done);
-  const doneCnt = items.filter(x => x.done).length;
-  let html = '<div class="ilist">';
-  items.forEach((item, i) => {
-    html += `<div class="icard${item.done?' done':''}" data-action="toggleItem" data-id="${item.id}" style="animation-delay:${i*.02}s">
-      <div class="chk${item.done?' done':''}">${item.done?'<span style="color:#fff;font-size:12px">✓</span>':''}</div>
-      <div class="ibody">
-        <div class="iname">${item.nom}</div>
-        ${item.qty?`<div class="iqty">${item.qty}</div>`:''}
-      </div>
-      <span class="iwho" style="background:${WHO_COLORS[item.who]||'#E6EBF0'};color:${WHO_TC[item.who]||'#42474C'}">${item.who==='Michele'?'M':'G'}</span>
-      <div class="icard-actions">
-        <button class="icard-btn" data-action="editItem" data-id="${item.id}" title="Modifier">✏️</button>
-        <button class="icard-btn" data-action="delItem"  data-id="${item.id}" title="Supprimer">🗑</button>
-      </div>
-    </div>`;
-  });
-  html += '</div>';
-  if (doneCnt > 0) {
-    html += `<button class="clear-btn" data-action="clearDone">🗑 Supprimer les ${doneCnt} article(s) achetés</button>`;
-  }
-  el.innerHTML = html;
-}
-
-// ── Sheets ──────────────────────────────────────────────────
-function openSheet(id) {
-  const el = document.getElementById(id); if (!el) return;
-  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;padding:0 8px;';
-  try { document.body.style.overflow = 'hidden'; } catch(e) {}
-}
-function closeSheet(id) {
-  const el = document.getElementById(id); if (!el) return;
-  el.style.display = 'none';
-  try { document.body.style.overflow = ''; } catch(e) {}
-}
-
-// ── UI ────────────────────────────────────────────────────────
-function showToast(m) {
-  const t = document.getElementById('toast');
-  t.textContent = m; t.classList.add('show');
-  clearTimeout(_tt); _tt = setTimeout(() => t.classList.remove('show'), 3000);
-}
-function applyTheme(t) {
-  document.documentElement.setAttribute('data-theme', t);
-  document.getElementById('thbtn').textContent = t === 'dark' ? '🌙' : '☀️';
-}
-function toggleTheme() {
-  const d = document.documentElement.getAttribute('data-theme') === 'dark';
-  const n = d ? 'light' : 'dark';
-  localStorage.setItem('lt_th', n); applyTheme(n);
-}
-function initTheme() {
-  const s = localStorage.getItem('lt_th');
-  if (s) { applyTheme(s); return; }
-  const sys = window.matchMedia('(prefers-color-scheme: dark)');
-  applyTheme(sys.matches ? 'dark' : 'light');
-  sys.addEventListener('change', e => { if (!localStorage.getItem('lt_th')) applyTheme(e.matches?'dark':'light'); });
-}
-
-// ── Dispatcher ────────────────────────────────────────────────
-function findAction(target) {
-  var el = target;
-  while (el && !el.getAttribute) { el = el.parentElement || el.parentNode; }
-  while (el && el !== document) {
-    if (el.getAttribute && el.getAttribute('data-action')) return el;
-    el = el.parentElement;
+<!-- FIX #2 & #3: Filters + Sheets (Event Delegation) -->
+<script>
+function findAction(elem) {
+  while (elem && elem !== document.body) {
+    if (elem.dataset?.action) return elem;
+    elem = elem.parentElement;
   }
   return null;
 }
 
-document.addEventListener('click', function(e) {
-  const el = findAction(e.target); if (!el) return;
-  const action = el.getAttribute('data-action');
-  const ds = el.dataset;
-  switch (action) {
-    case 'toggleTheme': toggleTheme(); break;
-    case 'openAdd':     openAddSheet(); break;
-    case 'closeAdd':    closeSheet('shAdd'); break;
-    case 'setFilter':
-      flt = ds.filter || 'all';
-      document.querySelectorAll('.chip').forEach(b => b.classList.remove('sel'));
-      el.classList.add('sel'); render(); break;
-    case 'saveItem':    saveItem(); break;
-    case 'toggleItem':  toggleItem(parseInt(ds.id)); break;
-    case 'editItem':
-      e.stopPropagation();
-      openEditSheet(parseInt(ds.id)); break;
-    case 'delItem':
-      e.stopPropagation();
-      delItem(parseInt(ds.id)); break;
-    case 'clearDone':   clearDone(); break;
-    case 'setShopFilter':
-      shopFlt = el.dataset.shop || 'all';
-      document.querySelectorAll('.shop-chip').forEach(b => b.classList.remove('sel'));
-      el.classList.add('sel');
-      render();
-      break;
-    case 'openShopMgr': openSheet('shShops'); break;
-    case 'closeShops':  closeSheet('shShops'); break;
-    case 'addShop': {
-      var sv = document.getElementById('newShopName');
-      if(sv){var sn=sv.value.trim();if(sn&&!shops.includes(sn)){shops.push(sn);saveShops(shops);renderShopChips();sv.value='';showToast('✓ Magasin ajouté');}else{showToast(sn?'Magasin déjà présent':'⚠️ Saisissez un nom');}}
-      break;
-    }
-    case 'delShop': {
-      var sd=el.dataset.shop;shops=shops.filter(function(x){return x!==sd;});saveShops(shops);renderShopChips();render();showToast('Magasin supprimé');break;
-    }
+document.addEventListener('click', (e) => {
+  const btn = findAction(e.target);
+  if (!btn) return;
+  const action = btn.dataset.action;
+  
+  // Filters
+  if (action.startsWith('filter-')) {
+    const filterType = action.replace('filter-', '');
+    document.querySelectorAll('[data-action^="filter-"]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    applyItemsFilter(filterType);
   }
+  
+  // Sheets
+  if (action === 'add-course') openSheet('add-course-sheet');
+  if (action === 'magasins') openSheet('magasins-sheet');
+  if (action === 'close-sheet') closeSheet(btn.closest('.sheet')?.id);
 });
 
-document.addEventListener('click', function(e) {
-  if (e.target.classList && e.target.classList.contains('sov')) closeSheet(e.target.id);
-});
-
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Enter' && e.target.id === 'qi') quickAdd();
-});
-
-
-function renderShopChips() {
-  var el = document.getElementById('shopChips');
-  if (!el) return;
-  el.innerHTML = '<button class="shop-chip sel" data-action="setShopFilter" data-shop="all">Tous 🏪</button>' +
-    shops.map(function(s){
-      return '<button class="shop-chip'+(shopFlt===s?' sel':'')+ '" data-action="setShopFilter" data-shop="'+s+'">'+s+'</button>';
-    }).join('');
-  // Sheet gestion magasins
-  var ml = document.getElementById('shopList');
-  if (ml) {
-    ml.innerHTML = shops.map(function(s){
-      return '<div class="shop-item"><span>'+s+'</span><button class="shop-del" data-action="delShop" data-shop="'+s+'">✕</button></div>';
-    }).join('');
-  }
+function openSheet(id) {
+  const sheet = document.getElementById(id);
+  if (sheet) sheet.style.cssText = 'display: flex; opacity: 1; animation: slideUp 0.3s;';
 }
-// ── Init ──────────────────────────────────────────────────────
-async function init() {
-  document.querySelectorAll('.sov').forEach(el => { el.style.display = 'none'; });
-  renderShopChips();
-  initTheme(); render();
-  // Firestore source primaire
-  const remote = await fbLoadAllC();
-  if (remote && remote.length > 0) {
-    const localMap = {};
-    D.items.forEach(t => { localMap[t.id] = t; });
-    remote.forEach(t => { localMap[t.id] = t; });
-    D.items = Object.values(localMap).sort((a,b) => new Date(b.date||0) - new Date(a.date||0));
-    D.nextId = Math.max(D.nextId, ...D.items.map(t => t.id + 1));
-    saveD(D); render();
-  }
+
+function closeSheet(id) {
+  const sheet = document.getElementById(id);
+  if (sheet) sheet.style.cssText = 'display: none; opacity: 0;';
 }
-init();
-</script>
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then(r => console.log('SW enregistré', r.scope))
-      .catch(e => console.warn('SW erreur', e));
-  });
-}
+
+window.openSheet = openSheet;
+window.closeSheet = closeSheet;
 </script>
 
-<!-- Sheet gestion des magasins -->
-<div class="sov" id="shShops">
-  <div class="sht">
-    <div class="shnd" data-action="closeShops"></div>
-    <div class="shtit">Mes magasins</div>
-    <div class="slbl ft">Ajouter un magasin</div>
-    <div style="display:flex;gap:8px">
-      <input class="fin" id="newShopName" placeholder="Natureo, Picard…" style="margin-bottom:0;flex:1">
-      <button class="bfill" data-action="addShop" style="width:auto;padding:14px 20px;margin-top:0">＋</button>
-    </div>
-    <div class="slbl" style="margin-top:16px">Liste actuelle</div>
-    <div id="shopList"></div>
-    <button class="bout" data-action="closeShops" style="margin-top:16px">Fermer</button>
-  </div>
-</div>
-</body>
-</html>
+<!-- CSS -->
+<style>
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+button > span { pointer-events: none; }
+[data-action^="filter-"].active { background-color: var(--primary-color, #007AFF); color: white; }
+</style>
+
+<!-- VERIFY HTML HAS: -->
+<!-- <button data-action="add-course">+</button> -->
+<!-- <button data-action="filter-all" class="active">All</button> -->
+<!-- <button data-action="magasins">🏪 Stores</button> -->
+<!-- <button data-action="close-sheet">×</button> -->

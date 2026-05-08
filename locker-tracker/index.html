@@ -1,152 +1,229 @@
-<!-- LOCKER-TRACKER FIXES - 07/05/2026 -->
-<!-- Apply these patches to locker-tracker/index.html -->
-
-<!-- ============================================ -->
-<!-- FIX #1: Dark Mode Toggle (classList bug) -->
-<!-- ============================================ -->
-
-<!-- Add this to the click listener section: -->
-<script>
-document.getElementById('themeToggle')?.addEventListener('click', () => {
-  const root = document.documentElement;
-  const isDark = root.classList.contains('dark');
-  
-  // Toggle class
-  isDark ? root.classList.remove('dark') : root.classList.add('dark');
-  
-  // CRITICAL: Force CSS recalc in Capacitor WebView
-  root.offsetHeight;
-  
-  // Save preference
-  localStorage.setItem('theme', isDark ? 'light' : 'dark');
-});
-</script>
-
-<!-- ============================================ -->
-<!-- FIX #2 & #3: Filters + Sheets (Event Delegation) -->
-<!-- ============================================ -->
-
-<!-- Add this GLOBAL click listener (runs ONCE on page load) -->
-<script>
-// Helper function for safe target finding
-function findAction(elem) {
-  while (elem && elem !== document.body) {
-    if (elem.dataset?.action) return elem;
-    elem = elem.parentElement;
-  }
-  return null;
-}
-
-// Global click dispatcher
-document.addEventListener('click', (e) => {
-  const actionBtn = findAction(e.target);
-  if (!actionBtn) return;
-  
-  const action = actionBtn.dataset.action;
-  
-  // FILTER BUTTONS (Fix #2)
-  if (action.startsWith('filter-')) {
-    const filterType = action.replace('filter-', '');
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Suivi Colis - DEBUG</title>
+  <style>
+    :root {
+      --c-primary: #8B7355;
+      --c-bg: #f5f1ed;
+      --c-card: #ffffff;
+      --c-border: #e8e3dd;
+      --c-text: #3a3a3a;
+      --c-light-text: #7a7a7a;
+      --c-success: #7cb342;
+      --c-warning: #fb8c00;
+      --c-danger: #e53935;
+      --osv: "Phase 3.0";
+    }
     
-    // Update active state
-    document.querySelectorAll('[data-action^="filter-"]').forEach(btn => {
-      btn.classList.remove('active');
-    });
-    actionBtn.classList.add('active');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--c-bg); color: var(--c-text); }
     
-    // Apply filter
-    applyColisFilter(filterType);
+    /* DEBUG BOX - PROMINENT */
+    #debug-box {
+      background: #ffcccc;
+      border: 3px solid #ff0000;
+      padding: 15px;
+      margin: 10px;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+      color: #000;
+      z-index: 9999;
+    }
+    
+    .debug-line {
+      padding: 5px;
+      border-bottom: 1px solid #ffaaaa;
+    }
+    
+    .debug-line.error { color: #ff0000; font-weight: bold; }
+    .debug-line.ok { color: #00aa00; font-weight: bold; }
+    .debug-line.info { color: #0066ff; }
+    
+    header {
+      background: var(--c-primary);
+      color: white;
+      padding: 15px;
+      text-align: center;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    header h1 { font-size: 20px; font-family: 'Bebas Neue'; }
+    
+    .header-date { font-size: 12px; opacity: 0.9; }
+    
+    footer {
+      background: var(--c-primary);
+      color: white;
+      padding: 10px;
+      text-align: center;
+      font-size: 11px;
+      margin-top: 20px;
+    }
+    
+    .container { padding: 15px; }
+    
+    .status-msg {
+      background: var(--c-card);
+      border-left: 4px solid var(--c-primary);
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 4px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<!-- DEBUG BOX AT TOP -->
+<div id="debug-box">
+  <div class="debug-line info">🔍 DEBUG MODE ACTIF</div>
+  <div class="debug-line">Chargement en cours...</div>
+</div>
+
+<header>
+  <h1>📦 SUIVI COLIS</h1>
+  <div class="header-date" id="header-date"></div>
+</header>
+
+<div class="container">
+  <div class="status-msg" id="status-msg">
+    ⏳ Initialisation...
+  </div>
+</div>
+
+<footer>
+  Guillaume & Michèle • v<span id="version"></span> • 
+  <span id="sync-status">Vérification connexion...</span>
+</footer>
+
+<script>
+// ============ DEBUG LOGGER ============
+const debugLog = {
+  lines: [],
+  box: document.getElementById('debug-box'),
+  
+  add(msg, type = 'info') {
+    const line = document.createElement('div');
+    line.className = 'debug-line ' + type;
+    
+    const time = new Date().toLocaleTimeString();
+    let icon = '❓';
+    if (type === 'error') icon = '❌';
+    if (type === 'ok') icon = '✅';
+    if (type === 'info') icon = 'ℹ️';
+    
+    line.textContent = `[${time}] ${icon} ${msg}`;
+    this.box.appendChild(line);
+    this.box.scrollTop = this.box.scrollHeight;
+  }
+};
+
+debugLog.add('DEBUG MODE activé');
+
+// ============ TEST 1: PATHS ============
+debugLog.add('Test 1: Vérification chemins');
+debugLog.add(`URL actuelle: ${window.location.href}`, 'info');
+debugLog.add(`Chemin: ${window.location.pathname}`, 'info');
+
+// ============ TEST 2: FIREBASE SYNC ============
+debugLog.add('Test 2: Chargement firebaseSync.js');
+
+const firebaseSyncScript = document.createElement('script');
+firebaseSyncScript.src = '../firebaseSync.js';
+firebaseSyncScript.onload = () => {
+  debugLog.add('firebaseSync.js chargé avec succès', 'ok');
+  
+  // Vérifier la fonction
+  if (typeof fbCreateSyncHandler !== 'undefined') {
+    debugLog.add('fbCreateSyncHandler() disponible', 'ok');
+  } else {
+    debugLog.add('fbCreateSyncHandler() NOT FOUND', 'error');
+  }
+};
+firebaseSyncScript.onerror = () => {
+  debugLog.add('ERREUR: Impossible de charger ../firebaseSync.js', 'error');
+  debugLog.add('Vérifier que le fichier existe en racine', 'error');
+};
+document.head.appendChild(firebaseSyncScript);
+
+// ============ TEST 3: LOCALSTORAGE ============
+setTimeout(() => {
+  debugLog.add('Test 3: LocalStorage');
+  
+  const fbConfig = localStorage.getItem('lt_fb');
+  if (fbConfig) {
+    debugLog.add('Firebase config trouvé: ' + fbConfig.substring(0, 40) + '...', 'ok');
+  } else {
+    debugLog.add('ATTENTION: Pas de config Firebase dans localStorage', 'error');
   }
   
-  // SHEET BUTTONS (Fix #3)
-  if (action === 'add-colis') {
-    openSheet('add-colis-sheet');
-  }
-  if (action === 'settings') {
-    openSheet('settings-sheet');
-  }
-  if (action === 'close-sheet') {
-    const sheetId = actionBtn.closest('.sheet')?.id;
-    if (sheetId) closeSheet(sheetId);
-  }
-});
+  const theme = localStorage.getItem('theme');
+  debugLog.add('Thème: ' + (theme || 'clair'), 'info');
+  
+}, 500);
 
-// Sheet functions
-function openSheet(sheetId) {
-  const sheet = document.getElementById(sheetId);
-  if (!sheet) {
-    console.warn('Sheet not found:', sheetId);
+// ============ TEST 4: FIRESTORE DATA ============
+setTimeout(() => {
+  debugLog.add('Test 4: Chargement données Firestore');
+  
+  const fbConfig = localStorage.getItem('lt_fb');
+  if (!fbConfig) {
+    debugLog.add('ERREUR: Pas de config, impossible de charger Firestore', 'error');
+    document.getElementById('status-msg').innerHTML = '❌ Erreur: Config Firebase manquante<br><small>Vérifier localStorage("lt_fb")</small>';
     return;
   }
-  sheet.style.cssText = 'display: flex; opacity: 1; pointer-events: auto; animation: slideUp 0.3s ease-out;';
-}
+  
+  try {
+    const config = JSON.parse(fbConfig);
+    debugLog.add('Config Firebase valide', 'ok');
+    
+    // Essayer de charger les colis
+    fetch(`https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/(default)/documents/meta/colis/items`, {
+      headers: { 'Authorization': `Bearer ${config.apiKey}` }
+    })
+    .then(r => {
+      debugLog.add(`Firestore réponse: ${r.status}`, r.status === 200 ? 'ok' : 'error');
+      return r.json();
+    })
+    .then(data => {
+      debugLog.add(`Documents reçus: ${data.documents?.length || 0}`, 'ok');
+      document.getElementById('status-msg').innerHTML = '✅ Données chargées<br><small>Voir debug box pour détails</small>';
+    })
+    .catch(err => {
+      debugLog.add(`Firestore erreur: ${err.message}`, 'error');
+      document.getElementById('status-msg').innerHTML = '❌ Erreur Firestore<br><small>' + err.message + '</small>';
+    });
+    
+  } catch (e) {
+    debugLog.add('Config Firebase invalide (JSON parse error)', 'error');
+    debugLog.add(e.message, 'error');
+  }
+}, 1000);
 
-function closeSheet(sheetId) {
-  const sheet = document.getElementById(sheetId);
-  if (!sheet) return;
-  sheet.style.cssText = 'display: none; opacity: 0; pointer-events: none;';
-}
+// ============ HEADER ============
+document.getElementById('header-date').textContent = new Date().toLocaleDateString('fr-FR');
+document.getElementById('version').textContent = 'DEBUG';
+document.getElementById('sync-status').textContent = '🔍 Mode Debug';
 
-// Make available globally for programmatic calls
-window.openSheet = openSheet;
-window.closeSheet = closeSheet;
+// ============ INSTRUCTIONS ============
+setTimeout(() => {
+  debugLog.add('═══════════════════════════════════', 'info');
+  debugLog.add('ACTIONS À FAIRE:', 'info');
+  debugLog.add('1. Lire tous les logs ci-dessus', 'info');
+  debugLog.add('2. Chercher les ❌ (erreurs)', 'info');
+  debugLog.add('3. Screenshot et envoyer', 'info');
+  debugLog.add('═══════════════════════════════════', 'info');
+}, 2000);
+
 </script>
 
-<!-- ============================================ -->
-<!-- VERIFY IN HTML (locker-tracker/index.html) -->
-<!-- ============================================ -->
-
-<!-- Button for FAB "Add Colis" should have: -->
-<!-- <button class="fab" data-action="add-colis">+</button> -->
-
-<!-- Buttons in filter bar should have: -->
-<!-- <button data-action="filter-all" class="active">All</button> -->
-<!-- <button data-action="filter-ups">UPS</button> -->
-<!-- <button data-action="filter-colissimo">Colissimo</button> -->
-<!-- etc. -->
-
-<!-- Close buttons in sheets should have: -->
-<!-- <button data-action="close-sheet" class="close-btn">×</button> -->
-
-<!-- ============================================ -->
-<!-- CSS ADDITIONS (for animations) -->
-<!-- ============================================ -->
-
-<style>
-@keyframes slideUp {
-  from {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-.sheet {
-  transition: all 0.3s ease-out;
-}
-
-[data-action^="filter-"].active {
-  background-color: var(--primary-color, #007AFF);
-  color: white;
-}
-
-/* Prevent text nodes inside buttons from triggering click twice */
-button > span {
-  pointer-events: none;
-}
-</style>
-
-<!-- ============================================ -->
-<!-- APPLY IN THIS ORDER: -->
-<!-- ============================================ -->
-<!-- 1. Add findAction() helper function -->
-<!-- 2. Add global document.addEventListener('click', ...) -->
-<!-- 3. Add openSheet() and closeSheet() functions -->
-<!-- 4. Add window.openSheet/closeSheet assignments -->
-<!-- 5. Verify HTML has data-action= attributes -->
-<!-- 6. Add CSS animations -->
-<!-- 7. Update theme toggle listener with offsetHeight -->
-<!-- 8. Test in browser (F12 console check for errors) -->
+</body>
+</html>

@@ -1,17 +1,259 @@
-<!-- TODO-PARTAGE FIXES - 07/05/2026 -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Todo Partagé</title>
+  
+  <!-- CRITICAL: Load firebaseSync FIRST -->
+  <script src="../firebaseSync.js"></script>
+  
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="../icons/home-192.png">
+  <style>
+    :root {
+      --c-primary: #3498db;
+      --c-bg: #f5f1ed;
+      --c-card: #ffffff;
+      --c-border: #e8e3dd;
+      --c-text: #3a3a3a;
+      --c-light-text: #7a7a7a;
+      --c-danger: #e53935;
+      --osv: "Phase 3.0";
+    }
+    
+    :root.dark {
+      --c-bg: #1a1a1a;
+      --c-card: #2d2d2d;
+      --c-border: #444;
+      --c-text: #f0f0f0;
+      --c-light-text: #aaa;
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--c-bg); color: var(--c-text); transition: 0.3s; }
+    
+    header {
+      background: var(--c-primary);
+      color: white;
+      padding: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    header h1 { font-size: 20px; font-family: 'Bebas Neue'; }
+    
+    .header-controls {
+      display: flex;
+      gap: 10px;
+    }
+    
+    button {
+      background: var(--c-primary);
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    button:hover { opacity: 0.8; }
+    
+    .container { padding: 15px; }
+    
+    .filters {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 15px;
+      overflow-x: auto;
+      padding-bottom: 10px;
+    }
+    
+    .filter-btn {
+      padding: 8px 12px;
+      border: 1px solid var(--c-border);
+      background: var(--c-card);
+      color: var(--c-text);
+      border-radius: 20px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: 0.3s;
+    }
+    
+    .filter-btn.active {
+      background: var(--c-primary);
+      color: white;
+      border-color: var(--c-primary);
+    }
+    
+    .todos-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .todo-item {
+      background: var(--c-card);
+      border-left: 4px solid var(--c-primary);
+      padding: 15px;
+      border-radius: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .todo-item.done {
+      opacity: 0.6;
+      text-decoration: line-through;
+    }
+    
+    .todo-info { flex: 1; }
+    .todo-title { font-weight: bold; margin-bottom: 5px; }
+    .todo-owner { font-size: 12px; color: var(--c-light-text); }
+    
+    .todo-checkbox {
+      cursor: pointer;
+      width: 20px;
+      height: 20px;
+    }
+    
+    .todo-delete {
+      background: var(--c-danger);
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+    
+    .fab {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      background: var(--c-primary);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      font-size: 24px;
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+    
+    .fab:hover { transform: scale(1.1); }
+    
+    .sheet {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--c-card);
+      padding: 20px;
+      border-radius: 12px 12px 0 0;
+      z-index: 1000;
+      animation: slideUp 0.3s ease-out;
+    }
+    
+    .sheet.visible { display: flex; flex-direction: column; }
+    
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    
+    .sheet input, .sheet select {
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid var(--c-border);
+      border-radius: 4px;
+      width: 100%;
+    }
+    
+    .sheet-close {
+      align-self: flex-end;
+      background: var(--c-danger);
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    footer {
+      background: var(--c-primary);
+      color: white;
+      padding: 10px;
+      text-align: center;
+      font-size: 11px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
 
-<!-- FIX #1: Dark Mode -->
+<header>
+  <h1>✓ TODO PARTAGÉ</h1>
+  <div class="header-controls">
+    <button id="homeBtn" data-action="home">🏠</button>
+    <button id="themeToggle" data-action="toggle-theme">🌙</button>
+  </div>
+</header>
+
+<div class="container">
+  <div class="filters">
+    <button class="filter-btn active" data-action="filter-all">Tous</button>
+    <button class="filter-btn" data-action="filter-pending">À faire</button>
+    <button class="filter-btn" data-action="filter-done">Fait</button>
+  </div>
+  
+  <button class="fab" data-action="add-todo" style="pointer-events: auto;">+</button>
+  
+  <div class="todos-list" id="todosList"></div>
+</div>
+
+<!-- Sheet: Add Todo -->
+<div class="sheet" id="add-todo-sheet">
+  <h2>Ajouter une tâche</h2>
+  <input type="text" id="todoTitle" placeholder="Titre de la tâche">
+  <select id="todoOwner">
+    <option value="Guillaume">Guillaume</option>
+    <option value="Michèle">Michèle</option>
+  </select>
+  <button onclick="saveNewTodo()">Ajouter</button>
+  <button class="sheet-close" data-action="close-sheet">Fermer</button>
+</div>
+
+<footer>
+  Guillaume & Michèle • v<span id="version"></span> • 🟢 Sync OK
+</footer>
+
 <script>
-document.getElementById('themeToggle')?.addEventListener('click', () => {
+// ============ INIT ============
+const todosSync = fbCreateSyncHandler('meta/todos/items');
+let allTodos = [];
+let currentFilter = 'all';
+
+document.getElementById('version').textContent = 'DEBUG';
+
+// ============ FIX #1: Dark Mode Toggle ============
+document.getElementById('themeToggle').addEventListener('click', () => {
   const root = document.documentElement;
   root.classList.toggle('dark');
-  root.offsetHeight; // CRITICAL
+  root.offsetHeight; // CRITICAL: Force recalc
   localStorage.setItem('theme', root.classList.contains('dark') ? 'dark' : 'light');
 });
-</script>
 
-<!-- FIX #2 & #3: Filters + Sheets -->
-<script>
+// Load saved theme
+if (localStorage.getItem('theme') === 'dark') {
+  document.documentElement.classList.add('dark');
+}
+
+// ============ FIX #2 & #3: Filters + Sheets (Event Delegation) ============
 function findAction(elem) {
   while (elem && elem !== document.body) {
     if (elem.dataset?.action) return elem;
@@ -23,43 +265,127 @@ function findAction(elem) {
 document.addEventListener('click', (e) => {
   const btn = findAction(e.target);
   if (!btn) return;
+  
   const action = btn.dataset.action;
+  
+  // Home button
+  if (action === 'home') {
+    window.location.href = '/';
+  }
   
   // Filters
   if (action.startsWith('filter-')) {
-    const type = action.replace('filter-', '');
+    currentFilter = action.replace('filter-', '');
     document.querySelectorAll('[data-action^="filter-"]').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    applyTasksFilter(type);
+    renderTodos();
   }
   
   // Sheets
-  if (action === 'add-task') openSheet('add-task-sheet');
+  if (action === 'add-todo') openSheet('add-todo-sheet');
   if (action === 'close-sheet') closeSheet(btn.closest('.sheet')?.id);
 });
 
 function openSheet(id) {
   const sheet = document.getElementById(id);
-  if (sheet) sheet.style.cssText = 'display: flex; opacity: 1; animation: slideUp 0.3s;';
+  if (sheet) {
+    sheet.style.cssText = 'display: flex; opacity: 1;';
+  }
 }
 
 function closeSheet(id) {
   const sheet = document.getElementById(id);
-  if (sheet) sheet.style.cssText = 'display: none; opacity: 0;';
+  if (sheet) {
+    sheet.style.cssText = 'display: none; opacity: 0;';
+  }
 }
 
-window.openSheet = openSheet;
-window.closeSheet = closeSheet;
+// ============ TODOS MANAGEMENT ============
+async function loadTodos() {
+  try {
+    const todos = await todosSync.readAll();
+    allTodos = todos || [];
+    renderTodos();
+  } catch (e) {
+    console.warn('Error loading todos:', e);
+  }
+}
+
+function renderTodos() {
+  const container = document.getElementById('todosList');
+  const filtered = allTodos.filter(todo => {
+    if (currentFilter === 'all') return true;
+    if (currentFilter === 'pending') return !todo.done;
+    if (currentFilter === 'done') return todo.done;
+    return true;
+  });
+  
+  container.innerHTML = filtered.map(todo => `
+    <div class="todo-item ${todo.done ? 'done' : ''}">
+      <input type="checkbox" class="todo-checkbox" ${todo.done ? 'checked' : ''} onchange="toggleTodo('${todo.id}')">
+      <div class="todo-info">
+        <div class="todo-title">${todo.title || 'Sans titre'}</div>
+        <div class="todo-owner">par ${todo.owner || '?'}</div>
+      </div>
+      <button class="todo-delete" onclick="deleteTodo('${todo.id}')">✕</button>
+    </div>
+  `).join('');
+}
+
+async function saveNewTodo() {
+  const title = document.getElementById('todoTitle').value;
+  const owner = document.getElementById('todoOwner').value;
+  
+  if (!title) {
+    alert('Titre requis');
+    return;
+  }
+  
+  const newTodo = {
+    id: Date.now().toString(),
+    title,
+    owner,
+    done: false
+  };
+  
+  try {
+    await todosSync.write(newTodo.id, newTodo);
+    allTodos.push(newTodo);
+    renderTodos();
+    closeSheet('add-todo-sheet');
+    document.getElementById('todoTitle').value = '';
+  } catch (e) {
+    console.warn('Error saving todo:', e);
+    alert('Erreur lors de la sauvegarde');
+  }
+}
+
+async function toggleTodo(id) {
+  const todo = allTodos.find(t => t.id === id);
+  if (todo) {
+    todo.done = !todo.done;
+    try {
+      await todosSync.write(id, todo);
+      renderTodos();
+    } catch (e) {
+      console.warn('Error updating todo:', e);
+    }
+  }
+}
+
+async function deleteTodo(id) {
+  try {
+    await todosSync.delete(id);
+    allTodos = allTodos.filter(t => t.id !== id);
+    renderTodos();
+  } catch (e) {
+    console.warn('Error deleting todo:', e);
+  }
+}
+
+// ============ STARTUP ============
+loadTodos();
 </script>
 
-<!-- CSS -->
-<style>
-@keyframes slideUp {
-  from { transform: translateY(100%); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-button > span { pointer-events: none; }
-[data-action^="filter-"].active { background-color: var(--primary-color, #007AFF); color: white; }
-</style>
-
-<!-- VERIFY: data-action="add-task", data-action="filter-all", data-action="close-sheet" -->
+</body>
+</html>

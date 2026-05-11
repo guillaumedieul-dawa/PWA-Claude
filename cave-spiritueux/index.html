@@ -1,17 +1,251 @@
-<!-- CAVE-SPIRITUEUX FIXES - 07/05/2026 -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cave Spiritueux</title>
+  
+  <!-- CRITICAL: Load firebaseSync FIRST -->
+  <script src="../firebaseSync.js"></script>
+  
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="../icons/home-192.png">
+  <style>
+    :root {
+      --c-primary: #9b59b6;
+      --c-bg: #f5f1ed;
+      --c-card: #ffffff;
+      --c-border: #e8e3dd;
+      --c-text: #3a3a3a;
+      --c-light-text: #7a7a7a;
+      --c-danger: #e53935;
+      --osv: "Phase 3.0";
+    }
+    
+    :root.dark {
+      --c-bg: #1a1a1a;
+      --c-card: #2d2d2d;
+      --c-border: #444;
+      --c-text: #f0f0f0;
+      --c-light-text: #aaa;
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--c-bg); color: var(--c-text); transition: 0.3s; }
+    
+    header {
+      background: var(--c-primary);
+      color: white;
+      padding: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    header h1 { font-size: 20px; font-family: 'Bebas Neue'; }
+    
+    .header-controls {
+      display: flex;
+      gap: 10px;
+    }
+    
+    button {
+      background: var(--c-primary);
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    button:hover { opacity: 0.8; }
+    
+    .container { padding: 15px; }
+    
+    .filters {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 15px;
+      overflow-x: auto;
+      padding-bottom: 10px;
+    }
+    
+    .filter-btn {
+      padding: 8px 12px;
+      border: 1px solid var(--c-border);
+      background: var(--c-card);
+      color: var(--c-text);
+      border-radius: 20px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: 0.3s;
+    }
+    
+    .filter-btn.active {
+      background: var(--c-primary);
+      color: white;
+      border-color: var(--c-primary);
+    }
+    
+    .bottles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 15px;
+    }
+    
+    .bottle-card {
+      background: var(--c-card);
+      border-left: 4px solid var(--c-primary);
+      border-radius: 4px;
+      padding: 15px;
+      text-align: center;
+    }
+    
+    .bottle-emoji { font-size: 40px; margin-bottom: 10px; }
+    .bottle-name { font-weight: bold; margin-bottom: 5px; }
+    .bottle-type { font-size: 12px; color: var(--c-light-text); margin-bottom: 8px; }
+    .bottle-qty { font-size: 14px; color: var(--c-primary); font-weight: bold; }
+    
+    .bottle-delete {
+      background: var(--c-danger);
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 10px;
+    }
+    
+    .fab {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      background: var(--c-primary);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      font-size: 24px;
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+    
+    .fab:hover { transform: scale(1.1); }
+    
+    .sheet {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--c-card);
+      padding: 20px;
+      border-radius: 12px 12px 0 0;
+      z-index: 1000;
+      animation: slideUp 0.3s ease-out;
+    }
+    
+    .sheet.visible { display: flex; flex-direction: column; }
+    
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    
+    .sheet input, .sheet select {
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid var(--c-border);
+      border-radius: 4px;
+      width: 100%;
+    }
+    
+    .sheet-close {
+      align-self: flex-end;
+      background: var(--c-danger);
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    footer {
+      background: var(--c-primary);
+      color: white;
+      padding: 10px;
+      text-align: center;
+      font-size: 11px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
 
-<!-- FIX #1: Dark Mode -->
+<header>
+  <h1>🍷 CAVE SPIRITUEUX</h1>
+  <div class="header-controls">
+    <button id="homeBtn" data-action="home">🏠</button>
+    <button id="themeToggle" data-action="toggle-theme">🌙</button>
+  </div>
+</header>
+
+<div class="container">
+  <div class="filters">
+    <button class="filter-btn active" data-action="filter-all">Tous</button>
+    <button class="filter-btn" data-action="filter-vin">Vin</button>
+    <button class="filter-btn" data-action="filter-alcool">Alcool</button>
+    <button class="filter-btn" data-action="filter-biere">Bière</button>
+  </div>
+  
+  <button class="fab" data-action="add-bottle" style="pointer-events: auto;">+</button>
+  
+  <div class="bottles-grid" id="bottlesGrid"></div>
+</div>
+
+<!-- Sheet: Add Bottle -->
+<div class="sheet" id="add-bottle-sheet">
+  <h2>Ajouter une bouteille</h2>
+  <input type="text" id="bottleName" placeholder="Nom de la bouteille">
+  <select id="bottleType">
+    <option value="vin">Vin</option>
+    <option value="alcool">Alcool</option>
+    <option value="biere">Bière</option>
+  </select>
+  <input type="number" id="bottleQty" placeholder="Quantité" value="1">
+  <button onclick="saveNewBottle()">Ajouter</button>
+  <button class="sheet-close" data-action="close-sheet">Fermer</button>
+</div>
+
+<footer>
+  Guillaume & Michèle • v<span id="version"></span> • 🟢 Sync OK
+</footer>
+
 <script>
-document.getElementById('themeToggle')?.addEventListener('click', () => {
+// ============ INIT ============
+const bottlesSync = fbCreateSyncHandler('meta/cave/bottles');
+let allBottles = [];
+let currentFilter = 'all';
+
+document.getElementById('version').textContent = 'DEBUG';
+
+// ============ FIX #1: Dark Mode Toggle ============
+document.getElementById('themeToggle').addEventListener('click', () => {
   const root = document.documentElement;
   root.classList.toggle('dark');
-  root.offsetHeight; // CRITICAL
+  root.offsetHeight; // CRITICAL: Force recalc
   localStorage.setItem('theme', root.classList.contains('dark') ? 'dark' : 'light');
 });
-</script>
 
-<!-- FIX #2 & #3: Filters + Sheets -->
-<script>
+// Load saved theme
+if (localStorage.getItem('theme') === 'dark') {
+  document.documentElement.classList.add('dark');
+}
+
+// ============ FIX #2 & #3: Filters + Sheets (Event Delegation) ============
 function findAction(elem) {
   while (elem && elem !== document.body) {
     if (elem.dataset?.action) return elem;
@@ -23,14 +257,20 @@ function findAction(elem) {
 document.addEventListener('click', (e) => {
   const btn = findAction(e.target);
   if (!btn) return;
+  
   const action = btn.dataset.action;
+  
+  // Home button
+  if (action === 'home') {
+    window.location.href = '/';
+  }
   
   // Filters
   if (action.startsWith('filter-')) {
-    const type = action.replace('filter-', '');
+    currentFilter = action.replace('filter-', '');
     document.querySelectorAll('[data-action^="filter-"]').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    applyBottlesFilter(type);
+    renderBottles();
   }
   
   // Sheets
@@ -40,26 +280,89 @@ document.addEventListener('click', (e) => {
 
 function openSheet(id) {
   const sheet = document.getElementById(id);
-  if (sheet) sheet.style.cssText = 'display: flex; opacity: 1; animation: slideUp 0.3s;';
+  if (sheet) {
+    sheet.style.cssText = 'display: flex; opacity: 1;';
+  }
 }
 
 function closeSheet(id) {
   const sheet = document.getElementById(id);
-  if (sheet) sheet.style.cssText = 'display: none; opacity: 0;';
+  if (sheet) {
+    sheet.style.cssText = 'display: none; opacity: 0;';
+  }
 }
 
-window.openSheet = openSheet;
-window.closeSheet = closeSheet;
+// ============ BOTTLES MANAGEMENT ============
+async function loadBottles() {
+  try {
+    const bottles = await bottlesSync.readAll();
+    allBottles = bottles || [];
+    renderBottles();
+  } catch (e) {
+    console.warn('Error loading bottles:', e);
+  }
+}
+
+function renderBottles() {
+  const container = document.getElementById('bottlesGrid');
+  const filtered = currentFilter === 'all' 
+    ? allBottles 
+    : allBottles.filter(b => b.type === currentFilter);
+  
+  container.innerHTML = filtered.map(bottle => `
+    <div class="bottle-card">
+      <div class="bottle-emoji">🍾</div>
+      <div class="bottle-name">${bottle.name || 'Sans nom'}</div>
+      <div class="bottle-type">${bottle.type || '?'}</div>
+      <div class="bottle-qty">x${bottle.quantity || 1}</div>
+      <button class="bottle-delete" onclick="deleteBottle('${bottle.id}')">✕</button>
+    </div>
+  `).join('');
+}
+
+async function saveNewBottle() {
+  const name = document.getElementById('bottleName').value;
+  const type = document.getElementById('bottleType').value;
+  const qty = document.getElementById('bottleQty').value || 1;
+  
+  if (!name) {
+    alert('Nom requis');
+    return;
+  }
+  
+  const newBottle = {
+    id: Date.now().toString(),
+    name,
+    type,
+    quantity: parseInt(qty)
+  };
+  
+  try {
+    await bottlesSync.write(newBottle.id, newBottle);
+    allBottles.push(newBottle);
+    renderBottles();
+    closeSheet('add-bottle-sheet');
+    document.getElementById('bottleName').value = '';
+    document.getElementById('bottleQty').value = '1';
+  } catch (e) {
+    console.warn('Error saving bottle:', e);
+    alert('Erreur lors de la sauvegarde');
+  }
+}
+
+async function deleteBottle(id) {
+  try {
+    await bottlesSync.delete(id);
+    allBottles = allBottles.filter(b => b.id !== id);
+    renderBottles();
+  } catch (e) {
+    console.warn('Error deleting bottle:', e);
+  }
+}
+
+// ============ STARTUP ============
+loadBottles();
 </script>
 
-<!-- CSS -->
-<style>
-@keyframes slideUp {
-  from { transform: translateY(100%); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-button > span { pointer-events: none; }
-[data-action^="filter-"].active { background-color: var(--primary-color, #007AFF); color: white; }
-</style>
-
-<!-- VERIFY: data-action="add-bottle", data-action="filter-all", data-action="filter-whisky", data-action="close-sheet" -->
+</body>
+</html>

@@ -1,19 +1,251 @@
-<!-- MENUS-SEMAINE FIXES - 07/05/2026 -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Menus Semaine</title>
+  
+  <!-- CRITICAL: Load firebaseSync FIRST -->
+  <script src="../firebaseSync.js"></script>
+  
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="../icons/home-192.png">
+  <style>
+    :root {
+      --c-primary: #e74c3c;
+      --c-bg: #f5f1ed;
+      --c-card: #ffffff;
+      --c-border: #e8e3dd;
+      --c-text: #3a3a3a;
+      --c-light-text: #7a7a7a;
+      --c-danger: #c0392b;
+      --osv: "Phase 3.0";
+    }
+    
+    :root.dark {
+      --c-bg: #1a1a1a;
+      --c-card: #2d2d2d;
+      --c-border: #444;
+      --c-text: #f0f0f0;
+      --c-light-text: #aaa;
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--c-bg); color: var(--c-text); transition: 0.3s; }
+    
+    header {
+      background: var(--c-primary);
+      color: white;
+      padding: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    header h1 { font-size: 20px; font-family: 'Bebas Neue'; }
+    
+    .header-controls {
+      display: flex;
+      gap: 10px;
+    }
+    
+    button {
+      background: var(--c-primary);
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    button:hover { opacity: 0.8; }
+    
+    .container { padding: 15px; }
+    
+    .days-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+    }
+    
+    .day-card {
+      background: var(--c-card);
+      border-left: 4px solid var(--c-primary);
+      border-radius: 4px;
+      padding: 15px;
+    }
+    
+    .day-title {
+      font-weight: bold;
+      font-size: 16px;
+      margin-bottom: 10px;
+      color: var(--c-primary);
+    }
+    
+    .meal-section {
+      margin-bottom: 10px;
+    }
+    
+    .meal-label {
+      font-size: 11px;
+      color: var(--c-light-text);
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+    
+    .meal-value {
+      font-size: 13px;
+      padding: 5px;
+      background: rgba(0,0,0,0.05);
+      border-radius: 3px;
+      min-height: 30px;
+      display: flex;
+      align-items: center;
+    }
+    
+    :root.dark .meal-value {
+      background: rgba(255,255,255,0.05);
+    }
+    
+    .edit-btn {
+      background: var(--c-primary);
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 10px;
+    }
+    
+    .fab {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      background: var(--c-primary);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      font-size: 24px;
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+    
+    .fab:hover { transform: scale(1.1); }
+    
+    .sheet {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--c-card);
+      padding: 20px;
+      border-radius: 12px 12px 0 0;
+      z-index: 1000;
+      animation: slideUp 0.3s ease-out;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    
+    .sheet.visible { display: flex; flex-direction: column; }
+    
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    
+    .sheet input, .sheet select, .sheet textarea {
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid var(--c-border);
+      border-radius: 4px;
+      width: 100%;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    
+    .sheet textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+    
+    .sheet-close {
+      align-self: flex-end;
+      background: var(--c-danger);
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    footer {
+      background: var(--c-primary);
+      color: white;
+      padding: 10px;
+      text-align: center;
+      font-size: 11px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
 
-<!-- FIX #1: Dark Mode -->
+<header>
+  <h1>🍽️ MENUS SEMAINE</h1>
+  <div class="header-controls">
+    <button id="homeBtn" data-action="home">🏠</button>
+    <button id="themeToggle" data-action="toggle-theme">🌙</button>
+  </div>
+</header>
+
+<div class="container">
+  <button class="fab" data-action="add-day" style="pointer-events: auto;">+</button>
+  
+  <div class="days-grid" id="daysGrid"></div>
+</div>
+
+<!-- Sheet: Edit Day Menu -->
+<div class="sheet" id="edit-day-sheet">
+  <h2>Éditer menu du jour</h2>
+  <input type="text" id="daySelect" placeholder="Jour" disabled>
+  <textarea id="dayMorning" placeholder="Petit déjeuner"></textarea>
+  <textarea id="dayNoon" placeholder="Déjeuner"></textarea>
+  <textarea id="dayEvening" placeholder="Dîner"></textarea>
+  <button onclick="saveDayMenu()">Sauvegarder</button>
+  <button class="sheet-close" data-action="close-sheet">Fermer</button>
+</div>
+
+<footer>
+  Guillaume & Michèle • v<span id="version"></span> • 🟢 Sync OK
+</footer>
+
 <script>
-document.getElementById('themeToggle')?.addEventListener('click', () => {
+// ============ INIT ============
+const menusSync = fbCreateSyncHandler('meta/menus/semaine');
+let allMenus = {};
+const days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+let editingDay = null;
+
+document.getElementById('version').textContent = 'DEBUG';
+
+// ============ FIX #1: Dark Mode Toggle ============
+document.getElementById('themeToggle').addEventListener('click', () => {
   const root = document.documentElement;
   root.classList.toggle('dark');
-  root.offsetHeight; // CRITICAL
+  root.offsetHeight; // CRITICAL: Force recalc
   localStorage.setItem('theme', root.classList.contains('dark') ? 'dark' : 'light');
 });
-</script>
 
-<!-- FIX #2: Navigation (Prev/Next/Suggestions) -->
-<script>
-let currentMenuDate = new Date();
+// Load saved theme
+if (localStorage.getItem('theme') === 'dark') {
+  document.documentElement.classList.add('dark');
+}
 
+// ============ FIX #2 & #3: Buttons + Sheets (Event Delegation) ============
 function findAction(elem) {
   while (elem && elem !== document.body) {
     if (elem.dataset?.action) return elem;
@@ -25,48 +257,110 @@ function findAction(elem) {
 document.addEventListener('click', (e) => {
   const btn = findAction(e.target);
   if (!btn) return;
+  
   const action = btn.dataset.action;
   
-  // Navigation
-  if (action === 'prev-week') {
-    currentMenuDate.setDate(currentMenuDate.getDate() - 7);
-    renderMenus();
+  // Home button
+  if (action === 'home') {
+    window.location.href = '/';
   }
-  if (action === 'next-week') {
-    currentMenuDate.setDate(currentMenuDate.getDate() + 7);
-    renderMenus();
+  
+  // Add day
+  if (action === 'add-day') openSheet('edit-day-sheet');
+  
+  // Edit day
+  if (action.startsWith('edit-day-')) {
+    editingDay = action.replace('edit-day-', '');
+    loadDayIntoSheet(editingDay);
+    openSheet('edit-day-sheet');
   }
-  if (action === 'suggestions') {
-    openSheet('suggestions-sheet');
-  }
+  
+  // Close sheet
+  if (action === 'close-sheet') closeSheet(btn.closest('.sheet')?.id);
 });
 
 function openSheet(id) {
   const sheet = document.getElementById(id);
-  if (sheet) sheet.style.cssText = 'display: flex; opacity: 1; animation: slideUp 0.3s;';
+  if (sheet) {
+    sheet.style.cssText = 'display: flex; opacity: 1;';
+  }
 }
 
 function closeSheet(id) {
   const sheet = document.getElementById(id);
-  if (sheet) sheet.style.cssText = 'display: none; opacity: 0;';
+  if (sheet) {
+    sheet.style.cssText = 'display: none; opacity: 0;';
+  }
 }
 
-window.openSheet = openSheet;
-window.closeSheet = closeSheet;
-window.currentMenuDate = currentMenuDate;
+// ============ MENUS MANAGEMENT ============
+async function loadMenus() {
+  try {
+    const menus = await menusSync.readAll();
+    allMenus = menus || {};
+    renderDays();
+  } catch (e) {
+    console.warn('Error loading menus:', e);
+  }
+}
+
+function renderDays() {
+  const container = document.getElementById('daysGrid');
+  
+  container.innerHTML = days.map(day => {
+    const menu = allMenus[day] || {};
+    return `
+      <div class="day-card">
+        <div class="day-title">${day}</div>
+        <div class="meal-section">
+          <div class="meal-label">🌅 Petit déj</div>
+          <div class="meal-value">${menu.morning || '-'}</div>
+        </div>
+        <div class="meal-section">
+          <div class="meal-label">🍽️ Déjeuner</div>
+          <div class="meal-value">${menu.noon || '-'}</div>
+        </div>
+        <div class="meal-section">
+          <div class="meal-label">🌙 Dîner</div>
+          <div class="meal-value">${menu.evening || '-'}</div>
+        </div>
+        <button class="edit-btn" data-action="edit-day-${day}">✎ Éditer</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function loadDayIntoSheet(day) {
+  const menu = allMenus[day] || {};
+  document.getElementById('daySelect').value = day;
+  document.getElementById('dayMorning').value = menu.morning || '';
+  document.getElementById('dayNoon').value = menu.noon || '';
+  document.getElementById('dayEvening').value = menu.evening || '';
+}
+
+async function saveDayMenu() {
+  const day = document.getElementById('daySelect').value;
+  const menu = {
+    day,
+    morning: document.getElementById('dayMorning').value,
+    noon: document.getElementById('dayNoon').value,
+    evening: document.getElementById('dayEvening').value
+  };
+  
+  try {
+    await menusSync.write(day, menu);
+    allMenus[day] = menu;
+    renderDays();
+    closeSheet('edit-day-sheet');
+  } catch (e) {
+    console.warn('Error saving menu:', e);
+    alert('Erreur lors de la sauvegarde');
+  }
+}
+
+// ============ STARTUP ============
+loadMenus();
 </script>
 
-<!-- CSS -->
-<style>
-@keyframes slideUp {
-  from { transform: translateY(100%); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-button > span { pointer-events: none; }
-</style>
-
-<!-- VERIFY HTML HAS: -->
-<!-- <button data-action="prev-week">← Previous</button> -->
-<!-- <button data-action="next-week">Next →</button> -->
-<!-- <button data-action="suggestions">💡 Ideas</button> -->
-<!-- <button data-action="close-sheet">×</button> in sheets -->
+</body>
+</html>

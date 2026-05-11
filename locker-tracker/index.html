@@ -1,55 +1,43 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Suivi Colis - DEBUG</title>
+  <title>Suivi Colis</title>
+  
+  <!-- CRITICAL: Load firebaseSync FIRST -->
+  <script src="../firebaseSync.js"></script>
+  
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="../icons/home-192.png">
   <style>
     :root {
-      --c-primary: #8B7355;
+      --c-primary: #f39c12;
       --c-bg: #f5f1ed;
       --c-card: #ffffff;
       --c-border: #e8e3dd;
       --c-text: #3a3a3a;
       --c-light-text: #7a7a7a;
-      --c-success: #7cb342;
-      --c-warning: #fb8c00;
       --c-danger: #e53935;
+      --c-success: #27ae60;
       --osv: "Phase 3.0";
     }
     
+    :root.dark {
+      --c-bg: #1a1a1a;
+      --c-card: #2d2d2d;
+      --c-border: #444;
+      --c-text: #f0f0f0;
+      --c-light-text: #aaa;
+    }
+    
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--c-bg); color: var(--c-text); }
-    
-    /* DEBUG BOX - PROMINENT */
-    #debug-box {
-      background: #ffcccc;
-      border: 3px solid #ff0000;
-      padding: 15px;
-      margin: 10px;
-      border-radius: 8px;
-      font-family: monospace;
-      font-size: 12px;
-      max-height: 200px;
-      overflow-y: auto;
-      color: #000;
-      z-index: 9999;
-    }
-    
-    .debug-line {
-      padding: 5px;
-      border-bottom: 1px solid #ffaaaa;
-    }
-    
-    .debug-line.error { color: #ff0000; font-weight: bold; }
-    .debug-line.ok { color: #00aa00; font-weight: bold; }
-    .debug-line.info { color: #0066ff; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--c-bg); color: var(--c-text); transition: 0.3s; }
     
     header {
       background: var(--c-primary);
       color: white;
       padding: 15px;
-      text-align: center;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -57,7 +45,140 @@
     
     header h1 { font-size: 20px; font-family: 'Bebas Neue'; }
     
-    .header-date { font-size: 12px; opacity: 0.9; }
+    .header-controls {
+      display: flex;
+      gap: 10px;
+    }
+    
+    button {
+      background: var(--c-primary);
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    button:hover { opacity: 0.8; }
+    
+    .container { padding: 15px; }
+    
+    .filters {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 15px;
+      overflow-x: auto;
+      padding-bottom: 10px;
+    }
+    
+    .filter-btn {
+      padding: 8px 12px;
+      border: 1px solid var(--c-border);
+      background: var(--c-card);
+      color: var(--c-text);
+      border-radius: 20px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: 0.3s;
+    }
+    
+    .filter-btn.active {
+      background: var(--c-primary);
+      color: white;
+      border-color: var(--c-primary);
+    }
+    
+    .packages-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .package-item {
+      background: var(--c-card);
+      border-left: 4px solid var(--c-primary);
+      padding: 15px;
+      border-radius: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    
+    .package-item.delivered {
+      border-left-color: var(--c-success);
+      opacity: 0.7;
+    }
+    
+    .package-info { flex: 1; }
+    .package-name { font-weight: bold; margin-bottom: 5px; }
+    .package-tracking { font-size: 12px; color: var(--c-light-text); margin-bottom: 3px; }
+    .package-status { font-size: 11px; padding: 3px 8px; background: var(--c-primary); color: white; border-radius: 10px; display: inline-block; }
+    .package-status.delivered { background: var(--c-success); }
+    
+    .package-delete {
+      background: var(--c-danger);
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    .fab {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      background: var(--c-primary);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      font-size: 24px;
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+    
+    .fab:hover { transform: scale(1.1); }
+    
+    .sheet {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--c-card);
+      padding: 20px;
+      border-radius: 12px 12px 0 0;
+      z-index: 1000;
+      animation: slideUp 0.3s ease-out;
+    }
+    
+    .sheet.visible { display: flex; flex-direction: column; }
+    
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    
+    .sheet input, .sheet select {
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid var(--c-border);
+      border-radius: 4px;
+      width: 100%;
+    }
+    
+    .sheet-close {
+      align-self: flex-end;
+      background: var(--c-danger);
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
     
     footer {
       background: var(--c-primary);
@@ -67,162 +188,196 @@
       font-size: 11px;
       margin-top: 20px;
     }
-    
-    .container { padding: 15px; }
-    
-    .status-msg {
-      background: var(--c-card);
-      border-left: 4px solid var(--c-primary);
-      padding: 15px;
-      margin: 15px 0;
-      border-radius: 4px;
-      text-align: center;
-    }
   </style>
 </head>
 <body>
 
-<!-- DEBUG BOX AT TOP -->
-<div id="debug-box">
-  <div class="debug-line info">🔍 DEBUG MODE ACTIF</div>
-  <div class="debug-line">Chargement en cours...</div>
-</div>
-
 <header>
   <h1>📦 SUIVI COLIS</h1>
-  <div class="header-date" id="header-date"></div>
+  <div class="header-controls">
+    <button id="homeBtn" data-action="home">🏠</button>
+    <button id="themeToggle" data-action="toggle-theme">🌙</button>
+  </div>
 </header>
 
 <div class="container">
-  <div class="status-msg" id="status-msg">
-    ⏳ Initialisation...
+  <div class="filters">
+    <button class="filter-btn active" data-action="filter-all">Tous</button>
+    <button class="filter-btn" data-action="filter-pending">En attente</button>
+    <button class="filter-btn" data-action="filter-delivered">Livrés</button>
   </div>
+  
+  <button class="fab" data-action="add-package" style="pointer-events: auto;">+</button>
+  
+  <div class="packages-list" id="packagesList"></div>
+</div>
+
+<!-- Sheet: Add Package -->
+<div class="sheet" id="add-package-sheet">
+  <h2>Ajouter un colis</h2>
+  <input type="text" id="packageName" placeholder="Nom du colis">
+  <input type="text" id="packageTracking" placeholder="Numéro de suivi">
+  <select id="packageCarrier">
+    <option value="La Poste">La Poste</option>
+    <option value="Chronopost">Chronopost</option>
+    <option value="DPD">DPD</option>
+    <option value="UPS">UPS</option>
+    <option value="Autre">Autre</option>
+  </select>
+  <button onclick="saveNewPackage()">Ajouter</button>
+  <button class="sheet-close" data-action="close-sheet">Fermer</button>
 </div>
 
 <footer>
-  Guillaume & Michèle • v<span id="version"></span> • 
-  <span id="sync-status">Vérification connexion...</span>
+  Guillaume & Michèle • v<span id="version"></span> • 🟢 Sync OK
 </footer>
 
 <script>
-// ============ DEBUG LOGGER ============
-const debugLog = {
-  lines: [],
-  box: document.getElementById('debug-box'),
-  
-  add(msg, type = 'info') {
-    const line = document.createElement('div');
-    line.className = 'debug-line ' + type;
-    
-    const time = new Date().toLocaleTimeString();
-    let icon = '❓';
-    if (type === 'error') icon = '❌';
-    if (type === 'ok') icon = '✅';
-    if (type === 'info') icon = 'ℹ️';
-    
-    line.textContent = `[${time}] ${icon} ${msg}`;
-    this.box.appendChild(line);
-    this.box.scrollTop = this.box.scrollHeight;
+// ============ INIT ============
+const packagesSync = fbCreateSyncHandler('meta/colis/items');
+let allPackages = [];
+let currentFilter = 'all';
+
+document.getElementById('version').textContent = 'DEBUG';
+
+// ============ FIX #1: Dark Mode Toggle ============
+document.getElementById('themeToggle').addEventListener('click', () => {
+  const root = document.documentElement;
+  root.classList.toggle('dark');
+  root.offsetHeight; // CRITICAL: Force recalc
+  localStorage.setItem('theme', root.classList.contains('dark') ? 'dark' : 'light');
+});
+
+// Load saved theme
+if (localStorage.getItem('theme') === 'dark') {
+  document.documentElement.classList.add('dark');
+}
+
+// ============ FIX #2 & #3: Filters + Sheets (Event Delegation) ============
+function findAction(elem) {
+  while (elem && elem !== document.body) {
+    if (elem.dataset?.action) return elem;
+    elem = elem.parentElement;
   }
-};
+  return null;
+}
 
-debugLog.add('DEBUG MODE activé');
-
-// ============ TEST 1: PATHS ============
-debugLog.add('Test 1: Vérification chemins');
-debugLog.add(`URL actuelle: ${window.location.href}`, 'info');
-debugLog.add(`Chemin: ${window.location.pathname}`, 'info');
-
-// ============ TEST 2: FIREBASE SYNC ============
-debugLog.add('Test 2: Chargement firebaseSync.js');
-
-const firebaseSyncScript = document.createElement('script');
-firebaseSyncScript.src = '../firebaseSync.js';
-firebaseSyncScript.onload = () => {
-  debugLog.add('firebaseSync.js chargé avec succès', 'ok');
+document.addEventListener('click', (e) => {
+  const btn = findAction(e.target);
+  if (!btn) return;
   
-  // Vérifier la fonction
-  if (typeof fbCreateSyncHandler !== 'undefined') {
-    debugLog.add('fbCreateSyncHandler() disponible', 'ok');
-  } else {
-    debugLog.add('fbCreateSyncHandler() NOT FOUND', 'error');
-  }
-};
-firebaseSyncScript.onerror = () => {
-  debugLog.add('ERREUR: Impossible de charger ../firebaseSync.js', 'error');
-  debugLog.add('Vérifier que le fichier existe en racine', 'error');
-};
-document.head.appendChild(firebaseSyncScript);
-
-// ============ TEST 3: LOCALSTORAGE ============
-setTimeout(() => {
-  debugLog.add('Test 3: LocalStorage');
+  const action = btn.dataset.action;
   
-  const fbConfig = localStorage.getItem('lt_fb');
-  if (fbConfig) {
-    debugLog.add('Firebase config trouvé: ' + fbConfig.substring(0, 40) + '...', 'ok');
-  } else {
-    debugLog.add('ATTENTION: Pas de config Firebase dans localStorage', 'error');
+  // Home button
+  if (action === 'home') {
+    window.location.href = '/';
   }
   
-  const theme = localStorage.getItem('theme');
-  debugLog.add('Thème: ' + (theme || 'clair'), 'info');
+  // Filters
+  if (action.startsWith('filter-')) {
+    currentFilter = action.replace('filter-', '');
+    document.querySelectorAll('[data-action^="filter-"]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderPackages();
+  }
   
-}, 500);
+  // Sheets
+  if (action === 'add-package') openSheet('add-package-sheet');
+  if (action === 'close-sheet') closeSheet(btn.closest('.sheet')?.id);
+});
 
-// ============ TEST 4: FIRESTORE DATA ============
-setTimeout(() => {
-  debugLog.add('Test 4: Chargement données Firestore');
+function openSheet(id) {
+  const sheet = document.getElementById(id);
+  if (sheet) {
+    sheet.style.cssText = 'display: flex; opacity: 1;';
+  }
+}
+
+function closeSheet(id) {
+  const sheet = document.getElementById(id);
+  if (sheet) {
+    sheet.style.cssText = 'display: none; opacity: 0;';
+  }
+}
+
+// ============ PACKAGES MANAGEMENT ============
+async function loadPackages() {
+  try {
+    const packages = await packagesSync.readAll();
+    allPackages = packages || [];
+    renderPackages();
+  } catch (e) {
+    console.warn('Error loading packages:', e);
+  }
+}
+
+function renderPackages() {
+  const container = document.getElementById('packagesList');
+  const filtered = allPackages.filter(pkg => {
+    if (currentFilter === 'all') return true;
+    if (currentFilter === 'pending') return !pkg.delivered;
+    if (currentFilter === 'delivered') return pkg.delivered;
+    return true;
+  });
   
-  const fbConfig = localStorage.getItem('lt_fb');
-  if (!fbConfig) {
-    debugLog.add('ERREUR: Pas de config, impossible de charger Firestore', 'error');
-    document.getElementById('status-msg').innerHTML = '❌ Erreur: Config Firebase manquante<br><small>Vérifier localStorage("lt_fb")</small>';
+  container.innerHTML = filtered.map(pkg => `
+    <div class="package-item ${pkg.delivered ? 'delivered' : ''}">
+      <div class="package-info">
+        <div class="package-name">${pkg.name || 'Sans nom'}</div>
+        <div class="package-tracking">${pkg.tracking || 'N/A'}</div>
+        <div class="package-status ${pkg.delivered ? 'delivered' : ''}">
+          ${pkg.delivered ? '✓ Livré' : '⏳ En cours'}
+        </div>
+      </div>
+      <button class="package-delete" onclick="deletePackage('${pkg.id}')">✕</button>
+    </div>
+  `).join('');
+}
+
+async function saveNewPackage() {
+  const name = document.getElementById('packageName').value;
+  const tracking = document.getElementById('packageTracking').value;
+  const carrier = document.getElementById('packageCarrier').value;
+  
+  if (!name) {
+    alert('Nom requis');
     return;
   }
   
+  const newPackage = {
+    id: Date.now().toString(),
+    name,
+    tracking,
+    carrier,
+    delivered: false,
+    createdAt: new Date().toISOString()
+  };
+  
   try {
-    const config = JSON.parse(fbConfig);
-    debugLog.add('Config Firebase valide', 'ok');
-    
-    // Essayer de charger les colis
-    fetch(`https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/(default)/documents/meta/colis/items`, {
-      headers: { 'Authorization': `Bearer ${config.apiKey}` }
-    })
-    .then(r => {
-      debugLog.add(`Firestore réponse: ${r.status}`, r.status === 200 ? 'ok' : 'error');
-      return r.json();
-    })
-    .then(data => {
-      debugLog.add(`Documents reçus: ${data.documents?.length || 0}`, 'ok');
-      document.getElementById('status-msg').innerHTML = '✅ Données chargées<br><small>Voir debug box pour détails</small>';
-    })
-    .catch(err => {
-      debugLog.add(`Firestore erreur: ${err.message}`, 'error');
-      document.getElementById('status-msg').innerHTML = '❌ Erreur Firestore<br><small>' + err.message + '</small>';
-    });
-    
+    await packagesSync.write(newPackage.id, newPackage);
+    allPackages.push(newPackage);
+    renderPackages();
+    closeSheet('add-package-sheet');
+    document.getElementById('packageName').value = '';
+    document.getElementById('packageTracking').value = '';
   } catch (e) {
-    debugLog.add('Config Firebase invalide (JSON parse error)', 'error');
-    debugLog.add(e.message, 'error');
+    console.warn('Error saving package:', e);
+    alert('Erreur lors de la sauvegarde');
   }
-}, 1000);
+}
 
-// ============ HEADER ============
-document.getElementById('header-date').textContent = new Date().toLocaleDateString('fr-FR');
-document.getElementById('version').textContent = 'DEBUG';
-document.getElementById('sync-status').textContent = '🔍 Mode Debug';
+async function deletePackage(id) {
+  try {
+    await packagesSync.delete(id);
+    allPackages = allPackages.filter(p => p.id !== id);
+    renderPackages();
+  } catch (e) {
+    console.warn('Error deleting package:', e);
+  }
+}
 
-// ============ INSTRUCTIONS ============
-setTimeout(() => {
-  debugLog.add('═══════════════════════════════════', 'info');
-  debugLog.add('ACTIONS À FAIRE:', 'info');
-  debugLog.add('1. Lire tous les logs ci-dessus', 'info');
-  debugLog.add('2. Chercher les ❌ (erreurs)', 'info');
-  debugLog.add('3. Screenshot et envoyer', 'info');
-  debugLog.add('═══════════════════════════════════', 'info');
-}, 2000);
-
+// ============ STARTUP ============
+loadPackages();
 </script>
 
 </body>

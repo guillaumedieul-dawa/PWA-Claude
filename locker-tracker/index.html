@@ -4,514 +4,108 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Suivi Colis</title>
-  
-  <!-- CRITICAL: Load firebaseSync FIRST -->
   <script src="../firebaseSync.js"></script>
-  
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" href="../icons/home-192.png">
   <style>
-    :root {
-      --c-primary: #f39c12;
-      --c-bg: #f5f1ed;
-      --c-card: #ffffff;
-      --c-border: #e8e3dd;
-      --c-text: #3a3a3a;
-      --c-light-text: #7a7a7a;
-      --c-danger: #e53935;
-      --c-success: #27ae60;
-      --osv: "Phase 3.0";
-    }
-    
-    :root.dark {
-      --c-bg: #1a1a1a;
-      --c-card: #2d2d2d;
-      --c-border: #444;
-      --c-text: #f0f0f0;
-      --c-light-text: #aaa;
-    }
-    
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--c-bg); color: var(--c-text); transition: 0.3s; }
-    
-    header {
-      background: var(--c-primary);
-      color: white;
-      padding: 15px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    
-    header h1 { font-size: 20px; font-family: 'Bebas Neue'; }
-    
-    .header-controls {
-      display: flex;
-      gap: 10px;
-    }
-    
-    button {
-      background: var(--c-primary);
-      color: white;
-      border: none;
-      padding: 8px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    
-    button:hover { opacity: 0.8; }
-    
-    .container { padding: 15px; }
-    
-    .filters {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 15px;
-      overflow-x: auto;
-      padding-bottom: 10px;
-    }
-    
-    .filter-btn {
-      padding: 8px 12px;
-      border: 1px solid var(--c-border);
-      background: var(--c-card);
-      color: var(--c-text);
-      border-radius: 20px;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: 0.3s;
-    }
-    
-    .filter-btn.active {
-      background: var(--c-primary);
-      color: white;
-      border-color: var(--c-primary);
-    }
-    
-    .packages-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    
-    .package-item {
-      background: var(--c-card);
-      border-left: 4px solid var(--c-primary);
-      padding: 15px;
-      border-radius: 4px;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-    }
-    
-    .package-item.delivered {
-      border-left-color: var(--c-success);
-      opacity: 0.7;
-    }
-    
-    .package-info { flex: 1; }
-    .package-name { font-weight: bold; margin-bottom: 5px; }
-    .package-tracking { font-size: 12px; color: var(--c-light-text); margin-bottom: 3px; }
-    .package-status { font-size: 11px; padding: 3px 8px; background: var(--c-primary); color: white; border-radius: 10px; display: inline-block; }
-    .package-status.delivered { background: var(--c-success); }
-    
-    .package-delete {
-      background: var(--c-danger);
-      color: white;
-      border: none;
-      padding: 6px 10px;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    
-    .fab {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 50px;
-      height: 50px;
-      background: var(--c-primary);
-      color: white;
-      border: none;
-      border-radius: 50%;
-      font-size: 24px;
-      cursor: pointer;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-    }
-    
-    .fab:hover { transform: scale(1.1); }
-    
-    .sheet {
-      display: none;
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: var(--c-card);
-      padding: 20px;
-      border-radius: 12px 12px 0 0;
-      z-index: 1000;
-      animation: slideUp 0.3s ease-out;
-    }
-    
-    .sheet.visible { display: flex; flex-direction: column; }
-    
-    @keyframes slideUp {
-      from { transform: translateY(100%); }
-      to { transform: translateY(0); }
-    }
-    
-    .sheet input, .sheet select {
-      padding: 10px;
-      margin: 10px 0;
-      border: 1px solid var(--c-border);
-      border-radius: 4px;
-      width: 100%;
-    }
-    
-    .sheet-close {
-      align-self: flex-end;
-      background: var(--c-danger);
-      color: white;
-      border: none;
-      padding: 8px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    
-    footer {
-      background: var(--c-primary);
-      color: white;
-      padding: 10px;
-      text-align: center;
-      font-size: 11px;
-      margin-top: 20px;
-    }
+    :root { --c-primary:#f39c12;--c-bg:#f5f1ed;--c-card:#fff;--c-border:#e8e3dd;--c-text:#3a3a3a;--c-light-text:#7a7a7a;--c-danger:#e53935;--c-success:#27ae60; }
+    :root.dark { --c-bg:#1a1a1a;--c-card:#2d2d2d;--c-border:#444;--c-text:#f0f0f0;--c-light-text:#aaa; }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:sans-serif;background:var(--c-bg);color:var(--c-text);transition:.3s;}
+    header{background:var(--c-primary);color:#fff;padding:15px;display:flex;justify-content:space-between;align-items:center;}
+    header h1{font-size:20px;font-weight:bold;}
+    .hc{display:flex;gap:10px;}
+    button{background:var(--c-primary);color:#fff;border:none;padding:8px 12px;border-radius:4px;cursor:pointer;font-size:14px;}
+    .container{padding:15px;}
+    .filters{display:flex;gap:8px;margin-bottom:15px;flex-wrap:wrap;}
+    .filter-btn{padding:8px 12px;border:1px solid var(--c-border);background:var(--c-card);color:var(--c-text);border-radius:20px;cursor:pointer;}
+    .filter-btn.active{background:var(--c-primary);color:#fff;border-color:var(--c-primary);}
+    .packages-list{display:flex;flex-direction:column;gap:10px;}
+    .package-item{background:var(--c-card);border-left:4px solid var(--c-primary);padding:15px;border-radius:4px;display:flex;justify-content:space-between;align-items:flex-start;}
+    .package-item.delivered{border-left-color:var(--c-success);opacity:.7;}
+    .package-info{flex:1;}
+    .package-name{font-weight:bold;margin-bottom:5px;}
+    .package-tracking{font-size:12px;color:var(--c-light-text);margin-bottom:3px;}
+    .package-status{font-size:11px;padding:3px 8px;background:var(--c-primary);color:#fff;border-radius:10px;display:inline-block;}
+    .package-status.delivered{background:var(--c-success);}
+    .package-delete{background:var(--c-danger);color:#fff;border:none;padding:6px 10px;border-radius:4px;cursor:pointer;}
+    .fab{position:fixed;bottom:20px;right:20px;width:56px;height:56px;background:var(--c-primary);color:#fff;border:none;border-radius:50%;font-size:28px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.3);}
+    .sheet{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--c-card);padding:20px;border-radius:12px 12px 0 0;z-index:1000;flex-direction:column;gap:10px;}
+    .sheet input,.sheet select{padding:10px;border:1px solid var(--c-border);border-radius:4px;width:100%;background:var(--c-bg);color:var(--c-text);}
+    .sheet-close{background:var(--c-danger);align-self:flex-end;}
+    footer{background:var(--c-primary);color:#fff;padding:10px;text-align:center;font-size:11px;margin-top:60px;}
   </style>
 </head>
 <body>
-
 <header>
   <h1>📦 SUIVI COLIS</h1>
-  <div class="header-controls">
-    <button id="homeBtn" data-action="home">🏠</button>
-    <button id="themeToggle" data-action="toggle-theme">🌙</button>
+  <div class="hc">
+    <button data-action="home">🏠</button>
+    <button data-action="toggle-theme">🌙</button>
   </div>
 </header>
-
 <div class="container">
   <div class="filters">
     <button class="filter-btn active" data-action="filter-all">Tous</button>
     <button class="filter-btn" data-action="filter-pending">En attente</button>
     <button class="filter-btn" data-action="filter-delivered">Livrés</button>
   </div>
-  
-  <button class="fab" data-action="add-package" style="pointer-events: auto;">+</button>
-  
   <div class="packages-list" id="packagesList"></div>
 </div>
-
-<!-- Sheet: Add Package -->
+<button class="fab" data-action="add-package">+</button>
 <div class="sheet" id="add-package-sheet">
-  <h2>Ajouter un colis</h2>
+  <button class="sheet-close" data-action="close-sheet">✕</button>
+  <h3>Ajouter un colis</h3>
   <input type="text" id="packageName" placeholder="Nom du colis">
   <input type="text" id="packageTracking" placeholder="Numéro de suivi">
   <select id="packageCarrier">
-    <option value="La Poste">La Poste</option>
-    <option value="Chronopost">Chronopost</option>
-    <option value="DPD">DPD</option>
-    <option value="UPS">UPS</option>
-    <option value="Autre">Autre</option>
+    <option>La Poste</option><option>Chronopost</option><option>DPD</option>
+    <option>UPS</option><option>Mondial Relay</option><option>Autre</option>
   </select>
-  <button onclick="saveNewPackage()">Ajouter</button>
-  <button class="sheet-close" data-action="close-sheet">Fermer</button>
+  <button data-action="save-package">✓ Ajouter</button>
 </div>
-
-<footer>
-  Guillaume & Michèle • v<span id="version"></span> • 🟢 Sync OK
-</footer>
-
+<footer>Guillaume &amp; Michèle • v<span id="version"></span> • 🟢 Sync OK</footer>
 <script>
-// ============ UI — Indépendant Firebase ============
-let allPackages = [];
-let currentFilter = 'all';
-let packagesSync = null;
-
-// Dark mode - fonctionne toujours
-function applyTheme() {
-  const saved = localStorage.getItem('theme');
-  if (saved === 'dark') document.documentElement.classList.add('dark');
+var allPackages=[], currentFilter='all', packagesSync=null;
+(function(){if(localStorage.getItem('theme')==='dark')document.documentElement.classList.add('dark');})();
+document.getElementById('version').textContent='P3.1';
+function findAction(e){while(e&&e!==document.body){if(e.dataset&&e.dataset.action)return e;e=e.parentElement;}return null;}
+function openSheet(id){var s=document.getElementById(id);if(s)s.style.cssText='display:flex;flex-direction:column;gap:10px;';}
+function closeSheet(id){var s=document.getElementById(id);if(s)s.style.cssText='display:none;';}
+function renderPackages(){
+  var c=document.getElementById('packagesList');
+  var f=allPackages.filter(function(p){return currentFilter==='all'?true:currentFilter==='pending'?!p.delivered:p.delivered;});
+  if(!f.length){c.innerHTML='<p style="text-align:center;padding:40px;color:var(--c-light-text)">Aucun colis</p>';return;}
+  c.innerHTML=f.map(function(p){return'<div class="package-item'+(p.delivered?' delivered':'')+'"><div class="package-info"><div class="package-name">'+(p.name||'Sans nom')+'</div><div class="package-tracking">'+(p.tracking||'')+'</div><div class="package-status'+(p.delivered?' delivered':'')+'">'+( p.delivered?'✓ Livré':'⏳ En cours')+'</div></div><button class="package-delete" data-action="delete-pkg" data-id="'+p.id+'">✕</button></div>';}).join('');
 }
-applyTheme();
-
-document.getElementById('version').textContent = 'P3';
-
-// Event delegation — fonctionne toujours
-function findAction(elem) {
-  while (elem && elem !== document.body) {
-    if (elem.dataset && elem.dataset.action) return elem;
-    elem = elem.parentElement;
-  }
-  return null;
-}
-
-document.addEventListener('click', function(e) {
-  var btn = findAction(e.target);
-  if (!btn) return;
-  var action = btn.dataset.action;
-  if (action === 'home') { window.location.href = '/'; }
-  if (action === 'toggle-theme') {
-    var root = document.documentElement;
-    root.classList.toggle('dark');
-    void root.offsetHeight;
-    localStorage.setItem('theme', root.classList.contains('dark') ? 'dark' : 'light');
-  }
-  if (action === 'filter-all') { setFilter('all', btn); }
-  if (action === 'filter-pending') { setFilter('pending', btn); }
-  if (action === 'filter-delivered') { setFilter('delivered', btn); }
-  if (action === 'add-package') { openSheet('add-package-sheet'); }
-  if (action === 'close-sheet') {
-    var sheet = btn.closest ? btn.closest('.sheet') : null;
-    if (sheet) closeSheet(sheet.id);
-  }
+document.addEventListener('click',function(e){
+  var btn=findAction(e.target);if(!btn)return;
+  var a=btn.dataset.action;
+  if(a==='home'){window.location.href='/';return;}
+  if(a==='toggle-theme'){var r=document.documentElement;r.classList.toggle('dark');void r.offsetHeight;localStorage.setItem('theme',r.classList.contains('dark')?'dark':'light');return;}
+  if(a==='filter-all'||a==='filter-pending'||a==='filter-delivered'){currentFilter=a.replace('filter-','');document.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');renderPackages();return;}
+  if(a==='add-package'){openSheet('add-package-sheet');return;}
+  if(a==='close-sheet'){var sh=btn.parentElement;while(sh&&!sh.classList.contains('sheet'))sh=sh.parentElement;if(sh)closeSheet(sh.id);return;}
+  if(a==='save-package'){saveNewPackage();return;}
+  if(a==='delete-pkg'){deletePackage(btn.dataset.id);return;}
 });
-
-function setFilter(f, btn) {
-  currentFilter = f;
-  document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
-  btn.classList.add('active');
-  renderPackages();
-}
-
-function openSheet(id) {
-  var sheet = document.getElementById(id);
-  if (sheet) sheet.style.cssText = 'display:flex;flex-direction:column;';
-}
-
-function closeSheet(id) {
-  var sheet = document.getElementById(id);
-  if (sheet) sheet.style.cssText = 'display:none;';
-}
-
-function renderPackages() {
-  var container = document.getElementById('packagesList');
-  var filtered = allPackages.filter(function(pkg) {
-    if (currentFilter === 'all') return true;
-    if (currentFilter === 'pending') return !pkg.delivered;
-    if (currentFilter === 'delivered') return pkg.delivered;
-    return true;
-  });
-  container.innerHTML = filtered.length === 0 
-    ? '<p style="text-align:center;color:var(--c-light-text);padding:40px">Aucun colis</p>'
-    : filtered.map(function(pkg) {
-      return '<div class="package-item ' + (pkg.delivered ? 'delivered' : '') + '">' +
-        '<div class="package-info">' +
-        '<div class="package-name">' + (pkg.name || 'Sans nom') + '</div>' +
-        '<div class="package-tracking">' + (pkg.tracking || '') + '</div>' +
-        '</div>' +
-        '<button class="package-delete" data-action="delete-pkg" data-id="' + pkg.id + '">✕</button>' +
-        '</div>';
-    }).join('');
-}
-
-// ============ FIREBASE — Séparé, ne bloque pas UI ============
-window.addEventListener('load', function() {
-  try {
-    var syncFn = window.fbCreateSyncHandler || (window.FBSync && window.FBSync.fbCreateSyncHandler);
-    if (syncFn) {
-      packagesSync = syncFn('meta/colis');
-      loadPackages();
-    } else {
-      console.warn('FamilyHub: firebaseSync.js non disponible');
-      renderPackages();
-    }
-  } catch(err) {
-    console.warn('FamilyHub init error:', err);
-    renderPackages();
-  }
+window.addEventListener('load',function(){
+  var fn=(typeof fbCreateSyncHandler!=='undefined')?fbCreateSyncHandler:(window.FBSync&&window.FBSync.fbCreateSyncHandler)||null;
+  if(fn){packagesSync=fn('meta/colis');loadPackages();}else{renderPackages();}
 });
-
-async function loadPackages() {
-  try {
-    var pkgs = await packagesSync.readAll();
-    allPackages = pkgs || [];
-    renderPackages();
-  } catch(e) { console.warn(e); renderPackages(); }
+async function loadPackages(){try{allPackages=(await packagesSync.readAll())||[];}catch(e){allPackages=[];}renderPackages();}
+async function saveNewPackage(){
+  var n=(document.getElementById('packageName').value||'').trim();if(!n){alert('Nom requis');return;}
+  var p={id:Date.now().toString(),name:n,tracking:document.getElementById('packageTracking').value||'',carrier:document.getElementById('packageCarrier').value||'',delivered:false,createdAt:new Date().toISOString()};
+  if(packagesSync)try{await packagesSync.write(p.id,p);}catch(e){console.warn(e);}
+  allPackages.push(p);renderPackages();closeSheet('add-package-sheet');
+  document.getElementById('packageName').value='';document.getElementById('packageTracking').value='';
 }
-
-async function saveNewPackage() {
-  var name = document.getElementById('packageName').value;
-  if (!name) { alert('Nom requis'); return; }
-  var pkg = {
-    id: Date.now().toString(),
-    name: name,
-    tracking: document.getElementById('packageTracking').value,
-    carrier: document.getElementById('packageCarrier').value,
-    delivered: false,
-    createdAt: new Date().toISOString()
-  };
-  if (packagesSync) {
-    try { await packagesSync.write(pkg.id, pkg); } catch(e) { console.warn(e); }
-  }
-  allPackages.push(pkg);
-  renderPackages();
-  closeSheet('add-package-sheet');
-  document.getElementById('packageName').value = '';
-  document.getElementById('packageTracking').value = '';
+async function deletePackage(id){
+  if(!id)return;
+  if(packagesSync)try{await packagesSync.delete(id);}catch(e){console.warn(e);}
+  allPackages=allPackages.filter(function(p){return p.id!==id;});renderPackages();
 }
-
-async function deletePackage(id) {
-  if (packagesSync) {
-    try { await packagesSync.delete(id); } catch(e) { console.warn(e); }
-  }
-  allPackages = allPackages.filter(function(p) { return p.id !== id; });
-  renderPackages();
-}
-let allPackages = [];
-let currentFilter = 'all';
-
-document.getElementById('version').textContent = 'DEBUG';
-
-// ============ FIX #1: Dark Mode Toggle ============
-document.getElementById('themeToggle').addEventListener('click', () => {
-  const root = document.documentElement;
-  root.classList.toggle('dark');
-  root.offsetHeight; // CRITICAL: Force recalc
-  localStorage.setItem('theme', root.classList.contains('dark') ? 'dark' : 'light');
-});
-
-// Load saved theme
-if (localStorage.getItem('theme') === 'dark') {
-  document.documentElement.classList.add('dark');
-}
-
-// ============ FIX #2 & #3: Filters + Sheets (Event Delegation) ============
-function findAction(elem) {
-  while (elem && elem !== document.body) {
-    if (elem.dataset?.action) return elem;
-    elem = elem.parentElement;
-  }
-  return null;
-}
-
-document.addEventListener('click', (e) => {
-  const btn = findAction(e.target);
-  if (!btn) return;
-  
-  const action = btn.dataset.action;
-  
-  // Home button
-  if (action === 'home') {
-    window.location.href = '/';
-  }
-  
-  // Filters
-  if (action.startsWith('filter-')) {
-    currentFilter = action.replace('filter-', '');
-    document.querySelectorAll('[data-action^="filter-"]').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    renderPackages();
-  }
-  
-  // Sheets
-  if (action === 'add-package') openSheet('add-package-sheet');
-  if (action === 'close-sheet') closeSheet(btn.closest('.sheet')?.id);
-});
-
-function openSheet(id) {
-  const sheet = document.getElementById(id);
-  if (sheet) {
-    sheet.style.cssText = 'display: flex; opacity: 1;';
-  }
-}
-
-function closeSheet(id) {
-  const sheet = document.getElementById(id);
-  if (sheet) {
-    sheet.style.cssText = 'display: none; opacity: 0;';
-  }
-}
-
-// ============ PACKAGES MANAGEMENT ============
-async function loadPackages() {
-  try {
-    const packages = await packagesSync.readAll();
-    allPackages = packages || [];
-    renderPackages();
-  } catch (e) {
-    console.warn('Error loading packages:', e);
-  }
-}
-
-function renderPackages() {
-  const container = document.getElementById('packagesList');
-  const filtered = allPackages.filter(pkg => {
-    if (currentFilter === 'all') return true;
-    if (currentFilter === 'pending') return !pkg.delivered;
-    if (currentFilter === 'delivered') return pkg.delivered;
-    return true;
-  });
-  
-  container.innerHTML = filtered.map(pkg => `
-    <div class="package-item ${pkg.delivered ? 'delivered' : ''}">
-      <div class="package-info">
-        <div class="package-name">${pkg.name || 'Sans nom'}</div>
-        <div class="package-tracking">${pkg.tracking || 'N/A'}</div>
-        <div class="package-status ${pkg.delivered ? 'delivered' : ''}">
-          ${pkg.delivered ? '✓ Livré' : '⏳ En cours'}
-        </div>
-      </div>
-      <button class="package-delete" onclick="deletePackage('${pkg.id}')">✕</button>
-    </div>
-  `).join('');
-}
-
-async function saveNewPackage() {
-  const name = document.getElementById('packageName').value;
-  const tracking = document.getElementById('packageTracking').value;
-  const carrier = document.getElementById('packageCarrier').value;
-  
-  if (!name) {
-    alert('Nom requis');
-    return;
-  }
-  
-  const newPackage = {
-    id: Date.now().toString(),
-    name,
-    tracking,
-    carrier,
-    delivered: false,
-    createdAt: new Date().toISOString()
-  };
-  
-  try {
-    await packagesSync.write(newPackage.id, newPackage);
-    allPackages.push(newPackage);
-    renderPackages();
-    closeSheet('add-package-sheet');
-    document.getElementById('packageName').value = '';
-    document.getElementById('packageTracking').value = '';
-  } catch (e) {
-    console.warn('Error saving package:', e);
-    alert('Erreur lors de la sauvegarde');
-  }
-}
-
-async function deletePackage(id) {
-  try {
-    await packagesSync.delete(id);
-    allPackages = allPackages.filter(p => p.id !== id);
-    renderPackages();
-  } catch (e) {
-    console.warn('Error deleting package:', e);
-  }
-}
-
-// ============ STARTUP ============
-loadPackages();
 </script>
-
 </body>
 </html>

@@ -372,5 +372,11 @@ if (typeof window !== 'undefined') {
   window.toFields = toFirestoreFields;
   window.fromFields = fromFirestoreFields;
   window.fbUrl = fbUrl;
+  window.fbCreateSyncHandler = fbCreateSyncHandler;
+  window.fbReadAll = fbReadAll;
+  window.fbWrite = fbWrite;
+  window.fbDelete = fbDelete;
+  window.fbIsConfigured = fbIsConfigured;
+  window.fbSetConfig = fbSetConfig;
   window.getFBKey = getFBKey;
 }

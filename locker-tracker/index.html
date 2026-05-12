@@ -8,13 +8,13 @@
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" href="../icons/home-192.png">
   <style>
-    :root { --c-primary:#f39c12;--c-bg:#f5f1ed;--c-card:#fff;--c-border:#e8e3dd;--c-text:#3a3a3a;--c-light-text:#7a7a7a;--c-danger:#e53935;--c-success:#27ae60; }
-    :root.dark { --c-bg:#1a1a1a;--c-card:#2d2d2d;--c-border:#444;--c-text:#f0f0f0;--c-light-text:#aaa; }
+    :root{--c-primary:#f39c12;--c-bg:#f5f1ed;--c-card:#fff;--c-border:#e8e3dd;--c-text:#3a3a3a;--c-light-text:#7a7a7a;--c-danger:#e53935;--c-success:#27ae60;}
+    :root.dark{--c-bg:#1a1a1a;--c-card:#2d2d2d;--c-border:#444;--c-text:#f0f0f0;--c-light-text:#aaa;}
     *{margin:0;padding:0;box-sizing:border-box;}
     body{font-family:sans-serif;background:var(--c-bg);color:var(--c-text);transition:.3s;}
     header{background:var(--c-primary);color:#fff;padding:15px;display:flex;justify-content:space-between;align-items:center;}
     header h1{font-size:20px;font-weight:bold;}
-    .hc{display:flex;gap:10px;}
+    .hc{display:flex;gap:8px;}
     button{background:var(--c-primary);color:#fff;border:none;padding:8px 12px;border-radius:4px;cursor:pointer;font-size:14px;}
     .container{padding:15px;}
     .filters{display:flex;gap:8px;margin-bottom:15px;flex-wrap:wrap;}
@@ -28,11 +28,15 @@
     .package-tracking{font-size:12px;color:var(--c-light-text);margin-bottom:3px;}
     .package-status{font-size:11px;padding:3px 8px;background:var(--c-primary);color:#fff;border-radius:10px;display:inline-block;}
     .package-status.delivered{background:var(--c-success);}
-    .package-delete{background:var(--c-danger);color:#fff;border:none;padding:6px 10px;border-radius:4px;cursor:pointer;}
+    .package-delete{background:var(--c-danger);color:#fff;border:none;padding:6px 10px;border-radius:4px;cursor:pointer;flex-shrink:0;}
     .fab{position:fixed;bottom:20px;right:20px;width:56px;height:56px;background:var(--c-primary);color:#fff;border:none;border-radius:50%;font-size:28px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.3);}
-    .sheet{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--c-card);padding:20px;border-radius:12px 12px 0 0;z-index:1000;flex-direction:column;gap:10px;}
-    .sheet input,.sheet select{padding:10px;border:1px solid var(--c-border);border-radius:4px;width:100%;background:var(--c-bg);color:var(--c-text);}
+    .sheet{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--c-card);padding:20px 20px 32px;border-radius:12px 12px 0 0;z-index:1000;flex-direction:column;gap:10px;max-height:85vh;overflow-y:auto;}
+    .sheet input,.sheet select,.sheet textarea{padding:10px;border:1px solid var(--c-border);border-radius:4px;width:100%;background:var(--c-bg);color:var(--c-text);font-size:14px;}
     .sheet-close{background:var(--c-danger);align-self:flex-end;}
+    .sheet label{font-size:12px;color:var(--c-light-text);margin-bottom:-6px;}
+    .fb-status{font-size:12px;padding:4px 8px;border-radius:4px;margin-top:4px;display:inline-block;}
+    .fb-ok{background:#d4edda;color:#155724;}
+    .fb-ko{background:#f8d7da;color:#721c24;}
     footer{background:var(--c-primary);color:#fff;padding:10px;text-align:center;font-size:11px;margin-top:60px;}
   </style>
 </head>
@@ -41,6 +45,7 @@
   <h1>📦 SUIVI COLIS</h1>
   <div class="hc">
     <button data-action="home">🏠</button>
+    <button data-action="open-config">⚙️</button>
     <button data-action="toggle-theme">🌙</button>
   </div>
 </header>
@@ -53,31 +58,101 @@
   <div class="packages-list" id="packagesList"></div>
 </div>
 <button class="fab" data-action="add-package">+</button>
+
+<!-- Sheet: Ajouter colis -->
 <div class="sheet" id="add-package-sheet">
   <button class="sheet-close" data-action="close-sheet">✕</button>
   <h3>Ajouter un colis</h3>
-  <input type="text" id="packageName" placeholder="Nom du colis">
-  <input type="text" id="packageTracking" placeholder="Numéro de suivi">
+  <label>Nom du colis</label>
+  <input type="text" id="packageName" placeholder="Ex: Commande Amazon">
+  <label>Numéro de suivi</label>
+  <input type="text" id="packageTracking" placeholder="Ex: 1ZA2E708DK99460766">
+  <label>Transporteur</label>
   <select id="packageCarrier">
-    <option>La Poste</option><option>Chronopost</option><option>DPD</option>
-    <option>UPS</option><option>Mondial Relay</option><option>Autre</option>
+    <option>La Poste / Colissimo</option><option>Chronopost</option><option>DPD</option>
+    <option>UPS</option><option>Mondial Relay</option><option>GLS</option><option>Autre</option>
   </select>
   <button data-action="save-package">✓ Ajouter</button>
 </div>
-<footer>Guillaume &amp; Michèle • v<span id="version"></span> • 🟢 Sync OK</footer>
+
+<!-- Sheet: Configuration Firebase -->
+<div class="sheet" id="config-sheet">
+  <button class="sheet-close" data-action="close-sheet">✕</button>
+  <h3>🔥 Configuration Firebase</h3>
+  <div id="fbStatusBadge" class="fb-status fb-ko">Non configuré</div>
+  <label>Project ID</label>
+  <input type="text" id="cfgProjectId" placeholder="familyhub-colis-8abbd">
+  <label>API Key</label>
+  <input type="text" id="cfgApiKey" placeholder="AIzaSy...">
+  <button data-action="save-firebase-config">✓ Enregistrer</button>
+  <button data-action="test-firebase" style="background:#27ae60;">🔍 Tester la connexion</button>
+  <div id="cfgResult" style="font-size:12px;color:var(--c-light-text);margin-top:4px;"></div>
+</div>
+
+<footer>Guillaume &amp; Michèle • v<span id="version"></span> • <span id="syncStatus">⚪ Sync</span></footer>
+
 <script>
 var allPackages=[], currentFilter='all', packagesSync=null;
+var FBK='lt_fb';
+
+// Thème immédiat
 (function(){if(localStorage.getItem('theme')==='dark')document.documentElement.classList.add('dark');})();
 document.getElementById('version').textContent='P3.1';
+
+// ============ HELPERS ============
 function findAction(e){while(e&&e!==document.body){if(e.dataset&&e.dataset.action)return e;e=e.parentElement;}return null;}
-function openSheet(id){var s=document.getElementById(id);if(s)s.style.cssText='display:flex;flex-direction:column;gap:10px;';}
-function closeSheet(id){var s=document.getElementById(id);if(s)s.style.cssText='display:none;';}
-function renderPackages(){
-  var c=document.getElementById('packagesList');
-  var f=allPackages.filter(function(p){return currentFilter==='all'?true:currentFilter==='pending'?!p.delivered:p.delivered;});
-  if(!f.length){c.innerHTML='<p style="text-align:center;padding:40px;color:var(--c-light-text)">Aucun colis</p>';return;}
-  c.innerHTML=f.map(function(p){return'<div class="package-item'+(p.delivered?' delivered':'')+'"><div class="package-info"><div class="package-name">'+(p.name||'Sans nom')+'</div><div class="package-tracking">'+(p.tracking||'')+'</div><div class="package-status'+(p.delivered?' delivered':'')+'">'+( p.delivered?'✓ Livré':'⏳ En cours')+'</div></div><button class="package-delete" data-action="delete-pkg" data-id="'+p.id+'">✕</button></div>';}).join('');
+function openSheet(id){
+  // Pré-remplir config si nécessaire
+  if(id==='config-sheet') loadConfigIntoSheet();
+  var s=document.getElementById(id);
+  if(s) s.style.cssText='display:flex;flex-direction:column;gap:10px;';
 }
+function closeSheet(id){var s=document.getElementById(id);if(s)s.style.cssText='display:none;';}
+
+function loadConfigIntoSheet(){
+  try{
+    var cfg=JSON.parse(localStorage.getItem(FBK)||'{}');
+    document.getElementById('cfgProjectId').value=cfg.projectId||'';
+    document.getElementById('cfgApiKey').value=cfg.apiKey||'';
+    updateFbStatusBadge(cfg.apiKey&&cfg.projectId);
+  }catch(e){}
+}
+
+function updateFbStatusBadge(ok){
+  var b=document.getElementById('fbStatusBadge');
+  if(ok){b.textContent='✅ Configuré';b.className='fb-status fb-ok';}
+  else{b.textContent='❌ Non configuré';b.className='fb-status fb-ko';}
+  var ss=document.getElementById('syncStatus');
+  ss.textContent=ok?'🟢 Sync OK':'🔴 Sync KO';
+}
+
+function saveFirebaseConfig(){
+  var pi=(document.getElementById('cfgProjectId').value||'').trim();
+  var ak=(document.getElementById('cfgApiKey').value||'').trim();
+  if(!pi||!ak){alert('Project ID et API Key requis');return;}
+  localStorage.setItem(FBK,JSON.stringify({projectId:pi,apiKey:ak}));
+  updateFbStatusBadge(true);
+  document.getElementById('cfgResult').textContent='✅ Configuration sauvegardée. Recharge l\'app pour activer.';
+  // Réinitialiser sync
+  var fn=(typeof fbCreateSyncHandler!=='undefined')?fbCreateSyncHandler:(window.FBSync&&window.FBSync.fbCreateSyncHandler)||null;
+  if(fn){packagesSync=fn('meta/colis');loadPackages();}
+}
+
+async function testFirebaseConfig(){
+  var pi=(document.getElementById('cfgProjectId').value||'').trim();
+  var ak=(document.getElementById('cfgApiKey').value||'').trim();
+  var res=document.getElementById('cfgResult');
+  if(!pi||!ak){res.textContent='⚠️ Remplir d\'abord les champs';return;}
+  res.textContent='⏳ Test en cours...';
+  try{
+    var url='https://firestore.googleapis.com/v1/projects/'+pi+'/databases/(default)/documents/meta/colis?key='+ak+'&pageSize=1';
+    var r=await fetch(url);
+    if(r.ok){res.textContent='✅ Connexion OK!';}
+    else{res.textContent='❌ Erreur '+r.status+' — vérifiez les valeurs';}
+  }catch(e){res.textContent='❌ '+e.message;}
+}
+
+// ============ EVENT DELEGATION ============
 document.addEventListener('click',function(e){
   var btn=findAction(e.target);if(!btn)return;
   var a=btn.dataset.action;
@@ -85,22 +160,52 @@ document.addEventListener('click',function(e){
   if(a==='toggle-theme'){var r=document.documentElement;r.classList.toggle('dark');void r.offsetHeight;localStorage.setItem('theme',r.classList.contains('dark')?'dark':'light');return;}
   if(a==='filter-all'||a==='filter-pending'||a==='filter-delivered'){currentFilter=a.replace('filter-','');document.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');renderPackages();return;}
   if(a==='add-package'){openSheet('add-package-sheet');return;}
+  if(a==='open-config'){openSheet('config-sheet');return;}
   if(a==='close-sheet'){var sh=btn.parentElement;while(sh&&!sh.classList.contains('sheet'))sh=sh.parentElement;if(sh)closeSheet(sh.id);return;}
   if(a==='save-package'){saveNewPackage();return;}
   if(a==='delete-pkg'){deletePackage(btn.dataset.id);return;}
+  if(a==='save-firebase-config'){saveFirebaseConfig();return;}
+  if(a==='test-firebase'){testFirebaseConfig();return;}
 });
+
+// ============ RENDER ============
+function renderPackages(){
+  var c=document.getElementById('packagesList');
+  var f=allPackages.filter(function(p){return currentFilter==='all'?true:currentFilter==='pending'?!p.delivered:p.delivered;});
+  if(!f.length){c.innerHTML='<p style="text-align:center;padding:40px;color:var(--c-light-text)">Aucun colis</p>';return;}
+  c.innerHTML=f.map(function(p){return'<div class="package-item'+(p.delivered?' delivered':'')+'">'+
+    '<div class="package-info">'+
+      '<div class="package-name">'+(p.name||'Sans nom')+'</div>'+
+      '<div class="package-tracking">'+(p.carrier?p.carrier+' — ':'')+( p.tracking||'')+'</div>'+
+      '<div class="package-status'+(p.delivered?' delivered':'')+'">'+( p.delivered?'✓ Livré':'⏳ En cours')+'</div>'+
+    '</div>'+
+    '<button class="package-delete" data-action="delete-pkg" data-id="'+p.id+'">✕</button>'+
+  '</div>';}).join('');
+}
+
+// ============ FIREBASE ============
 window.addEventListener('load',function(){
+  // Vérifier config existante
+  try{var cfg=JSON.parse(localStorage.getItem(FBK)||'{}');updateFbStatusBadge(!!(cfg.apiKey&&cfg.projectId));}catch(e){}
   var fn=(typeof fbCreateSyncHandler!=='undefined')?fbCreateSyncHandler:(window.FBSync&&window.FBSync.fbCreateSyncHandler)||null;
-  if(fn){packagesSync=fn('meta/colis');loadPackages();}else{renderPackages();}
+  if(fn){packagesSync=fn('meta/colis');loadPackages();}
+  else{renderPackages();}
 });
-async function loadPackages(){try{allPackages=(await packagesSync.readAll())||[];}catch(e){allPackages=[];}renderPackages();}
+
+async function loadPackages(){
+  try{allPackages=(await packagesSync.readAll())||[];}catch(e){allPackages=[];}
+  renderPackages();
+}
+
 async function saveNewPackage(){
-  var n=(document.getElementById('packageName').value||'').trim();if(!n){alert('Nom requis');return;}
+  var n=(document.getElementById('packageName').value||'').trim();
+  if(!n){alert('Nom requis');return;}
   var p={id:Date.now().toString(),name:n,tracking:document.getElementById('packageTracking').value||'',carrier:document.getElementById('packageCarrier').value||'',delivered:false,createdAt:new Date().toISOString()};
   if(packagesSync)try{await packagesSync.write(p.id,p);}catch(e){console.warn(e);}
   allPackages.push(p);renderPackages();closeSheet('add-package-sheet');
   document.getElementById('packageName').value='';document.getElementById('packageTracking').value='';
 }
+
 async function deletePackage(id){
   if(!id)return;
   if(packagesSync)try{await packagesSync.delete(id);}catch(e){console.warn(e);}

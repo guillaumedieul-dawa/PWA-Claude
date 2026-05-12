@@ -233,8 +233,141 @@
 </footer>
 
 <script>
-// ============ INIT ============
-const packagesSync = fbCreateSyncHandler('meta/colis');
+// ============ UI — Indépendant Firebase ============
+let allPackages = [];
+let currentFilter = 'all';
+let packagesSync = null;
+
+// Dark mode - fonctionne toujours
+function applyTheme() {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'dark') document.documentElement.classList.add('dark');
+}
+applyTheme();
+
+document.getElementById('version').textContent = 'P3';
+
+// Event delegation — fonctionne toujours
+function findAction(elem) {
+  while (elem && elem !== document.body) {
+    if (elem.dataset && elem.dataset.action) return elem;
+    elem = elem.parentElement;
+  }
+  return null;
+}
+
+document.addEventListener('click', function(e) {
+  var btn = findAction(e.target);
+  if (!btn) return;
+  var action = btn.dataset.action;
+  if (action === 'home') { window.location.href = '/'; }
+  if (action === 'toggle-theme') {
+    var root = document.documentElement;
+    root.classList.toggle('dark');
+    void root.offsetHeight;
+    localStorage.setItem('theme', root.classList.contains('dark') ? 'dark' : 'light');
+  }
+  if (action === 'filter-all') { setFilter('all', btn); }
+  if (action === 'filter-pending') { setFilter('pending', btn); }
+  if (action === 'filter-delivered') { setFilter('delivered', btn); }
+  if (action === 'add-package') { openSheet('add-package-sheet'); }
+  if (action === 'close-sheet') {
+    var sheet = btn.closest ? btn.closest('.sheet') : null;
+    if (sheet) closeSheet(sheet.id);
+  }
+});
+
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderPackages();
+}
+
+function openSheet(id) {
+  var sheet = document.getElementById(id);
+  if (sheet) sheet.style.cssText = 'display:flex;flex-direction:column;';
+}
+
+function closeSheet(id) {
+  var sheet = document.getElementById(id);
+  if (sheet) sheet.style.cssText = 'display:none;';
+}
+
+function renderPackages() {
+  var container = document.getElementById('packagesList');
+  var filtered = allPackages.filter(function(pkg) {
+    if (currentFilter === 'all') return true;
+    if (currentFilter === 'pending') return !pkg.delivered;
+    if (currentFilter === 'delivered') return pkg.delivered;
+    return true;
+  });
+  container.innerHTML = filtered.length === 0 
+    ? '<p style="text-align:center;color:var(--c-light-text);padding:40px">Aucun colis</p>'
+    : filtered.map(function(pkg) {
+      return '<div class="package-item ' + (pkg.delivered ? 'delivered' : '') + '">' +
+        '<div class="package-info">' +
+        '<div class="package-name">' + (pkg.name || 'Sans nom') + '</div>' +
+        '<div class="package-tracking">' + (pkg.tracking || '') + '</div>' +
+        '</div>' +
+        '<button class="package-delete" data-action="delete-pkg" data-id="' + pkg.id + '">✕</button>' +
+        '</div>';
+    }).join('');
+}
+
+// ============ FIREBASE — Séparé, ne bloque pas UI ============
+window.addEventListener('load', function() {
+  try {
+    var syncFn = window.fbCreateSyncHandler || (window.FBSync && window.FBSync.fbCreateSyncHandler);
+    if (syncFn) {
+      packagesSync = syncFn('meta/colis');
+      loadPackages();
+    } else {
+      console.warn('FamilyHub: firebaseSync.js non disponible');
+      renderPackages();
+    }
+  } catch(err) {
+    console.warn('FamilyHub init error:', err);
+    renderPackages();
+  }
+});
+
+async function loadPackages() {
+  try {
+    var pkgs = await packagesSync.readAll();
+    allPackages = pkgs || [];
+    renderPackages();
+  } catch(e) { console.warn(e); renderPackages(); }
+}
+
+async function saveNewPackage() {
+  var name = document.getElementById('packageName').value;
+  if (!name) { alert('Nom requis'); return; }
+  var pkg = {
+    id: Date.now().toString(),
+    name: name,
+    tracking: document.getElementById('packageTracking').value,
+    carrier: document.getElementById('packageCarrier').value,
+    delivered: false,
+    createdAt: new Date().toISOString()
+  };
+  if (packagesSync) {
+    try { await packagesSync.write(pkg.id, pkg); } catch(e) { console.warn(e); }
+  }
+  allPackages.push(pkg);
+  renderPackages();
+  closeSheet('add-package-sheet');
+  document.getElementById('packageName').value = '';
+  document.getElementById('packageTracking').value = '';
+}
+
+async function deletePackage(id) {
+  if (packagesSync) {
+    try { await packagesSync.delete(id); } catch(e) { console.warn(e); }
+  }
+  allPackages = allPackages.filter(function(p) { return p.id !== id; });
+  renderPackages();
+}
 let allPackages = [];
 let currentFilter = 'all';
 

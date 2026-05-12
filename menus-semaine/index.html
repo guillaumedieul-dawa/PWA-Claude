@@ -224,6 +224,13 @@
 </footer>
 
 <script>
+// ============ GUARD Firebase ============
+window.addEventListener('load', function() {
+  try {
+    var syncFn = window.fbCreateSyncHandler || (window.FBSync && window.FBSync.fbCreateSyncHandler);
+    if (syncFn && typeof window._initAppSync === 'function') window._initAppSync(syncFn);
+  } catch(e) { console.warn('FH load error:', e); }
+});
 // ============ INIT ============
 const menusSync = fbCreateSyncHandler('meta/menus');
 let allMenus = {};

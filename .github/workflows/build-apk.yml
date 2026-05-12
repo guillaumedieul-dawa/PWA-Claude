@@ -61,6 +61,7 @@ jobs:
         cp -f index.html www/ 2>/dev/null || true
         cp -f manifest.json www/ 2>/dev/null || true
         cp -f sw.js www/ 2>/dev/null || true
+        cp -f firebaseSync.js www/ 2>/dev/null || true
         cp -f storage.js www 2>/dev/null || true
         cp -rf icons/ www/ 2>/dev/null || true
         cp -rf locker-tracker/ www/ 2>/dev/null || true

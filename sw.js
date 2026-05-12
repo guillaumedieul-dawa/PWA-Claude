@@ -4,7 +4,7 @@
 //  Phase 3 - CORRIGÉ 10/05/2026
 // ══════════════════════════════════════════
 
-const VERSION      = '4';
+const VERSION      = '5';
 const CACHE_STATIC = 'fh-static-v' + VERSION;
 const CACHE_DYN    = 'fh-dyn-v'    + VERSION;
 

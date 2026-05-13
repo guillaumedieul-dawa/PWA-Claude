@@ -552,9 +552,16 @@ function frD(doc){
   }
   return o;
 }
+// Normalise un colis venant de Firebase (events peut être string, array, ou absent)
+function normalizePackage(p){
+  if(typeof p.id==='number')p.id=Math.round(p.id);
+  if(typeof p.events==='string'){try{p.events=JSON.parse(p.events);}catch(e){p.events=[];}}
+  if(!Array.isArray(p.events))p.events=[];
+  return p;
+}
 async function fbW(id,obj){const u=fbU(`colis/${id}`);const w={...obj};delete w.photo;await fetch(u,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({fields:toF(w)}),redirect:'follow'}).catch(()=>{});}
 async function fbDel(id){await fetch(fbU(`colis/${id}`),{method:'DELETE',redirect:'follow'}).catch(()=>{});}
-async function fbAll(){const r=await fetch(fbU('colis')+'&pageSize=500',{redirect:'follow'});if(!r.ok)throw new Error('Firebase '+r.status);const d=await r.json();return(d.documents||[]).map(x=>({...frD(x),_fbId:x.name.split('/').pop()}));}
+async function fbAll(){const r=await fetch(fbU('colis')+'&pageSize=500',{redirect:'follow'});if(!r.ok)throw new Error('Firebase '+r.status);const d=await r.json();return(d.documents||[]).map(x=>normalizePackage({...frD(x),_fbId:x.name.split('/').pop()}));}
 
 async function syncFB(){
   DBG.lifecycle('syncFB START');
@@ -565,10 +572,12 @@ async function syncFB(){
     const rem=await fbAll();let n=0;
     DBG.read('colis',rem.length);
     for(const p of rem){
+      normalizePackage(p);
       const ex=D.packages.find(x=>x._fbId===p._fbId);
       if(ex){
+        normalizePackage(ex);
         if(p.status&&p.status!==ex.status&&ex.status!=='collected')ex.status=p.status;
-        if((p.lastUpdated||'')>(ex.lastUpdated||'')){ex.pickupCode=p.pickupCode||ex.pickupCode;ex.lockerAddress=p.lockerAddress||ex.lockerAddress;ex.deliverySlot=p.deliverySlot||ex.deliverySlot;ex.trackingLink=p.trackingLink||ex.trackingLink;ex.trackingNum=p.trackingNum||ex.trackingNum;if(p.events)ex.events=Array.isArray(p.events)?p.events:(typeof p.events==='string'?JSON.parse(p.events||'[]'):[]);}
+        if((p.lastUpdated||'')>(ex.lastUpdated||'')){ex.pickupCode=p.pickupCode||ex.pickupCode;ex.lockerAddress=p.lockerAddress||ex.lockerAddress;ex.deliverySlot=p.deliverySlot||ex.deliverySlot;ex.trackingLink=p.trackingLink||ex.trackingLink;ex.trackingNum=p.trackingNum||ex.trackingNum;if(p.events&&p.events.length)ex.events=p.events;}
       }else{if(!p.id)p.id=D.nextId++; else p.id=Math.round(Number(p.id));D.packages.unshift(p);n++;}
     }
     D.lastSync=new Date().toISOString();purge();saveD(D);render();

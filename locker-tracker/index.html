@@ -12,31 +12,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Text:wght@400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<link rel="stylesheet" href="../themes.css">
 <style>
-:root {
-  --p:#0057A8;--op:#FFF;--pc:#D7E3FF;--opc:#001849;
-  --s:#006875;--sc:#9EEFFD;--t:#6B5E91;--tc:#ECDCFF;
-  --err:#BA1A1A;--ec:#FFDAD6;
-  --bg:#F4F8FB;--sf:#FFF;--s1:#EDF1F4;--s2:#E6EBF0;--s3:#DEE4EA;
-  --ol:#72787E;--olv:#C2C8CF;--ob:#1A1C1E;--os:#1A1C1E;--osv:#42474C;
-  --sh:rgba(0,0,0,0.08);
-  --cr:#1A6500;--crb:#C4EFAD;--cpd:#7B4F00;--cpdb:#FFDDB4;
-  --co:#7D4000;--cob:#FFDBCA;--cd:#0A5C00;--cdb:#B7F397;
-  --cf:#93000A;--cfb:#FFDAD6;--cx:#5C5C5C;--cxb:#E6E6E6;
-  --top:env(safe-area-inset-top,0px);--bot:env(safe-area-inset-bottom,0px);
-  --rl:28px;--rm:16px;--rs:12px;
-}
-[data-theme="dark"]{
-  --p:#ADC6FF;--op:#002E6C;--pc:#00429A;--opc:#D7E3FF;
-  --s:#53D7E8;--sc:#004E57;--t:#D2BCFF;--tc:#524678;
-  --err:#FFB4AB;--ec:#93000A;
-  --bg:#1A1C1E;--sf:#1A1C1E;--s1:#252729;--s2:#2C2F31;--s3:#333639;
-  --ol:#8C9198;--olv:#42474C;--ob:#E3E2E6;--os:#E3E2E6;--osv:#C2C7CE;
-  --sh:rgba(0,0,0,0.3);
-  --cr:#A7D689;--crb:#1E3A10;--cpd:#FFB95D;--cpdb:#3E2800;
-  --co:#FFB499;--cob:#3D1500;--cd:#94DA79;--cdb:#113800;
-  --cf:#FFB4AB;--cfb:#410002;--cx:#A0A0A0;--cxb:#2A2A2A;
-}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Google Sans Text',sans-serif;overflow-x:hidden;transition:background .3s,color .3s}
 #app{max-width:520px;margin:0 auto;min-height:100dvh;padding-bottom:calc(var(--bot) + 96px)}
@@ -235,6 +212,8 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 
 @keyframes fu{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 </style>
+<!-- Thème : init immédiate anti-flash -->
+<script src="../theme.js"></script>
 </head>
 <body>
 
@@ -246,7 +225,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
       <div class="th">📦 Mes colis <span id="totalBadge" style="font-size:14px;font-weight:400;color:var(--osv)"></span></div>
     </div>
     <button id="btn-sync" class="ibtn" onclick="openSync()" title="BDD / Sync">⟳<div class="ndot" id="sd" style="display:none"></div></button>
-    <button class="ibtn" id="thbtn" onclick="toggleTheme()">🌙</button>
+    <button class="ibtn" id="thbtn" data-action="toggleTheme">🌙</button>
   </div>
 
   <div class="swrap">
@@ -1012,9 +991,6 @@ function showT(id,btn){
 let _tt;
 function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('show'),3500);}
 
-function applyTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('thbtn').textContent=t==='dark'?'🌙':'☀️';}
-function toggleTheme(){const d=document.documentElement.getAttribute('data-theme')==='dark';const n=d?'light':'dark';localStorage.setItem('lt_th',n);applyTheme(n);}
-function initTheme(){const s=localStorage.getItem('lt_th');if(s){applyTheme(s);return;}const sys=window.matchMedia('(prefers-color-scheme: dark)');applyTheme(sys.matches?'dark':'light');sys.addEventListener('change',e=>{if(!localStorage.getItem('lt_th'))applyTheme(e.matches?'dark':'light');});}
 
 // ── Dispatcher global : gère TOUS les data-action ──
 // Remplace tous les onclick= pour compatibilité Capacitor WebView Android
@@ -1058,7 +1034,7 @@ function openAdd(){openSheet('shAdd');}
 function openSync(){openSheet('shSync');renderSS();renderLogs();}
 function closeS(id){closeSheet(id);}
 function openS(id){openSheet(id);}
-initTheme();purge();renderSS();render();autoSync();
+purge();renderSS();render();autoSync();
 
 // ── Dispatcher global click — pattern Capacitor WebView ──
 // Remplace le wrapper fragile : gère TOUS les data-action des cartes colis

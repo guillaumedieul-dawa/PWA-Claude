@@ -12,21 +12,8 @@
 <link rel="manifest" href="./manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Text:wght@400;500&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="themes.css">
 <style>
-:root {
-  --p:#0057A8;--op:#FFF;--pc:#D7E3FF;--opc:#001849;
-  --bg:#F4F8FB;--sf:#FFF;--s1:#EDF1F4;--s2:#E6EBF0;--s3:#DEE4EA;
-  --ol:#72787E;--olv:#C2C8CF;--ob:#1A1C1E;--os:#1A1C1E;--osv:#42474C;
-  --sh:rgba(0,0,0,0.08);
-  --top:env(safe-area-inset-top,0px);--bot:env(safe-area-inset-bottom,0px);
-  --rl:28px;--rm:16px;--rs:12px;
-}
-[data-theme="dark"]{
-  --p:#ADC6FF;--op:#002E6C;--pc:#00429A;--opc:#D7E3FF;
-  --bg:#1A1C1E;--sf:#1A1C1E;--s1:#252729;--s2:#2C2F31;--s3:#333639;
-  --ol:#8C9198;--olv:#42474C;--ob:#E3E2E6;--os:#E3E2E6;--osv:#C2C7CE;
-  --sh:rgba(0,0,0,0.3);
-}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Google Sans Text',sans-serif;overflow-x:hidden}
 
@@ -58,11 +45,11 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 .app-desc{font-size:11px;color:var(--osv);line-height:1.3}
 .app-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;font-family:'Google Sans',sans-serif;margin-top:2px}
 
-
-
 /* Footer */
 .footer{text-align:center;font-size:11px;color:var(--osv);margin-top:8px;font-family:'Roboto Mono',monospace}
 </style>
+<!-- Thème : init immédiate pour éviter le flash -->
+<script src="theme.js"></script>
 </head>
 <body>
 <div id="app">
@@ -71,7 +58,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
       <div class="hdr-eyebrow">Bonjour 👋</div>
       <div class="hdr-title">FamilyHub</div>
     </div>
-    <button class="ibtn" data-action="toggleTheme" id="thbtn">🌙</button>
+    <button class="ibtn" data-action="toggleTheme" id="thbtn">☀️</button>
   </div>
 
   <div class="greeting">
@@ -113,13 +100,9 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
       <span class="app-badge" style="background:#FFDDB4;color:#7B4F00" id="badgeMenus">7 jours</span>
     </a>
   </div>
-  </div>
+</div>
 
 <script>
-function applyTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('thbtn').textContent=t==='dark'?'🌙':'☀️';}
-function toggleTheme(){const d=document.documentElement.getAttribute('data-theme')==='dark';const n=d?'light':'dark';localStorage.setItem('lt_th',n);applyTheme(n);}
-function initTheme(){const s=localStorage.getItem('lt_th');if(s){applyTheme(s);return;}const sys=window.matchMedia('(prefers-color-scheme: dark)');applyTheme(sys.matches?'dark':'light');sys.addEventListener('change',e=>{if(!localStorage.getItem('lt_th'))applyTheme(e.matches?'dark':'light');});}
-
 // ── Firestore badges helper ──────────────────────────────────
 const FB_PROJ_HOME = 'familyhub-colis-8abbd';
 function getFBKeyHome() {
@@ -140,7 +123,7 @@ async function fbCountDocs(coll) {
 
 // Badges dynamiques : localStorage en premier, Firestore si cache vide
 async function loadBadges() {
-  // ── Colis (localStorage uniquement — pas encore migré vers Firestore) ──
+  // ── Colis (localStorage uniquement) ──
   try {
     const _colis = JSON.parse(localStorage.getItem('lt_v3')||'{}');
     const _pkgs  = _colis.packages||[];
@@ -162,7 +145,6 @@ async function loadBadges() {
   try {
     const todo    = JSON.parse(localStorage.getItem('fh_todo')||'{}');
     let tasks     = todo.tasks||[];
-    // Si cache vide et apiKey dispo → lecture Firestore
     if (tasks.length === 0 && getFBKeyHome()) {
       const docs = await fbCountDocs('meta/todo/tasks');
       if (docs && docs.length > 0) {
@@ -209,25 +191,21 @@ async function loadBadges() {
   } catch {}
 }
 
-
-document.addEventListener('click',function(e){
-  const el=e.target.closest('[data-action]');
-  if(!el)return;
-  if(el.getAttribute('data-action')==='toggleTheme')toggleTheme();
+document.addEventListener('click', function(e) {
+  const el = e.target.closest('[data-action]');
+  if (!el) return;
+  if (el.getAttribute('data-action') === 'toggleTheme') window.toggleTheme();
 });
 
-initTheme();
 loadBadges();
 
-// Afficher la date de build APK si disponible (injectée par le workflow GitHub)
+// Afficher la date de build APK si disponible
 (function(){
   var bel = document.getElementById('footerBuild');
   if (!bel) return;
   var meta = document.querySelector('meta[name="build-date"]');
   var bd = meta ? meta.getAttribute('content') : '';
-  if (bd) {
-    bel.textContent = 'FamilyHub v2 · APK du ' + bd;
-  }
+  if (bd) bel.textContent = 'FamilyHub v2 · APK du ' + bd;
 })();
 </script>
 
@@ -241,7 +219,7 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 </body>
-  <footer style="font-size: 12px; text-align: center; margin-top: 20px; color: #666;">
+<footer style="font-size: 12px; text-align: center; margin-top: 20px; color: #666;">
   Version applicative : __VERSION_NAME__<br />
   Build : __BUILD_ID__ — généré le __BUILD_DATE__
 </footer>

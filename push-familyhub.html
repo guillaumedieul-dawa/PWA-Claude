@@ -16,6 +16,7 @@ input:focus,select:focus{border-color:#2563eb}
 .hint{font-size:11px;color:#aaa;margin-top:-10px;margin-bottom:20px;line-height:1.5}
 .row{display:flex;gap:12px}
 .row .field{flex:1}
+.branch-meta{font-size:11px;color:#64748b;margin-top:-12px;margin-bottom:16px;min-height:16px}
 
 /* Zone d'upload */
 .drop-zone {border:2px dashed #2563eb;border-radius:12px;padding:25px;text-align:center;background:#f8fafc;cursor:pointer;transition:background .2s;margin-bottom:20px}
@@ -31,7 +32,7 @@ input:focus,select:focus{border-color:#2563eb}
 .progress-bar {width:0%;height:100%;background:#2563eb;transition:width .2s}
 
 .btn{width:100%;padding:14px;border-radius:28px;background:#2563eb;color:#fff;border:none;font-size:16px;font-weight:700;cursor:pointer;transition:opacity .2s;margin-bottom:10px}
-.btn-secondary{background:#0f172a} /* Couleur sombre pour l'action Git */
+.btn-secondary{background:#0f172a}
 .btn:active{opacity:.85}
 .btn:disabled{background:#aaa;cursor:not-allowed}
 
@@ -72,6 +73,7 @@ input:focus,select:focus{border-color:#2563eb}
           <option value="">Saisir un token pour charger les branches...</option>
         </select>
       </div>
+      <div class="branch-meta" id="branchMeta"></div>
     </div>
   </div>
 
@@ -83,7 +85,6 @@ input:focus,select:focus{border-color:#2563eb}
   </div>
 
   <button class="btn" id="pushBtn" onclick="startPush()" disabled>📤 Déployer les fichiers</button>
-  
   <button class="btn btn-secondary" id="mergeBtn" onclick="mergeV2ToMain()" disabled>🔀 Fusionner v2 vers main</button>
 
   <div class="progress-container" id="progressContainer">
@@ -111,6 +112,7 @@ let selectedFile = null;
 
 const tokenInput = document.getElementById('token');
 const branchContainer = document.getElementById('branchContainer');
+const branchMeta = document.getElementById('branchMeta');
 const fileInput = document.getElementById('fileInput');
 const dropZone = document.getElementById('dropZone');
 const dropZoneText = document.getElementById('dropZoneText');
@@ -122,9 +124,10 @@ tokenInput.addEventListener('input', () => {
   const token = tokenInput.value.trim();
   if (token.startsWith('ghp_') || token.startsWith('github_pat_')) {
     fetchBranches(token);
-    mergeBtn.disabled = false; // Active le bouton de fusion dès que le token semble saisi
+    mergeBtn.disabled = false;
   } else {
     mergeBtn.disabled = true;
+    branchMeta.textContent = '';
   }
 });
 
@@ -140,21 +143,56 @@ async function fetchBranches(token) {
     if (!r.ok) throw new Error('Impossible de charger');
     
     const branches = await r.json();
-    let html = '<select id="branchSelect">';
+    let html = '<select id="branchSelect" onchange="onBranchChange()">';
     branches.forEach(b => {
       const selected = b.name === 'v2' || b.name === 'main' ? 'selected' : '';
       html += `<option value="${b.name}" ${selected}>${b.name}</option>`;
     });
     html += '</select>';
     branchContainer.innerHTML = html;
+    
+    // Charger immédiatement les métadonnées de la branche sélectionnée par défaut
+    onBranchChange();
   } catch (err) {
-    branchContainer.innerHTML = '<input type="text" id="branchSelect" value="v2" placeholder="Ex: v2">';
+    branchContainer.innerHTML = '<input type="text" id="branchSelect" value="v2" placeholder="Ex: v2" oninput="onBranchChange()">';
+    onBranchChange();
   }
 }
 
 function getSelectedBranch() {
   const el = document.getElementById('branchSelect');
   return el ? el.value.trim() : 'v2';
+}
+
+// Fonction déclenchée au changement de branche pour aller chercher la date de commit
+async function onBranchChange() {
+  const token = tokenInput.value.trim();
+  const branch = getSelectedBranch();
+  if (!token || !branch) return;
+
+  branchMeta.style.color = '#64748b';
+  branchMeta.textContent = '⏳ Lecture des infos de la branche...';
+
+  try {
+    const r = await fetch(`https://api.github.com/repos/${REPO}/commits/${branch}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (r.ok) {
+      const data = await r.json();
+      const dateStr = data.commit.committer.date; // Format ISO string
+      const d = new Date(dateStr);
+      
+      // Formatage lisible en français : JJ/MM/AAAA à HH:MM:SS
+      const formattedDate = d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) + 
+                            ' à ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      
+      branchMeta.innerHTML = `📅 Dernier commit : <strong>${formattedDate}</strong>`;
+    } else {
+      branchMeta.textContent = '⚠️ Impossible de lire les métadonnées de cette branche.';
+    }
+  } catch (e) {
+    branchMeta.textContent = '';
+  }
 }
 
 fileInput.addEventListener('change', handleFileSelect);
@@ -289,6 +327,9 @@ async function startPush() {
       document.getElementById('doneBody').textContent = "GitHub Actions prend le relais.";
       document.getElementById('actionsLink').href = `https://github.com/guillaumedieul-dawa/PWA-Claude/actions?query=branch%3A${encodeURIComponent(branch)}`;
       document.getElementById('done').style.display = 'block';
+      
+      // Rafraîchir la date du dernier commit suite au push
+      onBranchChange();
     } else {
       alert(`Terminé avec des erreurs (${errorCount} échecs).`);
     }
@@ -301,7 +342,6 @@ async function startPush() {
   }
 }
 
-// NOUVELLE FONCTION : Aligner la branche main sur le dernier commit de v2
 async function mergeV2ToMain() {
   const token = tokenInput.value.trim();
   if (!token) { alert('Token requis'); return; }
@@ -336,7 +376,7 @@ async function mergeV2ToMain() {
       },
       body: JSON.stringify({
         sha: targetCommitSha,
-        force: true // Permet de forcer la mise à jour si nécessaire
+        force: true
       })
     });
 
@@ -351,6 +391,9 @@ async function mergeV2ToMain() {
     document.getElementById('doneBody').textContent = "La branche main est maintenant identique à v2.";
     document.getElementById('actionsLink').href = `https://github.com/guillaumedieul-dawa/PWA-Claude/actions?query=branch%3Amain`;
     document.getElementById('done').style.display = 'block';
+
+    // Forcer la mise à jour de la date si l'utilisateur regarde actuellement la branche main
+    onBranchChange();
 
   } catch (err) {
     addLog(`Erreur lors de l'alignement : ${err.message}`, "err");

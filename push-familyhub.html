@@ -11,7 +11,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 h1{font-size:20px;font-weight:700;margin-bottom:4px}
 .sub{font-size:13px;color:#888;margin-bottom:24px}
 label{font-size:12px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px}
-input[type=text],input[type=password],select{width:100%;padding:12px 14px;border-radius:10px;border:1px solid #ddd;font-size:15px;outline:none;transition:border .2s;margin-bottom:16px;background:#fff}
+input[type=text],input[type=password],select{width:100%;padding:12px 14px;border-radius:10px;border:1px solid #ddd;font-size:15px;outline:none;transition:border .2s;margin-bottom:16px;background:#fff;appearance:none;-webkit-appearance:none;}
 input:focus,select:focus{border-color:#2563eb}
 .hint{font-size:11px;color:#aaa;margin-top:-10px;margin-bottom:20px;line-height:1.5}
 .row{display:flex;gap:12px}
@@ -26,18 +26,28 @@ input:focus,select:focus{border-color:#2563eb}
 #fileInput {display:none}
 .file-selected {background:#f0fdf4;border-color:#22c55e;color:#166534}
 
-/* Progression */
+/* Boutons */
+.btn{width:100%;padding:14px;border-radius:28px;background:#2563eb;color:#fff;border:none;font-size:16px;font-weight:700;cursor:pointer;transition:opacity .2s;margin-bottom:10px}
+.btn-secondary{background:#0f172a}
+.btn-apk{background:#16a34a} 
+.btn:active{opacity:.85}
+.btn:disabled{background:#aaa;cursor:not-allowed}
+
+/* Panneau de fusion */
+.merge-panel{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:20px;display:none}
+.merge-panel select{padding:10px;font-size:14px;margin-bottom:12px;}
+.merge-panel .btn{margin-bottom:0;padding:12px;font-size:15px;}
+.merge-panel .hint{margin-bottom:6px;margin-top:0;}
+
+/* Section APK */
+.apk-panel{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-top:16px;display:none}
+.apk-status{font-size:13px;margin-bottom:12px;display:flex;align-items:flex-start;gap:8px;line-height:1.4}
+
+/* Progression & Logs */
 .progress-container {margin-top:20px;display:none}
 .progress-bar-bg {width:100%;height:10px;background:#e2e8f0;border-radius:5px;overflow:hidden;margin-top:6px}
 .progress-bar {width:0%;height:100%;background:#2563eb;transition:width .2s}
 
-.btn{width:100%;padding:14px;border-radius:28px;background:#2563eb;color:#fff;border:none;font-size:16px;font-weight:700;cursor:pointer;transition:opacity .2s;margin-bottom:10px}
-.btn-secondary{background:#0f172a}
-.btn-apk{background:#16a34a} /* Vert pour le livrable final */
-.btn:active{opacity:.85}
-.btn:disabled{background:#aaa;cursor:not-allowed}
-
-/* Logs */
 #log{margin-top:20px;border-radius:10px;background:#1e293b;color:#f8fafc;padding:14px;font-family:monospace;font-size:12px;display:none;max-height:200px;overflow-y:auto;line-height:1.6}
 .log-line {margin-bottom:4px;display:flex;align-items:flex-start;gap:6px}
 .log-ok {color:#4ade80}
@@ -46,10 +56,6 @@ input:focus,select:focus{border-color:#2563eb}
 
 .done{background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:14px;margin-top:16px;font-size:14px;color:#166534;display:none}
 .done a{color:#15803d;font-weight:600}
-
-/* Section APK */
-.apk-panel{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-top:16px;display:none}
-.apk-status{font-size:13px;margin-bottom:12px;display:flex;align-items:center;gap:6px}
 
 .repo-info{background:#f0f4ff;border-radius:10px;padding:12px 14px;margin-bottom:20px;font-size:13px;color:#3730a3}
 .repo-info strong{display:block;margin-bottom:2px}
@@ -71,27 +77,43 @@ input:focus,select:focus{border-color:#2563eb}
   <input type="password" id="token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
   <p class="hint">Permissions requises : <strong>repo</strong> ou <strong>Contents (Write) & Actions (Read)</strong></p>
 
-  <div class="row">
-    <div class="field">
-      <label>Branche cible</label>
-      <div id="branchContainer">
-        <select id="branchSelect" disabled>
-          <option value="">Saisir un token pour charger les branches...</option>
-        </select>
+  <div style="border-bottom: 1px solid #eee; padding-bottom: 16px; margin-bottom: 20px;">
+    <label>Déploiement manuel (ZIP)</label>
+    <div class="row">
+      <div class="field">
+        <span class="hint" style="display:block;margin-bottom:6px;margin-top:0;">Branche cible</span>
+        <div id="branchContainer">
+          <select id="branchSelect" disabled>
+            <option value="">Saisir un token d'abord...</option>
+          </select>
+        </div>
+        <div class="branch-meta" id="branchMeta"></div>
       </div>
-      <div class="branch-meta" id="branchMeta"></div>
     </div>
+
+    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+      <p id="dropZoneText">📁 Sélectionne ton fichier .zip</p>
+      <span id="fileDetails">L'arborescence interne sera conservée</span>
+      <input type="file" id="fileInput" accept=".zip">
+    </div>
+
+    <button class="btn" id="pushBtn" onclick="startPush()" disabled>📤 Déployer les fichiers</button>
   </div>
 
-  <label>Archive de l'application</label>
-  <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
-    <p id="dropZoneText">📁 Glisse ou sélectionne ton fichier .zip</p>
-    <span id="fileDetails">L'arborescence interne sera conservée</span>
-    <input type="file" id="fileInput" accept=".zip">
+  <div class="merge-panel" id="mergePanel">
+    <label>🔀 Fusionner des branches</label>
+    <div class="row">
+      <div class="field">
+        <span class="hint" style="display:block;">Source</span>
+        <select id="mergeSource"></select>
+      </div>
+      <div class="field">
+        <span class="hint" style="display:block;">Destination</span>
+        <select id="mergeDest"></select>
+      </div>
+    </div>
+    <button class="btn btn-secondary" id="mergeBtn" onclick="executeMerge()">Fusionner les branches</button>
   </div>
-
-  <button class="btn" id="pushBtn" onclick="startPush()" disabled>📤 Déployer les fichiers</button>
-  <button class="btn btn-secondary" id="mergeBtn" onclick="mergeV2ToMain()" disabled>🔀 Fusionner v2 vers main</button>
 
   <div class="apk-panel" id="apkPanel">
     <label>🤖 Statut du Build APK</label>
@@ -112,9 +134,9 @@ input:focus,select:focus{border-color:#2563eb}
   <div id="log"></div>
 
   <div class="done" id="done">
-    ✅ <strong id="doneTitle">Déploiement terminé avec succès !</strong><br><br>
-    <span id="doneBody">GitHub Actions prend le relais.</span><br>
-    Suivre le build → <a id="actionsLink" href="https://github.com/guillaumedieul-dawa/PWA-Claude/actions" target="_blank">Suivi GitHub Actions</a>
+    ✅ <strong id="doneTitle">Opération terminée avec succès !</strong><br><br>
+    <span id="doneBody">Les actions GitHub prennent le relais.</span><br>
+    Suivre → <a id="actionsLink" href="#" target="_blank">Ouvrir GitHub Actions</a>
   </div>
 </div>
 
@@ -122,6 +144,7 @@ input:focus,select:focus{border-color:#2563eb}
 const REPO = 'guillaumedieul-dawa/PWA-Claude';
 let selectedFile = null;
 let pollInterval = null;
+let globalBranches = []; // Pour garder en mémoire les branches
 
 const tokenInput = document.getElementById('token');
 const branchContainer = document.getElementById('branchContainer');
@@ -140,10 +163,8 @@ tokenInput.addEventListener('input', () => {
   const token = tokenInput.value.trim();
   if (token.startsWith('ghp_') || token.startsWith('github_pat_')) {
     fetchBranches(token);
-    mergeBtn.disabled = false;
-    showApkPanelIfPossible();
   } else {
-    mergeBtn.disabled = true;
+    document.getElementById('mergePanel').style.display = 'none';
     branchMeta.textContent = '';
     apkPanel.style.display = 'none';
     clearInterval(pollInterval);
@@ -152,7 +173,7 @@ tokenInput.addEventListener('input', () => {
 
 async function fetchBranches(token) {
   const select = document.getElementById('branchSelect');
-  if (select) select.innerHTML = '<option value="">⏳ Chargement des branches...</option>';
+  if (select) select.innerHTML = '<option value="">⏳ Chargement...</option>';
   
   try {
     const r = await fetch(`https://api.github.com/repos/${REPO}/branches`, {
@@ -160,6 +181,9 @@ async function fetchBranches(token) {
     });
     if (!r.ok) throw new Error('Impossible de charger');
     const branches = await r.json();
+    globalBranches = branches;
+
+    // 1. Remplissage du select pour le push
     let html = '<select id="branchSelect" onchange="onBranchChange()">';
     branches.forEach(b => {
       const selected = b.name === 'v2' || b.name === 'main' ? 'selected' : '';
@@ -167,11 +191,33 @@ async function fetchBranches(token) {
     });
     html += '</select>';
     branchContainer.innerHTML = html;
+    
+    // 2. Remplissage du panneau de fusion
+    populateMergeSelectors(branches);
+    document.getElementById('mergePanel').style.display = 'block';
+
     onBranchChange();
   } catch (err) {
     branchContainer.innerHTML = '<input type="text" id="branchSelect" value="v2" placeholder="Ex: v2" oninput="onBranchChange()">';
     onBranchChange();
   }
+}
+
+function populateMergeSelectors(branches) {
+  const sourceSelect = document.getElementById('mergeSource');
+  const destSelect = document.getElementById('mergeDest');
+  
+  let options = '';
+  branches.forEach(b => {
+    options += `<option value="${b.name}">${b.name}</option>`;
+  });
+  
+  sourceSelect.innerHTML = options;
+  destSelect.innerHTML = options;
+
+  // Pré-sélection intelligente (si v2 et main existent)
+  if (branches.find(b => b.name === 'v2')) sourceSelect.value = 'v2';
+  if (branches.find(b => b.name === 'main')) destSelect.value = 'main';
 }
 
 function getSelectedBranch() {
@@ -195,7 +241,7 @@ async function onBranchChange() {
       const data = await r.json();
       const d = new Date(data.commit.committer.date);
       const formattedDate = d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) + 
-                            ' à ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                            ' à ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
       branchMeta.innerHTML = `📅 Dernier commit : <strong>${formattedDate}</strong>`;
       showApkPanelIfPossible();
     } else {
@@ -302,8 +348,8 @@ async function startPush() {
     document.getElementById('progressStep').textContent = 'Terminé !';
 
     if (successCount === totalFiles) {
-      document.getElementById('doneTitle').textContent = "Déploiement terminé avec succès !";
-      document.getElementById('doneBody').textContent = "GitHub Actions prend le relais.";
+      document.getElementById('doneTitle').textContent = `Déploiement sur [${branch}] terminé !`;
+      document.getElementById('doneBody').textContent = "L'intégration continue va s'exécuter.";
       document.getElementById('actionsLink').href = `https://github.com/guillaumedieul-dawa/PWA-Claude/actions?query=branch%3A${encodeURIComponent(branch)}`;
       document.getElementById('done').style.display = 'block';
       onBranchChange();
@@ -312,37 +358,51 @@ async function startPush() {
   finally { pushBtn.disabled = false; mergeBtn.disabled = false; pushBtn.textContent = '📤 Déployer les fichiers'; }
 }
 
-async function mergeV2ToMain() {
+async function executeMerge() {
   const token = tokenInput.value.trim();
-  if (!token || !confirm("Voulez-vous pousser l'état de v2 sur main ?")) return;
+  const source = document.getElementById('mergeSource').value;
+  const dest = document.getElementById('mergeDest').value;
+
+  if (!token || !source || !dest) return;
+  if (source === dest) {
+    alert("Veuillez sélectionner des branches différentes pour la fusion.");
+    return;
+  }
+  
+  if (!confirm(`Voulez-vous écraser la branche [${dest}] avec l'état de [${source}] ?`)) return;
+
   pushBtn.disabled = true; mergeBtn.disabled = true;
   document.getElementById('log').innerHTML = ''; document.getElementById('done').style.display = 'none';
 
   try {
-    addLog("Lecture de la branche v2...", "info");
-    const resV2 = await fetch(`https://api.github.com/repos/${REPO}/git/ref/heads/v2`, { headers: { 'Authorization': `Bearer ${token}` } });
-    if (!resV2.ok) throw new Error("Branche v2 introuvable.");
-    const dataV2 = await resV2.json();
-    const targetCommitSha = dataV2.object.sha;
+    addLog(`Lecture du dernier état de [${source}]...`, "info");
+    const resSrc = await fetch(`https://api.github.com/repos/${REPO}/git/ref/heads/${source}`, { headers: { 'Authorization': `Bearer ${token}` } });
+    if (!resSrc.ok) throw new Error(`Branche source introuvable.`);
+    const dataSrc = await resSrc.json();
+    const targetCommitSha = dataSrc.object.sha;
 
-    addLog("Mise à jour de la branche main...", "info");
-    const resMain = await fetch(`https://api.github.com/repos/${REPO}/git/refs/heads/main`, {
+    addLog(`Mise à jour (Fast-forward) de [${dest}]...`, "info");
+    const resDest = await fetch(`https://api.github.com/repos/${REPO}/git/refs/heads/${dest}`, {
       method: 'PATCH',
       headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ sha: targetCommitSha, force: true })
     });
-    if (!resMain.ok) throw new Error("Échec de la mise à jour.");
+    if (!resDest.ok) throw new Error("Échec de la mise à jour sur GitHub.");
 
-    addLog("Branche main synchronisée !", "ok");
-    document.getElementById('doneTitle').textContent = "Mise à jour de main réussie !";
-    document.getElementById('actionsLink').href = `https://github.com/guillaumedieul-dawa/PWA-Claude/actions?query=branch%3Amain`;
+    addLog(`Fusion terminée avec succès !`, "ok");
+    document.getElementById('doneTitle').textContent = `[${dest}] est maintenant synchronisée !`;
+    document.getElementById('doneBody').textContent = "Les éventuelles actions sur cette branche vont démarrer.";
+    document.getElementById('actionsLink').href = `https://github.com/guillaumedieul-dawa/PWA-Claude/actions?query=branch%3A${encodeURIComponent(dest)}`;
     document.getElementById('done').style.display = 'block';
-    onBranchChange();
+    
+    // Rafraichir les infos si la branche de push est la destination modifiée
+    if (getSelectedBranch() === dest) onBranchChange();
+
   } catch (err) { addLog(`Erreur : ${err.message}`, "err"); }
   finally { pushBtn.disabled = false; mergeBtn.disabled = false; }
 }
 
-// --- NOUVELLES FONCTIONS SUIVI & TÉLÉCHARGEMENT APK ---
+// --- FONCTIONS SUIVI & TÉLÉCHARGEMENT APK ---
 
 function showApkPanelIfPossible() {
   const token = tokenInput.value.trim();
@@ -351,7 +411,7 @@ function showApkPanelIfPossible() {
     apkPanel.style.display = 'block';
     clearInterval(pollInterval);
     checkWorkflowStatus();
-    pollInterval = setInterval(checkWorkflowStatus, 15000); // Actualisation toutes les 15s
+    pollInterval = setInterval(checkWorkflowStatus, 15000);
   }
 }
 
@@ -361,7 +421,6 @@ async function checkWorkflowStatus() {
   if (!token || !branch) return;
 
   try {
-    // 1. Trouver le dernier run de workflow pour cette branche
     const rRun = await fetch(`https://api.github.com/repos/${REPO}/actions/runs?branch=${branch}&per_page=1`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
@@ -375,24 +434,28 @@ async function checkWorkflowStatus() {
     }
 
     const lastRun = dRun.workflow_runs[0];
-    const status = lastRun.status;       // queued, in_progress, completed
-    const conclusion = lastRun.conclusion; // success, failure, cancelled, etc.
+    const status = lastRun.status;       
+    const conclusion = lastRun.conclusion; 
+    
+    // Nouvelles variables : Numéro et Date
+    const runNumber = lastRun.run_number;
+    const runDateObj = new Date(lastRun.updated_at);
+    const runDateStr = runDateObj.toLocaleDateString('fr-FR') + ' à ' + runDateObj.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 
     if (status === 'queued' || status === 'in_progress') {
-      apkStatus.innerHTML = `⏳ Build en cours sur GitHub (Statut: <strong>${status}</strong>)...`;
+      apkStatus.innerHTML = `⏳ Build <strong>#${runNumber}</strong> en cours (Statut: <strong>${status}</strong>)...`;
       downloadApkBtn.disabled = true;
     } else if (status === 'completed' && conclusion === 'success') {
-      apkStatus.innerHTML = `✅ Build réussi ! Recherche du fichier APK...`;
-      // Chercher l'artifact lié à ce run spécifique
-      checkArtifacts(token, lastRun.id);
+      apkStatus.innerHTML = `✅ Build <strong>#${runNumber}</strong> réussi ! Recherche de l'APK...`;
+      checkArtifacts(token, lastRun.id, runNumber, runDateStr);
     } else {
-      apkStatus.innerHTML = `❌ Le dernier build a échoué (Conclusion: <strong>${conclusion}</strong>).`;
+      apkStatus.innerHTML = `❌ Build <strong>#${runNumber}</strong> échoué (Conclusion: <strong>${conclusion}</strong>).`;
       downloadApkBtn.disabled = true;
     }
   } catch (e) { console.error(e); }
 }
 
-async function checkArtifacts(token, runId) {
+async function checkArtifacts(token, runId, runNumber, runDateStr) {
   try {
     const rArt = await fetch(`https://api.github.com/repos/${REPO}/actions/runs/${runId}/artifacts`, {
       headers: { 'Authorization': `Bearer ${token}` }
@@ -401,16 +464,21 @@ async function checkArtifacts(token, runId) {
     const dArt = await rArt.json();
 
     if (dArt.artifacts.length === 0) {
-      apkStatus.innerHTML = `⚠️ Build réussi mais aucun fichier APK (artifact) n'est encore publié.`;
+      apkStatus.innerHTML = `⚠️ Build <strong>#${runNumber}</strong> validé le ${runDateStr}, mais aucun APK n'est publié.`;
       downloadApkBtn.disabled = true;
       return;
     }
 
-    // Récupérer le premier artifact disponible (généralement ton APK)
     const artifact = dArt.artifacts[0];
-    apkStatus.innerHTML = `🎁 APK disponible : <strong>${artifact.name}</strong> (${(artifact.size_in_bytes/(1024*1024)).toFixed(1)} Mo)`;
+    const sizeMo = (artifact.size_in_bytes / (1024 * 1024)).toFixed(1);
+    
+    apkStatus.innerHTML = `
+      <div>
+        🎁 Build <strong>#${runNumber}</strong> généré le <strong>${runDateStr}</strong><br>
+        <span style="color:#475569">Fichier : ${artifact.name} (${sizeMo} Mo)</span>
+      </div>`;
+      
     downloadApkBtn.disabled = false;
-    // Stocker l'ID de l'artifact dans le dataset du bouton
     downloadApkBtn.dataset.artifactId = artifact.id;
     downloadApkBtn.dataset.artifactName = artifact.name;
   } catch (e) { console.error(e); }
@@ -427,7 +495,6 @@ async function downloadLatestAPK() {
   addLog("Téléchargement du pack de l'artifact depuis GitHub...", "info");
 
   try {
-    // 1. Récupération du ZIP d'artifact de GitHub (renvoie un flux binaire)
     const res = await fetch(`https://api.github.com/repos/${REPO}/actions/artifacts/${artifactId}/zip`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
@@ -438,10 +505,7 @@ async function downloadLatestAPK() {
     addLog("Extraction du fichier APK interne en cours...", "info");
     downloadApkBtn.textContent = '⚙️ Extraction de l\'APK...';
 
-    // 2. Utilisation de JSZip pour ouvrir le zip d'artifact reçu
     const zip = await JSZip.loadAsync(blob);
-    
-    // Trouver le fichier .apk à l'intérieur du zip
     let apkFileObj = null;
     zip.forEach((relativePath, fileObj) => {
       if (relativePath.endsWith('.apk')) {
@@ -449,18 +513,12 @@ async function downloadLatestAPK() {
       }
     });
 
-    if (!apkFileObj) {
-      throw new Error("Aucun fichier avec l'extension .apk n'a été trouvé dans l'artifact.");
-    }
+    if (!apkFileObj) throw new Error("Aucun fichier avec l'extension .apk n'a été trouvé dans l'artifact.");
 
-    // 3. Extraire le fichier APK sous forme de Blob binaire pur
     const apkBlob = await apkFileObj.async('blob');
-    
-    // 4. Déclencher le téléchargement natif sur le téléphone mobile
     const url = window.URL.createObjectURL(apkBlob);
     const a = document.createElement('a');
     a.href = url;
-    // Nommer proprement le fichier pour le stockage mobile
     a.download = apkFileObj.name;
     document.body.appendChild(a);
     a.click();
@@ -470,7 +528,7 @@ async function downloadLatestAPK() {
     
     addLog(`APK [${apkFileObj.name}] extrait et téléchargé avec succès !`, "ok");
   } catch (err) {
-    addLog(`Échec de récupération de l'APK : ${err.message}`, "err");
+    addLog(`Échec de récupération : ${err.message}`, "err");
     alert(`Erreur : ${err.message}`);
   } finally {
     downloadApkBtn.disabled = false;

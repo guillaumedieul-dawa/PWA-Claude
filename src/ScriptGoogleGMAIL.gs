@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════
 //  FamilyHub — Sync Gmail → Firebase
 //  Compte : Guillaume Dieul
-//
+//  V1
 //  CONFIG : Dans Apps Script → Paramètres du projet
 //  → Propriétés du script → ajouter :
 //    FIREBASE_PROJECT = familyhub-colis

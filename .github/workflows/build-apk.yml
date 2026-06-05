@@ -106,7 +106,7 @@ jobs:
         root = tree.getroot()
 
         ANDROID_NS = "http://schemas.android.com/apk/res/android"
-        ET.register_namespace('android', AND_NS)
+        ET.register_namespace('android', ANDROID_NS)
 
         def has_permission(root, perm_name):
             android_name = f"{{{ANDROID_NS}}}name"
@@ -133,6 +133,7 @@ jobs:
         pretty = minidom.parseString(xml_bytes).toprettyxml(indent=" ")
         with open(manifest_path, "w", encoding="utf-8") as f:
             f.write(pretty)
+        print("✓ Permissions injectées avec succès")
         PYEOF
 
     - name: Generer et Afficher un NOUVEAU Keystore propre
@@ -141,7 +142,6 @@ jobs:
         mkdir -p "$KEYSTORE_DIR"
         rm -f "$KEYSTORE_DIR/debug.keystore"
         
-        # Génération forcée d'une clé neuve standard pour Android
         keytool -genkeypair -v -keystore "$KEYSTORE_DIR/debug.keystore" -storepass android -keypass android -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=FamilyHub,O=Famille Dieul-Gandet,C=FR"
         
         echo "=== DEBUT DU NOUVEAU BASE64 ==="
@@ -183,3 +183,4 @@ jobs:
         name: FamilyHub-v${{ github.run_number }}-APK
         path: android/app/build/outputs/apk/debug/app-debug.apk
         retention-days: 30
+        

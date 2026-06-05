@@ -17,6 +17,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci --prefer-offline --no-audit --no-fund
 
       - name: Configure Clasp Auth
         env:
@@ -24,5 +28,5 @@ jobs:
         run: echo "$CLASPRC_JSON" > ~/.clasprc.json
 
       - name: Push code to Google
-        run: npx @google/clasp push -f
+        run: npx clasp push -f
         

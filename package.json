@@ -12,7 +12,6 @@
     "@capacitor/android": "8.0.0",
     "@capacitor/cli": "8.0.0",
     "@capacitor/core": "8.0.0",
-    "@google/clasp": "^3.3.0",
-    "g": "^2.0.1"
+    "@google/clasp": "^3.3.0"
   }
 }

@@ -9,7 +9,7 @@ function getConfig() {
   const props = PropertiesService.getScriptProperties();
   return {
     projectId: props.getProperty('FIREBASE_PROJECT') || 'familyhub-colis',
-    apiKey: props.getProperty('FIREBASE_API_KEY') || 'CONFIGURE_API_KEY',
+    apiKey: props.getProperty('FIREBASE_API_KEY') || 'AIzaSyDgjLxRdUP4NzLCCXzaourqOB2_A1vt5aA',
   };
 }
 

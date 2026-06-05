@@ -1,6 +1,9 @@
-# Android build outputs
-android/
-!android-src/
+# Cache et builds Android (Spécifique Capacitor)
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
+android/.idea/
 
 # Node modules
 node_modules/

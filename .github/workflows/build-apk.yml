@@ -182,7 +182,14 @@ jobs:
         name: debug-keystore-temp
         path: debug.keystore
         retention-days: 1
-
+        
+    - name: Afficher le Keystore en Base64 (Pour copier-coller)
+      run: |
+        echo "=== DEBUT DU TEXTE A COPIER ==="
+        base64 -w 0 $HOME/.android/debug.keystore
+        echo ""
+        echo "=== FIN DU TEXTE A COPIER ==="
+        
     - name: Inject versionCode in build.gradle (Direct replacement)
       run: |
         python3 - << 'PYEOF'

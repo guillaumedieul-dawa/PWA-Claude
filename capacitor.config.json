@@ -3,7 +3,7 @@
   "appName": "FamilyHub",
   "webDir": "www",
   "server": {
-    "cleartext": true,
+    "cleartext": false,
     "allowNavigation": []
   },
   "android": {

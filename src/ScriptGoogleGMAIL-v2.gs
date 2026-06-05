@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════
 //  FamilyHub — Sync Gmail → Firebase (Optimisé)
 //  Compte : Guillaume Dieul
-//  V2
+//  V2 optimisée
 // ═══════════════════════════════════════════════════
 
 const ACCOUNT_NAME = 'Guillaume';

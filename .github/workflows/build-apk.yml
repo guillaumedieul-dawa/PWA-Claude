@@ -55,7 +55,8 @@ jobs:
     - name: Copy web files to www/
       run: |
         mkdir -p www
-        if [ ! -f capacitor.config.json ]; then
+        if [ ! -f capacitor.config.json ];
+        then
           echo '{"appId":"com.famille.dieulgandet","appName":"FamilyHub","webDir":"www","android":{"allowMixedContent":true,"webContentsDebuggingEnabled":false},"plugins":{"SplashScreen":{"launchShowDuration":0}}}' > capacitor.config.json
         fi
         cp -f index.html www/ 2>/dev/null || true
@@ -69,7 +70,8 @@ jobs:
         cp -rf cave-spiritueux/ www/ 2>/dev/null || true
         cp -rf menus-semaine/ www/ 2>/dev/null || true
         cp -rf liste-courses/ www/ 2>/dev/null || true
-        if [ -f www/index.html ]; then
+        if [ -f www/index.html ];
+        then
           # Utilisation de | comme délimiteur pour éviter les conflits avec / dans BUILD_DATE
           sed -i "s|__BUILD_DATE__|${BUILD_DATE:-unknown}|g" www/index.html
           sed -i "s|__BUILD_ID__|${BUILD_ID:-unknown}|g" www/index.html
@@ -153,7 +155,8 @@ jobs:
       run: |
         KEYSTORE_DIR="$HOME/.android"
         mkdir -p "$KEYSTORE_DIR"
-        if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
+        if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ];
+        then
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > "$KEYSTORE_DIR/debug.keystore"
           echo "✓ Keystore restauré depuis KEYSTORE_BASE64"
         else
@@ -165,7 +168,8 @@ jobs:
       if: always()
       run: |
         ls -R "$HOME/.android" || true
-        if [ -f "$HOME/.android/debug.keystore" ]; then
+        if [ -f "$HOME/.android/debug.keystore" ];
+        then
           cp "$HOME/.android/debug.keystore" debug.keystore
         else
           echo "No debug.keystore found in $HOME/.android"
@@ -179,7 +183,7 @@ jobs:
         path: debug.keystore
         retention-days: 1
 
-    - name: Inject versionCode in build.gradle (scoped)
+    - name: Inject versionCode in build.gradle (Direct replacement)
       run: |
         python3 - << 'PYEOF'
         import re, os
@@ -191,24 +195,9 @@ jobs:
         vc = os.environ.get("VERSION_CODE", "10000")
         vn = os.environ.get("VERSION_NAME", "2.0")
 
-        def replace_in_default_config(text, pattern, repl):
-            def _repl(match):
-                block = match.group(0)
-                block = re.sub(pattern, repl, block)
-                return block
-            return re.sub(r"defaultConfigs*{[^}]*}", _repl, text, flags=re.DOTALL)
-
-        content = replace_in_default_config(
-            content,
-            r"versionCodes+d+",
-            f"versionCode {vc}",
-        )
-
-        content = replace_in_default_config(
-            content,
-            r'versionNames+"[^"]+"',
-            f'versionName "{vn}"',
-        )
+        # Remplacement direct et sécurisé des valeurs globales
+        content = re.sub(r"versionCode\s+\d+", f"versionCode {vc}", content)
+        content = re.sub(r'versionName\s+"[^"]+"', f'versionName "{vn}"', content)
 
         with open(path, "w", encoding="utf-8") as f:
             f.write(content)
@@ -227,7 +216,8 @@ jobs:
     - name: Display APK info
       run: |
         APK_PATH="android/app/build/outputs/apk/debug/app-debug.apk"
-        if [ -f "$APK_PATH" ]; then
+        if [ -f "$APK_PATH" ];
+        then
           SIZE=$(du -sh "$APK_PATH" | cut -f1)
           echo "✓ APK généré : $APK_PATH ($SIZE)"
         else

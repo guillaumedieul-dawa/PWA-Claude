@@ -27,7 +27,7 @@ jobs:
     - uses: actions/cache@v4
       with:
         path: |
-          ~/.gradle/caches
+          ~ ~/.gradle/caches
           ~/.gradle/wrapper
           node_modules
         key: ${{ runner.os }}-gradle-node-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/package-lock.json') }}
@@ -106,7 +106,7 @@ jobs:
         root = tree.getroot()
 
         ANDROID_NS = "http://schemas.android.com/apk/res/android"
-        ET.register_namespace('android', ANDROID_NS)
+        ET.register_namespace('android', AND_NS)
 
         def has_permission(root, perm_name):
             android_name = f"{{{ANDROID_NS}}}name"
@@ -133,21 +133,20 @@ jobs:
         pretty = minidom.parseString(xml_bytes).toprettyxml(indent=" ")
         with open(manifest_path, "w", encoding="utf-8") as f:
             f.write(pretty)
-        print("✓ Permissions injectées avec succès")
         PYEOF
 
-    - name: Generer et Afficher un NOUVEAU Keystore propre
+    - name: Setup keystore stable (KEYSTORE_BASE64 secret)
       run: |
         KEYSTORE_DIR="$HOME/.android"
         mkdir -p "$KEYSTORE_DIR"
-        rm -f "$KEYSTORE_DIR/debug.keystore"
-        
-        keytool -genkeypair -v -keystore "$KEYSTORE_DIR/debug.keystore" -storepass android -keypass android -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=FamilyHub,O=Famille Dieul-Gandet,C=FR"
-        
-        echo "=== DEBUT DU NOUVEAU BASE64 ==="
-        base64 -w 0 "$KEYSTORE_DIR/debug.keystore"
-        echo ""
-        echo "=== FIN DU NOUVEAU BASE64 ==="
+        if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ];
+        then
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > "$KEYSTORE_DIR/debug.keystore"
+          echo "✓ Keystore restauré avec succès"
+        else
+          echo "❌ Erreur : Le secret KEYSTORE_BASE64 est manquant"
+          exit 1
+        fi
 
     - name: Inject versionCode in build.gradle (Direct replacement)
       run: |

@@ -18,7 +18,7 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version: '24'
-        cache: 'npm'
+        cache: 'npm' # Cache natif pour Node/npm
 
     - name: Install Dependencies
       run: npm ci --prefer-offline --no-audit --no-fund
@@ -39,10 +39,12 @@ jobs:
           echo '{"appId":"com.famille.dieulgandet.app","appName":"FamilyHub","webDir":"www","android":{"allowMixedContent":true,"webContentsDebuggingEnabled":false},"plugins":{"SplashScreen":{"launchShowDuration":0}}}' > capacitor.config.json
         fi
         
+        # Copie groupée des fichiers racine
         for file in index.html manifest.json sw.js firebaseSync.js storage.js; do
           cp -f "$file" www/ 2>/dev/null || true
         done
         
+        # Copie groupée des dossiers de fonctionnalités
         for dir in icons locker-tracker todo-partage cave-spiritueux menus-semaine liste-courses; do
           cp -rf "$dir/" www/ 2>/dev/null || true
         done
@@ -64,12 +66,12 @@ jobs:
     - name: Capacitor sync
       run: npx cap sync android
 
-    # L'étape Java est déplacée ici, maintenant que le dossier android/ existe !
+    # Étape Java configurée ICI pour que le cache Gradle s'initialise sans erreur
     - uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '21'
-        cache: 'gradle'
+        cache: 'gradle' # Cache natif et automatique pour Gradle
 
     - name: Copy SmsPlugin Java files
       run: |

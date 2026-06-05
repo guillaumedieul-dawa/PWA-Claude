@@ -708,7 +708,7 @@ function getFilt(){
   let pkgs=D.packages.filter(p=>{
     if(DIS.has(p.carrier))return false;
     if(p.status!=='ready'&&p.status!=='delivered'&&p.status!=='collected'){
-      const _lu=new Date(p.lastUpdated||p.arrivalDate||0).getTime();
+      const _lu=new Date(p.arrivalDate||p.lastUpdated||0).getTime();
       if(_lu>0&&_lu<_cut30)return false;
     }
     if(p.status==='out_for_delivery'){
@@ -731,9 +731,14 @@ function getFilt(){
 function updBadges(){
   const p=D.packages;
   const DIS=getDisabled();
+  const _cut30=Date.now()-30*86400000;
   function countFilt(statusFn){
     return p.filter(function(x){
       if(DIS.has(x.carrier))return false;
+      if(x.status!=='ready'&&x.status!=='delivered'&&x.status!=='collected'){
+        const _lu=new Date(x.arrivalDate||x.lastUpdated||0).getTime();
+        if(_lu>0&&_lu<_cut30)return false;
+      }
       if(x.status==='out_for_delivery'){
         const arr=x.arrivalDate?new Date(x.arrivalDate).getTime():0;
         if(arr>0&&arr<Date.now()-5*86400000)return false;

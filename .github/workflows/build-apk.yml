@@ -18,19 +18,10 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version: '24'
-        cache: 'npm' # Cache natif et optimisé pour Node / npm
-
-    - uses: actions/setup-java@v4
-      with:
-        distribution: 'temurin'
-        java-version: '21'
-        cache: 'gradle' # Cache natif et optimisé pour Gradle
+        cache: 'npm'
 
     - name: Install Dependencies
-      run: |
-        # Si vos packages sont dans package.json, utilisez 'npm ci'
-        # Sinon, l'alternative propre reste :
-        npm install @capacitor/core@8.0.0 @capacitor/cli@8.0.0 @capacitor/android@8.0.0 --no-audit --no-fund --prefer-offline
+      run: npm ci --prefer-offline --no-audit --no-fund
 
     - name: Set versionCode auto
       run: |
@@ -48,12 +39,10 @@ jobs:
           echo '{"appId":"com.famille.dieulgandet.app","appName":"FamilyHub","webDir":"www","android":{"allowMixedContent":true,"webContentsDebuggingEnabled":false},"plugins":{"SplashScreen":{"launchShowDuration":0}}}' > capacitor.config.json
         fi
         
-        # Copie groupée des fichiers de base
         for file in index.html manifest.json sw.js firebaseSync.js storage.js; do
           cp -f "$file" www/ 2>/dev/null || true
         done
         
-        # Copie groupée des dossiers de fonctionnalités
         for dir in icons locker-tracker todo-partage cave-spiritueux menus-semaine liste-courses; do
           cp -rf "$dir/" www/ 2>/dev/null || true
         done
@@ -74,6 +63,13 @@ jobs:
 
     - name: Capacitor sync
       run: npx cap sync android
+
+    # L'étape Java est déplacée ici, maintenant que le dossier android/ existe !
+    - uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+        cache: 'gradle'
 
     - name: Copy SmsPlugin Java files
       run: |

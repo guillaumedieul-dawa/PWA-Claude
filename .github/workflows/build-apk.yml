@@ -18,10 +18,17 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version: '24'
-        cache: 'npm' # Cache natif pour Node/npm
+        cache: 'npm'
 
     - name: Install Dependencies
       run: npm ci --prefer-offline --no-audit --no-fund
+
+    # Étape Java configurée ICI pour que l'environnement soit totalement prêt avant Capacitor et Gradle
+    - uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+        cache: 'gradle'
 
     - name: Set versionCode auto
       run: |
@@ -65,13 +72,6 @@ jobs:
 
     - name: Capacitor sync
       run: npx cap sync android
-
-    # Étape Java configurée ICI pour que le cache Gradle s'initialise sans erreur
-    - uses: actions/setup-java@v4
-      with:
-        distribution: 'temurin'
-        java-version: '21'
-        cache: 'gradle' # Cache natif et automatique pour Gradle
 
     - name: Copy SmsPlugin Java files
       run: |

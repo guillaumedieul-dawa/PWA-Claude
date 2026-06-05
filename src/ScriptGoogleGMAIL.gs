@@ -1,4 +1,3 @@
-//  
 // ═══════════════════════════════════════════════════
 //  FamilyHub — Sync Gmail → Firebase
 //  Compte : Guillaume Dieul

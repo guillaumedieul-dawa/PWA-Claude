@@ -18,24 +18,18 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version: '24'
+        cache: 'npm' # Cache natif et optimisé pour Node / npm
 
     - uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '21'
+        cache: 'gradle' # Cache natif et optimisé pour Gradle
 
-    - uses: actions/cache@v4
-      with:
-        path: |
-          ~/.gradle/caches
-          ~/.gradle/wrapper
-          node_modules
-        key: ${{ runner.os }}-gradle-node-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-gradle-node-
-
-    - name: Install Capacitor 8
+    - name: Install Dependencies
       run: |
+        # Si vos packages sont dans package.json, utilisez 'npm ci'
+        # Sinon, l'alternative propre reste :
         npm install @capacitor/core@8.0.0 @capacitor/cli@8.0.0 @capacitor/android@8.0.0 --no-audit --no-fund --prefer-offline
 
     - name: Set versionCode auto
@@ -44,33 +38,27 @@ jobs:
         VERSION_NAME="2.$(date +%Y%m%d)"
         echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_ENV
         echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
-
-        BUILD_DATE=$(date '+%d/%m/%Y %H:%M')
-        echo "BUILD_DATE=$BUILD_DATE" >> $GITHUB_ENV
-
-        BUILD_ID=$(date +%Y%m%d-%H%M)-run${GITHUB_RUN_NUMBER}
-        echo "BUILD_ID=$BUILD_ID" >> $GITHUB_ENV
+        echo "BUILD_DATE=$(date '+%d/%m/%Y %H:%M')" >> $GITHUB_ENV
+        echo "BUILD_ID=$(date +%Y%m%d-%H%M)-run${GITHUB_RUN_NUMBER}" >> $GITHUB_ENV
 
     - name: Copy web files to www/
       run: |
         mkdir -p www
-        if [ ! -f capacitor.config.json ];
-        then
+        if [ ! -f capacitor.config.json ]; then
           echo '{"appId":"com.famille.dieulgandet.app","appName":"FamilyHub","webDir":"www","android":{"allowMixedContent":true,"webContentsDebuggingEnabled":false},"plugins":{"SplashScreen":{"launchShowDuration":0}}}' > capacitor.config.json
         fi
-        cp -f index.html www/ 2>/dev/null || true
-        cp -f manifest.json www/ 2>/dev/null || true
-        cp -f sw.js www/ 2>/dev/null || true
-        cp -f firebaseSync.js www/ 2>/dev/null || true
-        cp -f storage.js www 2>/dev/null || true
-        cp -rf icons/ www/ 2>/dev/null || true
-        cp -rf locker-tracker/ www/ 2>/dev/null || true
-        cp -rf todo-partage/ www/ 2>/dev/null || true
-        cp -rf cave-spiritueux/ www/ 2>/dev/null || true
-        cp -rf menus-semaine/ www/ 2>/dev/null || true
-        cp -rf liste-courses/ www/ 2>/dev/null || true
-        if [ -f www/index.html ];
-        then
+        
+        # Copie groupée des fichiers de base
+        for file in index.html manifest.json sw.js firebaseSync.js storage.js; do
+          cp -f "$file" www/ 2>/dev/null || true
+        done
+        
+        # Copie groupée des dossiers de fonctionnalités
+        for dir in icons locker-tracker todo-partage cave-spiritueux menus-semaine liste-courses; do
+          cp -rf "$dir/" www/ 2>/dev/null || true
+        done
+
+        if [ -f www/index.html ]; then
           sed -i "s|__BUILD_DATE__|${BUILD_DATE:-unknown}|g" www/index.html
           sed -i "s|__BUILD_ID__|${BUILD_ID:-unknown}|g" www/index.html
           sed -i "s|__VERSION_NAME__|${VERSION_NAME:-unknown}|g" www/index.html
@@ -85,8 +73,7 @@ jobs:
         fi
 
     - name: Capacitor sync
-      run: |
-        npx cap sync android
+      run: npx cap sync android
 
     - name: Copy SmsPlugin Java files
       run: |
@@ -140,8 +127,7 @@ jobs:
       run: |
         KEYSTORE_DIR="$HOME/.android"
         mkdir -p "$KEYSTORE_DIR"
-        if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ];
-        then
+        if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > "$HOME/.android/debug.keystore"
           echo "✓ Keystore restauré avec succès"
         else
@@ -173,10 +159,10 @@ jobs:
     - name: Fix gradlew permissions
       run: chmod +x android/gradlew
 
-    - name: Clean & Build APK
+    - name: Build APK
       run: |
         cd android
-        ./gradlew clean assembleDebug --no-daemon
+        ./gradlew assembleDebug --no-daemon
 
     - name: Upload APK
       uses: actions/upload-artifact@v4

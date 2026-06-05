@@ -56,7 +56,7 @@ jobs:
         mkdir -p www
         if [ ! -f capacitor.config.json ];
         then
-          echo '{"appId":"com.famille.dieulgandet.Vtest","appName":"FamilyHub","webDir":"www","android":{"allowMixedContent":true,"webContentsDebuggingEnabled":false},"plugins":{"SplashScreen":{"launchShowDuration":0}}}' > capacitor.config.json
+          echo '{"appId":"com.famille.dieulgandet","appName":"FamilyHub","webDir":"www","android":{"allowMixedContent":true,"webContentsDebuggingEnabled":false},"plugins":{"SplashScreen":{"launchShowDuration":0}}}' > capacitor.config.json
         fi
         cp -f index.html www/ 2>/dev/null || true
         cp -f manifest.json www/ 2>/dev/null || true

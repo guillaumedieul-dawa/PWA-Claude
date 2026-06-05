@@ -822,7 +822,7 @@ function render(){
 }
 
 function tog(id){
-  const sid=String(Math.round(Number(id)));
+  const sid=String(id);
   const b=document.getElementById('pb'+sid);
   const card=document.getElementById('pc'+sid);
   if(!b||!card)return;
@@ -937,11 +937,14 @@ document.addEventListener('click',function(e){
   var el=findAction(e.target);
   if(!el)return;
   var action=el.getAttribute('data-action');
-  var id=Math.round(Number(el.dataset.id||0));
+  var rawId=el.dataset.id||'0';
+  // Conserver l'ID brut (string) pour les IDs Firebase type "sms_xxx"
+  // Cast numérique uniquement si l'ID est purement numérique
+  var id=/^\d+$/.test(rawId)?Math.round(Number(rawId)):rawId;
   DBG.dispatch(e,action);
 
   if(action==='toggleTheme'){toggleTheme();return;}
-  if(action==='tog'){e.stopPropagation();tog(id);return;}
+  if(action==='tog'){e.stopPropagation();tog(rawId);return;}
   if(action==='cpT'){e.stopPropagation();cpT(el.dataset.val,el.dataset.lbl,e);return;}
   if(action==='showQR'){e.stopPropagation();showQR(id,e);return;}
   if(action==='shareP'){e.stopPropagation();shareP(id,e);return;}

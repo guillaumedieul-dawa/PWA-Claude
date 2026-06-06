@@ -136,7 +136,6 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Pl
 const SK = 'fh_todo';
 const PRIO_COLORS = {high:'#cf0000', mid:'#7B4F00', low:'#1A6500'};
 
-// ── Firebase REST ──
 const FB_PROJECT = 'familyhub-colis-8abbd';
 const FB_COLL    = 'meta/todo/tasks';
 function getFBKey() {
@@ -396,11 +395,12 @@ function initTheme() {
   sys.addEventListener('change', e => { if (!localStorage.getItem('lt_th')) applyTheme(e.matches?'dark':'light'); });
 }
 
+/* FIX: reflow Capacitor WebView */
 function openSheet(id) {
   const el = document.getElementById(id);
   if (!el) return;
   el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;';
-  el.offsetHeight;
+  void el.offsetHeight; /* FIX: forcer reflow */
   try { document.body.style.overflow = 'hidden'; } catch(e) {}
 }
 function closeSheet(id) {
@@ -416,6 +416,7 @@ function showToast(m) {
   clearTimeout(_tt); _tt = setTimeout(() => t.classList.remove('show'), 3000);
 }
 
+/* FIX: findAction avec guard nodeType===1 (évite crash TextNode Capacitor) */
 function findAction(elem) {
   var el = elem;
   while (el && el !== document) {
@@ -424,6 +425,7 @@ function findAction(elem) {
   }
   return null;
 }
+
 document.addEventListener('click', function(e) {
   const el = findAction(e.target); if (!el) return;
   const action = el.getAttribute('data-action');

@@ -1,8 +1,12 @@
 package com.famille.dieulgandet;
 
+import android.os.Bundle;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
-    // Les plugins avec l'annotation @CapacitorPlugin sont automatiquement enregistrés.
-    // registerPlugin n'est plus requis.
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        registerPlugin(SmsPlugin.class);
+        super.onCreate(savedInstanceState);
+    }
 }

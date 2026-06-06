@@ -4,8 +4,7 @@
 <meta charset="UTF-8">
 <meta name="build-date" content="__BUILD_DATE__">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f8fb">
-<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1a1c1e">
+<meta name="theme-color" id="meta-theme" content="#faf7f2">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="FamilyHub">
 <title>FamilyHub</title>
@@ -14,172 +13,103 @@
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Text:wght@400;500&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="themes.css">
 <style>
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Google Sans Text',sans-serif;overflow-x:hidden}
-
-#app{max-width:520px;margin:0 auto;padding:calc(var(--top)+10px) 16px calc(var(--bot)+10px)}
-
-/* Header */
-.hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-.hdr-left{}
-.hdr-eyebrow{font-size:11px;color:var(--osv);letter-spacing:.5px;font-family:'Google Sans',sans-serif}
-.hdr-title{font-family:'Google Sans',sans-serif;font-size:28px;font-weight:700;color:var(--ob);letter-spacing:-.5px;line-height:1.1}
-.ibtn{width:40px;height:40px;border-radius:50%;border:none;background:var(--s1);color:var(--os);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer}
-.ibtn:active{background:var(--s2)}
-
-/* Greeting card */
-.greeting{background:var(--p);border-radius:var(--rl);padding:12px 20px;margin-bottom:12px;color:var(--op)}
-.greet-lbl{font-size:12px;opacity:.8;font-family:'Google Sans',sans-serif;letter-spacing:.3px}
-.greet-name{font-family:'Google Sans',sans-serif;font-size:20px;font-weight:700;margin-top:2px}
-.greet-sub{font-size:12px;opacity:.8;margin-top:3px;line-height:1.4}
-
-/* Section */
-.sec-lbl{font-family:'Google Sans',sans-serif;font-size:13px;font-weight:500;color:var(--osv);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
-
-/* App grid */
-.app-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:0}
-.app-card{background:var(--sf);border-radius:var(--rl);padding:12px 14px;cursor:pointer;box-shadow:0 1px 3px var(--sh);transition:all .2s;text-decoration:none;display:flex;flex-direction:column;gap:8px;border:1px solid transparent}
-.app-card:active{transform:scale(.97);border-color:var(--olv)}
-.app-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:2px}
-.app-name{font-family:'Google Sans',sans-serif;font-size:13px;font-weight:700;color:var(--os)}
-.app-desc{font-size:11px;color:var(--osv);line-height:1.3}
-.app-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;font-family:'Google Sans',sans-serif;margin-top:2px}
-
-/* Footer */
-.footer{text-align:center;font-size:11px;color:var(--osv);margin-top:8px;font-family:'Roboto Mono',monospace}
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--rm); padding: var(--rl); margin-top: 8px; }
+.card { background: var(--sf); border: 1px solid var(--olv); border-radius: var(--rm); padding: var(--rl); text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 2px 4px var(--sh); transition: transform 0.2s, box-shadow 0.2s; }
+.card:active { transform: scale(0.98); }
+.card-hd { display: flex; align-items: center; gap: 12px; }
+.card-ico { font-size: 28px; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: var(--s1); border-radius: var(--rs); }
+.card-ttl { font-family: 'Google Sans', sans-serif; font-size: 18px; font-weight: 700; color: var(--ob); }
+.card-desc { font-size: 14px; color: var(--osv); line-height: 1.4; }
+.badge { font-family: 'Roboto Mono', monospace; font-size: 12px; font-weight: 500; padding: 4px 8px; background: var(--pc); color: var(--opc); border-radius: 6px; align-self: flex-start; margin-top: 4px; }
+.tbar { display: flex; align-items: center; justify-content: space-between; padding: calc(var(--top) + 12px) var(--rl) 12px; background: var(--sf); border-bottom: 1px solid var(--olv); position: sticky; top: 0; z-index: 100; }
+.ttl { font-family: 'Google Sans', sans-serif; font-size: 20px; font-weight: 700; color: var(--ob); }
+.th { display: flex; gap: 8px; }
+.ibtn { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: var(--rs); background: var(--s1); border: none; color: var(--ob); font-size: 20px; cursor: pointer; }
 </style>
-<!-- Thème : init immédiate pour éviter le flash -->
-<script src="theme.js"></script>
 </head>
 <body>
-<div id="app">
-  <div class="hdr">
-    <div class="hdr-left">
-      <div class="hdr-eyebrow">Bonjour 👋</div>
-      <div class="hdr-title">FamilyHub</div>
-    </div>
-    <button class="ibtn" data-action="toggleTheme" id="thbtn">☀️</button>
-  </div>
 
-  <div class="greeting">
-    <div class="greet-lbl">Applications de la famille</div>
-    <div class="greet-name">Dieul</div>
-    <div class="greet-sub">21 rue du Beauregard, Pierrelaye<br>Données partagées entre Guillaume et Michèle</div>
-  </div>
-
-  <div class="sec-lbl">Applications</div>
-  <div class="app-grid">
-    <a href="./locker-tracker/index.html" class="app-card">
-      <div class="app-icon" style="background:#D7E3FF">📦</div>
-      <div class="app-name">Suivi Colis</div>
-      <div class="app-desc">SMS, Gmail, codes retrait, QR</div>
-      <span class="app-badge" style="background:#D7E3FF;color:#001849" id="badgeColis">— colis</span>
-    </a>
-    <a href="./liste-courses/index.html" class="app-card">
-      <div class="app-icon" style="background:#9EEFFD">🛒</div>
-      <div class="app-name">Liste de courses</div>
-      <div class="app-desc">Courses partagées</div>
-      <span class="app-badge" style="background:#9EEFFD;color:#004E57" id="badgeCourses">— articles</span>
-    </a>
-    <a href="./todo-partage/index.html" class="app-card">
-      <div class="app-icon" style="background:#C4EFAD">✅</div>
-      <div class="app-name">To-Do partagé</div>
-      <div class="app-desc">Liste de tâches commune</div>
-      <span class="app-badge" style="background:#C4EFAD;color:#1A6500" id="badgeTodo">— tâches</span>
-    </a>
-    <a href="./cave-spiritueux/index.html" class="app-card">
-      <div class="app-icon" style="background:#ECDCFF">🍷</div>
-      <div class="app-name">Cave</div>
-      <div class="app-desc">Vins, rhums, whiskys</div>
-      <span class="app-badge" style="background:#ECDCFF;color:#1D0160" id="badgeCave">— bouteilles</span>
-    </a>
-    <a href="./menus-semaine/index.html" class="app-card">
-      <div class="app-icon" style="background:#FFDDB4">🍽️</div>
-      <div class="app-name">Menus</div>
-      <div class="app-desc">Semaine et mois</div>
-      <span class="app-badge" style="background:#FFDDB4;color:#7B4F00" id="badgeMenus">7 jours</span>
-    </a>
+<div class="tbar">
+  <div class="ttl">FamilyHub</div>
+  <div class="th">
+    <button class="ibtn" id="thbtn" data-action="toggleTheme">☀️</button>
   </div>
 </div>
 
+<div class="grid">
+  <a href="todo.html" class="card">
+    <div class="card-hd">
+      <div class="card-ico">✅</div>
+      <div class="card-ttl">To-Do partagé</div>
+    </div>
+    <div class="card-desc">Suivi et répartition des tâches quotidiennes de la maison.</div>
+    <div class="badge" id="badgeTodo">Chargement...</div>
+  </a>
+
+  <a href="menus.html" class="card">
+    <div class="card-hd">
+      <div class="card-ico">🍳</div>
+      <div class="card-ttl">Menus de la semaine</div>
+    </div>
+    <div class="card-desc">Planification des repas et suggestions d'idées de plats.</div>
+    <div class="badge" id="badgeMenus">Midi & Soir</div>
+  </a>
+
+  <a href="courses.html" class="card">
+    <div class="card-hd">
+      <div class="card-ico">🛒</div>
+      <div class="card-ttl">Liste de courses</div>
+    </div>
+    <div class="card-desc">Articles à acheter, triés automatiquement par rayon.</div>
+    <div class="badge" id="badgeCourses">Chargement...</div>
+  </a>
+
+  <a href="cave.html" class="card">
+    <div class="card-hd">
+      <div class="card-ico">🍷</div>
+      <div class="card-ttl">Cave à spiritueux</div>
+    </div>
+    <div class="card-desc">Inventaire des bouteilles, cépages et alertes de stock.</div>
+    <div class="badge" id="badgeCave">Gestion du stock</div>
+  </a>
+</div>
+
+<div style="text-align:center; padding: var(--rl); color: var(--osv); font-size: 12px; font-family: 'Roboto Mono', monospace;" id="footerBuild">
+  FamilyHub v2
+</div>
+
+<script src="theme.js"></script>
 <script>
-// ── Firestore badges helper ──────────────────────────────────
-const FB_PROJ_HOME = 'familyhub-colis-8abbd';
-function getFBKeyHome() {
-  try { const s = JSON.parse(localStorage.getItem('lt_fb')); return s && s.apiKey ? s.apiKey : ''; } catch { return ''; }
-}
-function fbHomeUrl(coll) {
-  return 'https://firestore.googleapis.com/v1/projects/' + FB_PROJ_HOME +
-    '/databases/(default)/documents/' + coll + '?key=' + getFBKeyHome();
-}
-async function fbCountDocs(coll) {
+async function fbCountDocs(col) {
   try {
-    const r = await fetch(fbHomeUrl(coll));
+    const r = await fetch(`https://firestore.googleapis.com/v1/projects/familyhub-v2/databases/(default)/documents/${col}?pageSize=100`);
     if (!r.ok) return null;
-    const data = await r.json();
-    return data.documents || [];
+    const d = await r.json();
+    return d.documents || [];
   } catch { return null; }
 }
 
-// Badges dynamiques : localStorage en premier, Firestore si cache vide
 async function loadBadges() {
-  // ── Colis (localStorage uniquement) ──
   try {
-    const _colis = JSON.parse(localStorage.getItem('lt_v3')||'{}');
-    const _pkgs  = _colis.packages||[];
-    const _dis   = new Set(JSON.parse(localStorage.getItem('lt_disabled')||'["amazon"]'));
-    const _c30   = Date.now()-30*86400000;
-    const _active= _pkgs.filter(function(p){
-      if(_dis.has(p.carrier)) return false;
-      if(p.status!=='ready'&&p.status!=='delivered'&&p.status!=='collected'){
-        var _lu=new Date(p.lastUpdated||p.arrivalDate||0).getTime();
-        if(_lu>0&&_lu<_c30) return false;
-      } return true;
-    });
-    const _ready = _active.filter(function(p){return p.status==='ready';}).length;
-    const _el = document.getElementById('badgeColis');
-    if(_el) _el.textContent = _ready>0?_ready+' à retirer':_active.length>0?_active.length+' colis':'Aucun colis';
-  } catch {}
-
-  // ── To-Do ──────────────────────────────────────────────────
-  try {
-    const todo    = JSON.parse(localStorage.getItem('fh_todo')||'{}');
-    let tasks     = todo.tasks||[];
-    if (tasks.length === 0 && getFBKeyHome()) {
-      const docs = await fbCountDocs('meta/todo/tasks');
-      if (docs && docs.length > 0) {
-        tasks = docs.map(function(doc) {
-          const f = doc.fields||{};
-          return { done: f.done && f.done.booleanValue === true };
-        });
-      }
+    let tDocs = await fbCountDocs('meta/todo/tasks');
+    if (tDocs) {
+      let open = tDocs.filter(doc => {
+        const f = doc.fields || {};
+        return !(f.done && f.done.booleanValue === true);
+      }).length;
+      document.getElementById('badgeTodo').textContent = open + ' tâche' + (open > 1 ? 's' : '') + ' en cours';
     }
-    const pending = tasks.filter(t=>!t.done).length;
-    const el = document.getElementById('badgeTodo');
-    if (el) el.textContent = pending>0 ? pending+' en cours' : tasks.length+' tâches';
   } catch {}
 
-  // ── Cave ───────────────────────────────────────────────────
   try {
-    const cave    = JSON.parse(localStorage.getItem('fh_cave')||'{}');
-    let bottles   = cave.bottles||[];
-    if (bottles.length === 0 && getFBKeyHome()) {
-      const docs = await fbCountDocs('meta/cave/bottles');
-      if (docs && docs.length > 0) bottles = docs;
-    }
-    const count = bottles.length;
-    const el = document.getElementById('badgeCave');
-    if (el) el.textContent = count+' bouteille'+(count>1?'s':'');
-  } catch {}
-
-  // ── Courses ────────────────────────────────────────────────
-  try {
-    const courses = JSON.parse(localStorage.getItem('fh_courses')||'{}');
-    let items     = courses.items||[];
-    if (items.length === 0 && getFBKeyHome()) {
-      const docs = await fbCountDocs('meta/courses/items');
+    let items = [];
+    let local = localStorage.getItem('fh_courses');
+    if (local) {
+      items = JSON.parse(local).items || [];
+    } else {
+      let docs = await fbCountDocs('meta/courses/items');
       if (docs && docs.length > 0) {
-        items = docs.map(function(doc) {
+        items = docs.map(doc => {
           const f = doc.fields||{};
           return { done: f.done && f.done.booleanValue === true };
         });
@@ -187,7 +117,7 @@ async function loadBadges() {
     }
     const remaining = items.filter(i=>!i.done).length;
     const el = document.getElementById('badgeCourses');
-    if (el) el.textContent = remaining>0 ? remaining+' article'+(remaining>1?'s':'')+' restants' : 'Liste vide';
+    if (el) el.textContent = remaining > 0 ? remaining + ' article' + (remaining > 1 ? 's' : '') + ' restants' : 'Liste vide';
   } catch {}
 }
 
@@ -199,28 +129,20 @@ document.addEventListener('click', function(e) {
 
 loadBadges();
 
-// Afficher la date de build APK si disponible
 (function(){
   var bel = document.getElementById('footerBuild');
   if (!bel) return;
-  var meta = document.querySelector('meta[name="build-date"]');
+  var meta = document.querySelector('meta[name=\"build-date\"]');
   var bd = meta ? meta.getAttribute('content') : '';
   if (bd) bel.textContent = 'FamilyHub v2 · APK du ' + bd;
 })();
 </script>
-
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then(r => console.log('SW enregistré', r.scope))
-      .catch(e => console.warn('SW erreur', e));
+    navigator.serviceWorker.register('/sw.js').catch(e => console.warn('SW erreur', e));
   });
 }
 </script>
 </body>
-<footer style="font-size: 12px; text-align: center; margin-top: 20px; color: #666;">
-  Version applicative : __VERSION_NAME__<br />
-  Build : __BUILD_ID__ — généré le __BUILD_DATE__
-</footer>
 </html>

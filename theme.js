@@ -1,36 +1,36 @@
 /* ═══════════════════════════════════════════
    FamilyHub — theme.js
-   Gestion thème : light | dark | sepia
-   Persistance : localStorage key 'fh_theme'
+   Gestion thème globale & synchronisation APK
 ═══════════════════════════════════════════ */
 (function () {
   'use strict';
 
   const THEMES = ['light', 'dark', 'sepia'];
   const KEY = 'fh_theme';
+  const META_COLORS = { light: '#faf7f2', dark: '#1a1714', sepia: '#f4ecd8' };
 
-  /* ── Appliquer un thème ── */
   function applyTheme(t) {
     if (!THEMES.includes(t)) t = 'light';
     document.documentElement.setAttribute('data-theme', t);
     localStorage.setItem(KEY, t);
-    // Mettre à jour les points actifs
+    
     document.querySelectorAll('.theme-dot').forEach(d => {
       d.classList.toggle('active', d.dataset.t === t);
     });
-    // Compat anciens boutons 🌙/☀️
+
     const btn = document.getElementById('thbtn');
     if (btn) btn.textContent = t === 'dark' ? '🌙' : t === 'sepia' ? '📜' : '☀️';
+
+    const meta = document.getElementById('meta-theme');
+    if (meta) meta.setAttribute('content', META_COLORS[t]);
   }
 
-  /* ── Initialisation au chargement ── */
   function initTheme() {
     const saved = localStorage.getItem(KEY);
     const sys = window.matchMedia('(prefers-color-scheme: dark)').matches;
     applyTheme(saved || (sys ? 'dark' : 'light'));
   }
 
-  /* ── Injecter le sélecteur visuel dans le DOM ── */
   function injectPicker() {
     if (document.getElementById('theme-picker')) return;
     const picker = document.createElement('div');
@@ -45,28 +45,25 @@
       picker.appendChild(dot);
     });
     document.body.appendChild(picker);
-    // Marquer le thème courant
+    
     const cur = document.documentElement.getAttribute('data-theme') || 'light';
     document.querySelectorAll('.theme-dot').forEach(d => {
       d.classList.toggle('active', d.dataset.t === cur);
     });
   }
 
-  /* ── Compat : toggleTheme() appelé par anciens boutons ── */
   window.toggleTheme = function () {
     const cur = document.documentElement.getAttribute('data-theme') || 'light';
     const idx = THEMES.indexOf(cur);
     applyTheme(THEMES[(idx + 1) % THEMES.length]);
   };
 
-  /* ── Export public ── */
-  window.FHTheme = { apply: applyTheme, init: initTheme };
+  window.FHTheme = { apply: applyTheme, init: initTheme, inject: injectPicker };
 
-  /* ── Init immédiate (évite flash) ── */
-  initTheme();
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', injectPicker);
+    document.addEventListener('DOMContentLoaded', () => { initTheme(); injectPicker(); });
   } else {
+    initTheme();
     injectPicker();
   }
 })();

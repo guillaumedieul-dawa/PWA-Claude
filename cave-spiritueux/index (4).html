@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#faf7f2">
+<meta name="theme-color" media="(prefers-color-scheme: dark)"  content="#1a1714">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Cave à spiritueux">
+<title>Cave à spiritueux</title>
+<link rel="manifest" href="./manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fragment+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--p:#d97706;--pc:rgba(217,119,6,.12);--opc:#1c1410;--bg:#faf7f2;--sf:#fff;--s1:#f0ebe2;--s2:#e8e2d8;--olv:#e0d9cf;--ob:#1c1410;--os:#1c1410;--osv:#7a6a5a;--sh:rgba(0,0,0,.05);--cf:#9f1239;--cfb:#ffe4e6;--cd:#065f46;--cdb:#d1fae5;--top:env(safe-area-inset-top,0px);--bot:env(safe-area-inset-bottom,0px);--rl:20px;--rm:16px;--rs:12px}
+[data-theme="dark"]{--p:#fbbf24;--pc:rgba(251,191,36,.15);--opc:#f0ebe2;--bg:#1a1714;--sf:#231e1a;--s1:#2c2620;--s2:#352e27;--olv:#3e352d;--ob:#f0ebe2;--os:#f0ebe2;--osv:#a09080;--sh:rgba(0,0,0,.3);--cf:#fca5a5;--cfb:#450a0a;--cd:#6ee7b7;--cdb:#022c22}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Plus Jakarta Sans',sans-serif;overflow-x:hidden;transition:background .3s,color .3s}
+#app{max-width:520px;margin:0 auto;min-height:100dvh;padding-bottom:calc(var(--bot)+96px)}
+.tbar{position:sticky;top:0;z-index:100;background:var(--bg);padding:calc(var(--top)+16px) 20px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--olv)}
+.ihome{width:36px;height:36px;border-radius:10px;border:none;background:var(--s1);color:var(--os);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none;flex-shrink:0}
+.ihome:active{background:var(--s2)}
+.ttl{flex:1;min-width:0}
+.tlbl{font-size:10px;color:var(--osv);letter-spacing:.3px;font-weight:500}
+.th{font-family:'Bebas Neue',sans-serif!important;font-size:26px!important;letter-spacing:2px!important;color:var(--ob);line-height:1}
+.ibtn{width:36px;height:36px;border-radius:10px;border:none;background:var(--s1);color:var(--os);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;padding:0}
+.ibtn:active{background:var(--s2)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px 16px}
+.stat{background:var(--sf);border-radius:14px;padding:12px 10px;text-align:center;border:1px solid var(--olv);box-shadow:0 1px 3px var(--sh)}
+.stat-n{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--p);line-height:1}
+.stat-l{font-size:10px;color:var(--osv);margin-top:2px;font-weight:500}
+.swrap{padding:0 16px 8px;position:relative}
+.sfield{width:100%;padding:11px 16px 11px 42px;border-radius:28px;border:1px solid var(--olv);background:var(--sf);color:var(--ob);font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;outline:none;box-sizing:border-box}
+.sfield:focus{border-color:var(--p)}
+.sfield::placeholder{color:var(--osv)}
+.sico{position:absolute;left:28px;top:50%;transform:translateY(-50%);color:var(--osv);font-size:16px;pointer-events:none}
+.chips{display:flex;gap:8px;padding:0 16px 8px;overflow-x:auto;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;padding:6px 16px;border-radius:20px;border:1px solid var(--olv);background:transparent;color:var(--osv);font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;transition:all .15s}
+.chip.sel{background:var(--pc,rgba(0,0,0,.08));border-color:var(--p);color:var(--p);font-weight:600}
+.blist{padding:0 14px;display:flex;flex-direction:column;gap:8px}
+.bcard{background:var(--sf);border-radius:var(--rm);padding:15px 16px;display:flex;gap:12px;align-items:flex-start;cursor:pointer;transition:all .2s;border:1px solid var(--olv);animation:fu .25s ease both}
+.bcard:active{transform:scale(.98)}
+.bcard.open{border-color:var(--p)}
+.bico{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.binfo{flex:1;min-width:0}
+.bname{font-size:15px;font-weight:700;color:var(--os);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:-.2px}
+.bsub{font-size:12px;color:var(--osv);margin-top:2px}
+.bqty{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--p);text-align:right;line-height:1}
+.bqty-lbl{font-size:9px;color:var(--osv);text-align:right;margin-top:1px;text-transform:uppercase;letter-spacing:.5px}
+.bdetail{padding:12px 0 0;border-top:1px solid var(--olv);margin-top:12px;display:none}
+.bdetail.on{display:block}
+.field-lbl{font-size:10px;color:var(--osv);letter-spacing:.8px;text-transform:uppercase;margin-bottom:2px;font-weight:600}
+.field-val{font-size:13px;color:var(--os);margin-bottom:8px;line-height:1.4}
+.bacts{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.act{padding:7px 12px;border-radius:20px;border:1px solid var(--olv);background:transparent;color:var(--osv);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px}
+.act:active{background:var(--s2)}
+.act.rd{background:var(--cfb);border-color:transparent;color:var(--cf)}
+.qty-ctrl{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.qty-btn{width:34px;height:34px;border-radius:50%;border:1px solid var(--olv);background:var(--s1);color:var(--os);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.qty-btn:active{background:var(--s2)}
+.qty-val{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--p);min-width:36px;text-align:center}
+.fab{position:fixed;bottom:calc(var(--bot)+80px);right:20px;width:56px;height:56px;border-radius:18px;background:var(--p);color:#fff;border:none;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,.2);transition:transform .15s;z-index:99}
+.fab:active{transform:scale(.92)}
+.toast{position:fixed;bottom:calc(var(--bot)+160px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--ob);color:var(--bg);padding:12px 20px;border-radius:28px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;max-width:88vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.sov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center}
+.shtit{font-family:'Bebas Neue',sans-serif!important;font-size:22px!important;letter-spacing:2px!important;color:var(--ob);margin-bottom:20px}
+.slbl{font-size:11px;color:var(--osv);text-transform:uppercase;letter-spacing:.8px;margin:16px 0 6px;font-weight:600}
+.slbl.ft{margin-top:0}
+.slbl.opt::after{content:' (optionnel)';font-weight:400;text-transform:none;font-size:10px}
+.fin{width:100%;padding:13px 16px;border-radius:12px;border:1px solid var(--olv);background:var(--s1);color:var(--ob);font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;outline:none;transition:border-color .2s;margin-bottom:4px;box-sizing:border-box}
+.fin:focus{border-color:var(--p);background:var(--sf)}
+.fin::placeholder{color:var(--osv)}
+.fsel{width:100%;padding:13px 16px;border-radius:12px;border:1px solid var(--olv);background:var(--s1);color:var(--ob);font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;appearance:none;outline:none;margin-bottom:4px;box-sizing:border-box}
+.bfill{width:100%;padding:14px;border-radius:28px;background:var(--p);color:#fff;border:none;font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:10px;box-sizing:border-box}
+.bfill:active{opacity:.85}
+.bout{width:100%;padding:13px;border-radius:28px;background:transparent;border:1px solid var(--olv);color:var(--osv);font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;cursor:pointer;margin-top:8px;box-sizing:border-box}
+.row2{display:flex;gap:10px}
+.row2>*{flex:1;min-width:0}
+.empty{text-align:center;padding:60px 24px}
+.eico{font-size:52px;margin-bottom:12px;opacity:.4}
+.etit{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;color:var(--ob);margin-bottom:6px}
+.esub{font-size:13px;color:var(--osv)}
+@keyframes fu{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="tbar">
+    <a href="../index.html" class="ihome">🏠</a>
+    <div class="ttl">
+      <div class="tlbl">FamilyHub</div>
+      <div class="th">CAVE À SPIRITUEUX</div>
+    </div>
+    <button class="ibtn" id="thbtn" data-action="toggleTheme">🌙</button>
+  </div>
+  <div class="stats" id="stats"></div>
+  <div class="swrap">
+    <span class="sico">🔍</span>
+    <input class="sfield" id="searchField" placeholder="Nom, cépage, région…">
+  </div>
+  <div class="chips">
+    <button class="chip sel" data-filter="all"    data-action="setFilter">Tout</button>
+    <button class="chip"     data-filter="vin"    data-action="setFilter">🍷 Vins</button>
+    <button class="chip"     data-filter="rhum"   data-action="setFilter">🥃 Rhums</button>
+    <button class="chip"     data-filter="whisky" data-action="setFilter">🥃 Whiskys</button>
+    <button class="chip"     data-filter="autre"  data-action="setFilter">🍾 Autres</button>
+  </div>
+  <div class="blist" id="BL"></div>
+</div>
+<button class="fab" data-action="openAdd"><span style="pointer-events:none">＋</span></button>
+<div class="toast" id="toast"></div>
+
+<div class="sov" id="shAdd">
+  <div style="background:var(--sf);border-radius:20px 20px 0 0;padding:28px 32px calc(var(--bot)+40px);width:100%;max-width:520px;box-sizing:border-box;max-height:92dvh;overflow-y:auto">
+    <div style="width:32px;height:4px;background:var(--olv);border-radius:2px;margin:0 auto 20px;cursor:pointer" data-action="closeAdd"></div>
+    <div class="shtit">Ajouter une bouteille</div>
+    <div class="slbl ft">Nom</div>
+    <input class="fin" id="aNom" placeholder="Château Margaux, Zacapa 23…">
+    <div class="row2">
+      <div>
+        <div class="slbl ft">Type</div>
+        <select class="fsel" id="aType">
+          <option value="vin">🍷 Vin rouge</option>
+          <option value="vinb">🥂 Vin blanc</option>
+          <option value="vinr">🌸 Vin rosé</option>
+          <option value="rhum">🥃 Rhum</option>
+          <option value="whisky">🥃 Whisky</option>
+          <option value="champagne">🍾 Champagne</option>
+          <option value="autre">🍾 Autre</option>
+        </select>
+      </div>
+      <div>
+        <div class="slbl ft">Quantité</div>
+        <input class="fin" id="aQty" type="number" min="1" value="1" placeholder="1">
+      </div>
+    </div>
+    <div class="row2">
+      <div><div class="slbl ft">Millésime</div><input class="fin" id="aYear" type="number" placeholder="2019"></div>
+      <div><div class="slbl ft">Note /20</div><input class="fin" id="aNote" type="number" min="0" max="20" placeholder="16"></div>
+    </div>
+    <div class="slbl">Région / Distillerie</div>
+    <input class="fin" id="aRegion" placeholder="Bordeaux, Barbade…">
+    <div class="slbl">Commentaire</div>
+    <input class="fin" id="aComment" placeholder="Arômes, accords mets…">
+    <button class="bfill" data-action="addBottle">Enregistrer</button>
+    <button class="bout"  data-action="closeAdd">Annuler</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+const SK = 'fh_cave';
+const TYPES   = {vin:'🍷 Vin rouge',vinb:'🥂 Vin blanc',vinr:'🌸 Vin rosé',rhum:'🥃 Rhum',whisky:'🥃 Whisky',champagne:'🍾 Champagne',autre:'🍾 Autre'};
+const ICONS   = {vin:'🍷',vinb:'🥂',vinr:'🌸',rhum:'🥃',whisky:'🥃',champagne:'🍾',autre:'🍾'};
+const COLORS  = {vin:'#FFD6C0',vinb:'#FFFBD0',vinr:'#FFD0E8',rhum:'#ECDCFF',whisky:'#D7E3FF',champagne:'#C4EFAD',autre:'#E6EBF0'};
+
+const FB_PROJECT = 'familyhub-colis-8abbd';
+const FB_COLL    = 'meta/cave/bottles';
+function getFBKey() {
+  try { const s = JSON.parse(localStorage.getItem('lt_fb')); return s && s.apiKey ? s.apiKey : ''; } catch { return ''; }
+}
+function fbUrl(path) {
+  return 'https://firestore.googleapis.com/v1/projects/' + FB_PROJECT +
+    '/databases/(default)/documents/' + path + '?key=' + getFBKey();
+}
+function toFields(obj) {
+  const f = {};
+  for (const k in obj) {
+    const v = obj[k];
+    if (v === null || v === undefined) f[k] = {nullValue: null};
+    else if (typeof v === 'boolean')   f[k] = {booleanValue: v};
+    else if (typeof v === 'number')    f[k] = {integerValue: String(v)};
+    else                               f[k] = {stringValue: String(v)};
+  }
+  return f;
+}
+function fromFields(fields) {
+  if (!fields) return {};
+  const obj = {};
+  for (const k in fields) {
+    const v = fields[k];
+    if ('booleanValue' in v)      obj[k] = v.booleanValue;
+    else if ('integerValue' in v) obj[k] = parseInt(v.integerValue);
+    else if ('stringValue' in v)  obj[k] = v.stringValue;
+    else obj[k] = null;
+  }
+  return obj;
+}
+async function fbWriteBottle(b) {
+  if (!getFBKey()) return;
+  try {
+    await fetch(fbUrl(FB_COLL + '/' + b.id), {
+      method: 'PATCH',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({fields: toFields(b)})
+    });
+  } catch(e) { console.warn('fbWriteBottle', e); }
+}
+async function fbDeleteBottle(id) {
+  if (!getFBKey()) return;
+  try { await fetch(fbUrl(FB_COLL + '/' + id), {method:'DELETE'}); }
+  catch(e) { console.warn('fbDeleteBottle', e); }
+}
+async function fbLoadAll() {
+  if (!getFBKey()) return null;
+  try {
+    const r = await fetch(fbUrl(FB_COLL));
+    if (!r.ok) return null;
+    const data = await r.json();
+    return (data.documents || []).map(doc => fromFields(doc.fields));
+  } catch(e) { console.warn('fbLoadAll', e); return null; }
+}
+
+let D    = loadD();
+let flt  = 'all';
+let srch = '';
+let _tt;
+
+function loadD() {
+  try { const d = JSON.parse(localStorage.getItem(SK)); if (d && d.bottles) return d; } catch(e) {}
+  return {bottles:[], nextId:1};
+}
+function saveD(d) { localStorage.setItem(SK, JSON.stringify(d)); }
+
+function addBottle() {
+  const nom = document.getElementById('aNom').value.trim();
+  if (!nom) { showToast('⚠️ Saisissez un nom'); return; }
+  const bottle = {
+    id: D.nextId++, nom,
+    type:    document.getElementById('aType').value,
+    qty:     parseInt(document.getElementById('aQty').value) || 1,
+    year:    document.getElementById('aYear').value   || '',
+    note:    document.getElementById('aNote').value   || '',
+    region:  document.getElementById('aRegion').value.trim(),
+    comment: document.getElementById('aComment').value.trim(),
+    date:    new Date().toISOString()
+  };
+  D.bottles.unshift(bottle);
+  saveD(D); render(); closeSheet('shAdd');
+  fbWriteBottle(bottle);
+  showToast('✓ Ajoutée à la cave');
+  ['aNom','aYear','aNote','aRegion','aComment'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('aQty').value = '1';
+}
+
+function changeQty(id, delta) {
+  const b = D.bottles.find(x => x.id === id); if (!b) return;
+  b.qty = Math.max(0, b.qty + delta);
+  if (b.qty === 0 && confirm('Stock à 0 — supprimer la bouteille ?')) {
+    D.bottles = D.bottles.filter(x => x.id !== id);
+    saveD(D); render();
+    fbDeleteBottle(id);
+    return;
+  }
+  saveD(D); render();
+  fbWriteBottle(b);
+}
+
+function delBottle(id) {
+  if (!confirm('Supprimer cette bouteille ?')) return;
+  D.bottles = D.bottles.filter(x => x.id !== id);
+  saveD(D); render();
+  fbDeleteBottle(id);
+}
+
+function togBottle(id) {
+  const detail = document.getElementById('bd' + id);
+  const card   = document.getElementById('bc' + id);
+  if (detail) detail.classList.toggle('on');
+  if (card)   card.classList.toggle('open', detail && detail.classList.contains('on'));
+}
+
+function getFilt() {
+  let b = [...D.bottles];
+  if      (flt === 'vin')    b = b.filter(x => ['vin','vinb','vinr'].includes(x.type));
+  else if (flt === 'rhum')   b = b.filter(x => x.type === 'rhum');
+  else if (flt === 'whisky') b = b.filter(x => x.type === 'whisky');
+  else if (flt !== 'all')    b = b.filter(x => x.type === flt);
+  if (srch) {
+    const q = srch.toLowerCase();
+    b = b.filter(x => (x.nom||'').toLowerCase().includes(q) ||
+                      (x.region||'').toLowerCase().includes(q) ||
+                      (x.comment||'').toLowerCase().includes(q));
+  }
+  return b;
+}
+
+function renderStats() {
+  const b      = D.bottles;
+  const total  = b.reduce((s,x) => s + x.qty, 0);
+  const vins   = b.filter(x => ['vin','vinb','vinr','champagne'].includes(x.type)).reduce((s,x) => s+x.qty, 0);
+  const spirits= b.filter(x => ['rhum','whisky','autre'].includes(x.type)).reduce((s,x) => s+x.qty, 0);
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="stat-n">${total}</div><div class="stat-l">Total</div></div>
+    <div class="stat"><div class="stat-n">${vins}</div><div class="stat-l">Vins</div></div>
+    <div class="stat"><div class="stat-n">${spirits}</div><div class="stat-l">Spiritueux</div></div>`;
+}
+
+function render() {
+  renderStats();
+  const bottles = getFilt();
+  const el = document.getElementById('BL');
+  if (!bottles.length) {
+    el.innerHTML = `<div class="empty"><div class="eico">🍷</div><div class="etit">Cave vide</div><div class="esub">Appuyez sur + pour ajouter une bouteille</div></div>`;
+    return;
+  }
+  el.innerHTML = bottles.map((b,i) => `
+    <div class="bcard" id="bc${b.id}" data-action="togBottle" data-id="${b.id}" style="animation-delay:${i*.03}s">
+      <div class="bico" style="background:${COLORS[b.type]||'#E6EBF0'}">${ICONS[b.type]||'🍾'}</div>
+      <div class="binfo">
+        <div class="bname">${b.nom}</div>
+        <div class="bsub">${TYPES[b.type]||b.type}${b.year?' · '+b.year:''}${b.region?' · '+b.region:''}</div>
+        <div class="bdetail" id="bd${b.id}">
+          ${b.note?`<div class="field-lbl">Note</div><div class="field-val">⭐ ${b.note}/20</div>`:''}
+          ${b.comment?`<div class="field-lbl">Commentaire</div><div class="field-val">${b.comment}</div>`:''}
+          <div class="field-lbl">Quantité en cave</div>
+          <div class="qty-ctrl">
+            <button class="qty-btn" data-action="qtyMinus" data-id="${b.id}"><span style="pointer-events:none">−</span></button>
+            <div class="qty-val">${b.qty}</div>
+            <button class="qty-btn" data-action="qtyPlus"  data-id="${b.id}"><span style="pointer-events:none">+</span></button>
+          </div>
+          <div class="bacts">
+            <button class="act rd" data-action="delBottle" data-id="${b.id}">🗑 Supprimer</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="bqty">${b.qty}</div>
+        <div class="bqty-lbl">btl</div>
+      </div>
+    </div>`).join('');
+}
+
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  const btn = document.getElementById('thbtn');
+  if (btn) btn.textContent = t === 'dark' ? '🌙' : '☀️';
+}
+function toggleTheme() {
+  const d = document.documentElement.getAttribute('data-theme') === 'dark';
+  const n = d ? 'light' : 'dark';
+  localStorage.setItem('lt_th', n); applyTheme(n);
+}
+function initTheme() {
+  const s = localStorage.getItem('lt_th');
+  if (s) { applyTheme(s); return; }
+  const sys = window.matchMedia('(prefers-color-scheme: dark)');
+  applyTheme(sys.matches ? 'dark' : 'light');
+  sys.addEventListener('change', e => { if (!localStorage.getItem('lt_th')) applyTheme(e.matches?'dark':'light'); });
+}
+
+/* FIX: reflow Capacitor WebView */
+function openSheet(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;';
+  void el.offsetHeight; /* FIX: forcer reflow */
+  try { document.body.style.overflow = 'hidden'; } catch(e) {}
+}
+function closeSheet(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.display = 'none';
+  try { document.body.style.overflow = ''; } catch(e) {}
+}
+
+function showToast(m) {
+  const t = document.getElementById('toast');
+  t.textContent = m; t.classList.add('show');
+  clearTimeout(_tt); _tt = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+/* FIX: findAction avec guard nodeType===1 (évite crash TextNode Capacitor) */
+function findAction(elem) {
+  var el = elem;
+  while (el && el !== document) {
+    if (el.nodeType === 1 && el.getAttribute && el.getAttribute('data-action')) return el;
+    el = el.parentNode;
+  }
+  return null;
+}
+
+document.addEventListener('click', function(e) {
+  const el = findAction(e.target); if (!el) return;
+  const action = el.getAttribute('data-action');
+  const ds = el.dataset;
+  switch (action) {
+    case 'toggleTheme': toggleTheme(); break;
+    case 'openAdd':     openSheet('shAdd'); break;
+    case 'closeAdd':    closeSheet('shAdd'); break;
+    case 'setFilter':
+      flt = ds.filter || 'all';
+      document.querySelectorAll('.chip').forEach(b => b.classList.remove('sel'));
+      el.classList.add('sel'); render(); break;
+    case 'addBottle':  addBottle(); break;
+    case 'togBottle':
+      e.stopPropagation();
+      togBottle(parseInt(ds.id)); break;
+    case 'qtyMinus':
+      e.stopPropagation();
+      changeQty(parseInt(ds.id), -1); break;
+    case 'qtyPlus':
+      e.stopPropagation();
+      changeQty(parseInt(ds.id), +1); break;
+    case 'delBottle':
+      e.stopPropagation();
+      delBottle(parseInt(ds.id)); break;
+  }
+});
+document.addEventListener('click', function(e) {
+  if (e.target.classList && e.target.classList.contains('sov')) closeSheet(e.target.id);
+});
+document.addEventListener('input', function(e) {
+  if (e.target.id === 'searchField') { srch = e.target.value; render(); }
+});
+
+async function init() {
+  document.querySelectorAll('.sov').forEach(el => { el.style.display = 'none'; });
+  initTheme(); render();
+  const remote = await fbLoadAll();
+  if (remote && remote.length > 0) {
+    const localMap = {};
+    D.bottles.forEach(b => { localMap[b.id] = b; });
+    remote.forEach(b => { localMap[b.id] = b; });
+    D.bottles = Object.values(localMap).sort((a,b) => new Date(b.date||0) - new Date(a.date||0));
+    D.nextId = Math.max(D.nextId, ...D.bottles.map(b => b.id + 1));
+    saveD(D); render();
+  }
+}
+init();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>

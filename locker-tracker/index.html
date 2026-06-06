@@ -11,6 +11,7 @@
 <link rel="manifest" href="./manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fragment+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="../fbSync.js"></script>
 <style>
 :root{--p:#2563eb;--op:#fff;--pc:#dbeafe;--opc:#1e3a8a;--s:#059669;--sc:#d1fae5;--t:#7c3aed;--tc:#ede9fe;--err:#9f1239;--ec:#ffe4e6;--bg:#faf7f2;--sf:#fff;--s1:#f0ebe2;--s2:#e8e2d8;--olv:#e0d9cf;--ob:#1c1410;--os:#1c1410;--osv:#7a6a5a;--sh:rgba(0,0,0,.05);--cf:#9f1239;--cfb:#ffe4e6;--cr:#065f46;--crb:#d1fae5;--cd:#065f46;--cdb:#d1fae5;--co:#92400e;--cob:#fef3c7;--cpd:#92400e;--cpdb:#fef3c7;--cx:#6b7280;--cxb:#f3f4f6;--top:env(safe-area-inset-top,0px);--bot:env(safe-area-inset-bottom,0px);--rl:20px;--rm:16px;--rs:12px}
 [data-theme="dark"]{--p:#60a5fa;--op:#1e3a8a;--pc:#1e3a8a;--opc:#dbeafe;--s:#34d399;--sc:#064e3b;--t:#a78bfa;--tc:#2e1065;--err:#fca5a5;--ec:#450a0a;--bg:#1a1714;--sf:#231e1a;--s1:#2c2620;--s2:#352e27;--olv:#3e352d;--ob:#f0ebe2;--os:#f0ebe2;--osv:#a09080;--sh:rgba(0,0,0,.3);--cf:#fca5a5;--cfb:#450a0a;--cr:#6ee7b7;--crb:#022c22;--cd:#6ee7b7;--cdb:#022c22;--co:#fcd34d;--cob:#451a03;--cpd:#fcd34d;--cpdb:#451a03;--cx:#9ca3af;--cxb:#1f2937}
@@ -165,6 +166,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Pl
 .dbg-d{color:#8b949e;font-size:10px;width:100%;padding-left:90px;word-break:break-all}
 .dbg-ft{padding:3px 10px;background:#161b22;border-top:1px solid #30363d;color:#6e7681;font-size:10px;flex-shrink:0}
 @keyframes fu{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes fbPulse{0%,100%{opacity:1}50%{opacity:.3}}
 </style>
 </head>
 <body>
@@ -177,7 +179,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Pl
       <div class="th">📦 Mes colis <span id="totalBadge" style="font-size:14px;font-weight:400;color:var(--osv)"></span></div>
     </div>
     <!-- FIX: data-action remplace onclick -->
-    <button id="btn-sync" class="ibtn" data-action="openSync" title="BDD / Sync">⟳<div class="ndot" id="sd" style="display:none"></div></button>
+    <button id="btn-sync" class="ibtn" data-action="openSync" title="BDD / Sync">⟳<div class="ndot" id="sd" style="display:none"></div><div id="syncDot" style="position:absolute;bottom:6px;right:6px;width:7px;height:7px;border-radius:50%;background:#22c55e;border:1.5px solid var(--bg)"></div></button>
     <button class="ibtn" id="thbtn" data-action="toggleTheme">🌙</button>
   </div>
 
@@ -431,9 +433,7 @@ function saveFB(){
   localStorage.setItem(FBK,JSON.stringify({projectId:pi,apiKey:ak}));
   renderSS();showToast('✓ Firebase configuré');syncFB();
 }
-function autoSync(){
-  var last=D.lastSync;if(!last||Date.now()-new Date(last).getTime()>30*60*1000)syncFB();
-  var ls=localStorage.getItem(LSK);if(!ls||Date.now()-parseInt(ls)>30*60*1000)setTimeout(function(){readSMS(true);},2500);
+
 }
 
 // ─── DÉTECTION TRANSPORTEUR ───────────────────────────────────────────────────
@@ -529,7 +529,7 @@ async function readSMS(silent){
       var smsDate=sms.date?new Date(parseInt(sms.date)).toISOString():new Date().toISOString();
       var fbId='sms_'+String(sms.date||Date.now())+'_'+btoa(encodeURIComponent((sender+'|'+(body||'').substring(0,20)))).substring(0,16);
       var pkg={id:Math.round(D.nextId++),_fbId:fbId,carrier:c,trackingNum:tr,pickupCode:co,lockerAddress:ad,trackingLink:xL(body),deliverySlot:xSl(body),sender:xSd(body)||sender,arrivalDate:smsDate,expiryDate:xEx(body,smsDate,c),status:status,emailSubject:'SMS — '+(sender||'transporteur'),gmailLink:'',account:'Guillaume',source:'sms',gmailMsgId:fbId,note:'',lastUpdated:smsDate,events:[{date:smsDate,status:status,desc:'SMS — '+(sender||'')}]};
-      var dup=findDup(pkg);if(dup){mrg(dup,pkg);up++;}else{D.packages.unshift(pkg);fbW(fbId,pkg).catch(function(){});nw++;}
+      var dup=findDup(pkg);if(dup){mrg(dup,pkg);up++;}else{D.packages.unshift(pkg);FBSync.write('colis',fbId,pkg);nw++;}
     }
     localStorage.setItem(LSK,String(Date.now()));purge();saveD(D);render();
     var msg=nw>0?'✓ '+nw+' nouveau(x), '+up+' mis à jour':up>0?'✓ '+up+' mis à jour':'✓ Aucun nouveau ('+msgs.length+' SMS)';
@@ -542,7 +542,7 @@ function parseMan(){
   var lo=t.toLowerCase();var det=CARS.find(function(d){return d.t('',lo,lo);});var c=det&&det.c||'other';
   var now=new Date().toISOString();var fbId='sms_man_'+Date.now();
   var pkg={id:D.nextId++,_fbId:fbId,carrier:c,trackingNum:xT(c,t),pickupCode:xC(t),lockerAddress:xA(t),trackingLink:xL(t),deliverySlot:xSl(t),sender:xSd(t),arrivalDate:now,expiryDate:xEx(t,now,c),status:detSt(t),emailSubject:'SMS manuel',gmailLink:'',account:'Guillaume',source:'sms_manual',gmailMsgId:fbId,note:'',lastUpdated:now,events:[{date:now,status:detSt(t),desc:'Manuel'}]};
-  var dup=findDup(pkg);if(dup){mrg(dup,pkg);showToast('↗ Mis à jour');}else{D.packages.unshift(pkg);fbW(fbId,pkg).catch(function(){});showToast('✓ Ajouté : '+LB[c]);}
+  var dup=findDup(pkg);if(dup){mrg(dup,pkg);showToast('↗ Mis à jour');}else{D.packages.unshift(pkg);FBSync.write('colis',fbId,pkg);showToast('✓ Ajouté : '+LB[c]);}
   purge();saveD(D);render();document.getElementById('smsIn').value='';closeSheet('shSync');
 }
 
@@ -563,7 +563,7 @@ function addPkg(){
   var R=getRet(),now=new Date().toISOString(),fbId='man_'+Date.now();
   var defExp=new Date();defExp.setDate(defExp.getDate()+(R[SC]||14));
   var pkg={id:D.nextId++,_fbId:fbId,carrier:SC,trackingNum:tr,pickupCode:co,lockerAddress:ad,trackingLink:'',deliverySlot:'',sender:document.getElementById('aSd').value.trim(),arrivalDate:now,expiryDate:defExp.toISOString().split('T')[0],status:'ready',emailSubject:'Ajout manuel',gmailLink:'',account:document.getElementById('aAc').value,source:'manual',gmailMsgId:fbId,note:document.getElementById('aN').value.trim(),lastUpdated:now,events:[{date:now,status:'ready',desc:'Manuel'}]};
-  D.packages.unshift(pkg);saveD(D);render();fbW(fbId,pkg).catch(function(){});
+  D.packages.unshift(pkg);saveD(D);render();FBSync.write('colis',fbId,pkg);
   closeSheet('shAdd');showToast('✓ Colis ajouté');
   ['aT','aC','aA','aSd','aN'].forEach(function(id){document.getElementById(id).value='';});
   SC=null;document.querySelectorAll('.cb').forEach(function(b){b.classList.remove('sel');});
@@ -576,13 +576,13 @@ function markDone(id){
   if(!p.events)p.events=[];
   p.events.unshift({date:new Date().toISOString(),status:'collected',desc:''});
   saveD(D);render();
-  if(p._fbId)fbW(p._fbId,Object.assign({},p,{status:'collected'})).catch(function(){});
+  if(p._fbId)FBSync.write('colis',p._fbId,Object.assign({},p,{status:'collected'}));
   showToast('✓ Récupéré');
 }
 function delPkg(id){
   if(!confirm('Supprimer ?'))return;
   var p=D.packages.find(function(x){return x.id===id;});
-  if(p&&p._fbId)fbDel(p._fbId).catch(function(){});
+  if(p&&p._fbId)FBSync.delete('colis',p._fbId);
   D.packages=D.packages.filter(function(x){return x.id!==id;});
   saveD(D);render();
 }
@@ -930,7 +930,22 @@ function clearSearch(){
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 document.querySelectorAll('.sov').forEach(function(el){el.style.display='none';});
-initTheme();purge();renderSS();render();autoSync();
+initTheme();purge();renderSS();render();
+// Phase 4: polling temps réel
+FBSync.subscribe('colis', function(docs) {
+  var n=0;
+  docs.forEach(function(p){
+    normalizePackage(p);
+    var ex=D.packages.find(function(x){return x._fbId===p._fbId;});
+    if(ex){
+      normalizePackage(ex);
+      if(p.status&&p.status!==ex.status&&ex.status!=='collected')ex.status=p.status;
+      if((p.lastUpdated||'')>(ex.lastUpdated||'')){ex.pickupCode=p.pickupCode||ex.pickupCode;ex.lockerAddress=p.lockerAddress||ex.lockerAddress;ex.deliverySlot=p.deliverySlot||ex.deliverySlot;ex.trackingLink=p.trackingLink||ex.trackingLink;ex.trackingNum=p.trackingNum||ex.trackingNum;if(p.events&&p.events.length)ex.events=p.events;}
+    }else{if(!p.id)p.id=D.nextId++;else p.id=Math.round(Number(p.id));D.packages.unshift(p);n++;}
+  });
+  if(n>0){purge();saveD(D);render();document.getElementById('sd').style.display='block';}
+  updLs();
+});
 setTimeout(function(){
   var chip=document.querySelector('.chip[data-filter="'+flt+'"]');
   if(chip){document.querySelectorAll('.chip').forEach(function(b){b.classList.remove('sel');});chip.classList.add('sel');}

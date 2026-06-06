@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#faf7f2">
+<meta name="theme-color" media="(prefers-color-scheme: dark)"  content="#1a1714">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Menus de la semaine">
+<title>Menus de la semaine</title>
+<link rel="manifest" href="./manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fragment+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--p:#dc2626;--pc:rgba(220,38,38,.12);--opc:#1c1410;--bg:#faf7f2;--sf:#fff;--s1:#f0ebe2;--s2:#e8e2d8;--olv:#e0d9cf;--ob:#1c1410;--os:#1c1410;--osv:#7a6a5a;--sh:rgba(0,0,0,.05);--cf:#9f1239;--cfb:#ffe4e6;--top:env(safe-area-inset-top,0px);--bot:env(safe-area-inset-bottom,0px);--rl:20px;--rm:16px;--rs:12px}
+[data-theme="dark"]{--p:#f87171;--pc:rgba(248,113,113,.15);--opc:#f0ebe2;--bg:#1a1714;--sf:#231e1a;--s1:#2c2620;--s2:#352e27;--olv:#3e352d;--ob:#f0ebe2;--os:#f0ebe2;--osv:#a09080;--sh:rgba(0,0,0,.3);--cf:#fca5a5;--cfb:#450a0a}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Plus Jakarta Sans',sans-serif;overflow-x:hidden;transition:background .3s,color .3s}
+#app{max-width:520px;margin:0 auto;min-height:100dvh;padding-bottom:calc(var(--bot)+96px)}
+.tbar{position:sticky;top:0;z-index:100;background:var(--bg);padding:calc(var(--top)+16px) 20px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--olv)}
+.ihome{width:36px;height:36px;border-radius:10px;border:none;background:var(--s1);color:var(--os);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none;flex-shrink:0}
+.ihome:active{background:var(--s2)}
+.ttl{flex:1;min-width:0}
+.tlbl{font-size:10px;color:var(--osv);letter-spacing:.3px;font-weight:500}
+.th{font-family:'Bebas Neue',sans-serif!important;font-size:26px!important;letter-spacing:2px!important;color:var(--ob);line-height:1}
+.ibtn{width:36px;height:36px;border-radius:10px;border:none;background:var(--s1);color:var(--os);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;padding:0}
+.ibtn:active{background:var(--s2)}
+.week-nav{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 12px}
+.week-lbl{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:var(--ob)}
+.wnav-btn{width:34px;height:34px;border-radius:10px;border:1px solid var(--olv);background:transparent;color:var(--os);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:10px 14px;border-radius:var(--rs);background:var(--s1);color:var(--ob);font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;outline:none}
+.week-today{padding:6px 14px;border-radius:20px;border:1px solid var(--p);background:transparent;color:var(--p);font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer}
+.suggest-btn{width:calc(100% - 32px);margin:0 16px 12px;padding:12px 16px;border-radius:var(--rm);border:1px dashed var(--p);background:rgba(37,99,235,.06);color:var(--p);font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:8px}
+.dlist{padding:0 14px;display:flex;flex-direction:column;gap:8px}
+.dcard{overflow:hidden;transition:all .2s;cursor:pointer;background:var(--sf);border-radius:var(--rm);border:1px solid var(--olv);box-shadow:0 1px 3px var(--sh)}
+.dcard.today{border-color:var(--p);border-width:2px}
+.dhdr{padding:14px 16px;display:flex;align-items:center;gap:12px}
+.dhdr:active{background:var(--s1)}
+.dday{font-size:14px;font-weight:700;color:var(--os);width:90px;flex-shrink:0}
+.dday .dnum{font-size:10px;color:var(--osv);font-weight:400;display:block;margin-top:1px}
+.dslots{flex:1;display:flex;gap:8px;flex-wrap:wrap}
+.dslot{flex:1;min-width:80px}
+.dslot-lbl{font-size:9px;color:var(--osv);text-transform:uppercase;letter-spacing:.8px;font-weight:600;margin-bottom:2px}
+.dslot-val{font-size:12px;color:var(--os);font-weight:500;line-height:1.3}
+.dslot-empty{font-size:12px;color:var(--olv);font-style:italic}
+.dedit{padding:0 16px 14px;border-top:1px solid var(--olv)}
+.dedit-row{margin-top:10px}
+.dedit-lbl{font-size:10px;color:var(--osv);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;font-weight:600}
+.dedit-in{width:100%;padding:10px 14px;border-radius:12px;border:1px solid var(--olv);background:var(--s1);color:var(--ob);font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;outline:none;box-sizing:border-box}
+.dedit-in:focus{border-color:var(--p)}
+.dedit-in::placeholder{color:var(--osv)}
+.dedit-acts{display:flex;gap:8px;margin-top:10px}
+.btn-sm{flex:1;padding:10px;border-radius:14px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .2s;border:none}
+.btn-ok{background:var(--p);color:#fff}
+.btn-ok:active{opacity:.85}
+.btn-cl{background:var(--s2);color:var(--osv);border:1px solid var(--olv)!important}
+.apply-btn{width:100%;padding:13px;border-radius:28px;background:var(--p);color:#fff;border:none;font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px}
+.cancel-btn{width:100%;padding:12px;border-radius:28px;border:1px solid var(--olv);background:transparent;color:var(--osv);font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;cursor:pointer;margin-top:6px}
+.meal-grid{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.meal-item{background:var(--s1);border-radius:var(--rs);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;font-size:13px}
+.lvl-btns{display:flex;gap:8px;margin-bottom:16px}
+.lvl-btn{flex:1;padding:10px;border-radius:var(--rs);border:2px solid var(--olv);background:var(--s1);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;color:var(--osv)}
+.lvl-btn.sel{border-color:var(--p);background:var(--pc);color:var(--p)}
+.toast{position:fixed;bottom:calc(var(--bot)+160px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--ob);color:var(--bg);padding:12px 20px;border-radius:28px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;max-width:88vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.sov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center}
+.shtit{font-family:'Bebas Neue',sans-serif!important;font-size:22px!important;letter-spacing:2px!important;color:var(--ob);margin-bottom:14px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="tbar">
+    <a href="../index.html" class="ihome">🏠</a>
+    <div class="ttl">
+      <div class="tlbl">FamilyHub</div>
+      <div class="th">MENUS DE LA SEMAINE</div>
+    </div>
+    <button class="ibtn" data-action="toggleTheme" id="thbtn">🌙</button>
+  </div>
+
+  <div class="week-nav">
+    <button class="wnav-btn" data-action="prevWeek">‹</button>
+    <div class="week-lbl" id="weekLbl"></div>
+    <button class="week-today" data-action="goToday">Aujourd'hui</button>
+    <button class="wnav-btn" data-action="nextWeek">›</button>
+  </div>
+
+  <button class="suggest-btn" id="btn-suggest">✨ Propositions de repas</button>
+  <div class="dlist" id="DL"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="sov" id="shSuggest">
+  <div style="background:var(--sf);border-radius:20px 20px 0 0;padding:28px 32px calc(var(--bot)+40px);width:100%;max-width:520px;box-sizing:border-box;max-height:92dvh;overflow-y:auto">
+    <div style="width:32px;height:4px;background:var(--olv);border-radius:2px;margin:0 auto 20px;cursor:pointer" id="shnd-sug"></div>
+    <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:18px;font-weight:700;margin-bottom:14px">✨ Propositions de repas</div>
+    <div class="lvl-btns">
+      <button class="lvl-btn sel" id="lvl-c" data-lvl="classique">🍽️ Classique</button>
+      <button class="lvl-btn"     id="lvl-v" data-lvl="vegetarien">🥦 Végétarien</button>
+      <button class="lvl-btn"     id="lvl-e" data-lvl="enfants">👶 Enfants</button>
+    </div>
+    <div class="meal-grid" id="meal-grid"></div>
+    <button class="apply-btn"  id="btn-apply-sug">✓ Appliquer à la semaine</button>
+    <button class="cancel-btn" id="btn-cancel-sug">Annuler</button>
+  </div>
+</div>
+
+<script>
+const SK='fh_menus';
+const DAYS=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+const MONTHS=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+
+function loadD(){try{const d=JSON.parse(localStorage.getItem(SK));if(d)return d;}catch{}return{};}
+function saveD(d){localStorage.setItem(SK,JSON.stringify(d));}
+
+let D=loadD();
+let weekOffset=0;
+let openDay=null;
+let _tt;
+
+// ── Firebase REST ──
+const FB_PROJECT='familyhub-colis-8abbd';
+const MENUS_COLL='meta/menus';
+function getFBKey(){try{const s=JSON.parse(localStorage.getItem('lt_fb'));return s&&s.apiKey?s.apiKey:'';}catch{return '';}}
+function fbMenusUrl(path){return 'https://firestore.googleapis.com/v1/projects/'+FB_PROJECT+'/databases/(default)/documents/'+path+'?key='+getFBKey();}
+async function fbMenusWrite(dateKey,data){
+  if(!getFBKey())return;
+  try{
+    const fields={};
+    for(const k in data){fields[k]={stringValue:String(data[k]||'')};}
+    await fetch(fbMenusUrl(MENUS_COLL+'/'+dateKey),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({fields})});
+  }catch(e){console.warn('fbMenusWrite',e);}
+}
+async function fbMenusReadAll(){
+  if(!getFBKey())return{};
+  try{
+    const r=await fetch(fbMenusUrl(MENUS_COLL));
+    if(!r.ok)return{};
+    const data=await r.json();
+    const result={};
+    (data.documents||[]).forEach(function(doc){
+      const parts=doc.name.split('/');
+      const dateKey=parts[parts.length-1];
+      const fields=doc.fields||{};
+      result[dateKey]={};
+      for(const k in fields){result[dateKey][k]=fields[k].stringValue||'';}
+    });
+    return result;
+  }catch(e){console.warn('fbMenusReadAll',e);return{};}
+}
+
+function getWeekDates(offset=0){
+  const now=new Date();
+  const day=now.getDay();
+  const monday=new Date(now);
+  monday.setDate(now.getDate()-((day+6)%7)+offset*7);
+  monday.setHours(0,0,0,0);
+  return Array.from({length:7},(_,i)=>{
+    const d=new Date(monday);d.setDate(monday.getDate()+i);return d;
+  });
+}
+function dayKey(date){return date.toISOString().split('T')[0];}
+
+function renderWeekLabel(dates){
+  const a=dates[0],b=dates[6];
+  document.getElementById('weekLbl').textContent=
+    `${a.getDate()} ${MONTHS[a.getMonth()]} — ${b.getDate()} ${MONTHS[b.getMonth()]}`;
+}
+
+function render(){
+  const dates=getWeekDates(weekOffset);
+  renderWeekLabel(dates);
+  const today=dayKey(new Date());
+  const el=document.getElementById('DL');
+  el.innerHTML=dates.map((date,i)=>{
+    const k=dayKey(date);
+    const m=D[k]||{};
+    const isToday=k===today;
+    const isOpen=openDay===k;
+    return`<div class="dcard${isToday?' today':''}" id="dc_${k}">
+      <div class="dhdr" data-action="togDay" data-key="${k}">
+        <div class="dday">
+          ${DAYS[date.getDay()]}
+          <span class="dnum">${date.getDate()} ${MONTHS[date.getMonth()]}</span>
+        </div>
+        <div class="dslots">
+          <div class="dslot">
+            <div class="dslot-lbl">🌞 Midi</div>
+            ${m.midi?`<div class="dslot-val">${m.midi}</div>`:`<div class="dslot-empty">—</div>`}
+          </div>
+          <div class="dslot">
+            <div class="dslot-lbl">🌙 Soir</div>
+            ${m.soir?`<div class="dslot-val">${m.soir}</div>`:`<div class="dslot-empty">—</div>`}
+          </div>
+        </div>
+      </div>
+      ${isOpen?`<div class="dedit">
+        <div class="dedit-row">
+          <div class="dedit-lbl">🌞 Repas du midi</div>
+          <input class="dedit-in" id="midi_${k}" value="${m.midi||''}" placeholder="Poulet rôti, salade…">
+        </div>
+        <div class="dedit-row">
+          <div class="dedit-lbl">🌙 Repas du soir</div>
+          <input class="dedit-in" id="soir_${k}" value="${m.soir||''}" placeholder="Pâtes bolognaise…">
+        </div>
+        <div class="dedit-row">
+          <div class="dedit-lbl">💬 Note</div>
+          <input class="dedit-in" id="note_${k}" value="${m.note||''}" placeholder="Invités, régime, rapide…">
+        </div>
+        <div class="dedit-acts">
+          <button class="btn-sm btn-ok" data-action="saveDay" data-key="${k}">✓ Enregistrer</button>
+          <button class="btn-sm btn-cl" data-action="togDay"  data-key="${k}">Annuler</button>
+        </div>
+      </div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function togDay(k){
+  openDay=openDay===k?null:k;render();
+  if(openDay){
+    const el=document.getElementById(`midi_${k}`);
+    if(el)setTimeout(()=>el.focus(),100);
+  }
+}
+
+function saveDay(k){
+  const midi=(document.getElementById(`midi_${k}`)?.value||'').trim();
+  const soir=(document.getElementById(`soir_${k}`)?.value||'').trim();
+  const note=(document.getElementById(`note_${k}`)?.value||'').trim();
+  if(midi||soir||note)D[k]={midi,soir,note};
+  else delete D[k];
+  saveD(D);
+  fbMenusWrite(k,D[k]||{}).catch(()=>{});
+  openDay=null;render();showToast('✓ Menu enregistré');
+}
+
+// ── Suggestions ──
+const MEALS={
+  classique:{
+    midi:['Poulet rôti','Steak frites','Saumon grillé','Quiche lorraine','Côtes de porc','Pot-au-feu','Rôti de bœuf'],
+    soir:['Pâtes bolognaise','Pizza maison','Soupe et tartines','Omelette','Gratin dauphinois','Blanquette de veau','Risotto']
+  },
+  vegetarien:{
+    midi:['Quiche légumes','Curry pois chiches','Salade composée','Tartelettes chèvre','Buddha bowl','Soupe minestrone','Gratin courgettes'],
+    soir:['Pasta primavera','Galettes de légumes','Soupe potiron','Tarte aux poireaux','Falafels','Wok de tofu','Lentilles']
+  },
+  enfants:{
+    midi:['Nuggets frites','Pizza margherita','Spaghettis bolo','Croque-monsieur','Poisson pané purée','Hamburger maison','Hot-dogs crudités'],
+    soir:['Pâtes fromage','Crêpes','Soupe légumes','Jambon baguette','Mac and cheese','Nuggets riz','Saucisse purée']
+  }
+};
+var _suggestLvl='classique';
+function updateMealPreview(){
+  var m=MEALS[_suggestLvl];
+  var dates=getWeekDates(weekOffset);
+  var days=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+  document.getElementById('meal-grid').innerHTML=dates.map(function(d,i){
+    return '<div class="meal-item"><span>'+days[i]+' - Midi</span><span style="font-weight:600">'+m.midi[i%7]+'</span></div>'+
+           '<div class="meal-item"><span>'+days[i]+' - Soir</span><span style="font-weight:600">'+m.soir[i%7]+'</span></div>';
+  }).join('');
+}
+function applySuggest(){
+  var m=MEALS[_suggestLvl];
+  var dates=getWeekDates(weekOffset);
+  dates.forEach(function(d,i){
+    D[dayKey(d)]={midi:m.midi[i%7],soir:m.soir[i%7],note:''};
+  });
+  saveD(D);
+  closeSheet('shSuggest');
+  render();
+  showToast('✓ Repas appliqués pour la semaine');
+}
+
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  const btn=document.getElementById('thbtn');
+  if(btn)btn.textContent=t==='dark'?'🌙':'☀️';
+}
+function toggleTheme(){
+  const d=document.documentElement.getAttribute('data-theme')==='dark';
+  const n=d?'light':'dark';
+  localStorage.setItem('lt_th',n);applyTheme(n);
+}
+function initTheme(){
+  const s=localStorage.getItem('lt_th');
+  if(s){applyTheme(s);return;}
+  const sys=window.matchMedia('(prefers-color-scheme: dark)');
+  applyTheme(sys.matches?'dark':'light');
+  sys.addEventListener('change',e=>{if(!localStorage.getItem('lt_th'))applyTheme(e.matches?'dark':'light');});
+}
+
+function openSheet(id){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;';
+  el.offsetHeight;
+  try{document.body.style.overflow='hidden';}catch(e){}
+}
+function closeSheet(id){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.style.display='none';
+  try{document.body.style.overflow='';}catch(e){}
+}
+
+function showToast(m){
+  const t=document.getElementById('toast');
+  t.textContent=m;t.classList.add('show');
+  clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ── Dispatcher ──
+function findAction(elem){
+  var el=elem;
+  while(el&&el!==document){
+    if(el.nodeType===1&&el.getAttribute&&el.getAttribute('data-action'))return el;
+    el=el.parentNode;
+  }
+  return null;
+}
+document.addEventListener('click',function(e){
+  const el=findAction(e.target);if(!el)return;
+  const action=el.getAttribute('data-action');
+  const ds=el.dataset;
+  switch(action){
+    case 'toggleTheme': toggleTheme(); break;
+    case 'prevWeek': weekOffset--;render(); break;
+    case 'nextWeek': weekOffset++;render(); break;
+    case 'goToday':  weekOffset=0;render(); break;
+    case 'togDay':   togDay(ds.key); break;
+    case 'saveDay':  saveDay(ds.key); break;
+  }
+});
+
+// Boutons du sheet suggestions (IDs fixes)
+document.getElementById('btn-suggest').addEventListener('click',function(){updateMealPreview();openSheet('shSuggest');});
+document.getElementById('btn-apply-sug').addEventListener('click',function(){applySuggest();});
+document.getElementById('btn-cancel-sug').addEventListener('click',function(){closeSheet('shSuggest');});
+document.getElementById('shnd-sug').addEventListener('click',function(){closeSheet('shSuggest');});
+['lvl-c','lvl-v','lvl-e'].forEach(function(id){
+  document.getElementById(id).addEventListener('click',function(){
+    _suggestLvl=document.getElementById(id).dataset.lvl;
+    document.querySelectorAll('.lvl-btn').forEach(function(b){b.classList.remove('sel');});
+    document.getElementById(id).classList.add('sel');
+    updateMealPreview();
+  });
+});
+document.querySelectorAll('.sov').forEach(function(sov){
+  sov.addEventListener('click',function(e){if(e.target===sov)closeSheet(sov.id);},false);
+});
+
+async function init(){
+  document.querySelectorAll('.sov').forEach(el=>{el.style.display='none';});
+  initTheme();render();
+  try{
+    const remote=await fbMenusReadAll();
+    let changed=false;
+    for(const k in remote){
+      if(!D[k]||JSON.stringify(D[k])!==JSON.stringify(remote[k])){
+        D[k]=Object.assign(D[k]||{},remote[k]);changed=true;
+      }
+    }
+    if(changed){saveD(D);render();}
+  }catch(e){}
+}
+init();
+</script>
+<script>
+if('serviceWorker'in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('/sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>

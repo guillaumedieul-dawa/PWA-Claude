@@ -14,6 +14,24 @@
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Text:wght@400;500&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="themes.css">
 <style>
+/* --- Sécurité Rendu APK : Variables par défaut (Thème clair) --- */
+:root, [data-theme="light"] {
+  --bg: #faf7f2;
+  --sf: #fff;
+  --s1: #f0ebe2;
+  --s2: #e8e2d8;
+  --olv: #e0d9cf;
+  --ob: #1c1410;
+  --os: #1c1410;
+  --osv: #7a6a5a;
+  --p: #2563eb;
+  --op: #fff;
+  --sh: rgba(0,0,0,.05);
+  --top: env(safe-area-inset-top, 0px);
+  --bot: env(safe-area-inset-bottom, 0px);
+  --rl: 20px;
+}
+
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Google Sans Text',sans-serif;overflow-x:hidden}
 
@@ -46,9 +64,8 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 .app-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;font-family:'Google Sans',sans-serif;margin-top:2px}
 
 /* Footer */
-.footer{text-align:center;font-size:11px;color:var(--osv);margin-top:8px;font-family:'Roboto Mono',monospace}
+.footer{text-align:center;font-size:11px;color:var(--osv);margin-top:20px;font-family:'Roboto Mono',monospace}
 </style>
-<!-- Thème : init immédiate pour éviter le flash -->
 <script src="theme.js"></script>
 </head>
 <body>
@@ -191,22 +208,23 @@ async function loadBadges() {
   } catch {}
 }
 
+// Intercepteur global des clics pour le bouton de thème d'origine
 document.addEventListener('click', function(e) {
   const el = e.target.closest('[data-action]');
   if (!el) return;
-  if (el.getAttribute('data-action') === 'toggleTheme') window.toggleTheme();
+  if (el.getAttribute('data-action') === 'toggleTheme') {
+    if (typeof window.toggleTheme === 'function') {
+      window.toggleTheme();
+    } else if (window.FHTheme && typeof window.FHTheme.apply === 'function') {
+      // Fallback de sécurité vers l'objet exporté
+      const current = document.documentElement.getAttribute('data-theme') || 'light';
+      const next = current === 'light' ? 'dark' : current === 'dark' ? 'sepia' : 'light';
+      window.FHTheme.apply(next);
+    }
+  }
 });
 
 loadBadges();
-
-// Afficher la date de build APK si disponible
-(function(){
-  var bel = document.getElementById('footerBuild');
-  if (!bel) return;
-  var meta = document.querySelector('meta[name="build-date"]');
-  var bd = meta ? meta.getAttribute('content') : '';
-  if (bd) bel.textContent = 'FamilyHub v2 · APK du ' + bd;
-})();
 </script>
 
 <script>
@@ -219,7 +237,7 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 </body>
-<footer style="font-size: 12px; text-align: center; margin-top: 20px; color: #666;">
+<footer class="footer">
   Version applicative : __VERSION_NAME__<br />
   Build : __BUILD_ID__ — généré le __BUILD_DATE__
 </footer>

@@ -1,7 +1,8 @@
 // ═══════════════════════════════════════════════════
-//  FamilyHub — Sync Gmail → Firebase (Optimisé)
+//  FamilyHub — Sync Gmail → Firebase (Optimisé v2.1)
 //  Compte : Guillaume Dieul
-//  V2 optimisée
+//  V3
+//  Optimisations : Filtre temporel précis (Unix timestamp), suppression de l'appel fbGetExistingIds lourd
 // ═══════════════════════════════════════════════════
 
 const ACCOUNT_NAME = 'Guillaume';
@@ -81,7 +82,7 @@ function extractCode(t) {
   if (m3) return m3[1];
   const m9 = t.match(/communiquez\s+lui\s+le\s+code[\s\n]+(\d{4,8})/i);
   if (m9) return m9[1];
-  const ma = t.match(/(?:pr[eé]sentez\s+(?:ce\s+)?(?:QR\s+)?code[^\n]*\n\s*)(\d{4,8})/i);
+  const ma = t.match(/(?:présentez\s+(?:ce\s+)?(?:QR\s+)?code[^\n]*\n\s*)(\d{4,8})/i);
   if (ma) return ma[1];
   const m4 = t.match(/contre\s+(?:remise\s+du\s+)?code\s+(\d{4,8})/i);
   if (m4) return m4[1];
@@ -89,7 +90,7 @@ function extractCode(t) {
   if (m5) return m5[1];
   const m6 = t.match(/\bcode\s*:\s*([A-Z0-9\-]{3,12})/i);
   if (m6) return m6[1];
-  const m7 = t.match(/pr[eé]sentez\s+le\s+code\s+(\d{4,8})/i);
+  const m7 = t.match(/présentez\s+le\s+code\s+(\d{4,8})/i);
   if (m7) return m7[1];
   const m8 = t.match(/\b(?:code\s+consigne|code\s+amazon)\s*:\s*(\d{6})\b/i);
   if (m8) return m8[1];
@@ -124,7 +125,6 @@ function extractDeliverySlot(t) {
   return '';
 }
 
-// ── Convertisseur d'objet pour l'API Firestore REST ──
 function toFirestoreFields(data) {
   const fields = {};
   for (const [k, v] of Object.entries(data)) {
@@ -138,13 +138,10 @@ function toFirestoreFields(data) {
   return fields;
 }
 
-// ── Écriture groupée (Batch Write) pour économiser les quotas ──
 function fbBatchWrite(writes, config) {
   if (!writes.length) return;
   const url = `https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/(default)/documents:commit?key=${config.apiKey}`;
-  
   Logger.log(`🔄 fbBatchWrite : Envoi d'un batch de ${writes.length} document(s)...`);
-  
   try {
     const resp = UrlFetchApp.fetch(url, {
       method: 'POST',
@@ -152,18 +149,15 @@ function fbBatchWrite(writes, config) {
       payload: JSON.stringify({ writes }),
       muteHttpExceptions: true
     });
-    
     const code = resp.getResponseCode();
     if (code >= 400) {
       let errorMsg = resp.getContentText();
       try {
-        // Tente d'extraire le message d'erreur précis de Firestore
         const errorObj = JSON.parse(errorMsg);
         if (errorObj.error && errorObj.error.message) {
           errorMsg = `${errorObj.error.status || 'ERREUR'} — ${errorObj.error.message}`;
         }
-      } catch (jsonError) {
-        // Si la réponse n'est pas du JSON, on tronque le texte brut
+      } catch (e) {
         errorMsg = errorMsg.slice(0, 300);
       }
       Logger.log(`❌ fbBatchWrite ÉCHEC (HTTP ${code}) : ${errorMsg}`);
@@ -172,23 +166,6 @@ function fbBatchWrite(writes, config) {
     }
   } catch (e) {
     Logger.log(`❌ fbBatchWrite Exception critique : ${e.toString()}`);
-  }
-}
-
-function fbGetExistingIds(config) {
-  const url = `https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/(default)/documents/colis?key=${config.apiKey}&pageSize=500&fields=documents.name`;
-  try {
-    const resp = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
-    const code = resp.getResponseCode();
-    if (code >= 400) {
-      Logger.log('fbGetExistingIds HTTP ' + code + ' : ' + resp.getContentText().slice(0, 200));
-      return new Set();
-    }
-    const data = JSON.parse(resp.getContentText());
-    return new Set((data.documents || []).map(d => d.name.split('/').pop()));
-  } catch (e) {
-    Logger.log('fbGetExistingIds erreur: ' + e.toString());
-    return new Set();
   }
 }
 
@@ -209,7 +186,7 @@ function computeExpiry(text, arrivalIso, carrier) {
     janvier: 1, février: 2, mars: 3, avril: 4, mai: 5, juin: 6,
     juillet: 7, août: 8, septembre: 9, octobre: 10, novembre: 11, décembre: 12
   };
-  const dl = text.match(/(?:jusqu[''\`]au|avant le)\s+(\d{1,2})\s+([a-záéûô]+)/i);
+  const dl = text.match(/(?:jusqu['`\u00b4]au|avant le)\s+(\d{1,2})\s+([a-z\u00e1\u00e9\u00fb\u00f4]+)/i);
   if (dl && MONTHS[dl[2].toLowerCase()]) {
     const mo = MONTHS[dl[2].toLowerCase()];
     const y = new Date().getFullYear();
@@ -233,30 +210,33 @@ function extractSender(subject, body) {
   return '';
 }
 
-// ── Sync principale ──
 function syncGmailToFirebase() {
   const config = getConfig();
   Logger.log('Démarrage sync Gmail → Firebase pour ' + ACCOUNT_NAME);
 
   const props = PropertiesService.getScriptProperties();
-  const lastSyncDate = props.getProperty('LAST_SYNC_DATE') || '';
-  const dateFilter = lastSyncDate ? ' after:' + lastSyncDate : ' newer_than:45d';
+  const lastSyncTimestamp = props.getProperty('LAST_SYNC_TIMESTAMP') || '';
+  
+  let dateFilter = ' newer_than:3d';
+  if (lastSyncTimestamp) {
+    const afterSeconds = Math.floor(parseInt(lastSyncTimestamp) / 1000) - 60;
+    dateFilter = ` after:${afterSeconds}`;
+  }
+  
   const query = 'subject:(colis OR pickup OR livraison OR disponible OR tracking)' + dateFilter;
-
-  const existingIds = fbGetExistingIds(config);
-  const threads = GmailApp.search(query, 0, 60);
+  const threads = GmailApp.search(query, 0, 40);
   
   let newCount = 0;
   const batchWrites = [];
-
+  
   for (const thread of threads) {
     const msgs = thread.getMessages();
     const firstFrom = (msgs[0]?.getFrom() || '').toLowerCase();
     const isKnown = CARRIERS.some(d => d.test(firstFrom, '', ''));
     if (!isKnown) continue;
+    
     const msg = msgs[msgs.length - 1];
     const msgId = msg.getId();
-    if (existingIds.has(msgId)) continue;
 
     const from = (msg.getFrom() || '').toLowerCase();
     const subject = (msg.getSubject() || '');
@@ -301,47 +281,45 @@ function syncGmailToFirebase() {
       lastUpdated: new Date().toISOString(),
       events: JSON.stringify([{ date: arrivalDate, status: status, desc: 'Gmail' }])
     };
+
     batchWrites.push({
       update: {
         name: `projects/${config.projectId}/databases/(default)/documents/colis/${msgId}`,
         fields: toFirestoreFields(docData)
       }
     });
-    existingIds.add(msgId);
     newCount++;
-    Logger.log('Préparé : ' + c + ' — ' + (tracking || code || address.substring(0, 30)));
   }
 
-  // Exécution de l'écriture groupée (si nouveaux éléments)
   if (batchWrites.length > 0) {
     fbBatchWrite(batchWrites, config);
   }
 
-  props.setProperty('LAST_SYNC_DATE', Utilities.formatDate(new Date(), 'UTC', 'yyyy/MM/dd'));
-  Logger.log('Sync terminée : ' + newCount + ' nouveau(x) colis pour ' + ACCOUNT_NAME);
+  props.setProperty('LAST_SYNC_TIMESTAMP', String(Date.now()));
+  Logger.log('Sync terminée : ' + newCount + ' colis traités pour ' + ACCOUNT_NAME);
   
-  // Log de synchronisation final
-  try {
-    const logMsg = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd/MM/yyyy HH:mm')
-      + ' · ' + ACCOUNT_NAME + ' · ' + newCount + ' nouveau(x) · total=' + existingIds.size;
-    const logUrl = `https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/(default)/documents/meta/lastGmailSync?key=${config.apiKey}`;
-    
-    UrlFetchApp.fetch(logUrl, {
-      method: 'PATCH',
-      contentType: 'application/json',
-      muteHttpExceptions: true,
-      payload: JSON.stringify({
-        fields: {
-          log: { stringValue: logMsg },
-          account: { stringValue: ACCOUNT_NAME },
-          newCount: { integerValue: newCount },
-          updatedAt: { stringValue: new Date().toISOString() }
-        }
-      })
-    });
-    Logger.log('Log écrit dans /meta/lastGmailSync : ' + logMsg);
-  } catch (e) {
-    Logger.log('Erreur log Firebase : ' + e.toString());
+  if (batchWrites.length > 0) {
+    try {
+      const logMsg = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd/MM/yyyy HH:mm')
+        + ' · ' + ACCOUNT_NAME + ' · ' + newCount + ' traité(s)';
+      const logUrl = `https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/(default)/documents/meta/lastGmailSync?key=${config.apiKey}`;
+      
+      UrlFetchApp.fetch(logUrl, {
+        method: 'PATCH',
+        contentType: 'application/json',
+        muteHttpExceptions: true,
+        payload: JSON.stringify({
+          fields: {
+            log: { stringValue: logMsg },
+            account: { stringValue: ACCOUNT_NAME },
+            newCount: { integerValue: newCount },
+            updatedAt: { stringValue: new Date().toISOString() }
+          }
+        })
+      });
+    } catch (e) {
+      Logger.log('Erreur log Firebase : ' + e.toString());
+    }
   }
 }
 

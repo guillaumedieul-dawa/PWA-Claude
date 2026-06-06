@@ -1,127 +1,73 @@
-/* ═══════════════════════════════════════════
-   FamilyHub — Système de thèmes
-   3 thèmes : light | dark | sepia
-   Utilisation : <html data-theme="light|dark|sepia">
-═══════════════════════════════════════════ */
-
-/* ── THÈME LIGHT (Cream & Ink) ── */
+/* ── SYSTEME DE THEMES CENTRALISÉ ── */
 [data-theme="light"] {
-  /* Couleur d'accent principale */
   --p: #2563eb;       --op: #fff;
   --pc: #dbeafe;      --opc: #1e3a8a;
-  /* Secondaire & tertiaire */
-  --s: #059669;       --sc: #d1fae5;
-  --t: #7c3aed;       --tc: #ede9fe;
-  /* Fond & surfaces */
-  --bg: #faf7f2;
-  --sf: #fff;
-  --s1: #f0ebe2;
-  --s2: #e8e2d8;
-  --olv: #e0d9cf;
-  /* Textes */
-  --ob: #1c1410;
-  --os: #1c1410;
-  --osv: #7a6a5a;
-  /* Ombre & états */
+  --bg: #faf7f2;      --sf: #fff;
+  --s1: #f0ebe2;      --s2: #e8e2d8;
+  --olv: #e0d9cf;     --ob: #1c1410;
+  --os: #1c1410;      --osv: #7a6a5a;
   --sh: rgba(0,0,0,.05);
-  --cf: #9f1239;   --cfb: #ffe4e6;
-  --cd: #065f46;   --cdb: #d1fae5;
-  --cpd: #92400e;  --cpdb: #fef3c7;
-  --cr: #065f46;   --crb: #d1fae5;
-  --co: #92400e;   --cob: #fef3c7;
-  --cx: #6b7280;   --cxb: #f3f4f6;
+  --cf: #9f1239;      --cfb: #ffe4e6;
+  --cd: #065f46;      --cdb: #d1fae5;
+  --co: #b45309;      --cob: #fef3c7;
+  --cx: #4b5563;      --cxb: #f3f4f6;
 }
 
-/* ── THÈME DARK (Encre de nuit) ── */
 [data-theme="dark"] {
-  --p: #60a5fa;       --op: #1e3a8a;
-  --pc: #1e3a8a;      --opc: #dbeafe;
-  --s: #34d399;       --sc: #064e3b;
-  --t: #a78bfa;       --tc: #2e1065;
-  --bg: #1a1714;
-  --sf: #231e1a;
-  --s1: #2c2620;
-  --s2: #352e27;
-  --olv: #3e352d;
-  --ob: #f0ebe2;
-  --os: #f0ebe2;
-  --osv: #a09080;
-  --sh: rgba(0,0,0,.3);
-  --cf: #fca5a5;   --cfb: #450a0a;
-  --cd: #6ee7b7;   --cdb: #022c22;
-  --cpd: #fcd34d;  --cpdb: #451a03;
-  --cr: #6ee7b7;   --crb: #022c22;
-  --co: #fcd34d;   --cob: #451a03;
-  --cx: #9ca3af;   --cxb: #1f2937;
+  --p: #3b82f6;       --op: #fff;
+  --pc: rgba(59,130,246,.15); --opc: #bfdbfe;
+  --bg: #1a1714;      --sf: #24201c;
+  --s1: #2d2924;      --s2: #38332e;
+  --olv: #403a35;     --ob: #f5f2eb;
+  --os: #e8e2d8;      --osv: #a09284;
+  --sh: rgba(0,0,0,.2);
+  --cf: #f43f5e;      --cfb: rgba(244,63,94,.15);
+  --cd: #10b981;      --cdb: rgba(16,185,129,.15);
+  --co: #f59e0b;      --cob: rgba(245,158,11,.15);
+  --cx: #9ca3af;      --cxb: rgba(156,163,175,.15);
 }
 
-/* ── THÈME SEPIA (Parchemin) ── */
 [data-theme="sepia"] {
-  --p: #7c3d12;       --op: #fffbf5;
-  --pc: #fed7aa;      --opc: #431407;
-  --s: #3d6b12;       --sc: #d9f99d;
-  --t: #5b21b6;       --tc: #ede9fe;
-  --bg: #f5ead6;
-  --sf: #fdf6e3;
-  --s1: #f0e0c0;
-  --s2: #e8d4a8;
-  --olv: #d4b896;
-  --ob: #2d1a0a;
-  --os: #2d1a0a;
-  --osv: #8b6950;
-  --sh: rgba(80,40,0,.08);
-  --cf: #881337;   --cfb: #fde8d0;
-  --cd: #14532d;   --cdb: #dcfce7;
-  --cpd: #78350f;  --cpdb: #fef9c3;
-  --cr: #14532d;   --crb: #dcfce7;
-  --co: #78350f;   --cob: #fef9c3;
-  --cx: #78716c;   --cxb: #fafaf9;
+  --p: #b45309;       --op: #fff;
+  --pc: #fef3c7;      --opc: #78350f;
+  --bg: #f4ecd8;      --sf: #fdfbf7;
+  --s1: #e9dfc4;      --s2: #dfd3b3;
+  --olv: #d5c7a3;     --ob: #433422;
+  --os: #5c4831;      --osv: #8c7355;
+  --sh: rgba(67,52,34,.05);
+  --cf: #9f1239;      --cfb: #ffe4e6;
+  --cd: #065f46;      --cdb: #d1fae5;
+  --co: #78350f;      --cob: #fef9c3;
+  --cx: #78716c;      --cxb: #fafaf9;
 }
 
-/* ── Variables communes (layout, typo, radius) ── */
 [data-theme] {
   --top: env(safe-area-inset-top, 0px);
   --bot: env(safe-area-inset-bottom, 0px);
-  --rl: 20px;
-  --rm: 16px;
-  --rs: 12px;
+  --rl: 20px;         --rm: 16px;         --rs: 12px;
   color-scheme: normal;
 }
 
-/* ── Reset & base ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 html, body {
   min-height: 100dvh;
   background: var(--bg);
   color: var(--ob);
-  font-family: 'Plus Jakarta Sans', 'Google Sans Text', sans-serif;
+  font-family: 'Google Sans Text', sans-serif;
   overflow-x: hidden;
   transition: background .3s, color .3s;
 }
 
-/* ── Sélecteur de thème flottant ── */
-#theme-picker {
-  position: fixed;
-  top: calc(var(--top) + 8px);
-  right: 8px;
-  z-index: 500;
-  display: flex;
-  gap: 4px;
-  background: var(--sf);
-  border: 1px solid var(--olv);
-  border-radius: 28px;
-  padding: 4px 6px;
-  box-shadow: 0 2px 8px var(--sh);
-}
-.theme-dot {
-  width: 20px; height: 20px;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  cursor: pointer;
-  transition: transform .15s, border-color .15s;
-}
-.theme-dot:active { transform: scale(.85); }
-.theme-dot.active { border-color: var(--ob); }
-.theme-dot[data-t="light"]  { background: linear-gradient(135deg, #faf7f2 50%, #2563eb 50%); }
-.theme-dot[data-t="dark"]   { background: linear-gradient(135deg, #1a1714 50%, #60a5fa 50%); }
-.theme-dot[data-t="sepia"]  { background: linear-gradient(135deg, #f5ead6 50%, #7c3d12 50%); }
+/* ── COMPOSANTS ET UTILITIES STRUCTURELS COMMUNS ── */
+.tbar { display: flex; align-items: center; justify-content: space-between; padding: calc(var(--top) + 12px) var(--rl) 12px; background: var(--sf); border-bottom: 1px solid var(--olv); position: sticky; top: 0; z-index: 100; }
+.ihome { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: var(--rs); background: var(--s1); color: var(--ob); text-decoration: none; font-size: 20px; }
+.ttl { font-family: 'Google Sans', sans-serif; font-size: 20px; font-weight: 700; color: var(--ob); }
+.th { display: flex; gap: 8px; }
+.ibtn { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: var(--rs); background: var(--s1); border: none; color: var(--ob); font-size: 20px; cursor: pointer; }
+
+#theme-picker { position: fixed; top: calc(var(--top) + 8px); right: 8px; z-index: 500; display: flex; gap: 4px; background: var(--sf); border: 1px solid var(--olv); padding: 4px; border-radius: 20px; box-shadow: 0 2px 8px var(--sh); }
+.theme-dot { width: 24px; height: 24px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: transform .2s; }
+.theme-dot[data-t="light"] { background: #faf7f2; }
+.theme-dot[data-t="dark"] { background: #1a1714; }
+.theme-dot[data-t="sepia"] { background: #f4ecd8; }
+.theme-dot.active { border-color: var(--p); transform: scale(1.1); }

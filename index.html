@@ -14,9 +14,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Text:wght@400;500&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="themes.css">
 <style>
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Google Sans Text',sans-serif;overflow-x:hidden}
-
+/* On supprime html, body d'ici pour laisser themes.css gérer le fond automatiquement */
 #app{max-width:520px;margin:0 auto;padding:calc(var(--top)+10px) 16px calc(var(--bot)+10px)}
 
 /* Header */
@@ -57,7 +55,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
       <div class="hdr-eyebrow">Bonjour 👋</div>
       <div class="hdr-title">FamilyHub</div>
     </div>
-    <button class="ibtn" data-action="toggleTheme" id="thbtn">☀️</button>
+    <button class="ibtn" data-action="toggleTheme" id="thbtn" style="pointer-events: auto;">☀️</button>
   </div>
 
   <div class="greeting">
@@ -120,9 +118,8 @@ async function fbCountDocs(coll) {
   } catch { return null; }
 }
 
-// Badges dynamiques : localStorage en premier, Firestore si cache vide
+// Badges dynamiques
 async function loadBadges() {
-  // ── Colis (localStorage uniquement) ──
   try {
     const _colis = JSON.parse(localStorage.getItem('lt_v3')||'{}');
     const _pkgs  = _colis.packages||[];
@@ -140,7 +137,6 @@ async function loadBadges() {
     if(_el) _el.textContent = _ready>0?_ready+' à retirer':_active.length>0?_active.length+' colis':'Aucun colis';
   } catch {}
 
-  // ── To-Do ──────────────────────────────────────────────────
   try {
     const todo    = JSON.parse(localStorage.getItem('fh_todo')||'{}');
     let tasks     = todo.tasks||[];
@@ -158,7 +154,6 @@ async function loadBadges() {
     if (el) el.textContent = pending>0 ? pending+' en cours' : tasks.length+' tâches';
   } catch {}
 
-  // ── Cave ───────────────────────────────────────────────────
   try {
     const cave    = JSON.parse(localStorage.getItem('fh_cave')||'{}');
     let bottles   = cave.bottles||[];
@@ -171,7 +166,6 @@ async function loadBadges() {
     if (el) el.textContent = count+' bouteille'+(count>1?'s':'');
   } catch {}
 
-  // ── Courses ────────────────────────────────────────────────
   try {
     const courses = JSON.parse(localStorage.getItem('fh_courses')||'{}');
     let items     = courses.items||[];
@@ -190,11 +184,11 @@ async function loadBadges() {
   } catch {}
 }
 
-// ÉCOUTEUR SÉCURISÉ : Cible directement le bouton par son ID pour la WebView
+// CORRECTION DU CLIC : On cible de manière ultra-précise l'ID du bouton
 document.addEventListener('DOMContentLoaded', function() {
-  const themeBtn = document.getElementById('thbtn');
-  if (themeBtn) {
-    themeBtn.addEventListener('click', function(e) {
+  const btn = document.getElementById('thbtn');
+  if (btn) {
+    btn.addEventListener('click', function(e) {
       e.preventDefault();
       if (typeof window.toggleTheme === 'function') {
         window.toggleTheme();

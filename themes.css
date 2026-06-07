@@ -72,7 +72,7 @@
   --cx: #78716c;   --cxb: #fafaf9;
 }
 
-/* ── Variables communes (layout, typo, radius) ── */
+/* ── Variables communes ── */
 [data-theme] {
   --top: env(safe-area-inset-top, 0px);
   --bot: env(safe-area-inset-bottom, 0px);
@@ -82,7 +82,7 @@
   color-scheme: normal;
 }
 
-/* ── Reset & base ── */
+/* ── Base & Global Reset ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 html, body {
   min-height: 100dvh;

@@ -13,33 +13,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Text:wght@400;500&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="themes.css">
+<script src="theme.js"></script>
 <style>
-/* --- Sécurité Rendu APK : Variables par défaut (Thème clair) --- */
-:root, [data-theme="light"] {
-  --bg: #faf7f2;
-  --sf: #fff;
-  --s1: #f0ebe2;
-  --s2: #e8e2d8;
-  --olv: #e0d9cf;
-  --ob: #1c1410;
-  --os: #1c1410;
-  --osv: #7a6a5a;
-  --p: #2563eb;
-  --op: #fff;
-  --sh: rgba(0,0,0,.05);
-  --top: env(safe-area-inset-top, 0px);
-  --bot: env(safe-area-inset-bottom, 0px);
-  --rl: 20px;
-}
-
+/* Styles structurels propres à la page d'accueil */
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Google Sans Text',sans-serif;overflow-x:hidden}
-
 #app{max-width:520px;margin:0 auto;padding:calc(var(--top)+10px) 16px calc(var(--bot)+10px)}
 
 /* Header */
 .hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-.hdr-left{}
 .hdr-eyebrow{font-size:11px;color:var(--osv);letter-spacing:.5px;font-family:'Google Sans',sans-serif}
 .hdr-title{font-family:'Google Sans',sans-serif;font-size:28px;font-weight:700;color:var(--ob);letter-spacing:-.5px;line-height:1.1}
 .ibtn{width:40px;height:40px;border-radius:50%;border:none;background:var(--s1);color:var(--os);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none;}
@@ -66,14 +47,6 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 /* Footer */
 .footer{text-align:center;font-size:11px;color:var(--osv);margin-top:20px;font-family:'Roboto Mono',monospace}
 </style>
-
-<script>
-/* ── SÉCURITÉ THEME AVANT RENDU ── */
-(function() {
-  const saved = localStorage.getItem('fh_theme') || 'light';
-  document.documentElement.setAttribute('data-theme', saved);
-})();
-</script>
 </head>
 <body>
 <div id="app">
@@ -145,9 +118,8 @@ async function fbCountDocs(coll) {
   } catch { return null; }
 }
 
-// Badges dynamiques : localStorage en premier, Firestore si cache vide
+// Badges dynamiques
 async function loadBadges() {
-  // ── Colis (localStorage uniquement) ──
   try {
     const _colis = JSON.parse(localStorage.getItem('lt_v3')||'{}');
     const _pkgs  = _colis.packages||[];
@@ -165,7 +137,6 @@ async function loadBadges() {
     if(_el) _el.textContent = _ready>0?_ready+' à retirer':_active.length>0?_active.length+' colis':'Aucun colis';
   } catch {}
 
-  // ── To-Do ──────────────────────────────────────────────────
   try {
     const todo    = JSON.parse(localStorage.getItem('fh_todo')||'{}');
     let tasks     = todo.tasks||[];
@@ -183,7 +154,6 @@ async function loadBadges() {
     if (el) el.textContent = pending>0 ? pending+' en cours' : tasks.length+' tâches';
   } catch {}
 
-  // ── Cave ───────────────────────────────────────────────────
   try {
     const cave    = JSON.parse(localStorage.getItem('fh_cave')||'{}');
     let bottles   = cave.bottles||[];
@@ -196,7 +166,6 @@ async function loadBadges() {
     if (el) el.textContent = count+' bouteille'+(count>1?'s':'');
   } catch {}
 
-  // ── Courses ────────────────────────────────────────────────
   try {
     const courses = JSON.parse(localStorage.getItem('fh_courses')||'{}');
     let items     = courses.items||[];
@@ -217,32 +186,17 @@ async function loadBadges() {
 
 loadBadges();
 
-// ── LOGIQUE NATIVE DE BASCULE DU THÈME ───────────────────────
+// ── ÉCOUTEUR DU CLIC SUR LE BOUTON DE THÈME ──────────────────
 document.addEventListener('DOMContentLoaded', function() {
   const themeBtn = document.getElementById('thbtn');
-  const themes = ['light', 'dark', 'sepia'];
-  const icons = { light: '☀️', dark: '🌙', sepia: '📜' };
-
-  function apply(t) {
-    document.documentElement.setAttribute('data-theme', t);
-    localStorage.setItem('fh_theme', t);
-    if (themeBtn) themeBtn.textContent = icons[t] || '☀️';
-  }
-
-  // Init visuelle immédiate du bouton au chargement
-  const currentSaved = localStorage.getItem('fh_theme') || 'light';
-  if (themeBtn) themeBtn.textContent = icons[currentSaved] || '☀️';
-
   if (themeBtn) {
     themeBtn.addEventListener('click', function(e) {
       e.preventDefault();
       e.stopPropagation();
-      
-      const current = document.documentElement.getAttribute('data-theme') || 'light';
-      let nextIdx = (themes.indexOf(current) + 1) % themes.length;
-      if (nextIdx === -1) nextIdx = 0;
-      
-      apply(themes[nextIdx]);
+      // Appel direct de la fonction globale gérée par theme.js
+      if (typeof window.toggleTheme === 'function') {
+        window.toggleTheme();
+      }
     });
   }
 });

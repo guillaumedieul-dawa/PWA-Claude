@@ -42,7 +42,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 .hdr-left{}
 .hdr-eyebrow{font-size:11px;color:var(--osv);letter-spacing:.5px;font-family:'Google Sans',sans-serif}
 .hdr-title{font-family:'Google Sans',sans-serif;font-size:28px;font-weight:700;color:var(--ob);letter-spacing:-.5px;line-height:1.1}
-.ibtn{width:40px;height:40px;border-radius:50%;border:none;background:var(--s1);color:var(--os);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.ibtn{width:40px;height:40px;border-radius:50%;border:none;background:var(--s1);color:var(--os);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none;}
 .ibtn:active{background:var(--s2)}
 
 /* Greeting card */
@@ -66,7 +66,14 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
 /* Footer */
 .footer{text-align:center;font-size:11px;color:var(--osv);margin-top:20px;font-family:'Roboto Mono',monospace}
 </style>
-<script src="theme.js"></script>
+
+<script>
+/* ── SÉCURITÉ THEME AVANT RENDU ── */
+(function() {
+  const saved = localStorage.getItem('fh_theme') || 'light';
+  document.documentElement.setAttribute('data-theme', saved);
+})();
+</script>
 </head>
 <body>
 <div id="app">
@@ -210,23 +217,32 @@ async function loadBadges() {
 
 loadBadges();
 
-// ── ÉCOUTEUR ET CORRECTIF DU BOUTON THÈME ────────────────────
+// ── LOGIQUE NATIVE DE BASCULE DU THÈME ───────────────────────
 document.addEventListener('DOMContentLoaded', function() {
   const themeBtn = document.getElementById('thbtn');
+  const themes = ['light', 'dark', 'sepia'];
+  const icons = { light: '☀️', dark: '🌙', sepia: '📜' };
+
+  function apply(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    localStorage.setItem('fh_theme', t);
+    if (themeBtn) themeBtn.textContent = icons[t] || '☀️';
+  }
+
+  // Init visuelle immédiate du bouton au chargement
+  const currentSaved = localStorage.getItem('fh_theme') || 'light';
+  if (themeBtn) themeBtn.textContent = icons[currentSaved] || '☀️';
+
   if (themeBtn) {
     themeBtn.addEventListener('click', function(e) {
       e.preventDefault();
       e.stopPropagation();
       
-      // Appel de la méthode globale de theme.js en priorité
-      if (typeof window.toggleTheme === 'function') {
-        window.toggleTheme();
-      } else if (window.FHTheme && typeof window.FHTheme.apply === 'function') {
-        // Fallback de sécurité si l'objet est exporté différemment
-        const current = document.documentElement.getAttribute('data-theme') || 'light';
-        const next = current === 'light' ? 'dark' : current === 'dark' ? 'sepia' : 'light';
-        window.FHTheme.apply(next);
-      }
+      const current = document.documentElement.getAttribute('data-theme') || 'light';
+      let nextIdx = (themes.indexOf(current) + 1) % themes.length;
+      if (nextIdx === -1) nextIdx = 0;
+      
+      apply(themes[nextIdx]);
     });
   }
 });

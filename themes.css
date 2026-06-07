@@ -1,44 +1,94 @@
-body { border: 10px solid red !important; }
 /* ═══════════════════════════════════════════
-   FamilyHub — Système de thèmes partagé
-   Utilisation : <html data-theme="light|dark|sepia">
+   FamilyHub — Système de thèmes
+   3 thèmes : light | dark | sepia
 ═══════════════════════════════════════════ */
 
 /* ── THÈME LIGHT ── */
 [data-theme="light"] {
-  --p: #2563eb; --op: #fff; --pc: #dbeafe; --opc: #1e3a8a;
-  --s: #059669; --sc: #d1fae5; --t: #7c3aed; --tc: #ede9fe;
-  --bg: #faf7f2; --sf: #fff; --s1: #f0ebe2; --s2: #e8e2d8;
-  --olv: #e0d9cf; --ob: #1c1410; --os: #1c1410; --osv: #7a6a5a;
+  --p: #2563eb;       --op: #fff;
+  --pc: #dbeafe;      --opc: #1e3a8a;
+  --s: #059669;       --sc: #d1fae5;
+  --t: #7c3aed;       --tc: #ede9fe;
+  --bg: #faf7f2;
+  --sf: #fff;
+  --s1: #f0ebe2;
+  --s2: #e8e2d8;
+  --olv: #e0d9cf;
+  --ob: #1c1410;
+  --os: #1c1410;
+  --osv: #7a6a5a;
   --sh: rgba(0,0,0,.05);
+  --cf: #9f1239;   --cfb: #ffe4e6;
+  --cd: #065f46;   --cdb: #d1fae5;
+  --cpd: #92400e;  --cpdb: #fef3c7;
+  --cr: #065f46;   --crb: #d1fae5;
+  --co: #92400e;   --cob: #fef3c7;
+  --cx: #78716c;   --cxb: #fafaf9;
 }
 
 /* ── THÈME DARK ── */
 [data-theme="dark"] {
-  --p: #60a5fa; --op: #1e3a8a; --pc: #1e3a8a; --opc: #dbeafe;
-  --s: #34d399; --sc: #064e3b; --t: #a78bfa; --tc: #2e1065;
-  --bg: #1a1714; --sf: #231e1a; --s1: #2c2620; --s2: #352e27;
-  --olv: #3e352d; --ob: #f0ebe2; --os: #f0ebe2; --osv: #a09080;
+  --p: #60a5fa;       --op: #1e3a8a;
+  --pc: #1e3a8a;      --opc: #dbeafe;
+  --s: #34d399;       --sc: #064e3b;
+  --t: #a78bfa;       --tc: #2e1065;
+  --bg: #1a1714;
+  --sf: #231e1a;
+  --s1: #2c2620;
+  --s2: #352e27;
+  --olv: #3e352d;
+  --ob: #f0ebe2;
+  --os: #f0ebe2;
+  --osv: #a09080;
   --sh: rgba(0,0,0,.3);
+  --cf: #f43f5e;   --cfb: #4c0519;
+  --cd: #10b981;   --cdb: #064e3b;
+  --cpd: #f59e0b;  --cpdb: #451a03;
+  --cr: #10b981;   --crb: #064e3b;
+  --co: #f59e0b;   --cob: #451a03;
+  --cx: #a8a29e;   --cxb: #1c1917;
 }
 
 /* ── THÈME SEPIA ── */
 [data-theme="sepia"] {
-  --p: #7c3d12; --op: #fffbf5; --pc: #fed7aa; --opc: #431407;
-  --s: #3d6b12; --sc: #d9f99d; --t: #5b21b6; --tc: #ede9fe;
-  --bg: #f5ead6; --sf: #fdf6e3; --s1: #f0e0c0; --s2: #e8d4a8;
-  --olv: #d4b896; --ob: #2d1a0a; --os: #2d1a0a; --osv: #8b6950;
+  --p: #7c3d12;       --op: #fffbf5;
+  --pc: #fed7aa;      --opc: #431407;
+  --s: #3d6b12;       --sc: #d9f99d;
+  --t: #5b21b6;       --tc: #ede9fe;
+  --bg: #f5ead6;
+  --sf: #fdf6e3;
+  --s1: #f0e0c0;
+  --s2: #e8d4a8;
+  --olv: #d4b896;
+  --ob: #2d1a0a;
+  --os: #2d1a0a;
+  --osv: #8b6950;
   --sh: rgba(80,40,0,.08);
+  --cf: #b91c1c;   --cfb: #fef2f2;
+  --cd: #15803d;   --cdb: #f0fdf4;
+  --cpd: #b45309;  --cpdb: #fef9c3;
+  --cr: #14532d;   --crb: #dcfce7;
+  --co: #78350f;   --cob: #fef9c3;
+  --cx: #78716c;   --cxb: #fafaf9;
 }
 
-/* ── Base partagée ── */
+/* ── Variables communes (layout, typo, radius) ── */
 [data-theme] {
   --top: env(safe-area-inset-top, 0px);
   --bot: env(safe-area-inset-bottom, 0px);
-  transition: background 0.3s, color 0.3s;
+  --rl: 20px;
+  --rm: 16px;
+  --rs: 12px;
+  color-scheme: normal;
 }
+
+/* ── Reset & base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 html, body {
+  min-height: 100dvh;
   background: var(--bg);
   color: var(--ob);
-  min-height: 100dvh;
+  font-family: 'Google Sans Text', sans-serif;
+  overflow-x: hidden;
+  transition: background .3s, color .3s;
 }

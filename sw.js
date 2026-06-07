@@ -1,14 +1,16 @@
 // ══════════════════════════════════════════
-//  FamilyHub — Service Worker v5 OPTIMIZED
+//  FamilyHub — Service Worker v7 OPTIMIZED
 // ══════════════════════════════════════════
 
-const VERSION      = '6';
+const VERSION      = '7';
 const CACHE_STATIC = 'fh-static-v' + VERSION;
 const CACHE_DYN    = 'fh-dyn-v'    + VERSION;
 
 const STATIC_ASSETS = [
   '/',
   '/index.html',
+  '/themes.css',   // <-- Ajout du fichier CSS des thèmes
+  '/theme.js',     // <-- Ajout du script des thèmes
   '/manifest.json',
   '/firebaseSync.js',
   '/firebaseSync.test.js',
@@ -67,14 +69,15 @@ self.addEventListener('fetch', event => {
           return res;
         })
         .catch(() => {
-          return caches.match(request).then(r => {
+          // ignoreSearch permet de faire correspondre /index.html même si l'URL a des paramètres
+          return caches.match(request, { ignoreSearch: true }).then(r => {
             if (r) return r;
             const segments = url.pathname.split('/');
             const subApp = segments[1];
             const subAppIndex = `/${subApp}/index.html`;
             return STATIC_ASSETS.includes(subAppIndex) 
-              ? caches.match(subAppIndex) 
-              : caches.match('/index.html');
+              ? caches.match(subAppIndex, { ignoreSearch: true }) 
+              : caches.match('/index.html', { ignoreSearch: true });
           });
         })
     );
@@ -86,7 +89,8 @@ self.addEventListener('fetch', event => {
   
   if (staticExts.includes(ext)) {
     event.respondWith(
-      caches.match(request).then(cached => {
+      // L'ajout critique de { ignoreSearch: true } permet de contourner les bugs liés à ?v=1
+      caches.match(request, { ignoreSearch: true }).then(cached => {
         if (cached) return cached;
         return fetch(request).then(res => {
           if (res && res.status === 200) {
@@ -107,7 +111,7 @@ self.addEventListener('fetch', event => {
         caches.open(CACHE_DYN).then(cache => cache.put(request, clone));
       }
       return res;
-    }).catch(() => caches.match(request).then(cached => cached || new Response('Offline', { status: 503 })))
+    }).catch(() => caches.match(request, { ignoreSearch: true }).then(cached => cached || new Response('Offline', { status: 503 })))
   );
 });
 

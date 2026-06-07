@@ -75,7 +75,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Go
       <div class="hdr-eyebrow">Bonjour 👋</div>
       <div class="hdr-title">FamilyHub</div>
     </div>
-    <button class="ibtn" data-action="toggleTheme" id="thbtn">☀️</button>
+    <button class="ibtn" id="thbtn">☀️</button>
   </div>
 
   <div class="greeting">
@@ -208,23 +208,37 @@ async function loadBadges() {
   } catch {}
 }
 
-// Intercepteur global des clics pour le bouton de thème d'origine
-document.addEventListener('click', function(e) {
-  const el = e.target.closest('[data-action]');
-  if (!el) return;
-  if (el.getAttribute('data-action') === 'toggleTheme') {
-    if (typeof window.toggleTheme === 'function') {
-      window.toggleTheme();
-    } else if (window.FHTheme && typeof window.FHTheme.apply === 'function') {
-      // Fallback de sécurité vers l'objet exporté
-      const current = document.documentElement.getAttribute('data-theme') || 'light';
-      const next = current === 'light' ? 'dark' : current === 'dark' ? 'sepia' : 'light';
-      window.FHTheme.apply(next);
-    }
+loadBadges();
+
+// ── ÉCOUTEUR ET CORRECTIF DU BOUTON THÈME ────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  const themeBtn = document.getElementById('thbtn');
+  if (themeBtn) {
+    themeBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // Appel de la méthode globale de theme.js en priorité
+      if (typeof window.toggleTheme === 'function') {
+        window.toggleTheme();
+      } else if (window.FHTheme && typeof window.FHTheme.apply === 'function') {
+        // Fallback de sécurité si l'objet est exporté différemment
+        const current = document.documentElement.getAttribute('data-theme') || 'light';
+        const next = current === 'light' ? 'dark' : current === 'dark' ? 'sepia' : 'light';
+        window.FHTheme.apply(next);
+      }
+    });
   }
 });
 
-loadBadges();
+// Afficher la date de build APK si disponible
+(function(){
+  var bel = document.getElementById('footerBuild');
+  if (!bel) return;
+  var meta = document.querySelector('meta[name="build-date"]');
+  var bd = meta ? meta.getAttribute('content') : '';
+  if (bd) bel.textContent = 'FamilyHub v2 · APK du ' + bd;
+})();
 </script>
 
 <script>
@@ -239,6 +253,6 @@ if ('serviceWorker' in navigator) {
 </body>
 <footer class="footer">
   Version applicative : __VERSION_NAME__<br />
-  Build : __BUILD_ID__ — généré le __BUILD_DATE__
+  <span id="footerBuild">Build : __BUILD_ID__ — généré le __BUILD_DATE__</span>
 </footer>
 </html>

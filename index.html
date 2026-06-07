@@ -14,11 +14,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Text:wght@400;500&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="themes.css">
 <style>
+/* Nettoyage : On laisse themes.css gérer intégralement l'arrière-plan de html et body */
 #app{max-width:520px;margin:0 auto;padding:calc(var(--top)+10px) 16px calc(var(--bot)+10px)}
 
 /* Header */
 .hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-.hdr-left{}
 .hdr-eyebrow{font-size:11px;color:var(--osv);letter-spacing:.5px;font-family:'Google Sans',sans-serif}
 .hdr-title{font-family:'Google Sans',sans-serif;font-size:28px;font-weight:700;color:var(--ob);letter-spacing:-.5px;line-height:1.1}
 .ibtn{width:40px;height:40px;border-radius:50%;border:none;background:var(--s1);color:var(--os);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer}
@@ -41,9 +41,6 @@
 .app-name{font-family:'Google Sans',sans-serif;font-size:13px;font-weight:700;color:var(--os)}
 .app-desc{font-size:11px;color:var(--osv);line-height:1.3}
 .app-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;font-family:'Google Sans',sans-serif;margin-top:2px}
-
-/* Footer */
-.footer{text-align:center;font-size:11px;color:var(--osv);margin-top:8px;font-family:'Roboto Mono',monospace}
 </style>
 <script src="theme.js"></script>
 </head>
@@ -54,7 +51,7 @@
       <div class="hdr-eyebrow">Bonjour 👋</div>
       <div class="hdr-title">FamilyHub</div>
     </div>
-    <button class="ibtn" id="thbtn" onclick="if(typeof window.toggleTheme === 'function') window.toggleTheme();">☀️</button>
+    <button class="ibtn" id="thbtn" onclick="if(typeof window.toggleTheme === 'function') { window.toggleTheme(); }">☀️</button>
   </div>
 
   <div class="greeting">

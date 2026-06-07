@@ -4,68 +4,125 @@
    Utilisation : <html data-theme="light|dark|sepia">
 ═══════════════════════════════════════════ */
 
-/* ── THÈME LIGHT ── */
+/* ── THÈME LIGHT (Cream & Ink) ── */
 [data-theme="light"] {
+  /* Couleur d'accent principale */
   --p: #2563eb;       --op: #fff;
   --pc: #dbeafe;      --opc: #1e3a8a;
+  /* Secondaire & tertiaire */
   --s: #059669;       --sc: #d1fae5;
   --t: #7c3aed;       --tc: #ede9fe;
+  /* Fond & surfaces */
   --bg: #faf7f2;
   --sf: #fff;
   --s1: #f0ebe2;
   --s2: #e8e2d8;
   --olv: #e0d9cf;
+  /* Textes */
   --ob: #1c1410;
   --os: #1c1410;
   --osv: #7a6a5a;
+  /* Ombre & états */
   --sh: rgba(0,0,0,.05);
+  --cf: #9f1239;   --cfb: #ffe4e6;
+  --cd: #065f46;   --cdb: #d1fae5;
+  --cpd: #92400e;  --cpdb: #fef3c7;
+  --cr: #065f46;   --crb: #d1fae5;
+  --co: #92400e;   --cob: #fef3c7;
+  --cx: #6b7280;   --cxb: #f3f4f6;
 }
 
-/* ── THÈME DARK ── */
+/* ── THÈME DARK (Encre de nuit) ── */
 [data-theme="dark"] {
-  --p: #3b82f6;       --op: #ffffff;
+  --p: #60a5fa;       --op: #1e3a8a;
   --pc: #1e3a8a;      --opc: #dbeafe;
-  --s: #10b981;       --sc: #065f46;
-  --t: #8b5cf6;       --tc: #4c1d95;
-  --bg: #121212;
-  --sf: #1e1e1e;
-  --s1: #2d2d2d;
-  --s2: #3d3d3d;
-  --olv: #333333;
-  --ob: #e3e3e3;
-  --os: #f3f3f3;
-  --osv: #a0a0a0;
-  --sh: rgba(0,0,0,.4);
+  --s: #34d399;       --sc: #064e3b;
+  --t: #a78bfa;       --tc: #2e1065;
+  --bg: #1a1714;
+  --sf: #231e1a;
+  --s1: #2c2620;
+  --s2: #352e27;
+  --olv: #3e352d;
+  --ob: #f0ebe2;
+  --os: #f0ebe2;
+  --osv: #a09080;
+  --sh: rgba(0,0,0,.3);
+  --cf: #fca5a5;   --cfb: #450a0a;
+  --cd: #6ee7b7;   --cdb: #022c22;
+  --cpd: #fcd34d;  --cpdb: #451a03;
+  --cr: #6ee7b7;   --crb: #022c22;
+  --co: #fcd34d;   --cob: #451a03;
+  --cx: #9ca3af;   --cxb: #1f2937;
 }
 
-/* ── THÈME SEPIA ── */
+/* ── THÈME SEPIA (Parchemin) ── */
 [data-theme="sepia"] {
-  --p: #b45309;       --op: #fff;
-  --pc: #fef3c7;      --opc: #78350f;
-  --s: #15803d;       --sc: #dcfce7;
-  --t: #6d28d9;       --tc: #f3e8ff;
-  --bg: #f4ecd8;
+  --p: #7c3d12;       --op: #fffbf5;
+  --pc: #fed7aa;      --opc: #431407;
+  --s: #3d6b12;       --sc: #d9f99d;
+  --t: #5b21b6;       --tc: #ede9fe;
+  --bg: #f5ead6;
   --sf: #fdf6e3;
-  --s1: #e4daaf;
-  --s2: #d5c896;
-  --olv: #d3c79c;
-  --ob: #433422;
-  --os: #5b462a;
-  --osv: #8f7455;
-  --sh: rgba(67,52,34,.08);
+  --s1: #f0e0c0;
+  --s2: #e8d4a8;
+  --olv: #d4b896;
+  --ob: #2d1a0a;
+  --os: #2d1a0a;
+  --osv: #8b6950;
+  --sh: rgba(80,40,0,.08);
+  --cf: #881337;   --cfb: #fde8d0;
+  --cd: #14532d;   --cdb: #dcfce7;
+  --cpd: #78350f;  --cpdb: #fef9c3;
+  --cr: #14532d;   --crb: #dcfce7;
+  --co: #78350f;   --cob: #fef9c3;
+  --cx: #78716c;   --cxb: #fafaf9;
 }
 
-/* ── Variables communes (layout) ── */
+/* ── Variables communes (layout, typo, radius) ── */
 [data-theme] {
   --top: env(safe-area-inset-top, 0px);
   --bot: env(safe-area-inset-bottom, 0px);
   --rl: 20px;
+  --rm: 16px;
+  --rs: 12px;
+  color-scheme: normal;
 }
 
-/* ── Application globale ── */
+/* ── Reset & base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 html, body {
   min-height: 100dvh;
   background: var(--bg);
   color: var(--ob);
-  transition: background .2s, color .2s;
+  /* CORRECTION ICI : Utilisation des polices disponibles dans l'index */
+  font-family: 'Google Sans Text', sans-serif;
+  overflow-x: hidden;
+  transition: background .3s, color .3s;
 }
+
+/* ── Sélecteur de thème flottant ── */
+#theme-picker {
+  position: fixed;
+  top: calc(var(--top) + 8px);
+  right: 8px;
+  z-index: 500;
+  display: flex;
+  gap: 4px;
+  background: var(--sf);
+  border: 1px solid var(--olv);
+  border-radius: 28px;
+  padding: 4px 6px;
+  box-shadow: 0 2px 8px var(--sh);
+}
+.theme-dot {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform .15s, border-color .15s;
+}
+.theme-dot:active { transform: scale(.85); }
+.theme-dot.active { border-color: var(--ob); }
+.theme-dot[data-t="light"]  { background: linear-gradient(135deg, #faf7f2 50%, #2563eb 50%); }
+.theme-dot[data-t="dark"]   { background: linear-gradient(135deg, #1a1714 50%, #60a5fa 50%); }
+.theme-dot[data-t="sepia"]  { background: linear-gradient(135deg, #f5ead6 50%, #7c3d12 50%); }

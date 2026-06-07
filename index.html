@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="build-date" content="__BUILD_DATE__">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#faf7f2">
+<meta name="theme-color" id="meta-theme" content="#faf7f2">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="FamilyHub">
 <title>FamilyHub</title>
@@ -15,24 +15,16 @@
 
 <style>
 #app{max-width:520px;margin:0 auto;padding:calc(var(--top)+10px) 16px calc(var(--bot)+10px)}
-
-/* Header */
 .hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .hdr-eyebrow{font-size:11px;color:var(--osv);letter-spacing:.5px;font-family:'Google Sans',sans-serif}
 .hdr-title{font-family:'Google Sans',sans-serif;font-size:28px;font-weight:700;color:var(--ob);letter-spacing:-.5px;line-height:1.1}
-.ibtn{width:40px;height:40px;border-radius:50%;border:none;background:var(--s1);color:var(--os);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none;-webkit-user-select:none;}
+.ibtn{width:40px;height:40px;border-radius:50%;border:none;background:var(--s1);color:var(--os);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent;}
 .ibtn:active{background:var(--s2)}
-
-/* Greeting card */
 .greeting{background:var(--p);border-radius:var(--rl);padding:12px 20px;margin-bottom:12px;color:var(--op)}
 .greet-lbl{font-size:12px;opacity:.8;font-family:'Google Sans',sans-serif;letter-spacing:.3px}
 .greet-name{font-family:'Google Sans',sans-serif;font-size:20px;font-weight:700;margin-top:2px}
 .greet-sub{font-size:12px;opacity:.8;margin-top:3px;line-height:1.4}
-
-/* Section */
 .sec-lbl{font-family:'Google Sans',sans-serif;font-size:13px;font-weight:500;color:var(--osv);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
-
-/* App grid */
 .app-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:0}
 .app-card{background:var(--sf);border-radius:var(--rl);padding:12px 14px;cursor:pointer;box-shadow:0 1px 3px var(--sh);transition:all .2s;text-decoration:none;display:flex;flex-direction:column;gap:8px;border:1px solid transparent}
 .app-card:active{transform:scale(.97);border-color:var(--olv)}
@@ -40,17 +32,48 @@
 .app-name{font-family:'Google Sans',sans-serif;font-size:13px;font-weight:700;color:var(--os)}
 .app-desc{font-size:11px;color:var(--osv);line-height:1.3}
 .app-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;font-family:'Google Sans',sans-serif;margin-top:2px}
+.footer{text-align:center;font-size:11px;color:var(--osv);margin-top:8px;font-family:'Roboto Mono',monospace}
 </style>
 
 <script>
-  (function() {
-    const saved = localStorage.getItem('fh_theme');
-    const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const theme = saved || (sysDark ? 'dark' : 'light');
-    document.documentElement.setAttribute('data-theme', theme);
-  })();
+(function() {
+  var THEMES = ['light', 'dark', 'sepia'];
+  var THEME_COLORS = { 'light': '#faf7f2', 'dark': '#1a1714', 'sepia': '#f5ead6' };
+  
+  window.applyTheme = function(t) {
+    if (THEMES.indexOf(t) === -1) t = 'light';
+    
+    // Application forcée du CSS
+    document.documentElement.setAttribute('data-theme', t);
+    if (document.body) document.body.setAttribute('data-theme', t);
+    
+    // Sauvegarde avec try/catch pour WebViews restrictives
+    try { localStorage.setItem('fh_theme', t); } catch(e) {}
+    
+    // Mise à jour visuelle du bouton
+    var btn = document.getElementById('thbtn');
+    if (btn) btn.textContent = (t === 'dark' ? '🌙' : (t === 'sepia' ? '📜' : '☀️'));
+    
+    // Mise à jour de la couleur de la barre d'état Android !
+    var meta = document.getElementById('meta-theme');
+    if (meta) meta.setAttribute('content', THEME_COLORS[t]);
+  };
+
+  window.toggleTheme = function() {
+    var cur = document.documentElement.getAttribute('data-theme') || 'light';
+    var next = THEMES[(THEMES.indexOf(cur) + 1) % THEMES.length];
+    window.applyTheme(next);
+  };
+
+  // Initialisation immédiate avant l'affichage
+  var saved = 'light';
+  try { saved = localStorage.getItem('fh_theme'); } catch(e) {}
+  if (!saved) {
+    try { saved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; } catch(e) {}
+  }
+  window.applyTheme(saved || 'light');
+})();
 </script>
-<script src="theme.js" defer></script>
 </head>
 <body>
 <div id="app">
@@ -59,7 +82,7 @@
       <div class="hdr-eyebrow">Bonjour 👋</div>
       <div class="hdr-title">FamilyHub</div>
     </div>
-    <button class="ibtn" id="thbtn" onclick="if(typeof window.toggleTheme === 'function'){ window.toggleTheme(); }">☀️</button>
+    <button class="ibtn" id="thbtn" onclick="window.toggleTheme()">☀️</button>
   </div>
 
   <div class="greeting">
@@ -104,6 +127,12 @@
 </div>
 
 <script>
+// S'assure que le thème est bien validé une fois le contenu chargé
+document.addEventListener('DOMContentLoaded', function() {
+  var t = document.documentElement.getAttribute('data-theme') || 'light';
+  window.applyTheme(t);
+});
+
 // ── Firestore badges helper ──────────────────────────────────
 const FB_PROJ_HOME = 'familyhub-colis-8abbd';
 function getFBKeyHome() {
@@ -122,6 +151,7 @@ async function fbCountDocs(coll) {
   } catch { return null; }
 }
 
+// Badges dynamiques
 async function loadBadges() {
   try {
     const _colis = JSON.parse(localStorage.getItem('lt_v3')||'{}');
@@ -189,26 +219,25 @@ async function loadBadges() {
 
 loadBadges();
 
+// Afficher la date de build APK
 (function(){
   var bel = document.getElementById('footerBuild');
   if (!bel) return;
   var meta = document.querySelector('meta[name="build-date"]');
   var bd = meta ? meta.getAttribute('content') : '';
-  if (bd) bel.textContent = 'FamilyHub v2 · APK du ' + bd;
+  if (bd) bel.innerHTML = 'Version applicative : __VERSION_NAME__<br />Build : __BUILD_ID__ — généré le ' + bd;
 })();
 </script>
 
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then(r => console.log('SW enregistré', r.scope))
-      .catch(e => console.warn('SW erreur', e));
+    navigator.serviceWorker.register('/sw.js').catch(e => console.warn('SW erreur', e));
   });
 }
 </script>
 </body>
-<footer id="footerBuild" style="font-size: 11px; text-align: center; margin-top: 20px; color: var(--osv); font-family: 'Roboto Mono', monospace;">
+<footer id="footerBuild" class="footer">
   Version applicative : __VERSION_NAME__<br />
   Build : __BUILD_ID__ — généré le __BUILD_DATE__
 </footer>

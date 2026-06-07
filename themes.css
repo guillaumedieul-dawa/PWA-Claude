@@ -1,28 +1,22 @@
 /* ═══════════════════════════════════════════
    FamilyHub — Système de thèmes
    3 thèmes : light | dark | sepia
-   Utilisation : <html data-theme="light|dark|sepia">
 ═══════════════════════════════════════════ */
 
-/* ── THÈME LIGHT (Cream & Ink) ── */
+/* ── THÈME LIGHT ── */
 [data-theme="light"] {
-  /* Couleur d'accent principale */
   --p: #2563eb;       --op: #fff;
   --pc: #dbeafe;      --opc: #1e3a8a;
-  /* Secondaire & tertiaire */
   --s: #059669;       --sc: #d1fae5;
   --t: #7c3aed;       --tc: #ede9fe;
-  /* Fond & surfaces */
   --bg: #faf7f2;
   --sf: #fff;
   --s1: #f0ebe2;
   --s2: #e8e2d8;
   --olv: #e0d9cf;
-  /* Textes */
   --ob: #1c1410;
   --os: #1c1410;
   --osv: #7a6a5a;
-  /* Ombre & états */
   --sh: rgba(0,0,0,.05);
   --cf: #9f1239;   --cfb: #ffe4e6;
   --cd: #065f46;   --cdb: #d1fae5;
@@ -32,7 +26,7 @@
   --cx: #6b7280;   --cxb: #f3f4f6;
 }
 
-/* ── THÈME DARK (Encre de nuit) ── */
+/* ── THÈME DARK ── */
 [data-theme="dark"] {
   --p: #60a5fa;       --op: #1e3a8a;
   --pc: #1e3a8a;      --opc: #dbeafe;
@@ -55,7 +49,7 @@
   --cx: #9ca3af;   --cxb: #1f2937;
 }
 
-/* ── THÈME SEPIA (Parchemin) ── */
+/* ── THÈME SEPIA ── */
 [data-theme="sepia"] {
   --p: #7c3d12;       --op: #fffbf5;
   --pc: #fed7aa;      --opc: #431407;
@@ -78,7 +72,7 @@
   --cx: #78716c;   --cxb: #fafaf9;
 }
 
-/* ── Variables communes (layout, typo, radius) ── */
+/* ── Variables communes ── */
 [data-theme] {
   --top: env(safe-area-inset-top, 0px);
   --bot: env(safe-area-inset-bottom, 0px);
@@ -99,7 +93,7 @@ html, body {
   transition: background .3s, color .3s;
 }
 
-/* ── Sélecteur de thème flottant ── */
+/* ── Sélecteur visuel optionnel ── */
 #theme-picker {
   position: fixed;
   top: calc(var(--top) + 8px);

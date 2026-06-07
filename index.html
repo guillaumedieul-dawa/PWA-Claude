@@ -13,17 +13,18 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Text:wght@400;500&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="themes.css">
-<script src="theme.js"></script>
 <style>
-/* Styles structurels propres à la page d'accueil */
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Google Sans Text',sans-serif;overflow-x:hidden}
+
 #app{max-width:520px;margin:0 auto;padding:calc(var(--top)+10px) 16px calc(var(--bot)+10px)}
 
 /* Header */
 .hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.hdr-left{}
 .hdr-eyebrow{font-size:11px;color:var(--osv);letter-spacing:.5px;font-family:'Google Sans',sans-serif}
 .hdr-title{font-family:'Google Sans',sans-serif;font-size:28px;font-weight:700;color:var(--ob);letter-spacing:-.5px;line-height:1.1}
-.ibtn{width:40px;height:40px;border-radius:50%;border:none;background:var(--s1);color:var(--os);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none;}
+.ibtn{width:40px;height:40px;border-radius:50%;border:none;background:var(--s1);color:var(--os);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .ibtn:active{background:var(--s2)}
 
 /* Greeting card */
@@ -45,8 +46,9 @@
 .app-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;font-family:'Google Sans',sans-serif;margin-top:2px}
 
 /* Footer */
-.footer{text-align:center;font-size:11px;color:var(--osv);margin-top:20px;font-family:'Roboto Mono',monospace}
+.footer{text-align:center;font-size:11px;color:var(--osv);margin-top:8px;font-family:'Roboto Mono',monospace}
 </style>
+<script src="theme.js"></script>
 </head>
 <body>
 <div id="app">
@@ -55,7 +57,7 @@
       <div class="hdr-eyebrow">Bonjour 👋</div>
       <div class="hdr-title">FamilyHub</div>
     </div>
-    <button class="ibtn" id="thbtn">☀️</button>
+    <button class="ibtn" data-action="toggleTheme" id="thbtn">☀️</button>
   </div>
 
   <div class="greeting">
@@ -118,8 +120,9 @@ async function fbCountDocs(coll) {
   } catch { return null; }
 }
 
-// Badges dynamiques
+// Badges dynamiques : localStorage en premier, Firestore si cache vide
 async function loadBadges() {
+  // ── Colis (localStorage uniquement) ──
   try {
     const _colis = JSON.parse(localStorage.getItem('lt_v3')||'{}');
     const _pkgs  = _colis.packages||[];
@@ -137,6 +140,7 @@ async function loadBadges() {
     if(_el) _el.textContent = _ready>0?_ready+' à retirer':_active.length>0?_active.length+' colis':'Aucun colis';
   } catch {}
 
+  // ── To-Do ──────────────────────────────────────────────────
   try {
     const todo    = JSON.parse(localStorage.getItem('fh_todo')||'{}');
     let tasks     = todo.tasks||[];
@@ -154,6 +158,7 @@ async function loadBadges() {
     if (el) el.textContent = pending>0 ? pending+' en cours' : tasks.length+' tâches';
   } catch {}
 
+  // ── Cave ───────────────────────────────────────────────────
   try {
     const cave    = JSON.parse(localStorage.getItem('fh_cave')||'{}');
     let bottles   = cave.bottles||[];
@@ -166,6 +171,7 @@ async function loadBadges() {
     if (el) el.textContent = count+' bouteille'+(count>1?'s':'');
   } catch {}
 
+  // ── Courses ────────────────────────────────────────────────
   try {
     const courses = JSON.parse(localStorage.getItem('fh_courses')||'{}');
     let items     = courses.items||[];
@@ -184,22 +190,20 @@ async function loadBadges() {
   } catch {}
 }
 
-loadBadges();
-
-// ── ÉCOUTEUR DU CLIC SUR LE BOUTON DE THÈME ──────────────────
+// ÉCOUTEUR SÉCURISÉ : Cible directement le bouton par son ID pour la WebView
 document.addEventListener('DOMContentLoaded', function() {
   const themeBtn = document.getElementById('thbtn');
   if (themeBtn) {
     themeBtn.addEventListener('click', function(e) {
       e.preventDefault();
-      e.stopPropagation();
-      // Appel direct de la fonction globale gérée par theme.js
       if (typeof window.toggleTheme === 'function') {
         window.toggleTheme();
       }
     });
   }
 });
+
+loadBadges();
 
 // Afficher la date de build APK si disponible
 (function(){
@@ -221,8 +225,8 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 </body>
-<footer class="footer">
+<footer id="footerBuild" style="font-size: 11px; text-align: center; margin-top: 20px; color: var(--osv); font-family: 'Roboto Mono', monospace;">
   Version applicative : __VERSION_NAME__<br />
-  <span id="footerBuild">Build : __BUILD_ID__ — généré le __BUILD_DATE__</span>
+  Build : __BUILD_ID__ — généré le __BUILD_DATE__
 </footer>
 </html>

@@ -14,7 +14,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Text:wght@400;500&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="themes.css">
 <style>
-/* On supprime html, body d'ici pour laisser themes.css gérer le fond automatiquement */
 #app{max-width:520px;margin:0 auto;padding:calc(var(--top)+10px) 16px calc(var(--bot)+10px)}
 
 /* Header */
@@ -55,7 +54,7 @@
       <div class="hdr-eyebrow">Bonjour 👋</div>
       <div class="hdr-title">FamilyHub</div>
     </div>
-    <button class="ibtn" data-action="toggleTheme" id="thbtn" style="pointer-events: auto;">☀️</button>
+    <button class="ibtn" id="thbtn" onclick="if(typeof window.toggleTheme === 'function') window.toggleTheme();">☀️</button>
   </div>
 
   <div class="greeting">
@@ -183,19 +182,6 @@ async function loadBadges() {
     if (el) el.textContent = remaining>0 ? remaining+' article'+(remaining>1?'s':'')+' restants' : 'Liste vide';
   } catch {}
 }
-
-// CORRECTION DU CLIC : On cible de manière ultra-précise l'ID du bouton
-document.addEventListener('DOMContentLoaded', function() {
-  const btn = document.getElementById('thbtn');
-  if (btn) {
-    btn.addEventListener('click', function(e) {
-      e.preventDefault();
-      if (typeof window.toggleTheme === 'function') {
-        window.toggleTheme();
-      }
-    });
-  }
-});
 
 loadBadges();
 

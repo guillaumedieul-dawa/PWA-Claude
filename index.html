@@ -14,7 +14,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Text:wght@400;500&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="themes.css">
 <style>
-/* Nettoyage : On laisse themes.css gérer intégralement l'arrière-plan de html et body */
 #app{max-width:520px;margin:0 auto;padding:calc(var(--top)+10px) 16px calc(var(--bot)+10px)}
 
 /* Header */
@@ -51,7 +50,7 @@
       <div class="hdr-eyebrow">Bonjour 👋</div>
       <div class="hdr-title">FamilyHub</div>
     </div>
-    <button class="ibtn" id="thbtn" onclick="if(typeof window.toggleTheme === 'function') { window.toggleTheme(); }">☀️</button>
+    <button class="ibtn" id="thbtn" onclick="if(typeof window.toggleTheme === 'function') window.toggleTheme();">☀️</button>
   </div>
 
   <div class="greeting">

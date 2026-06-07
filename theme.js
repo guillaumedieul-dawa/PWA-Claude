@@ -13,24 +13,22 @@
   function applyTheme(t) {
     if (!THEMES.includes(t)) t = 'light';
     
-    // CORRECTION CRITIQUE : Appliquer à html ET body pour assurer la bascule sous WebView
+    // Correction : On l'applique sur la racine ET sur le body pour assurer la cascade CSS
     document.documentElement.setAttribute('data-theme', t);
     if (document.body) {
       document.body.setAttribute('data-theme', t);
-    } else {
-      // Si le DOM n'est pas encore prêt pour body, on attend la fin du chargement
-      document.addEventListener('DOMContentLoaded', () => {
-        document.body.setAttribute('data-theme', t);
-      });
     }
 
     localStorage.setItem(KEY, t);
-
-    // Mettre à jour l'icône du bouton d'origine de la page
+    
+    // Mettre à jour les points actifs si existants
+    document.querySelectorAll('.theme-dot').forEach(d => {
+      d.classList.toggle('active', d.dataset.t === t);
+    });
+    
+    // Mise à jour de l'icône du bouton principal
     const btn = document.getElementById('thbtn');
-    if (btn) {
-      btn.textContent = t === 'dark' ? '🌙' : t === 'sepia' ? '📜' : '☀️';
-    }
+    if (btn) btn.textContent = t === 'dark' ? '🌙' : t === 'sepia' ? '📜' : '☀️';
   }
 
   /* ── Initialisation au chargement ── */
@@ -40,7 +38,7 @@
     applyTheme(saved || (sys ? 'dark' : 'light'));
   }
 
-  /* ── Basculer dynamiquement entre les 3 thèmes (Appelé par index.html) ── */
+  /* ── Basculer dynamiquement ── */
   window.toggleTheme = function () {
     const cur = document.documentElement.getAttribute('data-theme') || 'light';
     const idx = THEMES.indexOf(cur);
@@ -50,9 +48,12 @@
   /* ── Export public ── */
   window.FHTheme = { apply: applyTheme, init: initTheme };
 
-  /* ── Initialisation immédiate ── */
+  /* ── Init immédiate ── */
   initTheme();
   
-  // NOTE : L'appel automatique à `injectPicker()` a été retiré
-  // pour éliminer le menu invisible qui parasitait l'interface.
+  // On applique une deuxième couche de sécurité dès que le DOM est complètement chargé
+  document.addEventListener('DOMContentLoaded', () => {
+    const saved = localStorage.getItem(KEY) || 'light';
+    applyTheme(saved);
+  });
 })();

@@ -18,7 +18,7 @@
     
     localStorage.setItem(KEY, t);
     
-    // Synchronisation visuelle de l'émoji du bouton
+    // Mise à jour visuelle du bouton principal
     const btn = document.getElementById('thbtn');
     if (btn) {
       btn.textContent = t === 'dark' ? '🌙' : t === 'sepia' ? '📜' : '☀️';
@@ -32,13 +32,14 @@
     applyTheme(next);
   };
 
-  // Initialisation ultra-rapide avant rendu pour éviter le flash blanc
-  const current = localStorage.getItem(KEY) || 'light';
-  document.documentElement.setAttribute('data-theme', current);
+  // Lecture et application immédiate à la racine HTML pour bloquer le flash blanc
+  const savedTheme = localStorage.getItem(KEY) || 'light';
+  document.documentElement.setAttribute('data-theme', savedTheme);
 
+  // Ajustement final une fois que les éléments graphiques existent
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => applyTheme(current));
+    document.addEventListener('DOMContentLoaded', () => applyTheme(savedTheme));
   } else {
-    applyTheme(current);
+    applyTheme(savedTheme);
   }
 })();

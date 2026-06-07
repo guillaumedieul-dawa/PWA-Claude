@@ -94,7 +94,6 @@ html, body {
   min-height: 100dvh;
   background: var(--bg);
   color: var(--ob);
-  /* CORRECTION ICI : Utilisation des polices disponibles dans l'index */
   font-family: 'Google Sans Text', sans-serif;
   overflow-x: hidden;
   transition: background .3s, color .3s;

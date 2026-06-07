@@ -13,7 +13,7 @@
   function applyTheme(t) {
     if (!THEMES.includes(t)) t = 'light';
     
-    // Correction : On l'applique sur la racine ET sur le body pour assurer la cascade CSS
+    // On applique sur la racine et le body
     document.documentElement.setAttribute('data-theme', t);
     if (document.body) {
       document.body.setAttribute('data-theme', t);
@@ -26,9 +26,11 @@
       d.classList.toggle('active', d.dataset.t === t);
     });
     
-    // Mise à jour de l'icône du bouton principal
+    // SÉCURITÉ : On ne met à jour le bouton que s'il existe dans le DOM
     const btn = document.getElementById('thbtn');
-    if (btn) btn.textContent = t === 'dark' ? '🌙' : t === 'sepia' ? '📜' : '☀️';
+    if (btn) {
+      btn.textContent = t === 'dark' ? '🌙' : t === 'sepia' ? '📜' : '☀️';
+    }
   }
 
   /* ── Initialisation au chargement ── */
@@ -48,10 +50,10 @@
   /* ── Export public ── */
   window.FHTheme = { apply: applyTheme, init: initTheme };
 
-  /* ── Init immédiate ── */
+  /* ── Init immédiate pour éviter le flash ── */
   initTheme();
   
-  // On applique une deuxième couche de sécurité dès que le DOM est complètement chargé
+  // Deuxième couche de sécurité une fois le DOM chargé pour synchroniser le bouton
   document.addEventListener('DOMContentLoaded', () => {
     const saved = localStorage.getItem(KEY) || 'light';
     applyTheme(saved);

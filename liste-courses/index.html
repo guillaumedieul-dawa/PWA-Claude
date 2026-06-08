@@ -36,6 +36,15 @@ h1 { font-family:'Bebas Neue',sans-serif; font-size:42px; letter-spacing:1px; co
 }
 .circle-btn:active { transform:scale(0.92); }
 
+/* Indicateur de synchro natif de fbSync.js */
+#syncDot {
+  width: 12px; height: 12px; border-radius: 50%; background: #22c55e;
+  transition: background 0.3s;
+}
+@keyframes fbPulse {
+  0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; }
+}
+
 /* Chips Magasins */
 .chips-scroll { display:flex; gap:8px; overflow-x:auto; padding:4px 4px 12px 4px; margin:0 -4px; scrollbar-width:none; }
 .chips-scroll::-webkit-scrollbar { display:none; }
@@ -130,23 +139,9 @@ h1 { font-family:'Bebas Neue',sans-serif; font-size:42px; letter-spacing:1px; co
   font-family:inherit; font-size:14px; color:var(--ob); outline:none;
 }
 .sheet-add button { padding:0 16px; background:var(--p); color:var(--op); border-radius:12px; border:none; font-weight:700; }
-
-/* Sync Overlay */
-.sov {
-  position:fixed; top:12px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.85);
-  color:#fff; padding:6px 12px; border-radius:20px; font-size:11px; font-family:'Fragment Mono',monospace;
-  z-index:9999; display:flex; align-items:center; gap:6px; box-shadow:0 4px 12px rgba(0,0,0,0.2);
-}
-.spinner {
-  width:10px; height:10px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff;
-  border-radius:50%; animation:spin 0.6s linear infinite;
-}
-@keyframes spin { to { transform:rotate(360deg); } }
 </style>
 </head>
 <body>
-
-<div id="sov" class="sov"><div class="spinner"></div><span>SYNC...</span></div>
 
 <header>
   <div class="hdr-title-block">
@@ -154,6 +149,7 @@ h1 { font-family:'Bebas Neue',sans-serif; font-size:42px; letter-spacing:1px; co
     <h1>Liste de courses</h1>
   </div>
   <div class="hdr-btns">
+    <div id="syncDot"></div>
     <button id="thbtn" class="circle-btn" onclick="window.toggleTheme()"></button>
     <button class="circle-btn" onclick="openSheet()">🏪</button>
   </div>
@@ -182,12 +178,13 @@ h1 { font-family:'Bebas Neue',sans-serif; font-size:42px; letter-spacing:1px; co
   </div>
 </div>
 
-<script src="/firebaseSync.js"></script>
+<script src="./fbSync.js"></script>
 <script>
 let D = { items: [] };
 let shops = ['Supermarché', 'Marché', 'Boulangerie'];
 let activeShopFilter = 'Tous';
 let selectedRayonIdx = 0;
+const COLLECTION = 'courses';
 
 const RAYONS = [
   { n: 'Frais / Légumes', e: '🥦' },
@@ -199,10 +196,6 @@ const RAYONS = [
   { n: 'Hygiène / Entretien', e: '🧼' },
   { n: 'Autre', e: '📦' }
 ];
-
-window.addEventListener('fhThemeChanged', (e) => {
-  console.log("Le thème a changé dans le module Liste de courses :", e.detail.theme);
-});
 
 function renderShopChips() {
   const container = document.getElementById('chipsScroll');
@@ -243,7 +236,7 @@ function parseInput(str) {
 }
 
 /* ═══════════════════════════════════════════
-   LOGIQUE APPLICATIVE AVEC SYNCHRO SÉCURISÉE
+   LOGIQUE APPLICATIVE ET FILTRE FIRESTORE (v4)
    ═══════════════════════════════════════════ */
 
 function addItem() {
@@ -252,9 +245,10 @@ function addItem() {
   
   let p = parseInput(inp.value);
   let rName = RAYONS[selectedRayonIdx].n;
+  let id = 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
   
   let item = {
-    id: 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+    id: id,
     name: p.name,
     qte: p.qte,
     rayon: rName,
@@ -263,12 +257,16 @@ function addItem() {
     date: new Date().toISOString()
   };
   
+  // Sauvegarde locale instantanée
   D.items.unshift(item);
   inp.value = '';
   saveLocal();
   render();
   
-  syncWithFirebase();
+  // Pousse dans la file de synchro transparente (fbSync.js)
+  if (typeof fbQueue === 'function') {
+    fbQueue(COLLECTION, id, item);
+  }
 }
 
 function toggleItem(id) {
@@ -277,7 +275,9 @@ function toggleItem(id) {
     item.checked = !item.checked;
     saveLocal();
     render();
-    syncWithFirebase();
+    if (typeof fbQueue === 'function') {
+      fbQueue(COLLECTION, id, item);
+    }
   }
 }
 
@@ -285,38 +285,8 @@ function deleteItem(id) {
   D.items = D.items.filter(i => i.id !== id);
   saveLocal();
   render();
-  syncWithFirebase();
-}
-
-// Intercepteur anti-blocage réseau
-function syncWithFirebase() {
-  const sov = document.getElementById('sov');
-  if (!sov) return;
-
-  sov.style.display = 'flex';
-
-  // Si Firebase ne répond pas sous 4 secondes, on retire le loader et on lève l'alerte
-  const safetyTimeout = setTimeout(() => {
-    sov.style.display = 'none';
-    alert("Timeout 4s : fbSaveAll ne répond pas.\nVérifiez les restrictions d'Application ID ou les clés Cloud Firebase.");
-  }, 4000);
-
-  if (typeof fbSaveAll === 'function') {
-    fbSaveAll(D.items)
-      .then(() => {
-        console.log("✓ Synchronisation réussie");
-      })
-      .catch(err => {
-        alert("Erreur Firebase capturée :\n" + JSON.stringify(err) + "\n\nMessage: " + (err ? err.message : 'inconnu'));
-      })
-      .finally(() => {
-        clearTimeout(safetyTimeout);
-        sov.style.display = 'none';
-      });
-  } else {
-    clearTimeout(safetyTimeout);
-    sov.style.display = 'none';
-    alert("Erreur critique : La fonction fbSaveAll n'existe pas ou firebaseSync.js n'est pas chargé.");
+  if (typeof fbDeleteQueue === 'function') {
+    fbDeleteQueue(COLLECTION, id);
   }
 }
 
@@ -339,7 +309,7 @@ function render() {
   
   RAYONS.forEach(r => {
     let itemsInRayon = groups[r.n];
-    if (itemsInRayon.length === 0) return;
+    if (!itemsInRayon || itemsInRayon.length === 0) return;
     
     itemsInRayon.sort((a,b) => a.checked - b.checked);
     
@@ -451,9 +421,7 @@ function deleteShop(idx) {
 function saveShops(arr) { localStorage.setItem('fh_courses_shops', JSON.stringify(arr)); }
 function saveLocal() { localStorage.setItem('fh_courses_data', JSON.stringify(D)); }
 
-async function init() {
-  document.getElementById('sov').style.display = 'none';
-  
+function init() {
   const lsShops = localStorage.getItem('fh_courses_shops');
   if (lsShops) shops = JSON.parse(lsShops);
   const lsData = localStorage.getItem('fh_courses_data');
@@ -463,20 +431,20 @@ async function init() {
   renderRayonsGrid();
   render();
 
-  if (typeof fbLoadAll === 'function') {
-    try {
-      const remote = await fbLoadAll();
-      if (remote && remote.length > 0) {
+  // Mise en place du flux Temps Réel bidirectionnel via fbSync.js
+  if (typeof fbSubscribe === 'function') {
+    fbSubscribe(COLLECTION, function(remoteItems) {
+      if (remoteItems && Array.isArray(remoteItems)) {
+        // Synchronisation et fusion intelligente
         const localMap = {};
         D.items.forEach(t => { localMap[t.id] = t; });
-        remote.forEach(t => { localMap[t.id] = t; });
+        remoteItems.forEach(t => { localMap[t.id] = t; });
+        
         D.items = Object.values(localMap).sort((a,b) => new Date(b.date||0) - new Date(a.date||0));
         saveLocal();
         render();
       }
-    } catch (err) {
-      console.error("Impossible de charger Firebase au démarrage :", err);
-    }
+    });
   }
 }
 

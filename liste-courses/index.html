@@ -185,7 +185,11 @@ let D = { items: [] };
 let shops = ['Supermarché', 'Marché', 'Boulangerie'];
 let activeShopFilter = 'Tous';
 let selectedRayonIdx = 0;
-const COLLECTION = 'courses';
+
+// Collections Firestore distinctes pour isoler la configuration des articles de courses
+const COLLECTION_ITEMS = 'courses';
+const COLLECTION_CONFIG = 'courses_config';
+const DOC_SHOPS_ID = 'magasins_shared';
 
 const RAYONS = [
   { n: 'Frais / Légumes', e: '🥦' },
@@ -205,8 +209,6 @@ function renderShopChips() {
     html += `<div class="chip ${activeShopFilter===s?'active':''}" onclick="setShopFilter('${s.replace(/'/g, "\\'")}')">🏪 ${s}</div>`;
   });
   container.innerHTML = html;
-  
-  // Met à jour en même temps le menu déroulant du formulaire d'ajout
   renderFormShopSelect();
 }
 
@@ -279,7 +281,7 @@ function addItem() {
   render();
   
   if (typeof fbQueue === 'function') {
-    fbQueue(COLLECTION, id, item);
+    fbQueue(COLLECTION_ITEMS, id, item);
   }
 }
 
@@ -290,12 +292,11 @@ function toggleItem(id) {
     saveLocal();
     render();
     if (typeof fbQueue === 'function') {
-      fbQueue(COLLECTION, id, item);
+      fbQueue(COLLECTION_ITEMS, id, item);
     }
   }
 }
 
-// Nouvelle fonction de modification au clic sur le libellé
 function editItem(id) {
   let item = D.items.find(i => i.id === id);
   if (!item) return;
@@ -307,12 +308,12 @@ function editItem(id) {
     let p = parseInput(newVal);
     item.name = p.name;
     item.qte = p.qte;
-    item.date = new Date().toISOString(); // actualise la date de modification
+    item.date = new Date().toISOString();
     
     saveLocal();
     render();
     if (typeof fbQueue === 'function') {
-      fbQueue(COLLECTION, id, item);
+      fbQueue(COLLECTION_ITEMS, id, item);
     }
   }
 }
@@ -322,7 +323,7 @@ function deleteItem(id) {
   saveLocal();
   render();
   if (typeof fbDeleteQueue === 'function') {
-    fbDeleteQueue(COLLECTION, id);
+    fbDeleteQueue(COLLECTION_ITEMS, id);
   }
 }
 
@@ -433,28 +434,41 @@ function renderSheetList() {
     `;
   });
 }
+
+/* ═══════════════════════════════════════════
+   MODIFICATION ET SYNCHRONISATION DES MAGASINS
+   ═══════════════════════════════════════════ */
+function syncShopsToFirebase() {
+  saveShopsLocal(shops);
+  if (typeof fbQueue === 'function') {
+    // On encapsule le tableau dans un objet ayant un identifiant unique de document fixe
+    fbQueue(COLLECTION_CONFIG, DOC_SHOPS_ID, { id: DOC_SHOPS_ID, list: shops });
+  }
+}
+
 function addShop() {
   const inp = document.getElementById('newShopInput');
   let val = inp.value.trim();
   if (val && !shops.includes(val)) {
     shops.push(val);
     inp.value = '';
-    saveShops(shops);
     renderSheetList();
     renderShopChips();
+    syncShopsToFirebase(); // Envoi synchro
   }
 }
+
 function deleteShop(idx) {
   let deletedShop = shops[idx];
   shops.splice(idx, 1);
-  saveShops(shops);
   if (activeShopFilter === deletedShop) activeShopFilter = 'Tous';
   renderSheetList();
   renderShopChips();
   render();
+  syncShopsToFirebase(); // Envoi synchro
 }
 
-function saveShops(arr) { localStorage.setItem('fh_courses_shops', JSON.stringify(arr)); }
+function saveShopsLocal(arr) { localStorage.setItem('fh_courses_shops', JSON.stringify(arr)); }
 function saveLocal() { localStorage.setItem('fh_courses_data', JSON.stringify(D)); }
 
 function init() {
@@ -467,16 +481,36 @@ function init() {
   renderRayonsGrid();
   render();
 
+  // 1. Abonnement Temps Réel aux articles
   if (typeof fbSubscribe === 'function') {
-    fbSubscribe(COLLECTION, function(remoteItems) {
+    fbSubscribe(COLLECTION_ITEMS, function(remoteItems) {
       if (remoteItems && Array.isArray(remoteItems)) {
+        // Filtrer au cas où le document de config se glisserait par erreur
+        const cleanRemote = remoteItems.filter(i => i.id !== DOC_SHOPS_ID);
         const localMap = {};
         D.items.forEach(t => { localMap[t.id] = t; });
-        remoteItems.forEach(t => { localMap[t.id] = t; });
+        cleanRemote.forEach(t => { localMap[t.id] = t; });
         
         D.items = Object.values(localMap).sort((a,b) => new Date(b.date||0) - new Date(a.date||0));
         saveLocal();
         render();
+      }
+    });
+  }
+
+  // 2. Abonnement Temps Réel à la liste des magasins partagés
+  if (typeof fbSubscribe === 'function') {
+    fbSubscribe(COLLECTION_CONFIG, function(remoteConfig) {
+      if (remoteConfig && Array.isArray(remoteConfig)) {
+        // Trouver le document contenant la liste des magasins
+        const shopDoc = remoteConfig.find(c => c.id === DOC_SHOPS_ID || c._fbId === DOC_SHOPS_ID);
+        if (shopDoc && shopDoc.list && Array.isArray(shopDoc.list)) {
+          shops = shopDoc.list;
+          saveShopsLocal(shops);
+          renderShopChips();
+          renderSheetList();
+          render();
+        }
       }
     });
   }

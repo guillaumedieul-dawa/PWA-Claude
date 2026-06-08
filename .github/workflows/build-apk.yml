@@ -46,15 +46,18 @@ jobs:
           echo '{"appId":"com.famille.dieulgandet.app","appName":"FamilyHub","webDir":"www","android":{"allowMixedContent":true,"webContentsDebuggingEnabled":false},"plugins":{"SplashScreen":{"launchShowDuration":0}}}' > capacitor.config.json
         fi
         
-        # Copie groupée des fichiers racine
-        for file in index.html manifest.json sw.js firebaseSync.js storage.js; do
-          cp -f "$file" www/ 2>/dev/null || true
-        done
-        
-        # Copie groupée des dossiers de fonctionnalités
-        for dir in icons locker-tracker todo-partage cave-spiritueux menus-semaine liste-courses; do
-          cp -rf "$dir/" www/ 2>/dev/null || true
-        done
+        # Synchronisation dynamique de tous les fichiers utiles
+        # En excluant les dossiers techniques, configs et le dossier cible lui-même
+        rsync -av \
+          --exclude='android' \
+          --exclude='android-src' \
+          --exclude='node_modules' \
+          --exclude='.git' \
+          --exclude='.github' \
+          --exclude='www' \
+          --exclude='package.json' \
+          --exclude='package-lock.json' \
+          ./ www/
 
         if [ -f www/index.html ]; then
           sed -i "s|__BUILD_DATE__|${BUILD_DATE:-unknown}|g" www/index.html
@@ -95,6 +98,7 @@ jobs:
 
         def has_permission(root, perm_name):
             android_name = f"{{{ANDROID_NS}}}name"
+  
             for uses_perm in root.findall("uses-permission"):
                 if uses_perm.get(android_name) == perm_name:
                     return True
@@ -111,6 +115,7 @@ jobs:
         for perm in permissions:
             if not has_permission(root, perm):
                 uses_perm = ET.Element("uses-permission")
+              
                 uses_perm.set(android_name_attr, perm)
                 root.insert(0, uses_perm)
 
@@ -125,8 +130,10 @@ jobs:
       run: |
         KEYSTORE_DIR="$HOME/.android"
         mkdir -p "$KEYSTORE_DIR"
-        if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > "$HOME/.android/debug.keystore"
+        if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ];
+        then
+          echo "${{ secrets.KEYSTORE_BASE64 }}" |
+          base64 --decode > "$HOME/.android/debug.keystore"
           echo "✓ Keystore restauré avec succès"
         else
           echo "❌ Erreur : Le secret KEYSTORE_BASE64 est manquant dans les paramètres du dépôt"
@@ -147,6 +154,7 @@ jobs:
 
         content = re.sub(r"versionCode\s+\d+", f"versionCode {vc}", content)
         content = re.sub(r'versionName\s+"[^"]+"', f'versionName "{vn}"', content)
+   
         content = re.sub(r'applicationId\s+"[^"]+"', 'applicationId "com.famille.dieulgandet.app"', content)
 
         with open(path, "w", encoding="utf-8") as f:

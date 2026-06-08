@@ -40,7 +40,7 @@ h1 { font-family:'Bebas Neue',sans-serif; font-size:42px; letter-spacing:1px; co
 #syncDot { width: 12px; height: 12px; border-radius: 50%; background: #22c55e; transition: background 0.3s; }
 @keyframes fbPulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
 
-/* Chips Filtres Magasins */
+/* Filter Chips Magasins */
 .chips-scroll { display:flex; gap:8px; overflow-x:auto; padding:4px 4px 12px 4px; margin:0 -4px 4px -4px; scrollbar-width:none; }
 .chips-scroll::-webkit-scrollbar { display:none; }
 .chip {
@@ -50,7 +50,7 @@ h1 { font-family:'Bebas Neue',sans-serif; font-size:42px; letter-spacing:1px; co
 }
 .chip.active { background:var(--pc); color:var(--opc); border-color:var(--p); }
 
-/* Formulaire d'ajout sécurisé clavier mobile */
+/* Formulaire d'ajout compact sécurisé clavier mobile */
 .add-box {
   background:var(--sf); padding:12px; border-radius:16px; box-shadow:0 4px 14px var(--sh);
   margin-bottom:16px; display:flex; flex-direction:column; gap:8px;
@@ -81,7 +81,7 @@ h1 { font-family:'Bebas Neue',sans-serif; font-size:42px; letter-spacing:1px; co
 }
 .rayon-header span.count { color:var(--osv); font-weight:500; }
 
-/* Items */
+/* Lignes d'articles */
 .item-row-container { position:relative; overflow:hidden; background:var(--sf); }
 .item-row-container:not(:last-child)::after {
   content:''; position:absolute; bottom:0; left:48px; right:14px; height:1px; background:var(--olv); z-index:1;
@@ -140,7 +140,7 @@ h1 { font-family:'Bebas Neue',sans-serif; font-size:42px; letter-spacing:1px; co
 .btn-secondary { padding:10px 16px; background:var(--s1); color:var(--osv); font-weight:600; border-radius:10px; border:none; font-size:14px; }
 .btn-primary { padding:10px 20px; background:var(--p); color:var(--op); font-weight:700; border-radius:10px; border:none; font-size:14px; }
 
-/* Bottom Sheet Configuration Magasins */
+/* Bottom Sheet Magasins */
 .sheet-backdrop {
   position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index:100; display:none; opacity:0; transition:opacity 0.25s;
 }
@@ -269,9 +269,17 @@ function getFamilyUser() {
 function renderShopChips() {
   const container = document.getElementById('chipsScroll');
   if (!container) return;
+  
+  // Force de sécurité si "shops" a été corrompu en amont par Firebase
+  if(!shops || !Array.isArray(shops) || shops.length === 0) {
+    shops = ['Supermarché', 'Marché', 'Boulangerie'];
+  }
+
   let html = `<div class="chip ${activeShopFilter==='Tous'?'active':''}" onclick="setShopFilter('Tous')">🛒 Tous</div>`;
   shops.forEach(s => {
-    html += `<div class="chip ${activeShopFilter===s?'active':''}" onclick="setShopFilter('${s.replace(/'/g, "\\'")}')">🏪 ${s}</div>`;
+    if (typeof s === 'string') {
+      html += `<div class="chip ${activeShopFilter===s?'active':''}" onclick="setShopFilter('${s.replace(/'/g, "\\'")}')">🏪 ${s}</div>`;
+    }
   });
   container.innerHTML = html;
   renderFormShopSelects();
@@ -283,7 +291,9 @@ function renderFormShopSelects() {
   
   let optionsHtml = '';
   shops.forEach(s => {
-    optionsHtml += `<option value="${s}">${s}</option>`;
+    if (typeof s === 'string') {
+      optionsHtml += `<option value="${s}">${s}</option>`;
+    }
   });
   
   if(addSelect) {
@@ -337,7 +347,7 @@ function addItem() {
     name: p.name,
     qte: p.qte,
     rayon: rName,
-    shop: shopSelect ? shopSelect.value : shops[0],
+    shop: shopSelect && shopSelect.value ? shopSelect.value : (shops[0] || 'Supermarché'),
     checked: false,
     user: getFamilyUser(),
     date: new Date().toISOString()
@@ -348,8 +358,8 @@ function addItem() {
   saveLocal();
   render();
   
-  if (globalThis.FBSync && typeof globalThis.FBSync.write === 'function') {
-    globalThis.FBSync.write(COLLECTION_ITEMS, id, item);
+  if (window.FBSync && typeof window.FBSync.write === 'function') {
+    window.FBSync.write(COLLECTION_ITEMS, id, item);
   }
 }
 
@@ -360,8 +370,8 @@ function toggleItem(id) {
     item.user = getFamilyUser();
     saveLocal();
     render();
-    if (globalThis.FBSync && typeof globalThis.FBSync.write === 'function') {
-      globalThis.FBSync.write(COLLECTION_ITEMS, id, item);
+    if (window.FBSync && typeof window.FBSync.write === 'function') {
+      window.FBSync.write(COLLECTION_ITEMS, id, item);
     }
   }
 }
@@ -373,7 +383,7 @@ function openEditModal(id) {
   document.getElementById('editId').value = id;
   document.getElementById('editName').value = item.name;
   document.getElementById('editQteValue').textContent = item.qte;
-  document.getElementById('editShopSelect').value = item.shop;
+  document.getElementById('editShopSelect').value = item.shop || shops[0];
   
   document.getElementById('modalBackdrop').classList.add('show');
   document.getElementById('editModal').classList.add('show');
@@ -405,8 +415,8 @@ function saveEditModal() {
     
     saveLocal();
     render();
-    if (globalThis.FBSync && typeof globalThis.FBSync.write === 'function') {
-      globalThis.FBSync.write(COLLECTION_ITEMS, id, item);
+    if (window.FBSync && typeof window.FBSync.write === 'function') {
+      window.FBSync.write(COLLECTION_ITEMS, id, item);
     }
   }
   closeEditModal();
@@ -416,8 +426,8 @@ function deleteItem(id) {
   D.items = D.items.filter(i => i.id !== id);
   saveLocal();
   render();
-  if (globalThis.FBSync && typeof globalThis.FBSync.delete === 'function') {
-    globalThis.FBSync.delete(COLLECTION_ITEMS, id);
+  if (window.FBSync && typeof window.FBSync.delete === 'function') {
+    window.FBSync.delete(COLLECTION_ITEMS, id);
   }
 }
 
@@ -426,9 +436,10 @@ function render() {
   if (!container) return;
   container.innerHTML = '';
   
-  let filtered = D.items || [];
+  if(!D.items) D.items = [];
+  let filtered = D.items;
   if (activeShopFilter !== 'Tous') {
-    filtered = filtered.filter(i => i.shop === activeShopFilter);
+    filtered = filtered.filter(i => i && i.shop === activeShopFilter);
   }
   
   let groups = {};
@@ -445,7 +456,7 @@ function render() {
     let itemsInRayon = groups[r.n];
     if (!itemsInRayon || itemsInRayon.length === 0) return;
     
-    itemsInRayon.sort((a,b) => a.checked - b.checked);
+    itemsInRayon.sort((a,b) => (a.checked ? 1 : 0) - (b.checked ? 1 : 0));
     
     let gBox = document.createElement('div');
     gBox.className = 'rayon-group';
@@ -469,7 +480,7 @@ function render() {
           <div class="item-meta">
             ${userDisplay}
             ${item.qte > 1 ? `<div class="qte-badge" onclick="openEditModal('${item.id}')">x${item.qte}</div>` : ''}
-            ${activeShopFilter === 'Tous' ? `<div class="shop-mini">${item.shop}</div>` : ''}
+            ${activeShopFilter === 'Tous' ? `<div class="shop-mini">${item.shop || ''}</div>` : ''}
           </div>
         </div>
       `;
@@ -501,17 +512,4 @@ function setupSwipe(container, id) {
     row.style.transform = `translateX(${currentX}px)`;
   }, {passive:true});
   
-  row.addEventListener('touchend', () => {
-    isSwiping = false;
-    row.style.transition = 'transform 0.15s ease-out';
-    if (currentX < -70) {
-      row.style.transform = 'translateX(-100%)';
-      setTimeout(() => deleteItem(id), 140);
-    } else {
-      row.style.transform = 'translateX(0)';
-    }
-    currentX = 0;
-  });
-}
-
-function
+ 

@@ -26,12 +26,13 @@ body {
   user-select: none; -webkit-user-select: none;
 }
 header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
-h1 { font-family:'Bebas Neue',sans-serif; font-size:42px; letter-spacing:1px; color:var(--ob); }
+.hdr-title-block { display:flex; align-items:center; gap:12px; }
+h1 { font-family:'Bebas Neue',sans-serif; font-size:42px; letter-spacing:1px; color:var(--ob); line-height:1; }
 .hdr-btns { display:flex; gap:12px; align-items:center; }
 .circle-btn {
   width:44px; height:44px; border-radius:50%; background:var(--sf);
   box-shadow:0 2px 8px var(--sh); display:flex; align-items:center; justify-content:center;
-  font-size:20px; border:none; cursor:pointer; transition:transform 0.1s;
+  font-size:20px; border:none; cursor:pointer; transition:transform 0.1s; text-decoration:none;
 }
 .circle-btn:active { transform:scale(0.92); }
 
@@ -130,7 +131,7 @@ h1 { font-family:'Bebas Neue',sans-serif; font-size:42px; letter-spacing:1px; co
 }
 .sheet-add button { padding:0 16px; background:var(--p); color:var(--op); border-radius:12px; border:none; font-weight:700; }
 
-/* Sync Overlay overlay */
+/* Sync Overlay */
 .sov {
   position:fixed; top:12px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.85);
   color:#fff; padding:6px 12px; border-radius:20px; font-size:11px; font-family:'Fragment Mono',monospace;
@@ -148,7 +149,10 @@ h1 { font-family:'Bebas Neue',sans-serif; font-size:42px; letter-spacing:1px; co
 <div id="sov" class="sov"><div class="spinner"></div><span>SYNC...</span></div>
 
 <header>
-  <h1>Liste de courses</h1>
+  <div class="hdr-title-block">
+    <a href="../index.html" class="circle-btn">🔙</a>
+    <h1>Liste de courses</h1>
+  </div>
   <div class="hdr-btns">
     <button id="thbtn" class="circle-btn" onclick="window.toggleTheme()"></button>
     <button class="circle-btn" onclick="openSheet()">🏪</button>
@@ -196,7 +200,6 @@ const RAYONS = [
   { n: 'Autre', e: '📦' }
 ];
 
-// Écouteur d'événement optionnel au besoin
 window.addEventListener('fhThemeChanged', (e) => {
   console.log("Le thème a changé dans le module Liste de courses :", e.detail.theme);
 });
@@ -239,6 +242,10 @@ function parseInput(str) {
   return { qte: 1, name: str };
 }
 
+/* ═══════════════════════════════════════════
+   LOGIQUE APPLICATIVE AVEC SYNCHRO SÉCURISÉE
+   ═══════════════════════════════════════════ */
+
 function addItem() {
   const inp = document.getElementById('addInput');
   if (!inp.value.trim()) return;
@@ -261,8 +268,7 @@ function addItem() {
   saveLocal();
   render();
   
-  document.getElementById('sov').style.display = 'flex';
-  fbSaveAll(D.items).then(() => { document.getElementById('sov').style.display = 'none'; });
+  syncWithFirebase();
 }
 
 function toggleItem(id) {
@@ -271,8 +277,7 @@ function toggleItem(id) {
     item.checked = !item.checked;
     saveLocal();
     render();
-    document.getElementById('sov').style.display = 'flex';
-    fbSaveAll(D.items).then(() => { document.getElementById('sov').style.display = 'none'; });
+    syncWithFirebase();
   }
 }
 
@@ -280,8 +285,39 @@ function deleteItem(id) {
   D.items = D.items.filter(i => i.id !== id);
   saveLocal();
   render();
-  document.getElementById('sov').style.display = 'flex';
-  fbSaveAll(D.items).then(() => { document.getElementById('sov').style.display = 'none'; });
+  syncWithFirebase();
+}
+
+// Fonction globale de secours avec Timeout anti-blocage
+function syncWithFirebase() {
+  const sov = document.getElementById('sov');
+  if (!sov) return;
+
+  sov.style.display = 'flex';
+
+  // Sécurité : Libère l'écran au bout de 4 secondes si la promesse Firebase gèle
+  const safetyTimeout = setTimeout(() => {
+    sov.style.display = 'none';
+    alert("Timeout 4s : fbSaveAll ne répond pas.\nVérifiez l'Application ID ou les règles Google Cloud.");
+  }, 4000);
+
+  if (typeof fbSaveAll === 'function') {
+    fbSaveAll(D.items)
+      .then(() => {
+        console.log("✓ Synchronisation réussie");
+      })
+      .catch(err => {
+        alert("Erreur Firebase capturée :\n" + JSON.stringify(err) + "\n\nMessage: " + (err ? err.message : 'inconnu'));
+      })
+      .finally(() => {
+        clearTimeout(safetyTimeout);
+        sov.style.display = 'none';
+      });
+  } else {
+    clearTimeout(safetyTimeout);
+    sov.style.display = 'none';
+    alert("Erreur critique : La fonction fbSaveAll n'existe pas ou firebaseSync.js n'est pas chargé.");
+  }
 }
 
 function render() {
@@ -305,7 +341,6 @@ function render() {
     let itemsInRayon = groups[r.n];
     if (itemsInRayon.length === 0) return;
     
-    // Tri séquentiel : Non cochés d'abord
     itemsInRayon.sort((a,b) => a.checked - b.checked);
     
     let gBox = document.createElement('div');
@@ -353,8 +388,8 @@ function setupSwipe(container, id) {
   row.addEventListener('touchmove', e => {
     if (!isSwiping) return;
     currentX = e.touches[0].clientX - startX;
-    if (currentX > 0) currentX = 0; // Bloque le balayage vers la droite
-    if (currentX < -120) currentX = -120; // Seuil maximum de glissement
+    if (currentX > 0) currentX = 0;
+    if (currentX < -120) currentX = -120;
     row.style.transform = `translateX(${currentX}px)`;
   }, {passive:true});
   
@@ -371,7 +406,6 @@ function setupSwipe(container, id) {
   });
 }
 
-/* Gestion du menu coulissant des Magasins */
 function openSheet() {
   document.getElementById('backdrop').classList.add('show');
   document.getElementById('sheet').classList.add('show');
@@ -408,10 +442,7 @@ function deleteShop(idx) {
   let deletedShop = shops[idx];
   shops.splice(idx, 1);
   saveShops(shops);
-  
-  // Si le filtre actif était sur ce magasin supprimé, on repasse sur 'Tous'
   if (activeShopFilter === deletedShop) activeShopFilter = 'Tous';
-  
   renderSheetList();
   renderShopChips();
   render();
@@ -432,15 +463,21 @@ async function init() {
   renderRayonsGrid();
   render();
 
-  // Chargement et synchronisation distante Firebase
-  const remote = await fbLoadAll();
-  if (remote && remote.length > 0) {
-    const localMap = {};
-    D.items.forEach(t => { localMap[t.id] = t; });
-    remote.forEach(t => { localMap[t.id] = t; });
-    D.items = Object.values(localMap).sort((a,b) => new Date(b.date||0) - new Date(a.date||0));
-    saveLocal();
-    render();
+  // Chargement initial distant sécurisé avec try/catch
+  if (typeof fbLoadAll === 'function') {
+    try {
+      const remote = await fbLoadAll();
+      if (remote && remote.length > 0) {
+        const localMap = {};
+        D.items.forEach(t => { localMap[t.id] = t; });
+        remote.forEach(t => { localMap[t.id] = t; });
+        D.items = Object.values(localMap).sort((a,b) => new Date(b.date||0) - new Date(a.date||0));
+        saveLocal();
+        render();
+      }
+    } catch (err) {
+      console.error("Impossible de charger Firebase au démarrage :", err);
+    }
   }
 }
 

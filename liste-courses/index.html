@@ -36,7 +36,6 @@ h1 { font-family:'Bebas Neue',sans-serif; font-size:42px; letter-spacing:1px; co
 }
 .circle-btn:active { transform:scale(0.92); }
 
-/* Indicateur de synchro natif de fbSync.js */
 #syncDot {
   width: 12px; height: 12px; border-radius: 50%; background: #22c55e;
   transition: background 0.3s;
@@ -61,11 +60,12 @@ h1 { font-family:'Bebas Neue',sans-serif; font-size:42px; letter-spacing:1px; co
   margin-bottom:20px; display:flex; flex-direction:column; gap:10px;
 }
 .add-row1 { display:flex; gap:10px; }
-.add-box input {
-  flex:1; border:none; background:var(--s1); padding:12px 16px; border-radius:12px;
+.add-box input, .add-box select {
+  border:none; background:var(--s1); padding:12px 16px; border-radius:12px;
   font-family:inherit; font-size:15px; font-weight:500; color:var(--ob); outline:none;
 }
-.add-box input::placeholder { color:var(--osv); }
+.add-box input { flex:1; }
+.add-box select { width: 130px; font-size: 13px; color: var(--osv); }
 .add-box button {
   padding:0 20px; border-radius:12px; background:var(--p); color:var(--op);
   font-weight:700; border:none; cursor:pointer; font-size:15px;
@@ -100,15 +100,15 @@ h1 { font-family:'Bebas Neue',sans-serif; font-size:42px; letter-spacing:1px; co
   display:flex; align-items:center; justify-content:space-between;
   transform:translateX(0); transition:transform 0.15s ease-out; touch-action:pan-y;
 }
-.item-left { display:flex; align-items:center; gap:12px; flex:1; }
+.item-left { display:flex; align-items:center; gap:12px; flex:1; min-width: 0; }
 .chk {
   width:22px; height:22px; border-radius:6px; border:2px solid var(--olv);
-  display:flex; align-items:center; justify-content:center; color:var(--op); font-size:13px; transition:all 0.1s;
+  display:flex; align-items:center; justify-content:center; color:var(--op); font-size:13px; transition:all 0.1s; flex-shrink: 0;
 }
 .item-row.checked .chk { background:var(--s); border-color:var(--s); }
-.item-text { font-size:15px; font-weight:500; color:var(--ob); transition:all 0.1s; }
+.item-text { font-size:15px; font-weight:500; color:var(--ob); transition:all 0.1s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .item-row.checked .item-text { color:var(--osv); text-decoration:line-through; }
-.item-meta { display:flex; align-items:center; gap:8px; }
+.item-meta { display:flex; align-items:center; gap:8px; flex-shrink: 0; }
 .qte-badge { padding:2px 6px; background:var(--s1); color:var(--osv); font-size:11px; font-weight:700; border-radius:6px; }
 .shop-mini { font-size:11px; font-weight:600; color:var(--p); background:var(--pc); padding:2px 6px; border-radius:6px; }
 
@@ -160,6 +160,7 @@ h1 { font-family:'Bebas Neue',sans-serif; font-size:42px; letter-spacing:1px; co
 <div class="add-box">
   <div class="add-row1">
     <input type="text" id="addInput" placeholder="Ajouter un article... (ex: 3 Pommes)" autocomplete="off">
+    <select id="addShopSelect"></select>
     <button onclick="addItem()">OK</button>
   </div>
   <div class="rayons-grid" id="rayonsGrid"></div>
@@ -204,6 +205,24 @@ function renderShopChips() {
     html += `<div class="chip ${activeShopFilter===s?'active':''}" onclick="setShopFilter('${s.replace(/'/g, "\\'")}')">🏪 ${s}</div>`;
   });
   container.innerHTML = html;
+  
+  // Met à jour en même temps le menu déroulant du formulaire d'ajout
+  renderFormShopSelect();
+}
+
+function renderFormShopSelect() {
+  const select = document.getElementById('addShopSelect');
+  if(!select) return;
+  select.innerHTML = '';
+  shops.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s;
+    opt.textContent = s;
+    if(activeShopFilter !== 'Tous' && s === activeShopFilter) {
+      opt.selected = true;
+    }
+    select.appendChild(opt);
+  });
 }
 
 function setShopFilter(s) {
@@ -235,12 +254,9 @@ function parseInput(str) {
   return { qte: 1, name: str };
 }
 
-/* ═══════════════════════════════════════════
-   LOGIQUE APPLICATIVE ET FILTRE FIRESTORE (v4)
-   ═══════════════════════════════════════════ */
-
 function addItem() {
   const inp = document.getElementById('addInput');
+  const shopSelect = document.getElementById('addShopSelect');
   if (!inp.value.trim()) return;
   
   let p = parseInput(inp.value);
@@ -252,18 +268,16 @@ function addItem() {
     name: p.name,
     qte: p.qte,
     rayon: rName,
-    shop: activeShopFilter === 'Tous' ? shops[0] : activeShopFilter,
+    shop: shopSelect ? shopSelect.value : shops[0],
     checked: false,
     date: new Date().toISOString()
   };
   
-  // Sauvegarde locale instantanée
   D.items.unshift(item);
   inp.value = '';
   saveLocal();
   render();
   
-  // Pousse dans la file de synchro transparente (fbSync.js)
   if (typeof fbQueue === 'function') {
     fbQueue(COLLECTION, id, item);
   }
@@ -273,6 +287,28 @@ function toggleItem(id) {
   let item = D.items.find(i => i.id === id);
   if (item) {
     item.checked = !item.checked;
+    saveLocal();
+    render();
+    if (typeof fbQueue === 'function') {
+      fbQueue(COLLECTION, id, item);
+    }
+  }
+}
+
+// Nouvelle fonction de modification au clic sur le libellé
+function editItem(id) {
+  let item = D.items.find(i => i.id === id);
+  if (!item) return;
+  
+  let currentVal = item.qte > 1 ? `${item.qte} ${item.name}` : item.name;
+  let newVal = prompt("Modifier l'article :", currentVal);
+  
+  if (newVal !== null && newVal.trim() !== '') {
+    let p = parseInput(newVal);
+    item.name = p.name;
+    item.qte = p.qte;
+    item.date = new Date().toISOString(); // actualise la date de modification
+    
     saveLocal();
     render();
     if (typeof fbQueue === 'function') {
@@ -326,12 +362,12 @@ function render() {
       rCont.innerHTML = `
         <div class="swipe-bg">🗑️ Supprimer</div>
         <div class="item-row ${item.checked?'checked':''}" id="row_${item.id}">
-          <div class="item-left" onclick="toggleItem('${item.id}')">
-            <div class="chk">${item.checked?'✓':''}</div>
-            <div class="item-text">${item.name}</div>
+          <div class="item-left">
+            <div class="chk" onclick="toggleItem('${item.id}')">${item.checked?'✓':''}</div>
+            <div class="item-text" onclick="editItem('${item.id}')">${item.name}</div>
           </div>
           <div class="item-meta">
-            ${item.qte > 1 ? `<div class="qte-badge">x${item.qte}</div>` : ''}
+            ${item.qte > 1 ? `<div class="qte-badge" onclick="editItem('${item.id}')">x${item.qte}</div>` : ''}
             ${activeShopFilter === 'Tous' ? `<div class="shop-mini">${item.shop}</div>` : ''}
           </div>
         </div>
@@ -431,11 +467,9 @@ function init() {
   renderRayonsGrid();
   render();
 
-  // Mise en place du flux Temps Réel bidirectionnel via fbSync.js
   if (typeof fbSubscribe === 'function') {
     fbSubscribe(COLLECTION, function(remoteItems) {
       if (remoteItems && Array.isArray(remoteItems)) {
-        // Synchronisation et fusion intelligente
         const localMap = {};
         D.items.forEach(t => { localMap[t.id] = t; });
         remoteItems.forEach(t => { localMap[t.id] = t; });

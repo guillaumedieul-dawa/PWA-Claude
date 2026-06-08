@@ -15,59 +15,424 @@
 <script src="../theme.js?v=2"></script>
 
 <style>
-/* Styles spécifiques au module Liste de Courses utilisant les variables globales */
 :root {
-  /* Vos ajustements de variables locales ou spécifiques à ce module restent ici si besoin */
+  --w: #fff;
+  --b: #000;
 }
+* { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+body {
+  padding: calc(var(--top) + 16px) var(--rm) calc(var(--bot) + 80px) var(--rm);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  user-select: none; -webkit-user-select: none;
+}
+header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+h1 { font-family:'Bebas Neue',sans-serif; font-size:42px; letter-spacing:1px; color:var(--ob); }
+.hdr-btns { display:flex; gap:12px; align-items:center; }
+.circle-btn {
+  width:44px; height:44px; border-radius:50%; background:var(--sf);
+  box-shadow:0 2px 8px var(--sh); display:flex; align-items:center; justify-content:center;
+  font-size:20px; border:none; cursor:pointer; transition:transform 0.1s;
+}
+.circle-btn:active { transform:scale(0.92); }
 
-/* Vous pouvez conserver ici le reste de votre bloc <style> d'origine (boutons, listes, layout...) */
-/* Veillez simplement à utiliser var(--bg), var(--ob), var(--p) etc. issues de themes.css */
+/* Chips Magasins */
+.chips-scroll { display:flex; gap:8px; overflow-x:auto; padding:4px 4px 12px 4px; margin:0 -4px; scrollbar-width:none; }
+.chips-scroll::-webkit-scrollbar { display:none; }
+.chip {
+  padding:8px 16px; border-radius:20px; background:var(--sf); color:var(--osv);
+  font-size:14px; font-weight:600; white-space:nowrap; box-shadow:0 2px 6px var(--sh);
+  border:1px solid transparent; cursor:pointer;
+}
+.chip.active { background:var(--pc); color:var(--opc); border-color:var(--p); }
+
+/* Formulaire d'ajout */
+.add-box {
+  background:var(--sf); padding:12px; border-radius:16px; box-shadow:0 4px 14px var(--sh);
+  margin-bottom:20px; display:flex; flex-direction:column; gap:10px;
+}
+.add-row1 { display:flex; gap:10px; }
+.add-box input {
+  flex:1; border:none; background:var(--s1); padding:12px 16px; border-radius:12px;
+  font-family:inherit; font-size:15px; font-weight:500; color:var(--ob); outline:none;
+}
+.add-box input::placeholder { color:var(--osv); }
+.add-box button {
+  padding:0 20px; border-radius:12px; background:var(--p); color:var(--op);
+  font-weight:700; border:none; cursor:pointer; font-size:15px;
+}
+.rayons-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+.rayon-opt {
+  padding:8px 4px; border-radius:10px; background:var(--s1); text-align:center;
+  font-size:11px; font-weight:600; color:var(--osv); cursor:pointer; border:1px solid transparent;
+}
+.rayon-opt.active { background:var(--sc); color:var(--s); border-color:var(--s); }
+
+/* Groupes de Rayons */
+.rayon-group { margin-bottom:16px; background:var(--sf); border-radius:16px; box-shadow:0 2px 8px var(--sh); overflow:hidden; }
+.rayon-header {
+  padding:12px 16px; background:var(--s1); color:var(--os); font-weight:700;
+  font-size:13px; text-transform:uppercase; letter-spacing:0.5px; display:flex; justify-content:space-between;
+}
+.rayon-header span.count { color:var(--osv); font-weight:500; }
+
+/* Items */
+.item-row-container { position:relative; overflow:hidden; background:var(--sf); }
+.item-row-container:not(:last-child)::after {
+  content:''; position:absolute; bottom:0; left:52px; right:16px; height:1px; background:var(--olv); z-index:1;
+}
+.swipe-bg {
+  position:absolute; top:0; left:0; width:100%; height:100%; display:flex;
+  align-items:center; justify-content:flex-end; padding-right:24px;
+  background:var(--cfb); color:var(--cf); font-size:18px; font-weight:700; z-index:0;
+}
+.item-row {
+  position:relative; z-index:2; background:var(--sf); padding:14px 16px;
+  display:flex; align-items:center; justify-content:space-between;
+  transform:translateX(0); transition:transform 0.15s ease-out; touch-action:pan-y;
+}
+.item-left { display:flex; align-items:center; gap:12px; flex:1; }
+.chk {
+  width:22px; height:22px; border-radius:6px; border:2px solid var(--olv);
+  display:flex; align-items:center; justify-content:center; color:var(--op); font-size:13px; transition:all 0.1s;
+}
+.item-row.checked .chk { background:var(--s); border-color:var(--s); }
+.item-text { font-size:15px; font-weight:500; color:var(--ob); transition:all 0.1s; }
+.item-row.checked .item-text { color:var(--osv); text-decoration:line-through; }
+.item-meta { display:flex; align-items:center; gap:8px; }
+.qte-badge { padding:2px 6px; background:var(--s1); color:var(--osv); font-size:11px; font-weight:700; border-radius:6px; }
+.shop-mini { font-size:11px; font-weight:600; color:var(--p); background:var(--pc); padding:2px 6px; border-radius:6px; }
+
+/* Bottom Sheet Magasins */
+.sheet-backdrop {
+  position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4);
+  z-index:100; display:none; opacity:0; transition:opacity 0.25s;
+}
+.sheet {
+  position:fixed; bottom:0; left:0; width:100vw; background:var(--sf);
+  border-radius:24px 24px 0 0; box-shadow:0 -4px 20px rgba(0,0,0,0.15); z-index:101;
+  transform:translateY(100%); transition:transform 0.25s cubic-bezier(0.1, 0.7, 0.1, 1);
+  padding:20px 20px calc(var(--bot) + 20px) 20px;
+}
+.sheet-backdrop.show { display:block; opacity:1; }
+.sheet.show { transform:translateY(0); }
+.sheet-handle { width:40px; height:4px; background:var(--olv); border-radius:2px; margin:0 auto 16px auto; }
+.sheet h3 { font-size:18px; font-weight:700; color:var(--ob); margin-bottom:16px; }
+.sheet-list { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; max-height:220px; overflow-y:auto; }
+.sheet-item {
+  display:flex; justify-content:space-between; align-items:center; padding:12px 16px;
+  background:var(--s1); border-radius:12px; font-weight:600; font-size:14px; color:var(--ob);
+}
+.sheet-item .del { color:var(--cf); font-size:16px; padding:4px; }
+.sheet-add { display:flex; gap:8px; }
+.sheet-add input {
+  flex:1; border:none; background:var(--s1); padding:12px 16px; border-radius:12px;
+  font-family:inherit; font-size:14px; color:var(--ob); outline:none;
+}
+.sheet-add button { padding:0 16px; background:var(--p); color:var(--op); border-radius:12px; border:none; font-weight:700; }
+
+/* Sync Overlay overlay */
+.sov {
+  position:fixed; top:12px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.85);
+  color:#fff; padding:6px 12px; border-radius:20px; font-size:11px; font-family:'Fragment Mono',monospace;
+  z-index:9999; display:flex; align-items:center; gap:6px; box-shadow:0 4px 12px rgba(0,0,0,0.2);
+}
+.spinner {
+  width:10px; height:10px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff;
+  border-radius:50%; animation:spin 0.6s linear infinite;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
 </style>
 </head>
 <body>
 
-<header style="display: flex; justify-content: space-between; align-items: center; padding: var(--rm);">
-  <h1 style="font-family: 'Bebas Neue', sans-serif; font-size: 2rem;">Liste de courses</h1>
-  <button id="thbtn" onclick="window.toggleTheme()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;"></button>
+<div id="sov" class="sov"><div class="spinner"></div><span>SYNC...</span></div>
+
+<header>
+  <h1>Liste de courses</h1>
+  <div class="hdr-btns">
+    <button id="thbtn" class="circle-btn" onclick="window.toggleTheme()"></button>
+    <button class="circle-btn" onclick="openSheet()">🏪</button>
+  </div>
 </header>
+
+<div class="chips-scroll" id="chipsScroll"></div>
+
+<div class="add-box">
+  <div class="add-row1">
+    <input type="text" id="addInput" placeholder="Ajouter un article... (ex: 3 Pommes)" autocomplete="off">
+    <button onclick="addItem()">OK</button>
+  </div>
+  <div class="rayons-grid" id="rayonsGrid"></div>
+</div>
+
+<div id="listContainer"></div>
+
+<div class="sheet-backdrop" id="backdrop" onclick="closeSheet()"></div>
+<div class="sheet" id="sheet">
+  <div class="sheet-handle"></div>
+  <h3>Gérer les magasins</h3>
+  <div class="sheet-list" id="sheetList"></div>
+  <div class="sheet-add">
+    <input type="text" id="newShopInput" placeholder="Nom du magasin..." autocomplete="off">
+    <button onclick="addShop()">+ Add</button>
+  </div>
+</div>
 
 <script src="/firebaseSync.js"></script>
 <script>
-// Votre logique applicative existante
 let D = { items: [] };
 let shops = ['Supermarché', 'Marché', 'Boulangerie'];
+let activeShopFilter = 'Tous';
+let selectedRayonIdx = 0;
 
-// Les écouteurs d'événements spécifiques au changement de thème si vous avez besoin de rafraîchir des composants graphiques (ex: graphiques, canvas)
+const RAYONS = [
+  { n: 'Frais / Légumes', e: '🥦' },
+  { n: 'Épicerie', e: '🍝' },
+  { n: 'Boucherie / Poisson', e: '🥩' },
+  { n: 'Produits Laitiers', e: '🧀' },
+  { n: 'Surgelés', e: '❄️' },
+  { n: 'Boissons', e: '💧' },
+  { n: 'Hygiène / Entretien', e: '🧼' },
+  { n: 'Autre', e: '📦' }
+];
+
+// Écouteur d'événement optionnel au besoin
 window.addEventListener('fhThemeChanged', (e) => {
   console.log("Le thème a changé dans le module Liste de courses :", e.detail.theme);
-  // Ajoutez ici du code si un composant spécifique a besoin d'être redessiné à la volée
 });
 
 function renderShopChips() {
-  // Votre logique d'affichage des magasins d'origine...
+  const container = document.getElementById('chipsScroll');
+  let html = `<div class="chip ${activeShopFilter==='Tous'?'active':''}" onclick="setShopFilter('Tous')">🛒 Tous</div>`;
+  shops.forEach(s => {
+    html += `<div class="chip ${activeShopFilter===s?'active':''}" onclick="setShopFilter('${s.replace(/'/g, "\\'")}')">🏪 ${s}</div>`;
+  });
+  container.innerHTML = html;
+}
+
+function setShopFilter(s) {
+  activeShopFilter = s;
+  renderShopChips();
+  render();
+}
+
+function renderRayonsGrid() {
+  const container = document.getElementById('rayonsGrid');
+  let html = '';
+  RAYONS.forEach((r, idx) => {
+    html += `<div class="rayon-opt ${selectedRayonIdx===idx?'active':''}" onclick="selectRayon(${idx})">${r.e}<br>${r.n.split(' ')[0]}</div>`;
+  });
+  container.innerHTML = html;
+}
+
+function selectRayon(idx) {
+  selectedRayonIdx = idx;
+  renderRayonsGrid();
+}
+
+function parseInput(str) {
+  str = str.trim();
+  let m = str.match(/^([0-9]+)\s*(x|X)?\s+(.+)$/);
+  if (m) {
+    return { qte: parseInt(m[1]), name: m[3].trim() };
+  }
+  return { qte: 1, name: str };
+}
+
+function addItem() {
+  const inp = document.getElementById('addInput');
+  if (!inp.value.trim()) return;
+  
+  let p = parseInput(inp.value);
+  let rName = RAYONS[selectedRayonIdx].n;
+  
+  let item = {
+    id: 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+    name: p.name,
+    qte: p.qte,
+    rayon: rName,
+    shop: activeShopFilter === 'Tous' ? shops[0] : activeShopFilter,
+    checked: false,
+    date: new Date().toISOString()
+  };
+  
+  D.items.unshift(item);
+  inp.value = '';
+  saveLocal();
+  render();
+  
+  document.getElementById('sov').style.display = 'flex';
+  fbSaveAll(D.items).then(() => { document.getElementById('sov').style.display = 'none'; });
+}
+
+function toggleItem(id) {
+  let item = D.items.find(i => i.id === id);
+  if (item) {
+    item.checked = !item.checked;
+    saveLocal();
+    render();
+    document.getElementById('sov').style.display = 'flex';
+    fbSaveAll(D.items).then(() => { document.getElementById('sov').style.display = 'none'; });
+  }
+}
+
+function deleteItem(id) {
+  D.items = D.items.filter(i => i.id !== id);
+  saveLocal();
+  render();
+  document.getElementById('sov').style.display = 'flex';
+  fbSaveAll(D.items).then(() => { document.getElementById('sov').style.display = 'none'; });
 }
 
 function render() {
-  // Votre logique d'affichage des articles d'origine...
+  const container = document.getElementById('listContainer');
+  container.innerHTML = '';
+  
+  let filtered = D.items;
+  if (activeShopFilter !== 'Tous') {
+    filtered = filtered.filter(i => i.shop === activeShopFilter);
+  }
+  
+  let groups = {};
+  RAYONS.forEach(r => { groups[r.n] = []; });
+  
+  filtered.forEach(item => {
+    if (!groups[item.rayon]) groups[item.rayon] = [];
+    groups[item.rayon].push(item);
+  });
+  
+  RAYONS.forEach(r => {
+    let itemsInRayon = groups[r.n];
+    if (itemsInRayon.length === 0) return;
+    
+    // Tri séquentiel : Non cochés d'abord
+    itemsInRayon.sort((a,b) => a.checked - b.checked);
+    
+    let gBox = document.createElement('div');
+    gBox.className = 'rayon-group';
+    
+    let unch = itemsInRayon.filter(i => !i.checked).length;
+    gBox.innerHTML = `<div class="rayon-header"><span>${r.e} &nbsp;${r.n}</span><span class="count">${unch} / ${itemsInRayon.length}</span></div>`;
+    
+    itemsInRayon.forEach(item => {
+      let rCont = document.createElement('div');
+      rCont.className = 'item-row-container';
+      
+      rCont.innerHTML = `
+        <div class="swipe-bg">🗑️ Supprimer</div>
+        <div class="item-row ${item.checked?'checked':''}" id="row_${item.id}">
+          <div class="item-left" onclick="toggleItem('${item.id}')">
+            <div class="chk">${item.checked?'✓':''}</div>
+            <div class="item-text">${item.name}</div>
+          </div>
+          <div class="item-meta">
+            ${item.qte > 1 ? `<div class="qte-badge">x${item.qte}</div>` : ''}
+            ${activeShopFilter === 'Tous' ? `<div class="shop-mini">${item.shop}</div>` : ''}
+          </div>
+        </div>
+      `;
+      
+      setupSwipe(rCont, item.id);
+      gBox.appendChild(rCont);
+    });
+    
+    container.appendChild(gBox);
+  });
+}
+
+function setupSwipe(container, id) {
+  let row = container.querySelector('.item-row');
+  let startX = 0, currentX = 0, isSwiping = false;
+  
+  row.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+    isSwiping = true;
+    row.style.transition = 'none';
+  }, {passive:true});
+  
+  row.addEventListener('touchmove', e => {
+    if (!isSwiping) return;
+    currentX = e.touches[0].clientX - startX;
+    if (currentX > 0) currentX = 0; // Bloque le balayage vers la droite
+    if (currentX < -120) currentX = -120; // Seuil maximum de glissement
+    row.style.transform = `translateX(${currentX}px)`;
+  }, {passive:true});
+  
+  row.addEventListener('touchend', () => {
+    isSwiping = false;
+    row.style.transition = 'transform 0.15s ease-out';
+    if (currentX < -70) {
+      row.style.transform = 'translateX(-100%)';
+      setTimeout(() => deleteItem(id), 140);
+    } else {
+      row.style.transform = 'translateX(0)';
+    }
+    currentX = 0;
+  });
+}
+
+/* Gestion du menu coulissant des Magasins */
+function openSheet() {
+  document.getElementById('backdrop').classList.add('show');
+  document.getElementById('sheet').classList.add('show');
+  renderSheetList();
+}
+function closeSheet() {
+  document.getElementById('backdrop').classList.remove('show');
+  document.getElementById('sheet').classList.remove('show');
+}
+function renderSheetList() {
+  const container = document.getElementById('sheetList');
+  container.innerHTML = '';
+  shops.forEach((s, idx) => {
+    container.innerHTML += `
+      <div class="sheet-item">
+        <span>🏪 ${s}</span>
+        ${shops.length > 1 ? `<span class="del" onclick="deleteShop(${idx})">🗑️</span>` : ''}
+      </div>
+    `;
+  });
+}
+function addShop() {
+  const inp = document.getElementById('newShopInput');
+  let val = inp.value.trim();
+  if (val && !shops.includes(val)) {
+    shops.push(val);
+    inp.value = '';
+    saveShops(shops);
+    renderSheetList();
+    renderShopChips();
+  }
+}
+function deleteShop(idx) {
+  let deletedShop = shops[idx];
+  shops.splice(idx, 1);
+  saveShops(shops);
+  
+  // Si le filtre actif était sur ce magasin supprimé, on repasse sur 'Tous'
+  if (activeShopFilter === deletedShop) activeShopFilter = 'Tous';
+  
+  renderSheetList();
+  renderShopChips();
+  render();
 }
 
 function saveShops(arr) { localStorage.setItem('fh_courses_shops', JSON.stringify(arr)); }
 function saveLocal() { localStorage.setItem('fh_courses_data', JSON.stringify(D)); }
 
-// Remplacement de votre ancienne fonction initTheme locale
 async function init() {
-  document.querySelectorAll('.sov').forEach(el => { el.style.display = 'none'; });
+  document.getElementById('sov').style.display = 'none';
   
-  // Lecture des magasins et données locales
   const lsShops = localStorage.getItem('fh_courses_shops');
   if (lsShops) shops = JSON.parse(lsShops);
   const lsData = localStorage.getItem('fh_courses_data');
   if (lsData) D = JSON.parse(lsData);
 
   renderShopChips();
+  renderRayonsGrid();
   render();
 
-  // Synchronisation distante
+  // Chargement et synchronisation distante Firebase
   const remote = await fbLoadAll();
   if (remote && remote.length > 0) {
     const localMap = {};
@@ -79,7 +444,6 @@ async function init() {
   }
 }
 
-// Lancement de l'initialisation de l'application
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init);
 } else {

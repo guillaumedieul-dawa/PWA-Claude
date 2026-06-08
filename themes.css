@@ -5,6 +5,7 @@
 
 /* ── THÈME LIGHT ── */
 [data-theme="light"] {
+  color-scheme: light;
   --p: #2563eb;       --op: #fff;
   --pc: #dbeafe;      --opc: #1e3a8a;
   --s: #059669;       --sc: #d1fae5;
@@ -28,6 +29,7 @@
 
 /* ── THÈME DARK ── */
 [data-theme="dark"] {
+  color-scheme: dark;
   --p: #60a5fa;       --op: #1e3a8a;
   --pc: #1e3a8a;      --opc: #dbeafe;
   --s: #34d399;       --sc: #064e3b;
@@ -51,6 +53,7 @@
 
 /* ── THÈME SEPIA ── */
 [data-theme="sepia"] {
+  color-scheme: light;
   --p: #7c3d12;       --op: #fffbf5;
   --pc: #fed7aa;      --opc: #431407;
   --s: #3d6b12;       --sc: #d9f99d;
@@ -79,16 +82,29 @@
   --rl: 20px;
   --rm: 16px;
   --rs: 12px;
-  color-scheme: normal;
 }
 
 /* ── Base & Global Reset ── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+*, *::before, *::after { 
+  box-sizing: border-box; 
+  margin: 0; 
+  padding: 0; 
+  -webkit-tap-highlight-color: transparent; 
+}
+
 html, body {
   min-height: 100dvh;
   background: var(--bg);
   color: var(--ob);
   font-family: 'Google Sans Text', sans-serif;
   overflow-x: hidden;
-  transition: background .3s, color .3s;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Transition fluide des couleurs lors d'un changement de thème */
+html.theme-ready, html.theme-ready body {
+  transition: background .25s ease, color .25s ease;
 }

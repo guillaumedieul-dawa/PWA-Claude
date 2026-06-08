@@ -40,8 +40,8 @@ h1 { font-family:'Bebas Neue',sans-serif; font-size:42px; letter-spacing:1px; co
 #syncDot { width: 12px; height: 12px; border-radius: 50%; background: #22c55e; transition: background 0.3s; }
 @keyframes fbPulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
 
-/* Chips Magasins */
-.chips-scroll { display:flex; gap:8px; overflow-x:auto; padding:4px 4px 12px 4px; margin:0 -4px; scrollbar-width:none; }
+/* Filer Chips Magasins */
+.chips-scroll { display:flex; gap:8px; overflow-x:auto; padding:4px 4px 12px 4px; margin:0 -4px 8px -4px; scrollbar-width:none; }
 .chips-scroll::-webkit-scrollbar { display:none; }
 .chip {
   padding:8px 16px; border-radius:20px; background:var(--sf); color:var(--osv);
@@ -50,7 +50,7 @@ h1 { font-family:'Bebas Neue',sans-serif; font-size:42px; letter-spacing:1px; co
 }
 .chip.active { background:var(--pc); color:var(--opc); border-color:var(--p); }
 
-/* Formulaire d'ajout sécurisé (Hauteur maitrisée pour éviter le hors-écran) */
+/* Formulaire d'ajout compact sécurisé */
 .add-box {
   background:var(--sf); padding:12px; border-radius:16px; box-shadow:0 4px 14px var(--sh);
   margin-bottom:16px; display:flex; flex-direction:column; gap:8px;
@@ -61,15 +61,15 @@ h1 { font-family:'Bebas Neue',sans-serif; font-size:42px; letter-spacing:1px; co
   font-family:inherit; font-size:14px; font-weight:500; color:var(--ob); outline:none; height:42px;
 }
 .add-box input { flex:1; min-width:0; }
-.add-box select { width: 105px; font-size: 12px; color: var(--osv); }
+.add-box select { width: 110px; font-size: 13px; color: var(--ob); font-weight:600; }
 .add-box button {
   height:42px; padding:0 16px; border-radius:10px; background:var(--p); color:var(--op);
   font-weight:700; border:none; cursor:pointer; font-size:14px; flex-shrink:0;
 }
 .rayons-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
 .rayon-opt {
-  padding:6px 2px; border-radius:8px; background:var(--s1); text-align:center;
-  font-size:10px; font-weight:600; color:var(--osv); cursor:pointer; border:1px solid transparent;
+  padding:8px 2px; border-radius:8px; background:var(--s1); text-align:center;
+  font-size:11px; font-weight:600; color:var(--osv); cursor:pointer; border:1px solid transparent;
 }
 .rayon-opt.active { background:var(--sc); color:var(--s); border-color:var(--s); }
 
@@ -81,7 +81,7 @@ h1 { font-family:'Bebas Neue',sans-serif; font-size:42px; letter-spacing:1px; co
 }
 .rayon-header span.count { color:var(--osv); font-weight:500; }
 
-/* Items */
+/* Lignes d'articles */
 .item-row-container { position:relative; overflow:hidden; background:var(--sf); }
 .item-row-container:not(:last-child)::after {
   content:''; position:absolute; bottom:0; left:48px; right:14px; height:1px; background:var(--olv); z-index:1;
@@ -93,7 +93,7 @@ h1 { font-family:'Bebas Neue',sans-serif; font-size:42px; letter-spacing:1px; co
 }
 .item-row {
   position:relative; z-index:2; background:var(--sf); padding:12px 14px;
-  display:flex; align-items:center; justify-content:space-between;
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
   transform:translateX(0); transition:transform 0.15s ease-out; touch-action:pan-y;
 }
 .item-left { display:flex; align-items:center; gap:10px; flex:1; min-width: 0; }
@@ -102,14 +102,14 @@ h1 { font-family:'Bebas Neue',sans-serif; font-size:42px; letter-spacing:1px; co
   display:flex; align-items:center; justify-content:center; color:var(--op); font-size:12px; transition:all 0.1s; flex-shrink: 0;
 }
 .item-row.checked .chk { background:var(--s); border-color:var(--s); }
-.item-text { font-size:14px; font-weight:500; color:var(--ob); transition:all 0.1s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item-text { font-size:14px; font-weight:500; color:var(--ob); transition:all 0.1s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex:1; }
 .item-row.checked .item-text { color:var(--osv); text-decoration:line-through; }
 .item-meta { display:flex; align-items:center; gap:6px; flex-shrink: 0; }
 .qte-badge { padding:2px 6px; background:var(--s1); color:var(--osv); font-size:11px; font-weight:700; border-radius:6px; }
 .shop-mini { font-size:11px; font-weight:600; color:var(--p); background:var(--pc); padding:2px 6px; border-radius:6px; }
 .user-badge { font-size:10px; font-weight:500; color:var(--osv); opacity:0.8; background:var(--s2); padding:2px 6px; border-radius:6px; }
 
-/* Fenêtres Modales Sur-Mesure (Style Premium Site) */
+/* Fenêtres Modales Sur-Mesure Premium */
 .modal-backdrop {
   position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5);
   backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
@@ -130,7 +130,6 @@ h1 { font-family:'Bebas Neue',sans-serif; font-size:42px; letter-spacing:1px; co
   width:100%; border:none; background:var(--s1); padding:12px; border-radius:10px;
   font-family:inherit; font-size:14px; color:var(--ob); outline:none;
 }
-/* Compteur Quantité Expert */
 .qte-picker { display:flex; gap:10px; align-items:center; }
 .qte-btn {
   width:40px; height:40px; border-radius:10px; background:var(--s1); color:var(--ob);
@@ -143,7 +142,7 @@ h1 { font-family:'Bebas Neue',sans-serif; font-size:42px; letter-spacing:1px; co
 .btn-secondary { padding:10px 16px; background:var(--s1); color:var(--osv); font-weight:600; border-radius:10px; border:none; font-size:14px; }
 .btn-primary { padding:10px 20px; background:var(--p); color:var(--op); font-weight:700; border-radius:10px; border:none; font-size:14px; }
 
-/* Bottom Sheet Magasins */
+/* Bottom Sheet Configuration Magasins */
 .sheet-backdrop {
   position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index:100; display:none; opacity:0; transition:opacity 0.25s;
 }
@@ -258,7 +257,6 @@ const RAYONS = [
   { n: 'Autre', e: '📦' }
 ];
 
-// Identification automatique du membre connecté
 function getFamilyUser() {
   try {
     const mainConfig = JSON.parse(localStorage.getItem('lt_fb'));
@@ -272,6 +270,7 @@ function getFamilyUser() {
 
 function renderShopChips() {
   const container = document.getElementById('chipsScroll');
+  if (!container) return;
   let html = `<div class="chip ${activeShopFilter==='Tous'?'active':''}" onclick="setShopFilter('Tous')">🛒 Tous</div>`;
   shops.forEach(s => {
     html += `<div class="chip ${activeShopFilter===s?'active':''}" onclick="setShopFilter('${s.replace(/'/g, "\\'")}')">🏪 ${s}</div>`;
@@ -306,6 +305,7 @@ function setShopFilter(s) {
 
 function renderRayonsGrid() {
   const container = document.getElementById('rayonsGrid');
+  if (!container) return;
   let html = '';
   RAYONS.forEach((r, idx) => {
     html += `<div class="rayon-opt ${selectedRayonIdx===idx?'active':''}" onclick="selectRayon(${idx})">${r.e}<br>${r.n.split(' ')[0]}</div>`;
@@ -328,7 +328,7 @@ function parseInput(str) {
 function addItem() {
   const inp = document.getElementById('addInput');
   const shopSelect = document.getElementById('addShopSelect');
-  if (!inp.value.trim()) return;
+  if (!inp || !inp.value.trim()) return;
   
   let p = parseInput(inp.value);
   let rName = RAYONS[selectedRayonIdx].n;
@@ -341,7 +341,7 @@ function addItem() {
     rayon: rName,
     shop: shopSelect ? shopSelect.value : shops[0],
     checked: false,
-    user: getFamilyUser(), // Tag du compte créateur
+    user: getFamilyUser(),
     date: new Date().toISOString()
   };
   
@@ -350,8 +350,8 @@ function addItem() {
   saveLocal();
   render();
   
-  if (typeof fbQueue === 'function') {
-    fbQueue(COLLECTION_ITEMS, id, item);
+  if (globalThis.FBSync && typeof globalThis.FBSync.write === 'function') {
+    globalThis.FBSync.write(COLLECTION_ITEMS, id, item);
   }
 }
 
@@ -359,18 +359,15 @@ function toggleItem(id) {
   let item = D.items.find(i => i.id === id);
   if (item) {
     item.checked = !item.checked;
-    item.user = getFamilyUser(); // Met à jour qui a coché l'élément
+    item.user = getFamilyUser();
     saveLocal();
     render();
-    if (typeof fbQueue === 'function') {
-      fbQueue(COLLECTION_ITEMS, id, item);
+    if (globalThis.FBSync && typeof globalThis.FBSync.write === 'function') {
+      globalThis.FBSync.write(COLLECTION_ITEMS, id, item);
     }
   }
 }
 
-/* ═══════════════════════════════════════════
-   INTERFACE DE MODIFICATION PREMIUM SUR-MESURE
-   ═══════════════════════════════════════════ */
 function openEditModal(id) {
   let item = D.items.find(i => i.id === id);
   if (!item) return;
@@ -405,13 +402,13 @@ function saveEditModal() {
     item.name = document.getElementById('editName').value.trim() || item.name;
     item.qte = parseInt(document.getElementById('editQteValue').textContent) || 1;
     item.shop = document.getElementById('editShopSelect').value;
-    item.user = getFamilyUser(); // Trace le dernier modificateur
+    item.user = getFamilyUser();
     item.date = new Date().toISOString();
     
     saveLocal();
     render();
-    if (typeof fbQueue === 'function') {
-      fbQueue(COLLECTION_ITEMS, id, item);
+    if (globalThis.FBSync && typeof globalThis.FBSync.write === 'function') {
+      globalThis.FBSync.write(COLLECTION_ITEMS, id, item);
     }
   }
   closeEditModal();
@@ -421,16 +418,17 @@ function deleteItem(id) {
   D.items = D.items.filter(i => i.id !== id);
   saveLocal();
   render();
-  if (typeof fbDeleteQueue === 'function') {
-    fbDeleteQueue(COLLECTION_ITEMS, id);
+  if (globalThis.FBSync && typeof globalThis.FBSync.delete === 'function') {
+    globalThis.FBSync.delete(COLLECTION_ITEMS, id);
   }
 }
 
 function render() {
   const container = document.getElementById('listContainer');
+  if (!container) return;
   container.innerHTML = '';
   
-  let filtered = D.items;
+  let filtered = D.items || [];
   if (activeShopFilter !== 'Tous') {
     filtered = filtered.filter(i => i.shop === activeShopFilter);
   }
@@ -439,8 +437,10 @@ function render() {
   RAYONS.forEach(r => { groups[r.n] = []; });
   
   filtered.forEach(item => {
-    if (!groups[item.rayon]) groups[item.rayon] = [];
-    groups[item.rayon].push(item);
+    if (item && item.rayon) {
+      if (!groups[item.rayon]) groups[item.rayon] = [];
+      groups[item.rayon].push(item);
+    }
   });
   
   RAYONS.forEach(r => {
@@ -459,7 +459,6 @@ function render() {
       let rCont = document.createElement('div');
       rCont.className = 'item-row-container';
       
-      // Affichage propre du nom du créateur (ex: "Par Papa")
       let userDisplay = item.user ? `<div class="user-badge">${item.user}</div>` : '';
       
       rCont.innerHTML = `
@@ -487,6 +486,7 @@ function render() {
 
 function setupSwipe(container, id) {
   let row = container.querySelector('.item-row');
+  if(!row) return;
   let startX = 0, currentX = 0, isSwiping = false;
   
   row.addEventListener('touchstart', e => {
@@ -509,4 +509,4 @@ function setupSwipe(container, id) {
     if (currentX < -70) {
       row.style.transform = 'translateX(-100%)';
       setTimeout(() => deleteItem(id), 140);
-   
+    } els

@@ -288,17 +288,17 @@ function deleteItem(id) {
   syncWithFirebase();
 }
 
-// Fonction globale de secours avec Timeout anti-blocage
+// Intercepteur anti-blocage réseau
 function syncWithFirebase() {
   const sov = document.getElementById('sov');
   if (!sov) return;
 
   sov.style.display = 'flex';
 
-  // Sécurité : Libère l'écran au bout de 4 secondes si la promesse Firebase gèle
+  // Si Firebase ne répond pas sous 4 secondes, on retire le loader et on lève l'alerte
   const safetyTimeout = setTimeout(() => {
     sov.style.display = 'none';
-    alert("Timeout 4s : fbSaveAll ne répond pas.\nVérifiez l'Application ID ou les règles Google Cloud.");
+    alert("Timeout 4s : fbSaveAll ne répond pas.\nVérifiez les restrictions d'Application ID ou les clés Cloud Firebase.");
   }, 4000);
 
   if (typeof fbSaveAll === 'function') {
@@ -463,7 +463,6 @@ async function init() {
   renderRayonsGrid();
   render();
 
-  // Chargement initial distant sécurisé avec try/catch
   if (typeof fbLoadAll === 'function') {
     try {
       const remote = await fbLoadAll();

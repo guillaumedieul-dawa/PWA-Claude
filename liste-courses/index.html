@@ -21,101 +21,131 @@
 }
 * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
 body {
-  padding: calc(var(--top) + 16px) var(--rm) calc(var(--bot) + 80px) var(--rm);
+  padding: calc(var(--top) + 16px) var(--rm) calc(var(--bot) + 90px) var(--rm);
   font-family: 'Plus Jakarta Sans', sans-serif;
   user-select: none; -webkit-user-select: none;
+  background: var(--bg);
 }
-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
 .hdr-title-block { display:flex; align-items:center; gap:12px; }
 h1 { font-family:'Bebas Neue',sans-serif; font-size:42px; letter-spacing:1px; color:var(--ob); line-height:1; }
-.hdr-btns { display:flex; gap:12px; align-items:center; }
+.hdr-btns { display:flex; gap:10px; align-items:center; }
 .circle-btn {
-  width:44px; height:44px; border-radius:50%; background:var(--sf);
+  width:42px; height:42px; border-radius:50%; background:var(--sf);
   box-shadow:0 2px 8px var(--sh); display:flex; align-items:center; justify-content:center;
-  font-size:20px; border:none; cursor:pointer; transition:transform 0.1s; text-decoration:none;
+  font-size:18px; border:none; cursor:pointer; transition:transform 0.1s; text-decoration:none;
 }
 .circle-btn:active { transform:scale(0.92); }
 
-#syncDot {
-  width: 12px; height: 12px; border-radius: 50%; background: #22c55e;
-  transition: background 0.3s;
-}
-@keyframes fbPulse {
-  0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; }
-}
+#syncDot { width: 12px; height: 12px; border-radius: 50%; background: #22c55e; transition: background 0.3s; }
+@keyframes fbPulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
 
 /* Chips Magasins */
 .chips-scroll { display:flex; gap:8px; overflow-x:auto; padding:4px 4px 12px 4px; margin:0 -4px; scrollbar-width:none; }
 .chips-scroll::-webkit-scrollbar { display:none; }
 .chip {
   padding:8px 16px; border-radius:20px; background:var(--sf); color:var(--osv);
-  font-size:14px; font-weight:600; white-space:nowrap; box-shadow:0 2px 6px var(--sh);
+  font-size:13px; font-weight:600; white-space:nowrap; box-shadow:0 2px 6px var(--sh);
   border:1px solid transparent; cursor:pointer;
 }
 .chip.active { background:var(--pc); color:var(--opc); border-color:var(--p); }
 
-/* Formulaire d'ajout */
+/* Formulaire d'ajout sécurisé (Hauteur maitrisée pour éviter le hors-écran) */
 .add-box {
   background:var(--sf); padding:12px; border-radius:16px; box-shadow:0 4px 14px var(--sh);
-  margin-bottom:20px; display:flex; flex-direction:column; gap:10px;
+  margin-bottom:16px; display:flex; flex-direction:column; gap:8px;
 }
-.add-row1 { display:flex; gap:10px; }
+.add-row1 { display:flex; gap:8px; align-items:center; }
 .add-box input, .add-box select {
-  border:none; background:var(--s1); padding:12px 16px; border-radius:12px;
-  font-family:inherit; font-size:15px; font-weight:500; color:var(--ob); outline:none;
+  border:none; background:var(--s1); padding:10px 12px; border-radius:10px;
+  font-family:inherit; font-size:14px; font-weight:500; color:var(--ob); outline:none; height:42px;
 }
-.add-box input { flex:1; }
-.add-box select { width: 130px; font-size: 13px; color: var(--osv); }
+.add-box input { flex:1; min-width:0; }
+.add-box select { width: 105px; font-size: 12px; color: var(--osv); }
 .add-box button {
-  padding:0 20px; border-radius:12px; background:var(--p); color:var(--op);
-  font-weight:700; border:none; cursor:pointer; font-size:15px;
+  height:42px; padding:0 16px; border-radius:10px; background:var(--p); color:var(--op);
+  font-weight:700; border:none; cursor:pointer; font-size:14px; flex-shrink:0;
 }
 .rayons-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
 .rayon-opt {
-  padding:8px 4px; border-radius:10px; background:var(--s1); text-align:center;
-  font-size:11px; font-weight:600; color:var(--osv); cursor:pointer; border:1px solid transparent;
+  padding:6px 2px; border-radius:8px; background:var(--s1); text-align:center;
+  font-size:10px; font-weight:600; color:var(--osv); cursor:pointer; border:1px solid transparent;
 }
 .rayon-opt.active { background:var(--sc); color:var(--s); border-color:var(--s); }
 
 /* Groupes de Rayons */
-.rayon-group { margin-bottom:16px; background:var(--sf); border-radius:16px; box-shadow:0 2px 8px var(--sh); overflow:hidden; }
+.rayon-group { margin-bottom:14px; background:var(--sf); border-radius:14px; box-shadow:0 2px 8px var(--sh); overflow:hidden; }
 .rayon-header {
-  padding:12px 16px; background:var(--s1); color:var(--os); font-weight:700;
-  font-size:13px; text-transform:uppercase; letter-spacing:0.5px; display:flex; justify-content:space-between;
+  padding:10px 14px; background:var(--s1); color:var(--os); font-weight:700;
+  font-size:12px; text-transform:uppercase; letter-spacing:0.5px; display:flex; justify-content:space-between;
 }
 .rayon-header span.count { color:var(--osv); font-weight:500; }
 
 /* Items */
 .item-row-container { position:relative; overflow:hidden; background:var(--sf); }
 .item-row-container:not(:last-child)::after {
-  content:''; position:absolute; bottom:0; left:52px; right:16px; height:1px; background:var(--olv); z-index:1;
+  content:''; position:absolute; bottom:0; left:48px; right:14px; height:1px; background:var(--olv); z-index:1;
 }
 .swipe-bg {
   position:absolute; top:0; left:0; width:100%; height:100%; display:flex;
-  align-items:center; justify-content:flex-end; padding-right:24px;
-  background:var(--cfb); color:var(--cf); font-size:18px; font-weight:700; z-index:0;
+  align-items:center; justify-content:flex-end; padding-right:20px;
+  background:var(--cfb); color:var(--cf); font-size:16px; font-weight:700; z-index:0;
 }
 .item-row {
-  position:relative; z-index:2; background:var(--sf); padding:14px 16px;
+  position:relative; z-index:2; background:var(--sf); padding:12px 14px;
   display:flex; align-items:center; justify-content:space-between;
   transform:translateX(0); transition:transform 0.15s ease-out; touch-action:pan-y;
 }
-.item-left { display:flex; align-items:center; gap:12px; flex:1; min-width: 0; }
+.item-left { display:flex; align-items:center; gap:10px; flex:1; min-width: 0; }
 .chk {
   width:22px; height:22px; border-radius:6px; border:2px solid var(--olv);
-  display:flex; align-items:center; justify-content:center; color:var(--op); font-size:13px; transition:all 0.1s; flex-shrink: 0;
+  display:flex; align-items:center; justify-content:center; color:var(--op); font-size:12px; transition:all 0.1s; flex-shrink: 0;
 }
 .item-row.checked .chk { background:var(--s); border-color:var(--s); }
-.item-text { font-size:15px; font-weight:500; color:var(--ob); transition:all 0.1s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item-text { font-size:14px; font-weight:500; color:var(--ob); transition:all 0.1s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .item-row.checked .item-text { color:var(--osv); text-decoration:line-through; }
-.item-meta { display:flex; align-items:center; gap:8px; flex-shrink: 0; }
+.item-meta { display:flex; align-items:center; gap:6px; flex-shrink: 0; }
 .qte-badge { padding:2px 6px; background:var(--s1); color:var(--osv); font-size:11px; font-weight:700; border-radius:6px; }
 .shop-mini { font-size:11px; font-weight:600; color:var(--p); background:var(--pc); padding:2px 6px; border-radius:6px; }
+.user-badge { font-size:10px; font-weight:500; color:var(--osv); opacity:0.8; background:var(--s2); padding:2px 6px; border-radius:6px; }
+
+/* Fenêtres Modales Sur-Mesure (Style Premium Site) */
+.modal-backdrop {
+  position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5);
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  z-index:200; display:none; opacity:0; transition:opacity 0.2s;
+}
+.modal-backdrop.show { display:block; opacity:1; }
+.modal-box {
+  position:fixed; top:50%; left:50%; transform: translate(-50%, -40%) scale(0.95);
+  width:calc(100% - 32px); max-width:360px; background:var(--sf); border-radius:20px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.2); z-index:201; display:none;
+  padding:20px; transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.modal-box.show { display:block; transform: translate(-50%, -50%) scale(1); }
+.modal-box h3 { font-size:18px; font-weight:700; color:var(--ob); margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+.modal-form-group { display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
+.modal-form-group label { font-size:11px; font-weight:700; text-transform:uppercase; color:var(--osv); letter-spacing:0.5px; }
+.modal-box input, .modal-box select {
+  width:100%; border:none; background:var(--s1); padding:12px; border-radius:10px;
+  font-family:inherit; font-size:14px; color:var(--ob); outline:none;
+}
+/* Compteur Quantité Expert */
+.qte-picker { display:flex; gap:10px; align-items:center; }
+.qte-btn {
+  width:40px; height:40px; border-radius:10px; background:var(--s1); color:var(--ob);
+  border:none; font-size:18px; font-weight:700; display:flex; align-items:center; justify-content:center; cursor:pointer;
+}
+.qte-btn:active { background:var(--s2); }
+.qte-value { font-size:16px; font-weight:700; color:var(--ob); width:30px; text-align:center; }
+
+.modal-actions { display:flex; gap:10px; margin-top:20px; justify-content:flex-end; }
+.btn-secondary { padding:10px 16px; background:var(--s1); color:var(--osv); font-weight:600; border-radius:10px; border:none; font-size:14px; }
+.btn-primary { padding:10px 20px; background:var(--p); color:var(--op); font-weight:700; border-radius:10px; border:none; font-size:14px; }
 
 /* Bottom Sheet Magasins */
 .sheet-backdrop {
-  position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4);
-  z-index:100; display:none; opacity:0; transition:opacity 0.25s;
+  position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index:100; display:none; opacity:0; transition:opacity 0.25s;
 }
 .sheet {
   position:fixed; bottom:0; left:0; width:100vw; background:var(--sf);
@@ -126,19 +156,16 @@ h1 { font-family:'Bebas Neue',sans-serif; font-size:42px; letter-spacing:1px; co
 .sheet-backdrop.show { display:block; opacity:1; }
 .sheet.show { transform:translateY(0); }
 .sheet-handle { width:40px; height:4px; background:var(--olv); border-radius:2px; margin:0 auto 16px auto; }
-.sheet h3 { font-size:18px; font-weight:700; color:var(--ob); margin-bottom:16px; }
-.sheet-list { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; max-height:220px; overflow-y:auto; }
+.sheet h3 { font-size:17px; font-weight:700; color:var(--ob); margin-bottom:14px; }
+.sheet-list { display:flex; flex-direction:column; gap:8px; margin-bottom:14px; max-height:180px; overflow-y:auto; }
 .sheet-item {
-  display:flex; justify-content:space-between; align-items:center; padding:12px 16px;
-  background:var(--s1); border-radius:12px; font-weight:600; font-size:14px; color:var(--ob);
+  display:flex; justify-content:space-between; align-items:center; padding:10px 14px;
+  background:var(--s1); border-radius:10px; font-weight:600; font-size:13px; color:var(--ob);
 }
-.sheet-item .del { color:var(--cf); font-size:16px; padding:4px; }
+.sheet-item .del { color:var(--cf); font-size:14px; padding:4px; cursor:pointer; }
 .sheet-add { display:flex; gap:8px; }
-.sheet-add input {
-  flex:1; border:none; background:var(--s1); padding:12px 16px; border-radius:12px;
-  font-family:inherit; font-size:14px; color:var(--ob); outline:none;
-}
-.sheet-add button { padding:0 16px; background:var(--p); color:var(--op); border-radius:12px; border:none; font-weight:700; }
+.sheet-add input { flex:1; border:none; background:var(--s1); padding:10px 14px; border-radius:10px; font-family:inherit; font-size:13px; color:var(--ob); outline:none; }
+.sheet-add button { padding:0 14px; background:var(--p); color:var(--op); border-radius:10px; border:none; font-weight:700; font-size:13px; }
 </style>
 </head>
 <body>
@@ -159,7 +186,7 @@ h1 { font-family:'Bebas Neue',sans-serif; font-size:42px; letter-spacing:1px; co
 
 <div class="add-box">
   <div class="add-row1">
-    <input type="text" id="addInput" placeholder="Ajouter un article... (ex: 3 Pommes)" autocomplete="off">
+    <input type="text" id="addInput" placeholder="Ex: 3 Pommes ou Lait..." autocomplete="off">
     <select id="addShopSelect"></select>
     <button onclick="addItem()">OK</button>
   </div>
@@ -171,11 +198,41 @@ h1 { font-family:'Bebas Neue',sans-serif; font-size:42px; letter-spacing:1px; co
 <div class="sheet-backdrop" id="backdrop" onclick="closeSheet()"></div>
 <div class="sheet" id="sheet">
   <div class="sheet-handle"></div>
-  <h3>Gérer les magasins</h3>
+  <h3>Gérer les magasins de la famille</h3>
   <div class="sheet-list" id="sheetList"></div>
   <div class="sheet-add">
-    <input type="text" id="newShopInput" placeholder="Nom du magasin..." autocomplete="off">
-    <button onclick="addShop()">+ Add</button>
+    <input type="text" id="newShopInput" placeholder="Nouveau magasin..." autocomplete="off">
+    <button onclick="addShop()">Ajouter</button>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop" onclick="closeEditModal()"></div>
+<div class="modal-box" id="editModal">
+  <h3>📝 Modifier l'article</h3>
+  <input type="hidden" id="editId">
+  
+  <div class="modal-form-group">
+    <label>Nom du produit</label>
+    <input type="text" id="editName" autocomplete="off">
+  </div>
+  
+  <div class="modal-form-group">
+    <label>Quantité</label>
+    <div class="qte-picker">
+      <button class="qte-btn" onclick="changeEditQte(-1)">-</button>
+      <div class="qte-value" id="editQteValue">1</div>
+      <button class="qte-btn" onclick="changeEditQte(1)">+</button>
+    </div>
+  </div>
+  
+  <div class="modal-form-group">
+    <label>Magasin assigné</label>
+    <select id="editShopSelect"></select>
+  </div>
+  
+  <div class="modal-actions">
+    <button class="btn-secondary" onclick="closeEditModal()">Annuler</button>
+    <button class="btn-primary" onclick="saveEditModal()">Enregistrer</button>
   </div>
 </div>
 
@@ -186,7 +243,6 @@ let shops = ['Supermarché', 'Marché', 'Boulangerie'];
 let activeShopFilter = 'Tous';
 let selectedRayonIdx = 0;
 
-// Collections Firestore distinctes pour isoler la configuration des articles de courses
 const COLLECTION_ITEMS = 'courses';
 const COLLECTION_CONFIG = 'courses_config';
 const DOC_SHOPS_ID = 'magasins_shared';
@@ -202,6 +258,18 @@ const RAYONS = [
   { n: 'Autre', e: '📦' }
 ];
 
+// Identification automatique du membre connecté
+function getFamilyUser() {
+  try {
+    const mainConfig = JSON.parse(localStorage.getItem('lt_fb'));
+    if (mainConfig && mainConfig.userUser) return mainConfig.userUser;
+    const user = localStorage.getItem('fh_user');
+    return user ? user : 'Famille';
+  } catch(e) {
+    return 'Famille';
+  }
+}
+
 function renderShopChips() {
   const container = document.getElementById('chipsScroll');
   let html = `<div class="chip ${activeShopFilter==='Tous'?'active':''}" onclick="setShopFilter('Tous')">🛒 Tous</div>`;
@@ -209,22 +277,25 @@ function renderShopChips() {
     html += `<div class="chip ${activeShopFilter===s?'active':''}" onclick="setShopFilter('${s.replace(/'/g, "\\'")}')">🏪 ${s}</div>`;
   });
   container.innerHTML = html;
-  renderFormShopSelect();
+  renderFormShopSelects();
 }
 
-function renderFormShopSelect() {
-  const select = document.getElementById('addShopSelect');
-  if(!select) return;
-  select.innerHTML = '';
+function renderFormShopSelects() {
+  const addSelect = document.getElementById('addShopSelect');
+  const editSelect = document.getElementById('editShopSelect');
+  
+  let optionsHtml = '';
   shops.forEach(s => {
-    const opt = document.createElement('option');
-    opt.value = s;
-    opt.textContent = s;
-    if(activeShopFilter !== 'Tous' && s === activeShopFilter) {
-      opt.selected = true;
-    }
-    select.appendChild(opt);
+    optionsHtml += `<option value="${s}">${s}</option>`;
   });
+  
+  if(addSelect) {
+    addSelect.innerHTML = optionsHtml;
+    if(activeShopFilter !== 'Tous' && shops.includes(activeShopFilter)) {
+      addSelect.value = activeShopFilter;
+    }
+  }
+  if(editSelect) editSelect.innerHTML = optionsHtml;
 }
 
 function setShopFilter(s) {
@@ -250,9 +321,7 @@ function selectRayon(idx) {
 function parseInput(str) {
   str = str.trim();
   let m = str.match(/^([0-9]+)\s*(x|X)?\s+(.+)$/);
-  if (m) {
-    return { qte: parseInt(m[1]), name: m[3].trim() };
-  }
+  if (m) return { qte: parseInt(m[1]), name: m[3].trim() };
   return { qte: 1, name: str };
 }
 
@@ -272,6 +341,7 @@ function addItem() {
     rayon: rName,
     shop: shopSelect ? shopSelect.value : shops[0],
     checked: false,
+    user: getFamilyUser(), // Tag du compte créateur
     date: new Date().toISOString()
   };
   
@@ -289,6 +359,7 @@ function toggleItem(id) {
   let item = D.items.find(i => i.id === id);
   if (item) {
     item.checked = !item.checked;
+    item.user = getFamilyUser(); // Met à jour qui a coché l'élément
     saveLocal();
     render();
     if (typeof fbQueue === 'function') {
@@ -297,17 +368,44 @@ function toggleItem(id) {
   }
 }
 
-function editItem(id) {
+/* ═══════════════════════════════════════════
+   INTERFACE DE MODIFICATION PREMIUM SUR-MESURE
+   ═══════════════════════════════════════════ */
+function openEditModal(id) {
   let item = D.items.find(i => i.id === id);
   if (!item) return;
   
-  let currentVal = item.qte > 1 ? `${item.qte} ${item.name}` : item.name;
-  let newVal = prompt("Modifier l'article :", currentVal);
+  document.getElementById('editId').value = id;
+  document.getElementById('editName').value = item.name;
+  document.getElementById('editQteValue').textContent = item.qte;
+  document.getElementById('editShopSelect').value = item.shop;
   
-  if (newVal !== null && newVal.trim() !== '') {
-    let p = parseInput(newVal);
-    item.name = p.name;
-    item.qte = p.qte;
+  document.getElementById('modalBackdrop').classList.add('show');
+  document.getElementById('editModal').classList.add('show');
+}
+
+function closeEditModal() {
+  document.getElementById('modalBackdrop').classList.remove('show');
+  document.getElementById('editModal').classList.remove('show');
+}
+
+function changeEditQte(amount) {
+  const qteEl = document.getElementById('editQteValue');
+  let current = parseInt(qteEl.textContent) || 1;
+  current += amount;
+  if (current < 1) current = 1;
+  qteEl.textContent = current;
+}
+
+function saveEditModal() {
+  const id = document.getElementById('editId').value;
+  let item = D.items.find(i => i.id === id);
+  
+  if (item) {
+    item.name = document.getElementById('editName').value.trim() || item.name;
+    item.qte = parseInt(document.getElementById('editQteValue').textContent) || 1;
+    item.shop = document.getElementById('editShopSelect').value;
+    item.user = getFamilyUser(); // Trace le dernier modificateur
     item.date = new Date().toISOString();
     
     saveLocal();
@@ -316,6 +414,7 @@ function editItem(id) {
       fbQueue(COLLECTION_ITEMS, id, item);
     }
   }
+  closeEditModal();
 }
 
 function deleteItem(id) {
@@ -360,15 +459,19 @@ function render() {
       let rCont = document.createElement('div');
       rCont.className = 'item-row-container';
       
+      // Affichage propre du nom du créateur (ex: "Par Papa")
+      let userDisplay = item.user ? `<div class="user-badge">${item.user}</div>` : '';
+      
       rCont.innerHTML = `
         <div class="swipe-bg">🗑️ Supprimer</div>
         <div class="item-row ${item.checked?'checked':''}" id="row_${item.id}">
           <div class="item-left">
             <div class="chk" onclick="toggleItem('${item.id}')">${item.checked?'✓':''}</div>
-            <div class="item-text" onclick="editItem('${item.id}')">${item.name}</div>
+            <div class="item-text" onclick="openEditModal('${item.id}')">${item.name}</div>
           </div>
           <div class="item-meta">
-            ${item.qte > 1 ? `<div class="qte-badge" onclick="editItem('${item.id}')">x${item.qte}</div>` : ''}
+            ${userDisplay}
+            ${item.qte > 1 ? `<div class="qte-badge" onclick="openEditModal('${item.id}')">x${item.qte}</div>` : ''}
             ${activeShopFilter === 'Tous' ? `<div class="shop-mini">${item.shop}</div>` : ''}
           </div>
         </div>
@@ -406,121 +509,4 @@ function setupSwipe(container, id) {
     if (currentX < -70) {
       row.style.transform = 'translateX(-100%)';
       setTimeout(() => deleteItem(id), 140);
-    } else {
-      row.style.transform = 'translateX(0)';
-    }
-    currentX = 0;
-  });
-}
-
-function openSheet() {
-  document.getElementById('backdrop').classList.add('show');
-  document.getElementById('sheet').classList.add('show');
-  renderSheetList();
-}
-function closeSheet() {
-  document.getElementById('backdrop').classList.remove('show');
-  document.getElementById('sheet').classList.remove('show');
-}
-function renderSheetList() {
-  const container = document.getElementById('sheetList');
-  container.innerHTML = '';
-  shops.forEach((s, idx) => {
-    container.innerHTML += `
-      <div class="sheet-item">
-        <span>🏪 ${s}</span>
-        ${shops.length > 1 ? `<span class="del" onclick="deleteShop(${idx})">🗑️</span>` : ''}
-      </div>
-    `;
-  });
-}
-
-/* ═══════════════════════════════════════════
-   MODIFICATION ET SYNCHRONISATION DES MAGASINS
-   ═══════════════════════════════════════════ */
-function syncShopsToFirebase() {
-  saveShopsLocal(shops);
-  if (typeof fbQueue === 'function') {
-    // On encapsule le tableau dans un objet ayant un identifiant unique de document fixe
-    fbQueue(COLLECTION_CONFIG, DOC_SHOPS_ID, { id: DOC_SHOPS_ID, list: shops });
-  }
-}
-
-function addShop() {
-  const inp = document.getElementById('newShopInput');
-  let val = inp.value.trim();
-  if (val && !shops.includes(val)) {
-    shops.push(val);
-    inp.value = '';
-    renderSheetList();
-    renderShopChips();
-    syncShopsToFirebase(); // Envoi synchro
-  }
-}
-
-function deleteShop(idx) {
-  let deletedShop = shops[idx];
-  shops.splice(idx, 1);
-  if (activeShopFilter === deletedShop) activeShopFilter = 'Tous';
-  renderSheetList();
-  renderShopChips();
-  render();
-  syncShopsToFirebase(); // Envoi synchro
-}
-
-function saveShopsLocal(arr) { localStorage.setItem('fh_courses_shops', JSON.stringify(arr)); }
-function saveLocal() { localStorage.setItem('fh_courses_data', JSON.stringify(D)); }
-
-function init() {
-  const lsShops = localStorage.getItem('fh_courses_shops');
-  if (lsShops) shops = JSON.parse(lsShops);
-  const lsData = localStorage.getItem('fh_courses_data');
-  if (lsData) D = JSON.parse(lsData);
-
-  renderShopChips();
-  renderRayonsGrid();
-  render();
-
-  // 1. Abonnement Temps Réel aux articles
-  if (typeof fbSubscribe === 'function') {
-    fbSubscribe(COLLECTION_ITEMS, function(remoteItems) {
-      if (remoteItems && Array.isArray(remoteItems)) {
-        // Filtrer au cas où le document de config se glisserait par erreur
-        const cleanRemote = remoteItems.filter(i => i.id !== DOC_SHOPS_ID);
-        const localMap = {};
-        D.items.forEach(t => { localMap[t.id] = t; });
-        cleanRemote.forEach(t => { localMap[t.id] = t; });
-        
-        D.items = Object.values(localMap).sort((a,b) => new Date(b.date||0) - new Date(a.date||0));
-        saveLocal();
-        render();
-      }
-    });
-  }
-
-  // 2. Abonnement Temps Réel à la liste des magasins partagés
-  if (typeof fbSubscribe === 'function') {
-    fbSubscribe(COLLECTION_CONFIG, function(remoteConfig) {
-      if (remoteConfig && Array.isArray(remoteConfig)) {
-        // Trouver le document contenant la liste des magasins
-        const shopDoc = remoteConfig.find(c => c.id === DOC_SHOPS_ID || c._fbId === DOC_SHOPS_ID);
-        if (shopDoc && shopDoc.list && Array.isArray(shopDoc.list)) {
-          shops = shopDoc.list;
-          saveShopsLocal(shops);
-          renderShopChips();
-          renderSheetList();
-          render();
-        }
-      }
-    });
-  }
-}
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
-} else {
-  init();
-}
-</script>
-</body>
-</html>
+   

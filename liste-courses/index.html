@@ -89,7 +89,6 @@ h1 { font-family: 'Bebas Neue', sans-serif; font-size: 42px; letter-spacing: 1px
   </div>
   <div class="hdr-btns">
     <div id="syncDot"></div>
-    <button class="circle-btn" onclick="openDebug()">🐞</button>
     <button id="thbtn" class="circle-btn" onclick="window.toggleTheme()"></button>
     <button class="circle-btn" onclick="openSheet()">🏪</button>
   </div>
@@ -118,17 +117,6 @@ h1 { font-family: 'Bebas Neue', sans-serif; font-size: 42px; letter-spacing: 1px
   <div class="sheet-add">
     <input type="text" id="newShopInput" placeholder="Nom du magasin..." autocomplete="off">
     <button onclick="addShop()">Ajouter</button>
-  </div>
-</div>
-
-<div class="modal-backdrop" id="debugBackdrop" onclick="closeDebug()"></div>
-<div class="modal-box" id="debugModal">
-  <h3>🐞 Panneau de Diagnostic</h3>
-  <div id="debugContent" style="font-size:12px; font-family:monospace; background:var(--s1); padding:10px; border-radius:8px; margin-bottom:15px; word-break:break-all;">
-    </div>
-  <div class="modal-actions">
-    <button class="btn-secondary" onclick="purgeQueue()">Purger File</button>
-    <button class="btn-primary" onclick="closeDebug()">Fermer</button>
   </div>
 </div>
 
@@ -163,57 +151,6 @@ h1 { font-family: 'Bebas Neue', sans-serif; font-size: 42px; letter-spacing: 1px
 <script src="./fbSync.js"></script>
 
 <script>
-// ============================================================================
-// SYSTEME DE DIAGNOSTIC DEBUG
-// ============================================================================
-window.showDebugError = function(msg) {
-    if(msg.includes("INTROUVABLE")) alert(msg);
-    localStorage.setItem('fh_last_error', new Date().toLocaleTimeString() + " - " + msg);
-    if(document.getElementById('debugModal').classList.contains('show')) renderDebug();
-};
-
-function openDebug() {
-    document.getElementById('debugBackdrop').classList.add('show');
-    document.getElementById('debugModal').classList.add('show');
-    renderDebug();
-}
-
-function closeDebug() {
-    document.getElementById('debugBackdrop').classList.remove('show');
-    document.getElementById('debugModal').classList.remove('show');
-}
-
-function renderDebug() {
-    const d = document.getElementById('debugContent');
-    if(!d) return;
-    let keyStat = "❌ Absente (Config nécessaire)";
-    try { 
-        let lt = JSON.parse(localStorage.getItem('lt_fb')); 
-        if(lt && lt.apiKey) keyStat = "✅ Présente (" + lt.apiKey.substring(0,6) + "...)"; 
-    } catch(e) {}
-    
-    let qCount = 0;
-    try { let q = JSON.parse(localStorage.getItem('fb_wq')); if(q) qCount = q.length; } catch(e){}
-    let err = localStorage.getItem('fh_last_error') || "Aucune erreur enregistrée";
-    
-    d.innerHTML = `
-        <strong>Clé API lt_fb:</strong><br> ${keyStat}<br><br>
-        <strong>File d'attente locale:</strong><br> ${qCount} requête(s) bloquée(s)<br><br>
-        <strong>Dernier Journal Système:</strong><br>
-        <span style="color:#ef4444;">${err}</span>
-    `;
-}
-
-function purgeQueue() {
-    localStorage.removeItem('fb_wq');
-    localStorage.removeItem('fh_last_error');
-    alert("File d'attente et logs purgés !");
-    renderDebug();
-}
-
-// ============================================================================
-// PONT UNIVERSEL DE BASE DE DONNÉES
-// ============================================================================
 const DB = {
   readAll: async function(coll, cb) {
     if (window.FBSync && typeof window.FBSync.subscribe === 'function') {
@@ -245,9 +182,6 @@ const DB = {
   }
 };
 
-// ============================================================================
-// LOGIQUE APPLICATIVE
-// ============================================================================
 let D = { items: [] };
 let shops = ['Supermarché', 'Marché', 'Boulangerie'];
 let activeShopFilter = 'Tous';

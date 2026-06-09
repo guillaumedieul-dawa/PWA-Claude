@@ -123,6 +123,7 @@
 
   // ── API publique write/delete ──────────────────────────────────
   function fbQueue(coll, id, data) {
+    console.log("Tentative d'écriture dans : " + collection, data); // LOG ICI  
     enqueue({ type: 'WRITE', coll: coll, id: String(id), data: data });
   }
   function fbDeleteQueue(coll, id) {

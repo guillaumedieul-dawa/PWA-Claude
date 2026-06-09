@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   FamilyHub — fbSync.js  v4.0
+   FamilyHub — fbSync.js  v4.1 (Debug IHM Edition)
    Phase 4 : Real-time sync via polling REST Firestore
    ───────────────────────────────────────────────────
    - fbSubscribe(collection, onData, opts) : polling toutes les 5s
@@ -56,6 +56,11 @@
     return o;
   }
 
+  // ── Notification IHM Debug ────────────────────────────────────
+  function notifyError(msg) {
+    if (global.showDebugError) global.showDebugError(msg);
+  }
+
   // ── Write Queue (retry exponentiel) ───────────────────────────
   function loadQueue() {
     try { return JSON.parse(localStorage.getItem(QUEUE_KEY)) || []; } catch (e) { return []; }
@@ -81,7 +86,13 @@
   }
   async function _doFlush() {
     _flushTimer = null;
-    if (!getKey()) return;
+    
+    // VERROU : Arrêt silencieux intercepté pour le debug
+    if (!getKey()) {
+        notifyError("🚨 BLOQUÉ : Clé API Firebase introuvable dans le localStorage (lt_fb). Configurez l'application.");
+        return;
+    }
+
     var q = loadQueue();
     if (!q.length) return;
     var now = Date.now();
@@ -91,20 +102,26 @@
       if (op.nextRetry > now) { remaining.push(op); continue; }
       try {
         var ok = false;
+        var r;
         if (op.type === 'DELETE') {
-          var r = await fetch(fbUrl(op.coll + '/' + op.id), { method: 'DELETE', redirect: 'follow' });
+          r = await fetch(fbUrl(op.coll + '/' + op.id), { method: 'DELETE', redirect: 'follow' });
           ok = r.ok;
         } else {
-          var r2 = await fetch(fbUrl(op.coll + '/' + op.id), {
+          r = await fetch(fbUrl(op.coll + '/' + op.id), {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ fields: toF(op.data) }),
             redirect: 'follow'
           });
-          ok = r2.ok;
+          ok = r.ok;
         }
-        if (!ok) throw new Error('HTTP ' + (r || r2).status);
+        
+        if (!ok) {
+            var errTxt = await r.text();
+            throw new Error('HTTP ' + r.status + ' : ' + errTxt);
+        }
         FBSyncUI.setStatus('ok');
+        notifyError("✅ Synchro réussie");
         // succès : ne pas remettre dans la queue
       } catch (e) {
         // retry exponentiel
@@ -112,6 +129,7 @@
         op.nextRetry  = Date.now() + op.retryDelay;
         remaining.push(op);
         FBSyncUI.setStatus('error');
+        notifyError("❌ Échec Synchro (" + op.coll + ") : " + e.message);
       }
     }
     saveQueue(remaining);
@@ -169,7 +187,10 @@
     try {
       var url = fbUrl(collection) + '&pageSize=500';
       var r = await fetch(url, { redirect: 'follow' });
-      if (!r.ok) throw new Error('HTTP ' + r.status);
+      if (!r.ok) {
+          var errTxt = await r.text();
+          throw new Error('HTTP ' + r.status + ' : ' + errTxt);
+      }
       var data = await r.json();
       var docs = (data.documents || []).map(function (x) {
         return Object.assign(frD(x), { _fbId: x.name.split('/').pop() });
@@ -180,6 +201,7 @@
     } catch (e) {
       entry.errors++;
       FBSyncUI.setStatus('error');
+      notifyError("❌ Échec Lecture (" + collection + ") : " + e.message);
     }
     if (_polls[collection]) {
       entry.timer = setTimeout(function () { _poll(collection); }, POLL_MS);
@@ -187,8 +209,6 @@
   }
 
   // ── Indicateur visuel ─────────────────────────────────────────
-  // Injecte un point coloré dans l'élément #syncDot si présent
-  // Statuts : ok (vert) | syncing (orange clignotant) | error (rouge)
   var FBSyncUI = {
     _status: 'ok',
     setStatus: function (s) {

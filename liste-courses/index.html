@@ -394,4 +394,123 @@ function render() {
 function setupSwipe(c, id) {
   let r = c.querySelector('.item-row');
   if (!r) return;
-  let sx = 
+  let sx = 0, cx = 0, sw = false;
+  r.addEventListener('touchstart', e => { sx = e.touches[0].clientX; sw = true; r.style.transition = 'none'; }, { passive: true });
+  r.addEventListener('touchmove', e => { if (!sw) return; cx = e.touches[0].clientX - sx; if (cx > 0) cx = 0; if (cx < -120) cx = -120; r.style.transform = `translateX(${cx}px)`; }, { passive: true });
+  r.addEventListener('touchend', () => { sw = false; r.style.transition = 'transform 0.15s ease-out'; if (cx < -70) { r.style.transform = 'translateX(-100%)'; setTimeout(() => deleteItem(id), 140); } else { r.style.transform = 'translateX(0)'; } cx = 0; });
+}
+
+function openSheet() {
+  document.getElementById('backdrop').classList.add('show');
+  document.getElementById('sheet').classList.add('show');
+  renderSheetList();
+}
+
+function closeSheet() {
+  document.getElementById('backdrop').classList.remove('show');
+  document.getElementById('sheet').classList.remove('show');
+}
+
+function renderSheetList() {
+  let c = document.getElementById('sheetList');
+  if (!c) return;
+  c.innerHTML = '';
+  shops.forEach((s, i) => {
+    if (typeof s === 'string') {
+      c.innerHTML += `
+        <div class="sheet-item">
+          <span>🏪 ${s}</span>
+          ${shops.length > 1 ? `<span class="del" onclick="deleteShop(${i})">🗑️</span>` : ''}
+        </div>`;
+    }
+  });
+}
+
+function syncShops() {
+  saveShopsLocal(shops);
+  // Encapsulation solide pour la BDD (contourne les limites de Firebase)
+  DB.write(COLL_CONF, DOC_SHOPS, { id: DOC_SHOPS, payload: JSON.stringify(shops) });
+}
+
+function addShop() {
+  let i = document.getElementById('newShopInput');
+  if (!i) return;
+  let v = i.value.trim();
+  if (v && !shops.includes(v)) {
+    shops.push(v);
+    i.value = '';
+    renderSheetList();
+    renderShopChips();
+    syncShops();
+  }
+}
+
+function deleteShop(i) {
+  let d = shops[i];
+  shops.splice(i, 1);
+  if (activeShopFilter === d) activeShopFilter = 'Tous';
+  renderSheetList();
+  renderShopChips();
+  render();
+  syncShops();
+}
+
+function saveShopsLocal(a) { localStorage.setItem('fh_courses_shops', JSON.stringify(a)); }
+function saveLocal() { localStorage.setItem('fh_courses_data', JSON.stringify(D)); }
+
+function init() {
+  try {
+    let s = localStorage.getItem('fh_courses_shops');
+    if (s) shops = JSON.parse(s);
+    let d = localStorage.getItem('fh_courses_data');
+    if (d) D = JSON.parse(d);
+  } catch(e) {}
+  
+  if (!Array.isArray(shops) || shops.length === 0) shops = ['Supermarché', 'Marché', 'Boulangerie'];
+  if (!D || !D.items) D = { items: [] };
+
+  renderShopChips();
+  renderRayonsGrid();
+  render();
+
+  // 1. Abonnement/Récupération universelle des articles
+  DB.readAll(COLL_ITEMS, r => {
+    if (Array.isArray(r)) {
+      let c = r.filter(i => i._fbId !== DOC_SHOPS && i.id !== DOC_SHOPS);
+      let m = {};
+      if (D.items) D.items.forEach(t => { if (t && t.id) m[t.id] = t; });
+      
+      c.forEach(t => {
+        let id = t.id || t._fbId;
+        if (id) { t.id = id; m[id] = t; }
+      });
+      
+      D.items = Object.values(m).sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+      saveLocal();
+      render();
+    }
+  });
+
+  // 2. Abonnement/Récupération universelle de la configuration des magasins
+  DB.readAll(COLL_CONF, r => {
+    if (Array.isArray(r)) {
+      let d = r.find(c => c.id === DOC_SHOPS || c._fbId === DOC_SHOPS);
+      if (d && d.payload) {
+        try {
+          let s = JSON.parse(d.payload);
+          if (Array.isArray(s) && s.length > 0) {
+            shops = s;
+            saveShopsLocal(shops);
+            renderShopChips();
+            render();
+          }
+        } catch(e) {}
+      }
+    }
+  });
+}
+
+if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { init(); }
+</script>
+</body>
+</html>

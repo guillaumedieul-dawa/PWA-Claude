@@ -64,7 +64,11 @@ async function fbReadAll(collection) {
   
   try {
     const response = await fetch(fbUrl(collection));
-    if (!response.ok) throw new Error(response.status);
+    if (!response.ok) {
+       const errData = await response.text();
+       console.error(`fbReadAll Error [${collection}]: HTTP ${response.status} - ${errData}`);
+       throw new Error(response.status);
+    }
     const data = await response.json();
     if (!data.documents) return [];
     
@@ -99,8 +103,15 @@ async function fbWrite(collection, documentId, data, options = {}) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ fields: toFirestoreFields(dataToWrite, numberType) })
     });
-    return response.ok;
-  } catch {
+    if (!response.ok) {
+       const errData = await response.text();
+       console.error(`Firebase Write Error [${collection}/${documentId}]: HTTP ${response.status} - ${errData}`);
+       queueOfflineAction({ type: 'WRITE', collection, documentId, data: dataToWrite, options });
+       return false;
+    }
+    return true;
+  } catch(e) {
+    console.error(`Firebase Network Error: ${e.message}`);
     queueOfflineAction({ type: 'WRITE', collection, documentId, data: dataToWrite, options });
     return false;
   }
@@ -114,8 +125,15 @@ async function fbDelete(collection, documentId) {
   }
   try {
     const response = await fetch(fbUrl(`${collection}/${documentId}`), { method: 'DELETE' });
-    return response.ok;
-  } catch {
+    if (!response.ok) {
+       const errData = await response.text();
+       console.error(`Firebase Delete Error [${collection}/${documentId}]: HTTP ${response.status} - ${errData}`);
+       queueOfflineAction({ type: 'DELETE', collection, documentId });
+       return false;
+    }
+    return true;
+  } catch(e) {
+    console.error(`Firebase Delete Network Error: ${e.message}`);
     queueOfflineAction({ type: 'DELETE', collection, documentId });
     return false;
   }

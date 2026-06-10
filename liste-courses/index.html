@@ -240,9 +240,9 @@ function fromFields(fields) {
 }
 
 // Génère un ID stable pour chaque item (utilisé comme document ID Firestore)
-// On utilise un string ID préfixé pour éviter les collisions et les parseInt NaN
+// Format : "item" + numéro (sans underscore pour compatibilité Firestore)
 function makeItemId(id) {
-  return 'item_' + String(id);
+  return 'item' + String(id);
 }
 
 async function fbWrite(item) {
@@ -618,6 +618,11 @@ async function init() {
       });
       remote.forEach(t => {
         if (!t._fbId) return;
+        // Extraire l'ID depuis _fbId (item1, item2, etc.)
+        if (!t.id && t._fbId.startsWith('item')) {
+          const numPart = t._fbId.replace('item', '');
+          t.id = parseInt(numPart) || t._fbId;
+        }
         if (localMap[t._fbId]) {
           Object.assign(localMap[t._fbId], t);
         } else {

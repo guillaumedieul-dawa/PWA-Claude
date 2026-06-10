@@ -191,6 +191,29 @@ function setFbStatus(state, msg) {
   txt.textContent = msg || '';
 }
 
+async function testFirebase() {
+  const key = getFBKey();
+  if (!key) {
+    setFbStatus('err', '❌ Clé API vide (locker-tracker ⟳ BDD)');
+    return;
+  }
+  setFbStatus('spin', 'Test…');
+  try {
+    const r = await fetch(fbUrl('courses/items'), {method: 'GET'});
+    if (r.status === 401) {
+      setFbStatus('err', '⚠️ Clé API invalide ou expirée');
+    } else if (r.status === 403) {
+      setFbStatus('err', '⚠️ Permissions insuffisantes (règles Firestore)');
+    } else if (r.ok) {
+      setFbStatus('ok', '✓ Firebase OK');
+    } else {
+      setFbStatus('err', 'HTTP ' + r.status);
+    }
+  } catch(e) {
+    setFbStatus('err', 'Réseau: ' + e.message.substring(0, 20));
+  }
+}
+
 function toFields(obj) {
   const f = {};
   for (const k in obj) {
@@ -579,33 +602,36 @@ async function init() {
     if (btn) btn.textContent = cur === 'dark' ? '🌙' : cur === 'sepia' ? '📜' : '☀️';
   }
 
-  // Firebase sync
-  const remote = await fbLoadAll();
-  if (remote && remote.length > 0) {
-    // Merge : clé = _fbId (string stable) ou id (numérique)
-    const localMap = {};
-    D.items.forEach(t => {
-      const key = t._fbId || makeItemId(t.id);
-      t._fbId = key;
-      localMap[key] = t;
-    });
-    remote.forEach(t => {
-      if (!t._fbId) return; // ignorer les docs sans ID
-      if (localMap[t._fbId]) {
-        // Priorité au remote pour les champs métier, garder local pour done (conflit résolu côté local)
-        Object.assign(localMap[t._fbId], t);
-      } else {
-        localMap[t._fbId] = t;
-      }
-    });
-    D.items = Object.values(localMap).filter(x => x.nom).sort((a,b) => new Date(b.date||0) - new Date(a.date||0));
-    // Recalculer nextId
-    const maxId = D.items.reduce((m, t) => {
-      const n = typeof t.id === 'number' ? t.id : 0;
-      return Math.max(m, n);
-    }, 0);
-    D.nextId = Math.max(D.nextId, maxId + 1);
-    saveD(D); render();
+  // Test Firebase d'abord
+  await testFirebase();
+
+  // Puis sync si clé OK
+  const key = getFBKey();
+  if (key) {
+    const remote = await fbLoadAll();
+    if (remote && remote.length > 0) {
+      const localMap = {};
+      D.items.forEach(t => {
+        const key = t._fbId || makeItemId(t.id);
+        t._fbId = key;
+        localMap[key] = t;
+      });
+      remote.forEach(t => {
+        if (!t._fbId) return;
+        if (localMap[t._fbId]) {
+          Object.assign(localMap[t._fbId], t);
+        } else {
+          localMap[t._fbId] = t;
+        }
+      });
+      D.items = Object.values(localMap).filter(x => x.nom).sort((a,b) => new Date(b.date||0) - new Date(a.date||0));
+      const maxId = D.items.reduce((m, t) => {
+        const n = typeof t.id === 'number' ? t.id : 0;
+        return Math.max(m, n);
+      }, 0);
+      D.nextId = Math.max(D.nextId, maxId + 1);
+      saveD(D); render();
+    }
   }
 }
 init();

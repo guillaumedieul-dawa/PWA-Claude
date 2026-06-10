@@ -218,10 +218,17 @@ function toFields(obj) {
   const f = {};
   for (const k in obj) {
     const v = obj[k];
-    if (v === null || v === undefined) f[k] = {nullValue: null};
-    else if (typeof v === 'boolean')   f[k] = {booleanValue: v};
-    else if (typeof v === 'number')    f[k] = {integerValue: String(v)};
-    else                               f[k] = {stringValue: String(v)};
+    if (v === null || v === undefined) {
+      f[k] = {nullValue: null};
+    } else if (typeof v === 'boolean') {
+      f[k] = {booleanValue: v};
+    } else if (typeof v === 'number') {
+      // Firestore: pas de "numberValue", utiliser integerValue ou doubleValue
+      f[k] = Number.isInteger(v) ? {integerValue: String(v)} : {doubleValue: v};
+    } else {
+      // string par défaut
+      f[k] = {stringValue: String(v)};
+    }
   }
   return f;
 }
@@ -248,17 +255,26 @@ function makeItemId(id) {
 async function fbWrite(item) {
   const key = getFBKey();
   if (!key) {
-    setFbStatus('err', 'Firebase non configuré (clé manquante)');
+    setFbStatus('err', '❌ Clé API vide (locker-tracker ⟳ BDD)');
     return false;
   }
   const docId = item._fbId || makeItemId(item.id);
-  item._fbId = docId; // mémoriser
+  item._fbId = docId;
   setFbStatus('spin', 'Sync…');
+  
+  // Exclure les champs internes (commençant par _)
+  const itemToSave = {};
+  for (const k in item) {
+    if (!k.startsWith('_')) {
+      itemToSave[k] = item[k];
+    }
+  }
+  
   try {
-    const r = await fetch(fbUrl(FB_COLL + '/' + docId), {
+    const r = await fetch(fbUrl('courses/items/' + docId), {
       method: 'PATCH',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({fields: toFields(item)})
+      body: JSON.stringify({fields: toFields(itemToSave)})
     });
     if (!r.ok) {
       const err = await r.text();
@@ -269,7 +285,7 @@ async function fbWrite(item) {
     setFbStatus('ok', 'Synchronisé ✓');
     return true;
   } catch(e) {
-    setFbStatus('err', 'Erreur réseau: ' + e.message);
+    setFbStatus('err', 'Réseau: ' + e.message.substring(0, 30));
     return false;
   }
 }

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
@@ -9,455 +9,613 @@
 <meta name="apple-mobile-web-app-title" content="Liste de courses">
 <title>Liste de courses</title>
 <link rel="manifest" href="./manifest.json">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../themes.css?v=2">
-<script src="../theme.js?v=2"></script>
-
+<link rel="stylesheet" href="../themes.css">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fragment+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="../theme.js"></script>
 <style>
-:root { --w: #fff; --b: #000; }
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-body { padding: calc(var(--top) + 16px) var(--rm) calc(var(--bot) + 90px) var(--rm); font-family: 'Plus Jakarta Sans', sans-serif; user-select: none; -webkit-user-select: none; background: var(--bg); }
-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.hdr-title-block { display: flex; align-items: center; gap: 12px; }
-h1 { font-family: 'Bebas Neue', sans-serif; font-size: 42px; letter-spacing: 1px; color: var(--ob); line-height: 1; }
-.hdr-btns { display: flex; gap: 10px; align-items: center; }
-.circle-btn { width: 42px; height: 42px; border-radius: 50%; background: var(--sf); box-shadow: 0 2px 8px var(--sh); display: flex; align-items: center; justify-content: center; font-size: 18px; border: none; cursor: pointer; transition: transform 0.1s; text-decoration: none; }
-.circle-btn:active { transform: scale(0.92); }
-#syncDot { width: 12px; height: 12px; border-radius: 50%; background: #22c55e; transition: background 0.3s; }
-.chips-scroll { display: flex; gap: 8px; overflow-x: auto; padding: 4px 4px 12px 4px; margin: 0 -4px 4px -4px; scrollbar-width: none; }
-.chips-scroll::-webkit-scrollbar { display: none; }
-.chip { padding: 8px 16px; border-radius: 20px; background: var(--sf); color: var(--osv); font-size: 13px; font-weight: 600; white-space: nowrap; box-shadow: 0 2px 6px var(--sh); border: 1px solid transparent; cursor: pointer; }
-.chip.active { background: var(--pc); color: var(--opc); border-color: var(--p); }
-.add-box { background: var(--sf); padding: 12px; border-radius: 16px; box-shadow: 0 4px 14px var(--sh); margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px; }
-.add-row1 { display: flex; gap: 8px; align-items: center; }
-.add-box input, .add-box select { border: none; background: var(--s1); padding: 10px 12px; border-radius: 10px; font-family: inherit; font-size: 14px; font-weight: 500; color: var(--ob); outline: none; height: 42px; }
-.add-box input { flex: 1; min-width: 0; }
-.add-box select { width: 110px; font-size: 13px; color: var(--ob); font-weight: 600; background: var(--s1); }
-.add-box button { height: 42px; padding: 0 16px; border-radius: 10px; background: var(--p); color: var(--op); font-weight: 700; border: none; cursor: pointer; font-size: 14px; flex-shrink: 0; }
-.rayons-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-.rayon-opt { padding: 8px 2px; border-radius: 8px; background: var(--s1); text-align: center; font-size: 11px; font-weight: 600; color: var(--osv); cursor: pointer; border: 1px solid transparent; }
-.rayon-opt.active { background: var(--sc); color: var(--s); border-color: var(--s); }
-.rayon-group { margin-bottom: 14px; background: var(--sf); border-radius: 14px; box-shadow: 0 2px 8px var(--sh); overflow: hidden; }
-.rayon-header { padding: 10px 14px; background: var(--s1); color: var(--os); font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; }
-.rayon-header span.count { color: var(--osv); font-weight: 500; }
-.item-row-container { position: relative; overflow: hidden; background: var(--sf); }
-.item-row-container:not(:last-child)::after { content: ''; position: absolute; bottom: 0; left: 48px; right: 14px; height: 1px; background: var(--olv); z-index: 1; }
-.swipe-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: flex-end; padding-right: 20px; background: var(--cfb); color: var(--cf); font-size: 16px; font-weight: 700; z-index: 0; }
-.item-row { position: relative; z-index: 2; background: var(--sf); padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px; transform: translateX(0); transition: transform 0.15s ease-out; touch-action: pan-y; }
-.item-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
-.chk { width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--olv); display: flex; align-items: center; justify-content: center; color: var(--op); font-size: 12px; transition: all 0.1s; flex-shrink: 0; }
-.item-row.checked .chk { background: var(--s); border-color: var(--s); }
-.item-text { font-size: 14px; font-weight: 500; color: var(--ob); transition: all 0.1s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
-.item-row.checked .item-text { color: var(--osv); text-decoration: line-through; }
-.item-meta { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-.qte-badge { padding: 2px 6px; background: var(--s1); color: var(--osv); font-size: 11px; font-weight: 700; border-radius: 6px; }
-.shop-mini { font-size: 11px; font-weight: 600; color: var(--p); background: var(--pc); padding: 2px 6px; border-radius: 6px; }
-.user-badge { font-size: 10px; font-weight: 600; color: var(--osv); background: var(--s2); padding: 2px 6px; border-radius: 6px; }
-.modal-backdrop, .sheet-backdrop { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); z-index: 900; display: none; opacity: 0; transition: opacity 0.2s; touch-action: none; }
-.modal-backdrop.show, .sheet-backdrop.show { display: block; opacity: 1; }
-.modal-box { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -40%) scale(0.95); width: calc(100% - 32px); max-width: 360px; background: var(--sf); border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 901; display: none; padding: 20px; transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); }
-.modal-box.show { display: block; transform: translate(-50%, -50%) scale(1); }
-.modal-box h3 { font-size: 18px; font-weight: 700; color: var(--ob); margin-bottom: 16px; }
-.modal-form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
-.modal-form-group label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--osv); letter-spacing: 0.5px; }
-.modal-box input, .modal-box select { width: 100%; border: none; background: var(--s1); padding: 12px; border-radius: 10px; font-family: inherit; font-size: 14px; color: var(--ob); outline: none; }
-.qte-picker { display: flex; gap: 10px; align-items: center; }
-.qte-btn { width: 40px; height: 40px; border-radius: 10px; background: var(--s1); color: var(--ob); border: none; font-size: 18px; font-weight: 700; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-.qte-value { font-size: 16px; font-weight: 700; color: var(--ob); width: 30px; text-align: center; }
-.modal-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
-.btn-secondary { padding: 10px 16px; background: var(--s1); color: var(--osv); font-weight: 600; border-radius: 10px; border: none; font-size: 14px; }
-.btn-primary { padding: 10px 20px; background: var(--p); color: var(--op); font-weight: 700; border-radius: 10px; border: none; font-size: 14px; }
-.sheet { position: fixed; bottom: 0; left: 0; width: 100vw; background: var(--sf); border-radius: 24px 24px 0 0; box-shadow: 0 -10px 40px rgba(0,0,0,0.2); z-index: 901; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.1, 0.7, 0.1, 1); padding: 20px 20px calc(var(--bot) + 20px) 20px; pointer-events: auto; }
-.sheet.show { transform: translateY(0); }
-.sheet-header-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.sheet-header-title h3 { font-size: 18px; font-weight: 700; color: var(--ob); margin: 0; }
-.sheet-header-title span { font-size: 22px; color: var(--osv); cursor: pointer; padding: 4px; line-height: 1; }
-.sheet-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; max-height: 200px; overflow-y: auto; }
-.sheet-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--s1); border-radius: 10px; font-weight: 600; font-size: 13px; color: var(--ob); }
-.sheet-item .del { color: var(--cf); font-size: 16px; padding: 4px; cursor: pointer; }
-.sheet-add { display: flex; gap: 8px; }
-.sheet-add input { flex: 1; border: none; background: var(--s1); padding: 12px 14px; border-radius: 10px; font-family: inherit; font-size: 14px; color: var(--ob); outline: none; }
-.sheet-add button { padding: 0 16px; background: var(--p); color: var(--op); border-radius: 10px; border: none; font-weight: 700; font-size: 14px; }
+#app{max-width:520px;margin:0 auto;min-height:100dvh;padding-bottom:calc(var(--bot)+96px)}
+.tbar{position:sticky;top:0;z-index:100;background:var(--bg);padding:calc(var(--top)+16px) 20px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--olv)}
+.ihome{width:36px;height:36px;border-radius:10px;border:none;background:var(--s1);color:var(--os);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none;flex-shrink:0}
+.ihome:active{background:var(--s2)}
+.ttl{flex:1;min-width:0}
+.tlbl{font-size:10px;color:var(--osv);letter-spacing:.3px;font-weight:500}
+.th{font-family:'Bebas Neue',sans-serif!important;font-size:26px!important;letter-spacing:2px!important;color:var(--ob);line-height:1}
+.ibtn{width:36px;height:36px;border-radius:10px;border:none;background:var(--s1);color:var(--os);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;padding:0}
+.ibtn:active{background:var(--s2)}
+.qadd{padding:12px 20px 4px;display:flex}
+.qadd-in{flex:1;padding:11px 16px;border-radius:28px;border:1px solid var(--olv);background:var(--sf);color:var(--ob);font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;outline:none;transition:border-color .2s}
+.qadd-in:focus{border-color:var(--p)}
+.qadd-in::placeholder{color:var(--osv)}
+.prog-wrap{padding:8px 16px 4px}
+.prog-lbl{display:flex;justify-content:space-between;font-size:11px;color:var(--osv);margin-bottom:5px}
+.prog-bar{height:5px;border-radius:3px;background:var(--s2);overflow:hidden}
+.prog-fill{height:100%;border-radius:3px;background:var(--p);transition:width .4s}
+.chips{display:flex;gap:8px;padding:10px 20px 12px;overflow-x:auto;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;padding:6px 16px;border-radius:20px;border:1px solid var(--olv);background:transparent;color:var(--osv);font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;transition:all .15s}
+.chip.sel{background:var(--pc,rgba(0,0,0,.08));border-color:var(--p);color:var(--p);font-weight:600}
+.shop-chips{display:flex;gap:8px;padding:0 16px 8px;overflow-x:auto;scrollbar-width:none}
+.shop-chips::-webkit-scrollbar{display:none}
+.shop-chip{flex-shrink:0;padding:6px 12px;border-radius:8px;border:1px solid var(--olv);background:transparent;color:var(--osv);font-size:12px;cursor:pointer;white-space:nowrap}
+.shop-chip.sel{background:var(--pc);border-color:var(--p);color:var(--opc)}
+.ilist{padding:0 14px;display:flex;flex-direction:column;gap:6px}
+.icard{background:var(--sf);border-radius:var(--rm);padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 2px var(--sh);border:1px solid var(--olv);cursor:pointer;transition:all .15s;animation:fu .25s ease both}
+.icard.done{opacity:.45}
+.icard.done .iname{text-decoration:line-through;color:var(--osv)}
+.icard:active{transform:scale(.99)}
+.chk{width:22px;height:22px;border-radius:6px;border:2px solid var(--olv);flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.chk.done{background:var(--p);border-color:var(--p)}
+.ibody{flex:1;min-width:0}
+.iname{font-size:14px;color:var(--os);font-weight:600}
+.iqty{font-family:'Fragment Mono',monospace;font-size:11px;color:var(--osv);margin-top:2px}
+.iwho{font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;flex-shrink:0}
+.icard-actions{display:flex;gap:2px;flex-shrink:0}
+.icard-btn{padding:5px 6px;border-radius:8px;border:none;background:transparent;color:var(--osv);font-size:13px;cursor:pointer;opacity:.5}
+.icard-btn:active{opacity:1}
+.fab{position:fixed;bottom:calc(var(--bot)+80px);right:20px;width:56px;height:56px;border-radius:18px;background:var(--p);color:#fff;border:none;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,.2);transition:transform .15s;z-index:99;will-change:transform}
+.fab:active{transform:scale(.92)}
+.toast{position:fixed;bottom:calc(var(--bot)+160px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--ob);color:var(--bg);padding:12px 20px;border-radius:28px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;max-width:88vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.sov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center}
+.shtit{font-family:'Bebas Neue',sans-serif!important;font-size:22px!important;letter-spacing:2px!important;color:var(--ob);margin-bottom:20px}
+.slbl{font-size:11px;color:var(--osv);text-transform:uppercase;letter-spacing:.8px;margin:16px 0 6px;font-weight:600}
+.slbl.ft{margin-top:0}
+.fin{width:100%;padding:13px 16px;border-radius:12px;border:1px solid var(--olv);background:var(--s1);color:var(--ob);font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;outline:none;transition:border-color .2s;margin-bottom:4px;box-sizing:border-box}
+.fin:focus{border-color:var(--p);background:var(--sf)}
+.fin::placeholder{color:var(--osv)}
+.fsel{width:100%;padding:13px 16px;border-radius:12px;border:1px solid var(--olv);background:var(--s1);color:var(--ob);font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;appearance:none;outline:none;margin-bottom:4px;box-sizing:border-box}
+.bfill{width:100%;padding:14px;border-radius:28px;background:var(--p);color:#fff;border:none;font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:10px;box-sizing:border-box}
+.bfill:active{opacity:.85}
+.bout{width:100%;padding:13px;border-radius:28px;background:transparent;border:1px solid var(--olv);color:var(--osv);font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;cursor:pointer;margin-top:8px;box-sizing:border-box}
+.shop-del{padding:4px 10px;border:none;background:var(--cfb);color:var(--cf);border-radius:8px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px}
+.shop-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--olv)}
+.empty{text-align:center;padding:60px 24px}
+.eico{font-size:52px;margin-bottom:12px;opacity:.4}
+.etit{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;color:var(--ob);margin-bottom:6px}
+.esub{font-size:13px;color:var(--osv)}
+/* FB status bar */
+.fb-status{display:flex;align-items:center;gap:6px;padding:4px 20px 6px;font-size:11px;color:var(--osv);font-family:'Fragment Mono',monospace}
+.fb-dot{width:7px;height:7px;border-radius:50%;background:var(--olv);flex-shrink:0}
+.fb-dot.ok{background:#059669}
+.fb-dot.err{background:#dc2626}
+.fb-dot.spin{background:#f59e0b;animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes fu{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 </style>
 </head>
 <body>
-
-<header>
-  <div class="hdr-title-block">
-    <a href="../index.html" class="circle-btn">🔙</a>
-    <h1>Liste de courses</h1>
-  </div>
-  <div class="hdr-btns">
-    <div id="syncDot"></div>
-    <button class="circle-btn" onclick="openDebug()">🐞</button>
-    <button id="thbtn" class="circle-btn" onclick="window.toggleTheme()"></button>
-    <button class="circle-btn" onclick="openSheet()">🏪</button>
-  </div>
-</header>
-
-<div class="chips-scroll" id="chipsScroll"></div>
-
-<div class="add-box">
-  <div class="add-row1">
-    <input type="text" id="addInput" placeholder="Ex: 3 Pommes ou Lait..." autocomplete="off">
-    <select id="addShopSelect"></select>
-    <button onclick="addItem()">OK</button>
-  </div>
-  <div class="rayons-grid" id="rayonsGrid"></div>
-</div>
-
-<div id="listContainer"></div>
-
-<div class="sheet-backdrop" id="backdrop" onclick="closeSheet()"></div>
-<div class="sheet" id="sheet">
-  <div class="sheet-header-title">
-    <h3>Gérer les magasins</h3>
-    <span onclick="closeSheet()">❌</span>
-  </div>
-  <div class="sheet-list" id="sheetList"></div>
-  <div class="sheet-add">
-    <input type="text" id="newShopInput" placeholder="Nom du magasin..." autocomplete="off">
-    <button onclick="addShop()">Ajouter</button>
-  </div>
-</div>
-
-<div class="modal-backdrop" id="debugBackdrop" onclick="closeDebug()"></div>
-<div class="modal-box" id="debugModal">
-  <h3>🐞 Panneau de Diagnostic</h3>
-  <div id="debugContent" style="font-size:12px; font-family:monospace; background:var(--s1); padding:10px; border-radius:8px; margin-bottom:15px; word-break:break-all;">
+<div id="app">
+  <div class="tbar">
+    <a href="../index.html" class="ihome">🏠</a>
+    <div class="ttl">
+      <div class="tlbl">FamilyHub</div>
+      <div class="th">LISTE DE COURSES</div>
     </div>
-  <div class="modal-actions">
-    <button class="btn-secondary" onclick="purgeQueue()">Purger File</button>
-    <button class="btn-primary" onclick="closeDebug()">Fermer</button>
+    <button class="ibtn" data-action="openShopMgr" title="Gérer les magasins">🏪</button>
+    <button class="ibtn" id="thbtn" data-action="toggleTheme">🌙</button>
   </div>
+
+  <!-- FB status indicator -->
+  <div class="fb-status" id="fbStatusBar">
+    <div class="fb-dot" id="fbDot"></div>
+    <span id="fbStatusTxt">Firebase non configuré</span>
+  </div>
+
+  <div class="qadd">
+    <input class="qadd-in" id="qi" placeholder="Ajouter rapidement un article…">
+  </div>
+  <div class="prog-wrap" id="progWrap"></div>
+  <div class="chips">
+    <button class="chip sel" data-filter="all"  data-action="setFilter">Tout</button>
+    <button class="chip"     data-filter="todo" data-action="setFilter">À acheter</button>
+    <button class="chip"     data-filter="done" data-action="setFilter">Achetés</button>
+    <button class="chip"     data-filter="g"    data-action="setFilter">Guillaume</button>
+    <button class="chip"     data-filter="m"    data-action="setFilter">Michèle</button>
+  </div>
+  <div id="shopChips" class="shop-chips"></div>
+  <div id="IL"></div>
 </div>
 
-<div class="modal-backdrop" id="modalBackdrop" onclick="closeEditModal()"></div>
-<div class="modal-box" id="editModal">
-  <h3>📝 Modifier l'article</h3>
-  <input type="hidden" id="editId">
-  <div class="modal-form-group">
-    <label>Nom du produit</label>
-    <input type="text" id="editName" autocomplete="off">
-  </div>
-  <div class="modal-form-group">
-    <label>Quantité</label>
-    <div class="qte-picker">
-      <button class="qte-btn" onclick="changeEditQte(-1)">-</button>
-      <div class="qte-value" id="editQteValue">1</div>
-      <button class="qte-btn" onclick="changeEditQte(1)">+</button>
+<button class="fab" data-action="openAdd"><span style="pointer-events:none">＋</span></button>
+<div class="toast" id="toast"></div>
+
+<!-- SHEET AJOUT -->
+<div class="sov" id="shAdd">
+  <div id="shAddInner" style="background:var(--sf);border-radius:20px 20px 0 0;padding:28px 32px calc(var(--bot)+40px);width:100%;max-width:520px;box-sizing:border-box;max-height:92dvh;overflow-y:auto">
+    <div style="width:32px;height:4px;background:var(--olv);border-radius:2px;margin:0 auto 20px;cursor:pointer" data-action="closeAdd"></div>
+    <div class="shtit" id="shAddTitle">Ajouter un article</div>
+    <div class="slbl ft">Article</div>
+    <input class="fin" id="aNom" placeholder="Lait, pain, fromage…">
+    <div class="slbl">Quantité</div>
+    <input class="fin" id="aQty" placeholder="2 litres, 500g… (optionnel)">
+    <div class="slbl">Ajouté par</div>
+    <select class="fsel" id="aWho">
+      <option value="Guillaume">Guillaume</option>
+      <option value="Michele">Michèle</option>
+    </select>
+    <div class="slbl">Magasin</div>
+    <select class="fsel" id="aShop"><option value="">— Choisir —</option></select>
+    <div class="slbl" style="display:flex;justify-content:space-between;align-items:center">
+      Note <span style="font-size:11px;color:var(--osv);text-transform:none">(optionnel)</span>
     </div>
-  </div>
-  <div class="modal-form-group">
-    <label>Magasin assigné</label>
-    <select id="editShopSelect"></select>
-  </div>
-  <div class="modal-actions">
-    <button class="btn-secondary" onclick="closeEditModal()">Annuler</button>
-    <button class="btn-primary" onclick="saveEditModal()">Enregistrer</button>
+    <input class="fin" id="aItemNote" placeholder="Marque, remarque…">
+    <button class="bfill" data-action="saveItem">Enregistrer</button>
+    <button class="bout"  data-action="closeAdd">Annuler</button>
   </div>
 </div>
 
-<script src="/firebaseSync.js"></script>
-<script src="../firebaseSync.js"></script>
-<script src="./fbSync.js"></script>
+<!-- SHEET MAGASINS -->
+<div class="sov" id="shShops">
+  <div style="background:var(--sf);border-radius:20px 20px 0 0;padding:28px 32px calc(var(--bot)+40px);width:100%;max-width:520px;box-sizing:border-box;max-height:92dvh;overflow-y:auto">
+    <div style="width:32px;height:4px;background:var(--olv);border-radius:2px;margin:0 auto 20px;cursor:pointer" data-action="closeShops"></div>
+    <div class="shtit">Mes magasins</div>
+    <div class="slbl ft">Ajouter un magasin</div>
+    <div style="display:flex;gap:8px">
+      <input class="fin" id="newShopName" placeholder="Natureo, Picard…" style="margin-bottom:0;flex:1">
+      <button class="bfill" data-action="addShop" style="width:auto;padding:14px 20px;margin-top:0">＋</button>
+    </div>
+    <div class="slbl" style="margin-top:16px">Liste actuelle</div>
+    <div id="shopList"></div>
+    <button class="bout" data-action="closeShops" style="margin-top:16px">Fermer</button>
+  </div>
+</div>
 
 <script>
-// ============================================================================
-// SYSTEME DE DIAGNOSTIC DEBUG
-// ============================================================================
-window.showDebugError = function(msg) {
-    if(msg.includes("INTROUVABLE")) alert(msg);
-    localStorage.setItem('fh_last_error', new Date().toLocaleTimeString() + " - " + msg);
-    if(document.getElementById('debugModal').classList.contains('show')) renderDebug();
-};
+'use strict';
+const SK       = 'fh_courses';
+const SK_SHOPS = 'fh_shops';
+const WHO_COLORS = {Guillaume:'#D7E3FF', Michele:'#ECDCFF'};
+const WHO_TC     = {Guillaume:'#001849', Michele:'#1D0160'};
 
-function openDebug() {
-    document.getElementById('debugBackdrop').classList.add('show');
-    document.getElementById('debugModal').classList.add('show');
-    renderDebug();
-}
+// ── Firebase ──────────────────────────────────────────────────────────────────
+const FB_PROJECT = 'familyhub-colis-8abbd';
+const FB_COLL    = 'meta/courses/items';
 
-function closeDebug() {
-    document.getElementById('debugBackdrop').classList.remove('show');
-    document.getElementById('debugModal').classList.remove('show');
-}
-
-function renderDebug() {
-    const d = document.getElementById('debugContent');
-    if(!d) return;
-    let keyStat = "❌ Absente (Config nécessaire)";
-    try { 
-        let lt = JSON.parse(localStorage.getItem('lt_fb')); 
-        if(lt && lt.apiKey) keyStat = "✅ Présente (" + lt.apiKey.substring(0,6) + "...)"; 
-    } catch(e) {}
-    
-    let qCount = 0;
-    try { let q = JSON.parse(localStorage.getItem('fb_wq')); if(q) qCount = q.length; } catch(e){}
-    let err = localStorage.getItem('fh_last_error') || "Aucune erreur enregistrée";
-    
-    d.innerHTML = `
-        <strong>Clé API lt_fb:</strong><br> ${keyStat}<br><br>
-        <strong>File d'attente locale:</strong><br> ${qCount} requête(s) bloquée(s)<br><br>
-        <strong>Dernier Journal Système:</strong><br>
-        <span style="color:#ef4444;">${err}</span>
-    `;
-}
-
-function purgeQueue() {
-    localStorage.removeItem('fb_wq');
-    localStorage.removeItem('fh_last_error');
-    alert("File d'attente et logs purgés !");
-    renderDebug();
-}
-
-// ============================================================================
-// PONT UNIVERSEL DE BASE DE DONNÉES
-// ============================================================================
-const DB = {
-  readAll: async function(coll, cb) {
-    if (window.FBSync && typeof window.FBSync.subscribe === 'function') {
-      window.FBSync.subscribe(coll, cb);
-    } else {
-      let fetchFn = window.fbReadAll || (window.FBSync && window.FBSync.fbReadAll);
-      if (typeof fetchFn === 'function') {
-        try { let res = await fetchFn(coll); if (res) cb(res); } catch(e) { console.error(e); }
-      }
-    }
-  },
-  write: function(coll, id, data) {
-    if (window.FBSync && typeof window.FBSync.write === 'function') {
-      window.FBSync.write(coll, id, data);
-      if (window.FBSync.flush) window.FBSync.flush();
-    } else {
-      let writeFn = window.fbWrite || (window.FBSync && window.FBSync.fbWrite);
-      if (typeof writeFn === 'function') writeFn(coll, id, data);
-    }
-  },
-  delete: function(coll, id) {
-    if (window.FBSync && typeof window.FBSync.delete === 'function') {
-      window.FBSync.delete(coll, id);
-      if (window.FBSync.flush) window.FBSync.flush();
-    } else {
-      let delFn = window.fbDelete || (window.FBSync && window.FBSync.fbDelete);
-      if (typeof delFn === 'function') delFn(coll, id);
-    }
-  }
-};
-
-// ============================================================================
-// LOGIQUE APPLICATIVE
-// ============================================================================
-let D = { items: [] };
-let shops = ['Supermarché', 'Marché', 'Boulangerie'];
-let activeShopFilter = 'Tous';
-let selectedRayonIdx = 0;
-
-const COLL_ITEMS = 'courses';
-const COLL_CONF = 'courses_config';
-const DOC_SHOPS = 'magasins_shared';
-
-const RAYONS = [
-  { n: 'Frais / Légumes', e: '🥦' }, { n: 'Épicerie', e: '🍝' },
-  { n: 'Boucherie / Poisson', e: '🥩' }, { n: 'Produits Laitiers', e: '🧀' },
-  { n: 'Surgelés', e: '❄️' }, { n: 'Boissons', e: '💧' },
-  { n: 'Hygiène / Entretien', e: '🧼' }, { n: 'Autre', e: '📦' }
-];
-
-function getFamilyUser() {
+function getFBKey() {
   try {
-    let c = JSON.parse(localStorage.getItem('lt_fb'));
-    if (c && c.userUser) return c.userUser;
-    let u = localStorage.getItem('fh_user');
-    return u || 'Famille';
-  } catch(e) { return 'Famille'; }
+    const s = JSON.parse(localStorage.getItem('lt_fb'));
+    return s && s.apiKey ? s.apiKey : '';
+  } catch { return ''; }
 }
 
-function renderShopChips() {
-  const container = document.getElementById('chipsScroll');
-  if (!container) return;
-  let html = `<div class="chip ${activeShopFilter === 'Tous' ? 'active' : ''}" onclick="setShopFilter('Tous')">🛒 Tous</div>`;
-  shops.forEach(s => {
-    if (typeof s === 'string') html += `<div class="chip ${activeShopFilter === s ? 'active' : ''}" onclick="setShopFilter('${s.replace(/'/g, "\\'")}')">🏪 ${s}</div>`;
-  });
-  container.innerHTML = html;
-  renderFormShopSelects();
+function fbUrl(path) {
+  return 'https://firestore.googleapis.com/v1/projects/' + FB_PROJECT +
+    '/databases/(default)/documents/' + path + '?key=' + getFBKey();
 }
 
-function renderFormShopSelects() {
-  const addSelect = document.getElementById('addShopSelect');
-  const editSelect = document.getElementById('editShopSelect');
-  let optionsHtml = '';
-  shops.forEach(s => { if (typeof s === 'string') optionsHtml += `<option value="${s}">${s}</option>`; });
-  if (addSelect) { addSelect.innerHTML = optionsHtml; if (activeShopFilter !== 'Tous' && shops.includes(activeShopFilter)) addSelect.value = activeShopFilter; }
-  if (editSelect) editSelect.innerHTML = optionsHtml;
+function setFbStatus(state, msg) {
+  var dot = document.getElementById('fbDot');
+  var txt = document.getElementById('fbStatusTxt');
+  if (!dot || !txt) return;
+  dot.className = 'fb-dot' + (state === 'ok' ? ' ok' : state === 'err' ? ' err' : state === 'spin' ? ' spin' : '');
+  txt.textContent = msg || '';
 }
 
-function setShopFilter(s) { activeShopFilter = s; renderShopChips(); render(); }
-function renderRayonsGrid() {
-  const container = document.getElementById('rayonsGrid');
-  if (!container) return;
-  let html = '';
-  RAYONS.forEach((r, i) => { html += `<div class="rayon-opt ${selectedRayonIdx === i ? 'active' : ''}" onclick="selectRayon(${i})">${r.e}<br>${r.n.split(' ')[0]}</div>`; });
-  container.innerHTML = html;
-}
-function selectRayon(i) { selectedRayonIdx = i; renderRayonsGrid(); }
-
-function parseInput(s) {
-  s = s.trim();
-  let m = s.match(/^([0-9]+)\s*(x|X)?\s+(.+)$/);
-  return m ? { qte: parseInt(m[1]), name: m[3].trim() } : { qte: 1, name: s };
+function toFields(obj) {
+  const f = {};
+  for (const k in obj) {
+    const v = obj[k];
+    if (v === null || v === undefined) f[k] = {nullValue: null};
+    else if (typeof v === 'boolean')   f[k] = {booleanValue: v};
+    else if (typeof v === 'number')    f[k] = {integerValue: String(v)};
+    else                               f[k] = {stringValue: String(v)};
+  }
+  return f;
 }
 
-function addItem() {
-  let i = document.getElementById('addInput'), s = document.getElementById('addShopSelect');
-  if (!i || !i.value.trim()) return;
-  let p = parseInput(i.value), id = 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
-  let item = { id: id, name: p.name, qte: p.qte, rayon: RAYONS[selectedRayonIdx].n, shop: s && s.value ? s.value : (shops[0] || 'Supermarché'), checked: false, user: getFamilyUser(), date: new Date().toISOString() };
-  D.items.unshift(item);
-  i.value = '';
-  saveLocal();
-  render();
-  DB.write(COLL_ITEMS, id, item);
+function fromFields(fields) {
+  if (!fields) return {};
+  const obj = {};
+  for (const k in fields) {
+    const v = fields[k];
+    if ('booleanValue' in v)      obj[k] = v.booleanValue;
+    else if ('integerValue' in v) obj[k] = parseInt(v.integerValue);
+    else if ('stringValue' in v)  obj[k] = v.stringValue;
+    else obj[k] = null;
+  }
+  return obj;
+}
+
+// Génère un ID stable pour chaque item (utilisé comme document ID Firestore)
+// On utilise un string ID préfixé pour éviter les collisions et les parseInt NaN
+function makeItemId(id) {
+  return 'item_' + String(id);
+}
+
+async function fbWrite(item) {
+  const key = getFBKey();
+  if (!key) {
+    setFbStatus('err', 'Firebase non configuré (clé manquante)');
+    return false;
+  }
+  const docId = item._fbId || makeItemId(item.id);
+  item._fbId = docId; // mémoriser
+  setFbStatus('spin', 'Sync…');
+  try {
+    const r = await fetch(fbUrl(FB_COLL + '/' + docId), {
+      method: 'PATCH',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({fields: toFields(item)})
+    });
+    if (!r.ok) {
+      const err = await r.text();
+      setFbStatus('err', 'Firestore ' + r.status);
+      console.warn('fbWrite error', r.status, err);
+      return false;
+    }
+    setFbStatus('ok', 'Synchronisé ✓');
+    return true;
+  } catch(e) {
+    setFbStatus('err', 'Erreur réseau: ' + e.message);
+    return false;
+  }
+}
+
+async function fbDelete(id, fbId) {
+  const key = getFBKey();
+  if (!key) return false;
+  const docId = fbId || makeItemId(id);
+  try {
+    await fetch(fbUrl(FB_COLL + '/' + docId), {method: 'DELETE'});
+    return true;
+  } catch(e) {
+    console.warn('fbDelete', e);
+    return false;
+  }
+}
+
+async function fbLoadAll() {
+  const key = getFBKey();
+  if (!key) {
+    setFbStatus('', 'Firebase non configuré');
+    return null;
+  }
+  setFbStatus('spin', 'Chargement…');
+  try {
+    const r = await fetch(fbUrl(FB_COLL));
+    if (!r.ok) {
+      setFbStatus('err', 'Firestore ' + r.status + ' — vérifiez la clé API');
+      return null;
+    }
+    const data = await r.json();
+    const docs = (data.documents || []).map(doc => {
+      const obj = fromFields(doc.fields);
+      // Récupérer l'ID depuis le chemin du document
+      obj._fbId = doc.name.split('/').pop();
+      // Si id numérique absent, extraire depuis _fbId
+      if (!obj.id && obj._fbId && obj._fbId.startsWith('item_')) {
+        obj.id = parseInt(obj._fbId.replace('item_', '')) || obj._fbId;
+      }
+      return obj;
+    });
+    setFbStatus('ok', docs.length + ' articles Firebase');
+    return docs;
+  } catch(e) {
+    setFbStatus('err', 'Erreur: ' + e.message);
+    return null;
+  }
+}
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let D       = loadD();
+let shops   = loadShops();
+let shopFlt = 'all';
+let flt     = 'all';
+let editId  = null;
+let _tt;
+
+function loadD() {
+  try { const d = JSON.parse(localStorage.getItem(SK)); if (d && d.items) return d; } catch(e) {}
+  return {items: [], nextId: 1};
+}
+function saveD(d) { localStorage.setItem(SK, JSON.stringify(d)); }
+function loadShops() {
+  try { const s = JSON.parse(localStorage.getItem(SK_SHOPS)); if (Array.isArray(s)) return s; } catch(e) {}
+  return ['Carrefour','Super U','Picard','Natureo','Lidl','Biocoop'];
+}
+function saveShops(s) { shops = s; localStorage.setItem(SK_SHOPS, JSON.stringify(s)); }
+
+// ── Actions ───────────────────────────────────────────────────────────────────
+function quickAdd() {
+  const el = document.getElementById('qi');
+  const v = el.value.trim(); if (!v) return;
+  const item = {
+    id: D.nextId++,
+    nom: v, qty: '', who: 'Guillaume', shop: '', note: '',
+    done: false, date: new Date().toISOString()
+  };
+  item._fbId = makeItemId(item.id);
+  D.items.push(item);
+  saveD(D); render(); el.value = '';
+  fbWrite(item).then(ok => { if (!ok && getFBKey()) showToast('⚠️ Sync Firebase échouée'); });
+  showToast('✓ Ajouté');
+}
+
+function openAddSheet() {
+  editId = null;
+  document.getElementById('shAddTitle').textContent = 'Ajouter un article';
+  document.getElementById('aNom').value = '';
+  document.getElementById('aQty').value = '';
+  document.getElementById('aWho').value = 'Guillaume';
+  document.getElementById('aItemNote').value = '';
+  rebuildShopSelect('');
+  openSheet('shAdd');
+}
+
+function rebuildShopSelect(selected) {
+  const el = document.getElementById('aShop');
+  if (!el) return;
+  el.innerHTML = '<option value="">— Choisir un magasin —</option>' +
+    shops.map(s => '<option value="'+s+'"'+(s===selected?' selected':'')+'>'+s+'</option>').join('');
+}
+
+function openEditSheet(id) {
+  const item = D.items.find(x => x.id === id); if (!item) return;
+  editId = id;
+  document.getElementById('shAddTitle').textContent = 'Modifier l\'article';
+  document.getElementById('aNom').value = item.nom;
+  document.getElementById('aQty').value = item.qty || '';
+  document.getElementById('aWho').value = item.who;
+  document.getElementById('aItemNote').value = item.note || '';
+  rebuildShopSelect(item.shop || '');
+  openSheet('shAdd');
+}
+
+function saveItem() {
+  const nom = document.getElementById('aNom').value.trim();
+  if (!nom) { showToast('⚠️ Saisissez un article'); return; }
+  const qty  = document.getElementById('aQty').value.trim();
+  const who  = document.getElementById('aWho').value;
+  const note = document.getElementById('aItemNote').value.trim();
+  const shop = document.getElementById('aShop').value;
+  if (!shop) { showToast('⚠️ Sélectionnez un magasin'); return; }
+
+  if (editId !== null) {
+    const item = D.items.find(x => x.id === editId); if (!item) return;
+    item.nom = nom; item.qty = qty; item.who = who; item.note = note; item.shop = shop;
+    if (!item._fbId) item._fbId = makeItemId(item.id);
+    fbWrite(item);
+    showToast('✓ Article modifié');
+  } else {
+    const item = {
+      id: D.nextId++, nom, qty, who, note, shop,
+      done: false, date: new Date().toISOString()
+    };
+    item._fbId = makeItemId(item.id);
+    D.items.push(item);
+    fbWrite(item);
+    showToast('✓ Ajouté à la liste');
+  }
+  saveD(D); render(); closeSheet('shAdd');
 }
 
 function toggleItem(id) {
-  let i = D.items.find(x => x.id === id);
-  if (i) { i.checked = !i.checked; i.user = getFamilyUser(); saveLocal(); render(); DB.write(COLL_ITEMS, id, i); }
+  const t = D.items.find(x => x.id === id); if (!t) return;
+  t.done = !t.done;
+  saveD(D); render();
+  fbWrite(t);
 }
 
-function openEditModal(id) {
-  let i = D.items.find(x => x.id === id);
-  if (!i) return;
-  document.getElementById('editId').value = id;
-  document.getElementById('editName').value = i.name;
-  document.getElementById('editQteValue').textContent = i.qte;
-  document.getElementById('editShopSelect').value = i.shop || shops[0];
-  document.getElementById('modalBackdrop').classList.add('show');
-  document.getElementById('editModal').classList.add('show');
-}
-function closeEditModal() { document.getElementById('modalBackdrop').classList.remove('show'); document.getElementById('editModal').classList.remove('show'); }
-function changeEditQte(a) { let e = document.getElementById('editQteValue'), c = parseInt(e.textContent) || 1; c += a; if (c < 1) c = 1; e.textContent = c; }
-function saveEditModal() {
-  let id = document.getElementById('editId').value, i = D.items.find(x => x.id === id);
-  if (i) { i.name = document.getElementById('editName').value.trim() || i.name; i.qte = parseInt(document.getElementById('editQteValue').textContent) || 1; i.shop = document.getElementById('editShopSelect').value; i.user = getFamilyUser(); i.date = new Date().toISOString(); saveLocal(); render(); DB.write(COLL_ITEMS, id, i); }
-  closeEditModal();
+function delItem(id) {
+  const item = D.items.find(x => x.id === id);
+  D.items = D.items.filter(x => x.id !== id);
+  saveD(D); render();
+  fbDelete(id, item && item._fbId);
 }
 
-function deleteItem(id) { D.items = D.items.filter(x => x.id !== id); saveLocal(); render(); DB.delete(COLL_ITEMS, id); }
+function clearDone() {
+  const n = D.items.filter(x => x.done).length; if (!n) return;
+  if (confirm('Supprimer les ' + n + ' article(s) achetés ?')) {
+    const toDel = D.items.filter(x => x.done);
+    D.items = D.items.filter(x => !x.done);
+    saveD(D); render();
+    toDel.forEach(item => fbDelete(item.id, item._fbId));
+    showToast('✓ ' + n + ' article(s) supprimés');
+  }
+}
+
+// ── Filtrage & rendu ──────────────────────────────────────────────────────────
+function getFilt() {
+  let items = [...D.items];
+  if      (flt === 'todo') items = items.filter(x => !x.done);
+  else if (flt === 'done') items = items.filter(x =>  x.done);
+  else if (flt === 'g')    items = items.filter(x => x.who === 'Guillaume');
+  else if (flt === 'm')    items = items.filter(x => x.who === 'Michele');
+  if (shopFlt !== 'all')   items = items.filter(x => x.shop === shopFlt);
+  return items;
+}
+
+function renderProg() {
+  const total = D.items.length;
+  const done  = D.items.filter(x => x.done).length;
+  if (!total) { document.getElementById('progWrap').innerHTML = ''; return; }
+  const pct = Math.round(done / total * 100);
+  document.getElementById('progWrap').innerHTML =
+    '<div class="prog-lbl"><span>'+done+'/'+total+' articles</span><span>'+pct+'%</span></div>' +
+    '<div class="prog-bar"><div class="prog-fill" style="width:'+pct+'%"></div></div>';
+}
 
 function render() {
-  let c = document.getElementById('listContainer');
-  if (!c) return;
-  c.innerHTML = '';
-  if (!D.items) D.items = [];
-  let f = activeShopFilter !== 'Tous' ? D.items.filter(i => i && i.shop === activeShopFilter) : D.items;
-  let g = {};
-  RAYONS.forEach(r => g[r.n] = []);
-  f.forEach(i => { if (i && i.rayon && g[i.rayon]) g[i.rayon].push(i); });
-  RAYONS.forEach(r => {
-    let x = g[r.n];
-    if (!x || !x.length) return;
-    x.sort((a, b) => (a.checked ? 1 : 0) - (b.checked ? 1 : 0));
-    let b = document.createElement('div');
-    b.className = 'rayon-group';
-    let u = x.filter(i => !i.checked).length;
-    b.innerHTML = `<div class="rayon-header"><span>${r.e} &nbsp;${r.n}</span><span class="count">${u} / ${x.length}</span></div>`;
-    x.forEach(i => {
-      let rc = document.createElement('div');
-      rc.className = 'item-row-container';
-      let ud = i.user ? `<div class="user-badge">${i.user}</div>` : '';
-      rc.innerHTML = `<div class="swipe-bg">🗑️ Supprimer</div><div class="item-row ${i.checked ? 'checked' : ''}" id="row_${i.id}"><div class="item-left"><div class="chk" onclick="toggleItem('${i.id}')">${i.checked ? '✓' : ''}</div><div class="item-text" onclick="openEditModal('${i.id}')">${i.name}</div></div><div class="item-meta">${ud}${i.qte > 1 ? `<div class="qte-badge" onclick="openEditModal('${i.id}')">x${i.qte}</div>` : ''}${activeShopFilter === 'Tous' ? `<div class="shop-mini">${i.shop || ''}</div>` : ''}</div></div>`;
-      setupSwipe(rc, i.id);
-      b.appendChild(rc);
-    });
-    c.appendChild(b);
-  });
-}
-
-function setupSwipe(c, id) {
-  let r = c.querySelector('.item-row');
-  if (!r) return;
-  let sx = 0, cx = 0, sw = false;
-  r.addEventListener('touchstart', e => { sx = e.touches[0].clientX; sw = true; r.style.transition = 'none'; }, { passive: true });
-  r.addEventListener('touchmove', e => { if (!sw) return; cx = e.touches[0].clientX - sx; if (cx > 0) cx = 0; if (cx < -120) cx = -120; r.style.transform = `translateX(${cx}px)`; }, { passive: true });
-  r.addEventListener('touchend', () => { sw = false; r.style.transition = 'transform 0.15s ease-out'; if (cx < -70) { r.style.transform = 'translateX(-100%)'; setTimeout(() => deleteItem(id), 140); } else { r.style.transform = 'translateX(0)'; } cx = 0; });
-}
-
-function openSheet() { document.getElementById('backdrop').classList.add('show'); document.getElementById('sheet').classList.add('show'); renderSheetList(); }
-function closeSheet() { document.getElementById('backdrop').classList.remove('show'); document.getElementById('sheet').classList.remove('show'); }
-function renderSheetList() {
-  let c = document.getElementById('sheetList');
-  if (!c) return;
-  c.innerHTML = '';
-  shops.forEach((s, i) => { if (typeof s === 'string') c.innerHTML += `<div class="sheet-item"><span>🏪 ${s}</span>${shops.length > 1 ? `<span class="del" onclick="deleteShop(${i})">🗑️</span>` : ''}</div>`; });
-}
-function syncShops() { saveShopsLocal(shops); DB.write(COLL_CONF, DOC_SHOPS, { id: DOC_SHOPS, payload: JSON.stringify(shops) }); }
-function addShop() {
-  let i = document.getElementById('newShopInput');
-  if (!i) return;
-  let v = i.value.trim();
-  if (v && !shops.includes(v)) { shops.push(v); i.value = ''; renderSheetList(); renderShopChips(); syncShops(); }
-}
-function deleteShop(i) {
-  let d = shops[i];
-  shops.splice(i, 1);
-  if (activeShopFilter === d) activeShopFilter = 'Tous';
-  renderSheetList();
-  renderShopChips();
-  render();
-  syncShops();
-}
-function saveShopsLocal(a) { localStorage.setItem('fh_courses_shops', JSON.stringify(a)); }
-function saveLocal() { localStorage.setItem('fh_courses_data', JSON.stringify(D)); }
-
-function init() {
-  try {
-    let s = localStorage.getItem('fh_courses_shops');
-    if (s) shops = JSON.parse(s);
-    let d = localStorage.getItem('fh_courses_data');
-    if (d) D = JSON.parse(d);
-  } catch(e) {}
-  
-  // AUTO-AMORÇAGE si vide
-  if (!Array.isArray(shops) || shops.length === 0) {
-      shops = ['Supermarché'];
-      saveShopsLocal(shops);
-      DB.write(COLL_CONF, DOC_SHOPS, { id: DOC_SHOPS, payload: JSON.stringify(shops) });
+  renderProg();
+  const items = getFilt();
+  const el = document.getElementById('IL');
+  if (!items.length) {
+    el.innerHTML = '<div class="ilist"><div class="empty"><div class="eico">🛒</div>' +
+      '<div class="etit">'+(flt==='done'?'Aucun achat':'Liste vide')+'</div>' +
+      '<div class="esub">Appuyez sur + pour ajouter un article</div></div></div>';
+    return;
   }
-  
-  if (!D || !D.items) D = { items: [] };
-
-  renderShopChips();
-  renderRayonsGrid();
-  render();
-
-  DB.readAll(COLL_ITEMS, r => {
-    if (Array.isArray(r)) {
-      let c = r.filter(i => i._fbId !== DOC_SHOPS && i.id !== DOC_SHOPS);
-      let m = {};
-      if (D.items) D.items.forEach(t => { if (t && t.id) m[t.id] = t; });
-      c.forEach(t => { let id = t.id || t._fbId; if (id) { t.id = id; m[id] = t; } });
-      D.items = Object.values(m).sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
-      saveLocal();
-      render();
-    }
+  items.sort((a,b) => a.done - b.done);
+  const doneCnt = items.filter(x => x.done).length;
+  let html = '<div class="ilist">';
+  items.forEach((item, i) => {
+    html += '<div class="icard'+(item.done?' done':'')+'" data-action="toggleItem" data-id="'+item.id+'" style="animation-delay:'+i*.02+'s">' +
+      '<div class="chk'+(item.done?' done':'')+'">'+
+        (item.done?'<span style="color:#fff;font-size:12px">✓</span>':'')+
+      '</div>'+
+      '<div class="ibody">'+
+        '<div class="iname">'+item.nom+'</div>'+
+        (item.qty?'<div class="iqty">'+item.qty+'</div>':'')+
+      '</div>'+
+      '<span class="iwho" style="background:'+(WHO_COLORS[item.who]||'#E6EBF0')+';color:'+(WHO_TC[item.who]||'#42474C')+'">'+(item.who==='Michele'?'M':'G')+'</span>'+
+      '<div class="icard-actions">'+
+        '<button class="icard-btn" data-action="editItem" data-id="'+item.id+'" title="Modifier">✏️</button>'+
+        '<button class="icard-btn" data-action="delItem"  data-id="'+item.id+'" title="Supprimer">🗑</button>'+
+      '</div>'+
+    '</div>';
   });
-
-  DB.readAll(COLL_CONF, r => {
-    if (Array.isArray(r)) {
-      let d = r.find(c => c.id === DOC_SHOPS || c._fbId === DOC_SHOPS);
-      if (d && d.payload) {
-        try {
-          let s = JSON.parse(d.payload);
-          if (Array.isArray(s) && s.length > 0) { shops = s; saveShopsLocal(shops); renderShopChips(); render(); }
-        } catch(e) {}
-      }
-    }
-  });
+  html += '</div>';
+  if (doneCnt > 0) {
+    html += '<button data-action="clearDone" style="display:flex;align-items:center;justify-content:center;margin:10px 14px;padding:11px;border-radius:14px;border:1px solid var(--olv);background:transparent;color:var(--osv);font-family:\'Plus Jakarta Sans\',sans-serif;font-size:13px;cursor:pointer;width:calc(100% - 28px)">🗑 Supprimer les '+doneCnt+' article(s) achetés</button>';
+  }
+  el.innerHTML = html;
 }
 
-if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { init(); }
+function renderShopChips() {
+  const el = document.getElementById('shopChips');
+  if (!el) return;
+  el.innerHTML = '<button class="shop-chip'+(shopFlt==='all'?' sel':'')+'" data-action="setShopFilter" data-shop="all">Tous 🏪</button>' +
+    shops.map(s => '<button class="shop-chip'+(shopFlt===s?' sel':'')+'" data-action="setShopFilter" data-shop="'+s+'">'+s+'</button>').join('');
+  const ml = document.getElementById('shopList');
+  if (ml) {
+    ml.innerHTML = shops.map(s =>
+      '<div class="shop-item"><span>'+s+'</span><button class="shop-del" data-action="delShop" data-shop="'+s+'">✕</button></div>'
+    ).join('');
+  }
+}
+
+// ── Sheet helpers ─────────────────────────────────────────────────────────────
+function openSheet(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;';
+  void el.offsetHeight;
+  try { document.body.style.overflow = 'hidden'; } catch(e) {}
+}
+function closeSheet(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.display = 'none';
+  try { document.body.style.overflow = ''; } catch(e) {}
+}
+
+function showToast(m) {
+  const t = document.getElementById('toast');
+  t.textContent = m; t.classList.add('show');
+  clearTimeout(_tt); _tt = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function findAction(elem) {
+  var el = elem;
+  while (el && el !== document) {
+    if (el.nodeType === 1 && el.getAttribute && el.getAttribute('data-action')) return el;
+    el = el.parentNode;
+  }
+  return null;
+}
+
+// ── Dispatcher ────────────────────────────────────────────────────────────────
+document.addEventListener('click', function(e) {
+  const el = findAction(e.target); if (!el) return;
+  const action = el.getAttribute('data-action');
+  const ds = el.dataset;
+
+  switch (action) {
+    case 'toggleTheme': window.toggleTheme && window.toggleTheme(); break;
+    case 'openAdd':     openAddSheet(); break;
+    case 'closeAdd':    closeSheet('shAdd'); break;
+    case 'openShopMgr': renderShopChips(); openSheet('shShops'); break;
+    case 'closeShops':  closeSheet('shShops'); break;
+    case 'setFilter':
+      flt = ds.filter || 'all';
+      document.querySelectorAll('.chip').forEach(b => b.classList.remove('sel'));
+      el.classList.add('sel'); render(); break;
+    case 'saveItem':    saveItem(); break;
+    case 'toggleItem':  toggleItem(parseInt(ds.id)); break;
+    case 'editItem':
+      e.stopPropagation();
+      openEditSheet(parseInt(ds.id)); break;
+    case 'delItem':
+      e.stopPropagation();
+      delItem(parseInt(ds.id)); break;
+    case 'clearDone':   clearDone(); break;
+    case 'setShopFilter':
+      shopFlt = ds.shop || 'all';
+      document.querySelectorAll('.shop-chip').forEach(b => b.classList.remove('sel'));
+      el.classList.add('sel'); render(); break;
+    case 'addShop': {
+      const sv = document.getElementById('newShopName');
+      if (sv) {
+        const sn = sv.value.trim();
+        if (sn && !shops.includes(sn)) { shops.push(sn); saveShops(shops); renderShopChips(); sv.value = ''; showToast('✓ Magasin ajouté'); }
+        else showToast(sn ? 'Magasin déjà présent' : '⚠️ Saisissez un nom');
+      }
+      break;
+    }
+    case 'delShop': {
+      shops = shops.filter(x => x !== ds.shop); saveShops(shops); renderShopChips(); render(); showToast('Magasin supprimé');
+      break;
+    }
+  }
+});
+
+document.addEventListener('click', function(e) {
+  if (e.target && e.target.classList && e.target.classList.contains('sov')) closeSheet(e.target.id);
+});
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && e.target.id === 'qi') quickAdd();
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+async function init() {
+  document.querySelectorAll('.sov').forEach(el => { el.style.display = 'none'; });
+  renderShopChips();
+  render();
+
+  // Mettre à jour l'icône thème via FHTheme si disponible
+  if (window.FHTheme) {
+    const cur = document.documentElement.getAttribute('data-theme') || 'light';
+    const btn = document.getElementById('thbtn');
+    if (btn) btn.textContent = cur === 'dark' ? '🌙' : cur === 'sepia' ? '📜' : '☀️';
+  }
+
+  // Firebase sync
+  const remote = await fbLoadAll();
+  if (remote && remote.length > 0) {
+    // Merge : clé = _fbId (string stable) ou id (numérique)
+    const localMap = {};
+    D.items.forEach(t => {
+      const key = t._fbId || makeItemId(t.id);
+      t._fbId = key;
+      localMap[key] = t;
+    });
+    remote.forEach(t => {
+      if (!t._fbId) return; // ignorer les docs sans ID
+      if (localMap[t._fbId]) {
+        // Priorité au remote pour les champs métier, garder local pour done (conflit résolu côté local)
+        Object.assign(localMap[t._fbId], t);
+      } else {
+        localMap[t._fbId] = t;
+      }
+    });
+    D.items = Object.values(localMap).filter(x => x.nom).sort((a,b) => new Date(b.date||0) - new Date(a.date||0));
+    // Recalculer nextId
+    const maxId = D.items.reduce((m, t) => {
+      const n = typeof t.id === 'number' ? t.id : 0;
+      return Math.max(m, n);
+    }, 0);
+    D.nextId = Math.max(D.nextId, maxId + 1);
+    saveD(D); render();
+  }
+}
+init();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(()=>{});
+  });
+}
 </script>
 </body>
 </html>

@@ -59,6 +59,7 @@
   // ── Notification IHM Debug ────────────────────────────────────
   function notifyError(msg) {
     if (global.showDebugError) global.showDebugError(msg);
+    console.error("fbSync Debug:", msg); // Ajout pour faciliter la lecture dans la console Android
   }
 
   // ── Write Queue (retry exponentiel) ───────────────────────────
@@ -118,10 +119,15 @@
         
         if (!ok) {
             var errTxt = await r.text();
-            throw new Error('HTTP ' + r.status + ' : ' + errTxt);
+            // Analyse fine de l'erreur JSON Firestore pour extraction
+            var detailMsg = errTxt;
+            try {
+               var errJson = JSON.parse(errTxt);
+               if(errJson.error && errJson.error.message) detailMsg = errJson.error.message;
+            } catch(e) {}
+            throw new Error('HTTP ' + r.status + ' : ' + detailMsg);
         }
         FBSyncUI.setStatus('ok');
-        notifyError("✅ Synchro réussie");
         // succès : ne pas remettre dans la queue
       } catch (e) {
         // retry exponentiel
@@ -129,7 +135,7 @@
         op.nextRetry  = Date.now() + op.retryDelay;
         remaining.push(op);
         FBSyncUI.setStatus('error');
-        notifyError("❌ Échec Synchro (" + op.coll + ") : " + e.message);
+        notifyError("❌ Échec Synchro (" + op.coll + "/" + op.id + ") : " + e.message);
       }
     }
     saveQueue(remaining);
@@ -189,7 +195,9 @@
       var r = await fetch(url, { redirect: 'follow' });
       if (!r.ok) {
           var errTxt = await r.text();
-          throw new Error('HTTP ' + r.status + ' : ' + errTxt);
+          var detailMsg = errTxt;
+          try { var errJson = JSON.parse(errTxt); if(errJson.error && errJson.error.message) detailMsg = errJson.error.message; } catch(e) {}
+          throw new Error('HTTP ' + r.status + ' : ' + detailMsg);
       }
       var data = await r.json();
       var docs = (data.documents || []).map(function (x) {
@@ -242,3 +250,4 @@
   };
 
 })(window);
+     

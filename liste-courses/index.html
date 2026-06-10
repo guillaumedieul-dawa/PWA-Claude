@@ -95,7 +95,6 @@
     <button class="ibtn" id="thbtn" data-action="toggleTheme">🌙</button>
   </div>
 
-  <!-- FB status indicator -->
   <div class="fb-status" id="fbStatusBar">
     <div class="fb-dot" id="fbDot"></div>
     <span id="fbStatusTxt">Firebase non configuré</span>
@@ -119,7 +118,6 @@
 <button class="fab" data-action="openAdd"><span style="pointer-events:none">＋</span></button>
 <div class="toast" id="toast"></div>
 
-<!-- SHEET AJOUT -->
 <div class="sov" id="shAdd">
   <div id="shAddInner" style="background:var(--sf);border-radius:20px 20px 0 0;padding:28px 32px calc(var(--bot)+40px);width:100%;max-width:520px;box-sizing:border-box;max-height:92dvh;overflow-y:auto">
     <div style="width:32px;height:4px;background:var(--olv);border-radius:2px;margin:0 auto 20px;cursor:pointer" data-action="closeAdd"></div>
@@ -144,7 +142,6 @@
   </div>
 </div>
 
-<!-- SHEET MAGASINS -->
 <div class="sov" id="shShops">
   <div style="background:var(--sf);border-radius:20px 20px 0 0;padding:28px 32px calc(var(--bot)+40px);width:100%;max-width:520px;box-sizing:border-box;max-height:92dvh;overflow-y:auto">
     <div style="width:32px;height:4px;background:var(--olv);border-radius:2px;margin:0 auto 20px;cursor:pointer" data-action="closeShops"></div>
@@ -169,7 +166,8 @@ const WHO_TC     = {Guillaume:'#001849', Michele:'#1D0160'};
 
 // ── Firebase ──────────────────────────────────────────────────────────────────
 const FB_PROJECT = 'familyhub-colis-8abbd';
-const FB_COLL    = 'courses/items';
+// CORRECTION : 'courses' au lieu de 'courses/items' pour respecter la règle des segments pairs (Collection -> Document)
+const FB_COLL    = 'courses';
 
 function getFBKey() {
   try {
@@ -199,11 +197,15 @@ async function testFirebase() {
   }
   setFbStatus('spin', 'Test…');
   try {
-    const r = await fetch(fbUrl('courses/items'), {method: 'GET'});
+    const r = await fetch(fbUrl(FB_COLL), {method: 'GET'});
     if (r.status === 401) {
       setFbStatus('err', '⚠️ Clé API invalide ou expirée');
     } else if (r.status === 403) {
       setFbStatus('err', '⚠️ Permissions insuffisantes (règles Firestore)');
+    } else if (r.status === 400) {
+      const errTxt = await r.text();
+      setFbStatus('err', '⚠️ Erreur 400. Voir console.');
+      console.error('Test Firebase 400:', errTxt);
     } else if (r.ok) {
       setFbStatus('ok', '✓ Firebase OK');
     } else {
@@ -223,10 +225,8 @@ function toFields(obj) {
     } else if (typeof v === 'boolean') {
       f[k] = {booleanValue: v};
     } else if (typeof v === 'number') {
-      // Firestore: pas de "numberValue", utiliser integerValue ou doubleValue
       f[k] = Number.isInteger(v) ? {integerValue: String(v)} : {doubleValue: v};
     } else {
-      // string par défaut
       f[k] = {stringValue: String(v)};
     }
   }
@@ -246,10 +246,8 @@ function fromFields(fields) {
   return obj;
 }
 
-// Génère un ID stable pour chaque item (utilisé comme document ID Firestore)
-// Format : "item" + numéro (sans underscore pour compatibilité Firestore)
 function makeItemId(id) {
-  return 'item' + String(id);
+  return 'item_' + String(id);
 }
 
 async function fbWrite(item) {
@@ -262,7 +260,6 @@ async function fbWrite(item) {
   item._fbId = docId;
   setFbStatus('spin', 'Sync…');
   
-  // Exclure les champs internes (commençant par _)
   const itemToSave = {};
   for (const k in item) {
     if (!k.startsWith('_')) {
@@ -271,15 +268,18 @@ async function fbWrite(item) {
   }
   
   try {
-    const r = await fetch(fbUrl('courses/items/' + docId), {
+    const r = await fetch(fbUrl(FB_COLL + '/' + docId), {
       method: 'PATCH',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({fields: toFields(itemToSave)})
     });
+    
     if (!r.ok) {
-      const err = await r.text();
-      setFbStatus('err', 'Firestore ' + r.status);
-      console.warn('fbWrite error', r.status, err);
+      const errTxt = await r.text();
+      let errMsg = errTxt;
+      try { const errObj = JSON.parse(errTxt); if(errObj.error && errObj.error.message) errMsg = errObj.error.message; } catch(e){}
+      setFbStatus('err', 'Firestore ' + r.status + ' (Voir Console)');
+      console.error('fbWrite error details:', errMsg);
       return false;
     }
     setFbStatus('ok', 'Synchronisé ✓');
@@ -313,26 +313,68 @@ async function fbLoadAll() {
   try {
     const r = await fetch(fbUrl(FB_COLL));
     if (!r.ok) {
-      setFbStatus('err', 'Firestore ' + r.status + ' — vérifiez la clé API');
+      const errTxt = await r.text();
+      setFbStatus('err', 'Firestore ' + r.status + ' — ' + errTxt.substring(0,20));
       return null;
     }
     const data = await r.json();
-    const docs = (data.documents || []).map(doc => {
-      const obj = fromFields(doc.fields);
-      // Récupérer l'ID depuis le chemin du document
-      obj._fbId = doc.name.split('/').pop();
-      // Si id numérique absent, extraire depuis _fbId
-      if (!obj.id && obj._fbId && obj._fbId.startsWith('item_')) {
-        obj.id = parseInt(obj._fbId.replace('item_', '')) || obj._fbId;
-      }
-      return obj;
-    });
+    const docs = (data.documents || [])
+      .map(doc => {
+        const obj = fromFields(doc.fields);
+        obj._fbId = doc.name.split('/').pop();
+        if (!obj.id && obj._fbId && obj._fbId.startsWith('item_')) {
+          obj.id = parseInt(obj._fbId.replace('item_', '')) || obj._fbId;
+        }
+        return obj;
+      })
+      // On filtre pour ne garder que les documents "items" (évite de charger magasins_config comme un produit)
+      .filter(obj => obj._fbId && obj._fbId.startsWith('item_'));
+      
     setFbStatus('ok', docs.length + ' articles Firebase');
     return docs;
   } catch(e) {
     setFbStatus('err', 'Erreur: ' + e.message);
     return null;
   }
+}
+
+// ── NOUVEAU : Synchronisation des magasins ────────────────────────────────────
+async function fbWriteShops(shopsArray) {
+  const key = getFBKey();
+  if (!key) return;
+  const fields = { list: { arrayValue: { values: shopsArray.map(s => ({stringValue: s})) } } };
+  try {
+    const r = await fetch(fbUrl(FB_COLL + '/magasins_config'), {
+      method: 'PATCH',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({fields: fields})
+    });
+    if(!r.ok) {
+      const err = await r.text();
+      console.error("Erreur sync magasins", err);
+    }
+  } catch(e) {
+    console.error("Network error sync magasins", e);
+  }
+}
+
+async function fbLoadShopsRemote() {
+  const key = getFBKey();
+  if (!key) return null;
+  try {
+    const r = await fetch(fbUrl(FB_COLL + '/magasins_config'));
+    if (r.ok) {
+      const data = await r.json();
+      if (data.fields && data.fields.list && data.fields.list.arrayValue && data.fields.list.arrayValue.values) {
+        return data.fields.list.arrayValue.values.map(v => v.stringValue);
+      } else if (data.fields && data.fields.list && data.fields.list.arrayValue && !data.fields.list.arrayValue.values) {
+        return [];
+      }
+    }
+  } catch(e) {
+    console.warn("Erreur chargement magasins distants", e);
+  }
+  return null;
 }
 
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -352,7 +394,7 @@ function loadShops() {
   try { const s = JSON.parse(localStorage.getItem(SK_SHOPS)); if (Array.isArray(s)) return s; } catch(e) {}
   return ['Carrefour','Super U','Picard','Natureo','Lidl','Biocoop'];
 }
-function saveShops(s) { shops = s; localStorage.setItem(SK_SHOPS, JSON.stringify(s)); }
+function saveShops(s) { shops = s; localStorage.setItem(SK_SHOPS, JSON.stringify(s)); fbWriteShops(s); }
 
 // ── Actions ───────────────────────────────────────────────────────────────────
 function quickAdd() {
@@ -605,25 +647,50 @@ document.addEventListener('keydown', function(e) {
   if (e.key === 'Enter' && e.target.id === 'qi') quickAdd();
 });
 
+// ── NOUVEAU : Création du 1er jeu de données bidon ─────────────────────────────
+async function injectMockData() {
+  const mockItems = [
+    { id: 1, nom: "Pommes Gala", qty: "1kg", who: "Guillaume", shop: "Carrefour", note: "Si possible", done: false, date: new Date().toISOString() },
+    { id: 2, nom: "Lait demi-écrémé", qty: "2L", who: "Michele", shop: "Super U", note: "", done: false, date: new Date().toISOString() }
+  ];
+  for (let it of mockItems) {
+    it._fbId = makeItemId(it.id);
+    D.items.push(it);
+    await fbWrite(it);
+  }
+  D.nextId = 3;
+  saveD(D);
+  render();
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
   document.querySelectorAll('.sov').forEach(el => { el.style.display = 'none'; });
   renderShopChips();
   render();
 
-  // Mettre à jour l'icône thème via FHTheme si disponible
   if (window.FHTheme) {
     const cur = document.documentElement.getAttribute('data-theme') || 'light';
     const btn = document.getElementById('thbtn');
     if (btn) btn.textContent = cur === 'dark' ? '🌙' : cur === 'sepia' ? '📜' : '☀️';
   }
 
-  // Test Firebase d'abord
   await testFirebase();
 
-  // Puis sync si clé OK
   const key = getFBKey();
   if (key) {
+    // 1. Sync des magasins
+    const remoteShops = await fbLoadShopsRemote();
+    if (remoteShops && remoteShops.length > 0) {
+      shops = remoteShops;
+      localStorage.setItem(SK_SHOPS, JSON.stringify(shops));
+      renderShopChips();
+    } else {
+      // Pousse la config locale vers Firebase si aucune présente
+      fbWriteShops(shops);
+    }
+
+    // 2. Sync des articles
     const remote = await fbLoadAll();
     if (remote && remote.length > 0) {
       const localMap = {};
@@ -634,9 +701,8 @@ async function init() {
       });
       remote.forEach(t => {
         if (!t._fbId) return;
-        // Extraire l'ID depuis _fbId (item1, item2, etc.)
-        if (!t.id && t._fbId.startsWith('item')) {
-          const numPart = t._fbId.replace('item', '');
+        if (!t.id && t._fbId.startsWith('item_')) {
+          const numPart = t._fbId.replace('item_', '');
           t.id = parseInt(numPart) || t._fbId;
         }
         if (localMap[t._fbId]) {
@@ -652,6 +718,10 @@ async function init() {
       }, 0);
       D.nextId = Math.max(D.nextId, maxId + 1);
       saveD(D); render();
+    } else if (D.items.length === 0) {
+      // 3. Injection du jeu de données bidon si TOUT est vide
+      setFbStatus('spin', 'Création jeu d\'essai…');
+      await injectMockData();
     }
   }
 }

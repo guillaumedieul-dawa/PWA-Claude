@@ -9,14 +9,13 @@
 <meta name="apple-mobile-web-app-title" content="Colis">
 <title>Suivi Colis</title>
 <link rel="manifest" href="./manifest.json">
+<link rel="stylesheet" href="../themes.css">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fragment+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="../fbSync.js"></script>
+<script src="../theme.js"></script>
 <style>
-:root{--p:#2563eb;--op:#fff;--pc:#dbeafe;--opc:#1e3a8a;--s:#059669;--sc:#d1fae5;--t:#7c3aed;--tc:#ede9fe;--err:#9f1239;--ec:#ffe4e6;--bg:#faf7f2;--sf:#fff;--s1:#f0ebe2;--s2:#e8e2d8;--olv:#e0d9cf;--ob:#1c1410;--os:#1c1410;--osv:#7a6a5a;--sh:rgba(0,0,0,.05);--cf:#9f1239;--cfb:#ffe4e6;--cr:#065f46;--crb:#d1fae5;--cd:#065f46;--cdb:#d1fae5;--co:#92400e;--cob:#fef3c7;--cpd:#92400e;--cpdb:#fef3c7;--cx:#6b7280;--cxb:#f3f4f6;--top:env(safe-area-inset-top,0px);--bot:env(safe-area-inset-bottom,0px);--rl:20px;--rm:16px;--rs:12px}
-[data-theme="dark"]{--p:#60a5fa;--op:#1e3a8a;--pc:#1e3a8a;--opc:#dbeafe;--s:#34d399;--sc:#064e3b;--t:#a78bfa;--tc:#2e1065;--err:#fca5a5;--ec:#450a0a;--bg:#1a1714;--sf:#231e1a;--s1:#2c2620;--s2:#352e27;--olv:#3e352d;--ob:#f0ebe2;--os:#f0ebe2;--osv:#a09080;--sh:rgba(0,0,0,.3);--cf:#fca5a5;--cfb:#450a0a;--cr:#6ee7b7;--crb:#022c22;--cd:#6ee7b7;--cdb:#022c22;--co:#fcd34d;--cob:#451a03;--cpd:#fcd34d;--cpdb:#451a03;--cx:#9ca3af;--cxb:#1f2937}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Plus Jakarta Sans',sans-serif;overflow-x:hidden;transition:background .3s,color .3s}
+html,body{font-family:'Plus Jakarta Sans',sans-serif;}
 #app{max-width:520px;margin:0 auto;min-height:100dvh;padding-bottom:calc(var(--bot) + 96px)}
 .tbar{position:sticky;top:0;z-index:100;background:var(--bg);padding:calc(var(--top) + 12px) 16px 8px;display:flex;align-items:center;gap:8px}
 .ihome{width:40px;height:40px;border-radius:50%;border:none;background:var(--s1);color:var(--os);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none;flex-shrink:0;transition:background .2s}
@@ -222,6 +221,12 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Pl
       <div class="cb" data-action="selCarrier" data-carrier="chronofresh"><span>❄️</span><p>Chronofresh</p></div>
       <div class="cb" data-action="selCarrier" data-carrier="other"><span>📦</span><p>Autre</p></div>
     </div>
+    <div class="row2">
+      <div><div class="slbl ft">N° suivi</div><input class="fin" id="aT" placeholder="1ZA2E708…"></div>
+      <div><div class="slbl ft">Code retrait</div><input class="fin" id="aC" placeholder="6684"></div>
+    </div>
+    <div class="slbl">Adresse</div>
+    <input class="fin" id="aA" placeholder="Consigne Pickup Grand Frais Herblay…" style="margin-bottom:8px">
     <div class="row2">
       <div><div class="slbl ft">N° suivi</div><input class="fin" id="aT" placeholder="1ZA2E708…"></div>
       <div><div class="slbl ft">Code retrait</div><input class="fin" id="aC" placeholder="6684"></div>
@@ -463,6 +468,8 @@ function detSt(t){if(!t)return'pending';var lo=t.toLowerCase();var orders=['deli
 function xT(c,t){if(!t)return'';var P={ups:[/\b(1Z[A-Z0-9]{16})\b/i],chronopost:[/\b([A-Z]{2}\d{9}[A-Z]{2})\b/,/\b(PP\d{9}FR)\b/i,/\b(\d{13}[A-Z])\b/],chronofresh:[/\b([A-Z]{2}\d{9}[A-Z]{2})\b/],colissimo:[/\b(6[A-Z]\d{11})\b/,/\b(8[A-Z]\d{11})\b/,/\bn[°o]\s*([A-Z0-9]{9,15})\b/i],mondialrelay:[/\b(\d{8})\b/,/\b(\d{5,7})\b/],vintedgo:[/\b(1UW[A-Z0-9]{9,})\b/i,/\b(\d{13,19})\b/,/suivi\s*:\s*([A-Z0-9]{8,})/i],dpd:[/\b(\d{14})\b/,/colis n[°o]\s*(\d{10,})/i],gls:[/colis\s+([0-9A-Z]{6,10})\b/i],relaiscolis:[/\b(VD[A-Z0-9]{8,})\b/i],laposte:[/\b(6[A-Z]\d{11})\b/,/\b(8[A-Z]\d{11})\b/],amazon:[/\b(\d{3}-\d{7}-\d{7})\b/]};var patterns=P[c]||[];for(var i=0;i<patterns.length;i++){var m=t.match(patterns[i]);if(m&&m[1])return m[1].toUpperCase().trim();}return'';}
 function xC(t){if(!t)return'';var _mic=t.match(/identifiant\s*[:\-]\s*(\d{3,6})[\s\S]*?(?:code\s+d.ouverture|ouverture)\s*[:\-]\s*(\d{3,6})/i);if(_mic)return _mic[1]+' / '+_mic[2];var m1=t.match(/(?:vos\s+)?codes?\s+(\d{4})\s+puis\s+(\d{4})/i);if(m1)return m1[1]+' / '+m1[2];var m2=t.match(/identifiant\s*:\s*(\d{3,8}).*?code\s*d.ouverture\s*:\s*(\d{3,8})/is);if(m2)return m2[1]+' / '+m2[2];var m3=t.match(/\bCODE\s+(\d{4,8})\b/);if(m3)return m3[1];var m9=t.match(/communiquez\s+lui\s+le\s+code[\s\n]+(\d{4,8})/i);if(m9)return m9[1];var ma=t.match(/(?:pr[eé]sentez\s+(?:ce\s+)?(?:QR\s+)?code[^\n]*\n\s*)(\d{4,8})/i);if(ma)return ma[1];var m4=t.match(/contre\s+code\s+(\d{4,8})/i);if(m4)return m4[1];var m5=t.match(/code\s+de\s+retrait\s+(\d{4,8})/i);if(m5)return m5[1];var m6=t.match(/\bcode\s*:\s*([A-Z0-9\-]{3,12})/i);if(m6)return m6[1];return'';}
 function xA(t){if(!t)return'';var J=/^(ce message|merci|suivre|téléchargez|pour ne|absent|bonjour)/i;var P=[/consigne\s+pickup\s+(.+?)(?:\.|jusqu|n°|code|\+\s*d)/i,/consigne\s+vinted\s+go\s*:\s*(.+?)(?:\.|suivi)/i,/(?:au\s+)?(?:p\.\s*)?relais\s+([A-Z][A-Z\s]{3,40}?)(?:\.|retirez|avec|$)/i,/disponible\s+au\s+(.+?)(?:\.|retirez|avec|$)/i,/votre\s+point\s+de\s+retrait\s*:\s*\n+(.+?\n.+?\n.+?)(?:\n\n)/is,/sera\s+livré\s+à\s*\n(.+?\n.+?)(?:\n\n|france)/is,/expédier\s+à\s*\n(.+?\n.+?\n.+?)(?:\n\n|ups standard)/is,/informations\s+sur\s+l.adresse\s*\n(.+?\n.+?\n.+?)(?:\n\n)/is];for(var i=0;i<P.length;i++){var m=t.match(P[i]);if(m&&m[1]){var ln=m[1].split('\n').map(function(l){return l.trim();}).filter(function(l){return l.length>2&&!J.test(l);});if(ln.length)return ln.slice(0,3).join(', ').substring(0,150);}}return'';}
+
+
 function xL(t){if(!t)return'';var ps=[/https?:\/\/(?:n\.pkup\.fr)[^\s<"')]+/i,/https?:\/\/(?:sms\.laposte\.fr)[^\s<"')]+/i,/https?:\/\/(?:p\.vintedgo\.com)[^\s<"')]+/i,/https?:\/\/(?:moncolis\.gls-france\.com)[^\s<"')]+/i,/https?:\/\/(?:my\.dpd\.fr)[^\s<"')]+/i,/https?:\/\/(?:amzn\.eu)[^\s<"')]+/i,/https?:\/\/(?:www\.chronopost\.fr)[^\s<"')]+/i,/ups\.com\/su\/[^\s<"')]+/i,/https?:\/\/[^\s<"')]{12,60}/];for(var i=0;i<ps.length;i++){var m=t.match(ps[i]);if(m){var u=m[0];if(!u.startsWith('http'))u='https://'+u;return u;}}return'';}
 function xSl(t){if(!t)return'';var m1=t.match(/entre\s+(\d{1,2}[h:]\d{2})\s*[-–et]+\s*(\d{1,2}[h:]\d{2})/i);if(m1)return m1[1].replace('h',':')+' — '+m1[2].replace('h',':');return'';}
 function xEx(t,arr,c){if(!t)return'';var R=getRet();var d=t.match(/(?:disposez?\s+de|pendant)\s+(\d+)\s+jours?/i);if(d){var x=new Date(arr);x.setDate(x.getDate()+parseInt(d[1]));return x.toISOString().split('T')[0];}var i=t.match(/(?:avant le|jusqu['']au)\s+(\d{4}-\d{2}-\d{2})/i);if(i)return i[1];var nm=t.match(/(?:jusqu['']au|avant le)\s+(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/i);if(nm){var y=nm[3]?(nm[3].length===2?'20'+nm[3]:nm[3]):new Date().getFullYear();return y+'-'+nm[2].padStart(2,'0')+'-'+nm[1].padStart(2,'0');}var days=R[c]||14;var def=new Date(arr);def.setDate(def.getDate()+days);return def.toISOString().split('T')[0];}
@@ -788,25 +795,6 @@ function toggleCarrier(c){
   showToast(d.has(c)?LB[c]+' désactivé':LB[c]+' réactivé');
 }
 
-// ─── THÈME ────────────────────────────────────────────────────────────────────
-function applyTheme(t){
-  document.documentElement.setAttribute('data-theme',t);
-  var btn=document.getElementById('thbtn');
-  if(btn)btn.textContent=t==='dark'?'🌙':'☀️';
-}
-function toggleTheme(){
-  var d=document.documentElement.getAttribute('data-theme')==='dark';
-  var n=d?'light':'dark';
-  localStorage.setItem('lt_th',n);applyTheme(n);
-}
-function initTheme(){
-  var s=localStorage.getItem('lt_th');
-  if(s){applyTheme(s);return;}
-  var sys=window.matchMedia('(prefers-color-scheme: dark)');
-  applyTheme(sys.matches?'dark':'light');
-  sys.addEventListener('change',function(e){if(!localStorage.getItem('lt_th'))applyTheme(e.matches?'dark':'light');});
-}
-
 // ─── SHEETS ───────────────────────────────────────────────────────────────────
 function openSheet(id){
   var el=document.getElementById(id);if(!el)return;
@@ -855,7 +843,7 @@ document.addEventListener('click',function(e){
   DBG.dispatch(e,action);
 
   switch(action){
-    case 'toggleTheme': toggleTheme(); break;
+    case 'toggleTheme': if(window.toggleTheme) window.toggleTheme(); break;
     case 'openAdd': openSheet('shAdd'); break;
     case 'openSync': openSheet('shSync');renderSS();renderLogs(); break;
     case 'closeSheet': closeSheet(ds.target); break;
@@ -911,7 +899,7 @@ function clearSearch(){
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 document.querySelectorAll('.sov').forEach(function(el){el.style.display='none';});
-initTheme();purge();renderSS();render();
+purge();renderSS();render();
 FBSync.subscribe('colis', function(docs) {
   var n=0;
   docs.forEach(function(p){

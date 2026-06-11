@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#faf7f2">
+<meta name="theme-color" media="(prefers-color-scheme: dark)"  content="#1a1714">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Paramètres">
+<title>Paramètres Globaux</title>
+<link rel="manifest" href="../manifest.json">
+<link rel="stylesheet" href="../themes.css">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fragment+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="../theme.js"></script>
+<style>
+#app{max-width:520px;margin:0 auto;min-height:100dvh;padding-bottom:calc(var(--bot)+96px)}
+.tbar{position:sticky;top:0;z-index:100;background:var(--bg);padding:calc(var(--top)+16px) 20px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--olv)}
+.ihome{width:36px;height:36px;border-radius:10px;border:none;background:var(--s1);color:var(--os);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none;flex-shrink:0}
+.ihome:active{background:var(--s2)}
+.ttl{flex:1;min-width:0}
+.tlbl{font-size:10px;color:var(--osv);letter-spacing:.3px;font-weight:500}
+.th{font-family:'Bebas Neue',sans-serif!important;font-size:26px!important;letter-spacing:2px!important;color:var(--ob);line-height:1}
+.ibtn{width:36px;height:36px;border-radius:10px;border:none;background:var(--s1);color:var(--os);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;padding:0}
+.ibtn:active{background:var(--s2)}
+
+.sec{padding:20px;border-bottom:1px solid var(--olv)}
+.sec-tit{font-family:'Plus Jakarta Sans',sans-serif;font-size:18px;font-weight:700;color:var(--ob);margin-bottom:6px}
+.sec-desc{font-size:13px;color:var(--osv);margin-bottom:16px;line-height:1.4}
+.slbl{font-size:11px;color:var(--osv);text-transform:uppercase;letter-spacing:.8px;margin:12px 0 6px;font-weight:600}
+
+.fin{width:100%;padding:13px 16px;border-radius:12px;border:1px solid var(--olv);background:var(--s1);color:var(--ob);font-family:'Fragment Mono',monospace;font-size:14px;outline:none;transition:border-color .2s;margin-bottom:10px;box-sizing:border-box}
+.fin:focus{border-color:var(--p);background:var(--sf)}
+.fin::placeholder{color:var(--osv);font-family:'Plus Jakarta Sans',sans-serif}
+
+.bfill{width:100%;padding:14px;border-radius:28px;background:var(--p);color:#fff;border:none;font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px;box-sizing:border-box;transition:opacity .2s}
+.bfill:active{opacity:.85}
+
+.toast{position:fixed;bottom:calc(var(--bot)+40px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--ob);color:var(--bg);padding:12px 20px;border-radius:28px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;max-width:88vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.stat-box{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--s1);border-radius:12px;margin-bottom:16px}
+.stat-dot{width:10px;height:10px;border-radius:50%;background:var(--osv)}
+.stat-dot.ok{background:#059669}
+.stat-dot.err{background:#dc2626}
+.stat-txt{font-size:13px;font-weight:600;color:var(--os)}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="tbar">
+    <a href="../index.html" class="ihome">🏠</a>
+    <div class="ttl">
+      <div class="tlbl">FamilyHub</div>
+      <div class="th">PARAMÈTRES</div>
+    </div>
+    <button class="ibtn" id="thbtn" data-action="toggleTheme">🌙</button>
+  </div>
+
+  <div class="sec">
+    <div class="sec-tit">Base de données globale</div>
+    <div class="sec-desc">Ces identifiants Firestore permettent la synchronisation en temps réel de la liste de courses, des colis, etc.</div>
+    
+    <div class="stat-box" id="fbStatusBox">
+      <div class="stat-dot" id="fbDot"></div>
+      <div class="stat-txt" id="fbStatus">Non configuré</div>
+    </div>
+
+    <div class="slbl">ID du Projet (Project ID)</div>
+    <input type="text" id="fbPi" class="fin" placeholder="ex: familyhub-colis-8abbd">
+    
+    <div class="slbl">Clé API (API Key)</div>
+    <input type="password" id="fbAk" class="fin" placeholder="AIzaSy...">
+
+    <button class="bfill" data-action="saveFB">Enregistrer & Tester</button>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+const FBK = 'lt_fb';
+let _tt;
+
+function showToast(m) {
+  const t = document.getElementById('toast');
+  t.textContent = m; 
+  t.classList.add('show');
+  clearTimeout(_tt); 
+  _tt = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function loadConfig() {
+  try {
+    const config = JSON.parse(localStorage.getItem(FBK));
+    if (config) {
+      document.getElementById('fbPi').value = config.projectId || '';
+      document.getElementById('fbAk').value = config.apiKey || '';
+      if (config.apiKey) {
+        testFirebase(config.projectId, config.apiKey);
+      }
+    } else {
+      // Valeur par défaut pour le projet
+      document.getElementById('fbPi').value = 'familyhub-colis-8abbd';
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+async function testFirebase(projectId, apiKey) {
+  const dot = document.getElementById('fbDot');
+  const txt = document.getElementById('fbStatus');
+  
+  dot.className = 'stat-dot';
+  dot.style.background = '#f59e0b'; // orange clignotant
+  txt.textContent = 'Test de connexion...';
+
+  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/meta?key=${apiKey}`;
+  
+  try {
+    const r = await fetch(url, { method: 'GET' });
+    if (r.ok || r.status === 404 || r.status === 403) {
+        // 403 ou 404 signifie que la base existe et l'API key est valide, 
+        // même si les règles ou le doc meta bloquent la lecture exacte de cette URL.
+        dot.className = 'stat-dot ok';
+        txt.textContent = 'Connexion Firebase établie';
+    } else if (r.status === 401 || r.status === 400) {
+        dot.className = 'stat-dot err';
+        txt.textContent = 'Clé API invalide ou expirée';
+    } else {
+        dot.className = 'stat-dot err';
+        txt.textContent = `Erreur HTTP ${r.status}`;
+    }
+  } catch(e) {
+    dot.className = 'stat-dot err';
+    txt.textContent = 'Erreur réseau';
+  }
+}
+
+function saveConfig() {
+  const pi = document.getElementById('fbPi').value.trim();
+  const ak = document.getElementById('fbAk').value.trim();
+
+  if (!pi || !ak) {
+    showToast('⚠️ Les deux champs sont requis');
+    return;
+  }
+
+  localStorage.setItem(FBK, JSON.stringify({ projectId: pi, apiKey: ak }));
+  showToast('✓ Configuration enregistrée');
+  testFirebase(pi, ak);
+}
+
+document.addEventListener('click', function(e) {
+  let el = e.target;
+  while (el && el !== document) {
+    if (el.nodeType === 1 && el.getAttribute && el.getAttribute('data-action')) break;
+    el = el.parentNode;
+  }
+  if (!el || el === document) return;
+
+  const action = el.getAttribute('data-action');
+  
+  if (action === 'toggleTheme') {
+    if (window.toggleTheme) window.toggleTheme();
+  } else if (action === 'saveFB') {
+    saveConfig();
+  }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadConfig();
+  if (window.FHTheme) {
+    const cur = document.documentElement.getAttribute('data-theme') || 'light';
+    const btn = document.getElementById('thbtn');
+    if (btn) btn.textContent = cur === 'dark' ? '🌙' : cur === 'sepia' ? '📜' : '☀️';
+  }
+});
+</script>
+</body>
+</html>

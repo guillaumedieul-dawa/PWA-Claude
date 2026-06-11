@@ -9,10 +9,10 @@
 <meta name="apple-mobile-web-app-title" content="Menus de la semaine">
 <title>Menus de la semaine</title>
 <link rel="manifest" href="./manifest.json">
+<link rel="stylesheet" href="../themes.css">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fragment+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="../theme.js"></script>
 <style>
-:root{--p:#dc2626;--pc:rgba(220,38,38,.12);--opc:#1c1410;--bg:#faf7f2;--sf:#fff;--s1:#f0ebe2;--s2:#e8e2d8;--olv:#e0d9cf;--ob:#1c1410;--os:#1c1410;--osv:#7a6a5a;--sh:rgba(0,0,0,.05);--cf:#9f1239;--cfb:#ffe4e6;--top:env(safe-area-inset-top,0px);--bot:env(safe-area-inset-bottom,0px);--rl:20px;--rm:16px;--rs:12px}
-[data-theme="dark"]{--p:#f87171;--pc:rgba(248,113,113,.15);--opc:#f0ebe2;--bg:#1a1714;--sf:#231e1a;--s1:#2c2620;--s2:#352e27;--olv:#3e352d;--ob:#f0ebe2;--os:#f0ebe2;--osv:#a09080;--sh:rgba(0,0,0,.3);--cf:#fca5a5;--cfb:#450a0a}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Plus Jakarta Sans',sans-serif;overflow-x:hidden;transition:background .3s,color .3s}
 #app{max-width:520px;margin:0 auto;min-height:100dvh;padding-bottom:calc(var(--bot)+96px)}
@@ -271,24 +271,6 @@ function applySuggest(){
   showToast('✓ Repas appliqués pour la semaine');
 }
 
-function applyTheme(t){
-  document.documentElement.setAttribute('data-theme',t);
-  const btn=document.getElementById('thbtn');
-  if(btn)btn.textContent=t==='dark'?'🌙':'☀️';
-}
-function toggleTheme(){
-  const d=document.documentElement.getAttribute('data-theme')==='dark';
-  const n=d?'light':'dark';
-  localStorage.setItem('lt_th',n);applyTheme(n);
-}
-function initTheme(){
-  const s=localStorage.getItem('lt_th');
-  if(s){applyTheme(s);return;}
-  const sys=window.matchMedia('(prefers-color-scheme: dark)');
-  applyTheme(sys.matches?'dark':'light');
-  sys.addEventListener('change',e=>{if(!localStorage.getItem('lt_th'))applyTheme(e.matches?'dark':'light');});
-}
-
 function openSheet(id){
   const el=document.getElementById(id);
   if(!el)return;
@@ -323,7 +305,7 @@ document.addEventListener('click',function(e){
   const action=el.getAttribute('data-action');
   const ds=el.dataset;
   switch(action){
-    case 'toggleTheme': toggleTheme(); break;
+    case 'toggleTheme': if(window.toggleTheme) window.toggleTheme(); break;
     case 'prevWeek': weekOffset--;render(); break;
     case 'nextWeek': weekOffset++;render(); break;
     case 'goToday':  weekOffset=0;render(); break;
@@ -351,7 +333,7 @@ document.querySelectorAll('.sov').forEach(function(sov){
 
 async function init(){
   document.querySelectorAll('.sov').forEach(el=>{el.style.display='none';});
-  initTheme();render();
+  render();
   try{
     const remote=await fbMenusReadAll();
     let changed=false;

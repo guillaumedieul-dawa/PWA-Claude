@@ -98,7 +98,6 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Pl
 .fab:active{transform:scale(.92)}
 .toast{position:fixed;bottom:calc(var(--bot) + 160px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--ob);color:var(--bg);padding:12px 20px;border-radius:28px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;max-width:88vw;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.2)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-/* FIX: Bottom Sheet overlay */
 .sov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center}
 .sht{background:var(--sf);border-radius:20px 20px 0 0;padding:28px 32px calc(env(safe-area-inset-bottom,0px) + 40px);width:100%;max-width:520px;box-sizing:border-box;max-height:92dvh;overflow-y:auto}
 .shnd{width:32px;height:4px;background:var(--olv);border-radius:2px;margin:0 auto 18px;cursor:pointer}
@@ -177,7 +176,6 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Pl
       <div class="tlbl">FamilyHub</div>
       <div class="th">📦 Mes colis <span id="totalBadge" style="font-size:14px;font-weight:400;color:var(--osv)"></span></div>
     </div>
-    <!-- FIX: data-action remplace onclick -->
     <button id="btn-sync" class="ibtn" data-action="openSync" title="BDD / Sync">⟳<div class="ndot" id="sd" style="display:none"></div><div id="syncDot" style="position:absolute;bottom:6px;right:6px;width:7px;height:7px;border-radius:50%;background:#22c55e;border:1.5px solid var(--bg)"></div></button>
     <button class="ibtn" id="thbtn" data-action="toggleTheme">🌙</button>
   </div>
@@ -200,11 +198,8 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Pl
   <div class="plist" id="PL"></div>
 </div>
 
-<!-- FAB: data-action -->
 <button id="btn-fab" class="fab" data-action="openAdd">＋</button>
 <div class="toast" id="toast"></div>
-
-<!-- SHEET AJOUT -->
 <div class="sov" id="shAdd">
   <div class="sht">
     <div class="shnd" data-action="closeSheet" data-target="shAdd"></div>
@@ -241,11 +236,10 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Pl
   </div>
 </div>
 
-<!-- SHEET SYNC -->
 <div class="sov" id="shSync">
   <div class="sht">
     <div class="shnd" data-action="closeSheet" data-target="shSync"></div>
-    <div class="shtit">BDD &amp; Synchronisation</div>
+    <div class="shtit">BDD & Synchronisation</div>
     <div class="stabs">
       <button class="stab sel" data-action="showTab" data-tab="tSy">BDD</button>
       <button class="stab" data-action="showTab" data-tab="tSM">SMS</button>
@@ -266,10 +260,12 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Pl
       <div style="font-size:13px;color:var(--osv);margin-bottom:6px" id="fbRes"></div>
       <div style="font-size:12px;color:var(--osv);margin-bottom:14px;font-family:'Fragment Mono',monospace" id="fbLs"></div>
       <button class="bfill" style="margin-top:0" data-action="syncFB">⟳ Actualiser</button>
+      
       <div class="slbl">Configuration Firebase</div>
-      <input class="fin" id="fbPi" placeholder="projectId" style="margin-bottom:8px">
-      <input class="fin" id="fbAk" placeholder="apiKey" style="margin-bottom:8px">
-      <button class="bfill" style="margin-top:0" data-action="saveFB">✓ Enregistrer</button>
+      <div style="background:var(--s1);border-radius:12px;padding:12px;font-size:13px;color:var(--osv);text-align:center">
+        La gestion de la clé API est centralisée.<br>
+        <a href="../parametres/index.html" style="display:inline-block;margin-top:10px;padding:10px 20px;background:var(--p);color:#fff;border-radius:20px;text-decoration:none;font-weight:bold">⚙️ Ouvrir les Paramètres</a>
+      </div>
     </div>
 
     <div class="tpan" id="tSM">
@@ -310,7 +306,6 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Pl
   </div>
 </div>
 
-<!-- SHEET QR -->
 <div class="sov" id="shQR">
   <div class="sht" style="text-align:center">
     <div class="shnd" data-action="closeSheet" data-target="shQR"></div>
@@ -562,8 +557,8 @@ var LOGOS={chronopost:'https://www.chronopost.fr/favicon.ico',chronofresh:'https
 var DK='lt_disabled';
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
-function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
-function escAttr(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/'/g,'&#39;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');}
+function esc(s){if(!s)return'';return String(s).replace(/&/g,'&').replace(/</g,'<').replace(/>/g,'>').replace(/"/g,'"').replace(/'/g,''');}
+function escAttr(s){if(!s)return'';return String(s).replace(/&/g,'&').replace(/'/g,''').replace(/"/g,'"').replace(/</g,'<').replace(/>/g,'>').replace(/[\r\n]+/g,' ');}
 function carrierLogo(c,size){size=size||28;var url=LOGOS[c];if(!url)return EM[c]||'📦';return '<img src="'+url+'" width="'+size+'" height="'+size+'" style="border-radius:6px;object-fit:contain" onerror="this.style.display=\'none\'" alt="">';}
 
 function getDisabled(){try{if(!localStorage.getItem(DK))localStorage.setItem(DK,JSON.stringify(['amazon']));return new Set(JSON.parse(localStorage.getItem(DK)||'[]'));}catch{return new Set();}}
@@ -614,6 +609,7 @@ function purge(){
   if(changed||D.packages.length!==b)saveD(D);
 }
 
+
 // ─── FIREBASE REST ────────────────────────────────────────────────────────────
 function fbU(p){var c=getFB();return'https://firestore.googleapis.com/v1/projects/'+c.projectId+'/databases/(default)/documents/'+p+'?key='+c.apiKey;}
 function toF(o){var f={};Object.entries(o).forEach(function(kv){var k=kv[0],v=kv[1];if(v==null)return;if(typeof v==='string')f[k]={stringValue:v};else if(typeof v==='number')f[k]={doubleValue:v};else if(typeof v==='boolean')f[k]={booleanValue:v};});return f;}
@@ -653,15 +649,8 @@ async function syncFB(){
     wlog('firebase','❌ '+e.message);showToast('❌ '+e.message);
   }
 }
-function saveFB(){
-  var pi=document.getElementById('fbPi').value.trim();
-  var ak=document.getElementById('fbAk').value.trim();
-  if(!pi||!ak){showToast('⚠️ Les deux champs sont requis');return;}
-  localStorage.setItem(FBK,JSON.stringify({projectId:pi,apiKey:ak}));
-  renderSS();showToast('✓ Firebase configuré');syncFB();
-}
 
-// ─── DÉTECTION TRANSPORTEUR ───────────────────────────────────────────────────
+  // ─── DÉTECTION TRANSPORTEUR ───────────────────────────────────────────────────
 var CARS=[
   {c:'chronofresh',t:function(f,s,b){return/chronofresh/i.test(f+s+b);}},
   {c:'colissimo',  t:function(f,s,b){return/colissimo/i.test(f+s+b)||/laposte/i.test(f);}},
@@ -971,9 +960,7 @@ function showQR(id){
 // ─── SYNC PANEL ───────────────────────────────────────────────────────────────
 function renderSS(){
   var cfg=getFB();var st=document.getElementById('fbSt');
-  var i1=document.getElementById('fbPi'),i2=document.getElementById('fbAk');
   if(st){var custom=localStorage.getItem(FBK);st.textContent=custom?'Configuré':'Par défaut';st.className='sbg '+(custom?'bok':'bwt');}
-  if(i1)i1.value=cfg.projectId;if(i2)i2.value=cfg.apiKey;
   document.getElementById('sd').style.display='block';
   updLs();
 }
@@ -1108,7 +1095,6 @@ document.addEventListener('click',function(e){
     case 'selCarrier': e.stopPropagation();selCarrier(ds.carrier,el); break;
     case 'addPkg': addPkg(); break;
     case 'syncFB': syncFB(); break;
-    case 'saveFB': saveFB(); break;
     case 'readSMS': readSMS(false); break;
     case 'parseMan': parseMan(); break;
     case 'showTab': showTab(ds.tab,el); break;
@@ -1177,7 +1163,6 @@ setTimeout(function(){
 },0);
 </script>
 
-<!-- DEBUG PANEL -->
 <div id="fh-dbg">
   <div class="dbg-h">
     <span class="dbg-ti">🔍 Debug — Suivi Colis</span>

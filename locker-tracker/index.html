@@ -11,6 +11,7 @@
 <link rel="manifest" href="./manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fragment+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="../fbSync.js"></script>
 <style>
 :root{--p:#2563eb;--op:#fff;--pc:#dbeafe;--opc:#1e3a8a;--s:#059669;--sc:#d1fae5;--t:#7c3aed;--tc:#ede9fe;--err:#9f1239;--ec:#ffe4e6;--bg:#faf7f2;--sf:#fff;--s1:#f0ebe2;--s2:#e8e2d8;--olv:#e0d9cf;--ob:#1c1410;--os:#1c1410;--osv:#7a6a5a;--sh:rgba(0,0,0,.05);--cf:#9f1239;--cfb:#ffe4e6;--cr:#065f46;--crb:#d1fae5;--cd:#065f46;--cdb:#d1fae5;--co:#92400e;--cob:#fef3c7;--cpd:#92400e;--cpdb:#fef3c7;--cx:#6b7280;--cxb:#f3f4f6;--top:env(safe-area-inset-top,0px);--bot:env(safe-area-inset-bottom,0px);--rl:20px;--rm:16px;--rs:12px}
 [data-theme="dark"]{--p:#60a5fa;--op:#1e3a8a;--pc:#1e3a8a;--opc:#dbeafe;--s:#34d399;--sc:#064e3b;--t:#a78bfa;--tc:#2e1065;--err:#fca5a5;--ec:#450a0a;--bg:#1a1714;--sf:#231e1a;--s1:#2c2620;--s2:#352e27;--olv:#3e352d;--ob:#f0ebe2;--os:#f0ebe2;--osv:#a09080;--sh:rgba(0,0,0,.3);--cf:#fca5a5;--cfb:#450a0a;--cr:#6ee7b7;--crb:#022c22;--cd:#6ee7b7;--cdb:#022c22;--co:#fcd34d;--cob:#451a03;--cpd:#fcd34d;--cpdb:#451a03;--cx:#9ca3af;--cxb:#1f2937}
@@ -98,6 +99,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Pl
 .fab:active{transform:scale(.92)}
 .toast{position:fixed;bottom:calc(var(--bot) + 160px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--ob);color:var(--bg);padding:12px 20px;border-radius:28px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;max-width:88vw;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.2)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+/* FIX: Bottom Sheet overlay */
 .sov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center}
 .sht{background:var(--sf);border-radius:20px 20px 0 0;padding:28px 32px calc(env(safe-area-inset-bottom,0px) + 40px);width:100%;max-width:520px;box-sizing:border-box;max-height:92dvh;overflow-y:auto}
 .shnd{width:32px;height:4px;background:var(--olv);border-radius:2px;margin:0 auto 18px;cursor:pointer}
@@ -200,6 +202,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Pl
 
 <button id="btn-fab" class="fab" data-action="openAdd">＋</button>
 <div class="toast" id="toast"></div>
+
 <div class="sov" id="shAdd">
   <div class="sht">
     <div class="shnd" data-action="closeSheet" data-target="shAdd"></div>
@@ -317,234 +320,6 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Pl
 </div>
 
 <script>
-/* ═══════════════════════════════════════════════════════════════
-   FamilyHub — fbSync.js  v4.0
-   Phase 4 : Real-time sync via polling REST Firestore
-   ───────────────────────────────────────────────────
-   - fbSubscribe(collection, onData, opts) : polling toutes les 5s
-   - fbUnsubscribe(collection)             : arrêt du polling
-   - fbQueue(collection, id, data)         : write avec retry expo
-   - fbDeleteQueue(collection, id)         : delete avec retry expo
-   - Sync indicateur visuel via FBSyncUI   : point header vert/orange/rouge
-   ═══════════════════════════════════════════════════════════════ */
-
-(function (global) {
-  'use strict';
-
-  // ── Config ────────────────────────────────────────────────────
-  var FB_PROJECT = 'familyhub-colis-8abbd';
-  var POLL_MS    = 5000;   // intervalle polling
-  var RETRY_MAX  = 30000;  // retry max 30s
-  var QUEUE_KEY  = 'fb_wq'; // localStorage write queue
-
-  // ── Helpers Firebase REST ─────────────────────────────────────
-  function getKey() {
-    try { var s = JSON.parse(localStorage.getItem('lt_fb')); return s && s.apiKey ? s.apiKey : ''; } catch (e) { return ''; }
-  }
-  function fbUrl(path) {
-    return 'https://firestore.googleapis.com/v1/projects/' + FB_PROJECT +
-      '/databases/(default)/documents/' + path + '?key=' + getKey();
-  }
-  function toF(o) {
-    var f = {};
-    Object.keys(o).forEach(function (k) {
-      var v = o[k];
-      if (v == null) return;
-      if (typeof v === 'string')  f[k] = { stringValue: v };
-      else if (typeof v === 'number')  f[k] = { doubleValue: v };
-      else if (typeof v === 'boolean') f[k] = { booleanValue: v };
-    });
-    return f;
-  }
-  function frD(doc) {
-    var o = {};
-    if (!doc.fields) return o;
-    Object.keys(doc.fields).forEach(function (k) {
-      var v = doc.fields[k];
-      if (v.stringValue  !== undefined) o[k] = v.stringValue;
-      else if (v.doubleValue  !== undefined) o[k] = v.doubleValue;
-      else if (v.integerValue !== undefined) o[k] = parseInt(v.integerValue, 10);
-      else if (v.booleanValue !== undefined) o[k] = v.booleanValue;
-      else if (v.arrayValue   !== undefined) {
-        o[k] = (v.arrayValue.values || []).map(function (item) {
-          if (item.stringValue !== undefined) { try { return JSON.parse(item.stringValue); } catch (e) { return item.stringValue; } }
-          return '';
-        });
-      } else o[k] = '';
-    });
-    return o;
-  }
-
-  // ── Write Queue (retry exponentiel) ───────────────────────────
-  function loadQueue() {
-    try { return JSON.parse(localStorage.getItem(QUEUE_KEY)) || []; } catch (e) { return []; }
-  }
-  function saveQueue(q) {
-    try { localStorage.setItem(QUEUE_KEY, JSON.stringify(q)); } catch (e) {}
-  }
-  function enqueue(op) {
-    var q = loadQueue();
-    // Dédupliquer : remplacer op existante sur même coll/id
-    q = q.filter(function (x) { return !(x.coll === op.coll && x.id === op.id); });
-    op.retryDelay = 1000;
-    op.nextRetry  = Date.now();
-    q.push(op);
-    saveQueue(q);
-    _flushQueue();
-  }
-
-  var _flushTimer = null;
-  function _flushQueue() {
-    if (_flushTimer) return;
-    _flushTimer = setTimeout(_doFlush, 100);
-  }
-  async function _doFlush() {
-    _flushTimer = null;
-    if (!getKey()) return;
-    var q = loadQueue();
-    if (!q.length) return;
-    var now = Date.now();
-    var remaining = [];
-    for (var i = 0; i < q.length; i++) {
-      var op = q[i];
-      if (op.nextRetry > now) { remaining.push(op); continue; }
-      try {
-        var ok = false;
-        if (op.type === 'DELETE') {
-          var r = await fetch(fbUrl(op.coll + '/' + op.id), { method: 'DELETE', redirect: 'follow' });
-          ok = r.ok;
-        } else {
-          var r2 = await fetch(fbUrl(op.coll + '/' + op.id), {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fields: toF(op.data) }),
-            redirect: 'follow'
-          });
-          ok = r2.ok;
-        }
-        if (!ok) throw new Error('HTTP ' + (r || r2).status);
-        FBSyncUI.setStatus('ok');
-        // succès : ne pas remettre dans la queue
-      } catch (e) {
-        // retry exponentiel
-        op.retryDelay = Math.min(op.retryDelay * 2, RETRY_MAX);
-        op.nextRetry  = Date.now() + op.retryDelay;
-        remaining.push(op);
-        FBSyncUI.setStatus('error');
-      }
-    }
-    saveQueue(remaining);
-    if (remaining.length) {
-      var nextMs = Math.min.apply(null, remaining.map(function (x) { return x.nextRetry - Date.now(); }));
-      setTimeout(_doFlush, Math.max(nextMs, 500));
-    }
-  }
-
-  // ── API publique write/delete ──────────────────────────────────
-  function fbQueue(coll, id, data) {
-    enqueue({ type: 'WRITE', coll: coll, id: String(id), data: data });
-  }
-  function fbDeleteQueue(coll, id) {
-    enqueue({ type: 'DELETE', coll: coll, id: String(id) });
-  }
-
-  // ── Polling ───────────────────────────────────────────────────
-  var _polls = {}; // { collection: { timer, lastEtag, cb, opts } }
-
-  function fbSubscribe(collection, onData, opts) {
-    opts = opts || {};
-    fbUnsubscribe(collection); // éviter double poll
-    _polls[collection] = { cb: onData, opts: opts, timer: null, etag: null, errors: 0 };
-    _poll(collection);
-    // Pause quand app en arrière-plan
-    document.addEventListener('visibilitychange', function () {
-      if (document.hidden) { _pausePoll(collection); }
-      else                 { _resumePoll(collection); }
-    });
-  }
-
-  function fbUnsubscribe(collection) {
-    if (_polls[collection]) {
-      clearTimeout(_polls[collection].timer);
-      delete _polls[collection];
-    }
-  }
-
-  function _pausePoll(collection) {
-    if (_polls[collection]) clearTimeout(_polls[collection].timer);
-  }
-  function _resumePoll(collection) {
-    if (_polls[collection]) _poll(collection);
-  }
-
-  async function _poll(collection) {
-    var entry = _polls[collection];
-    if (!entry) return;
-    if (!getKey()) {
-      entry.timer = setTimeout(function () { _poll(collection); }, POLL_MS);
-      return;
-    }
-    FBSyncUI.setStatus('syncing');
-    try {
-      var url = fbUrl(collection) + '&pageSize=500';
-      var r = await fetch(url, { redirect: 'follow' });
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      var data = await r.json();
-      var docs = (data.documents || []).map(function (x) {
-        return Object.assign(frD(x), { _fbId: x.name.split('/').pop() });
-      });
-      entry.errors = 0;
-      FBSyncUI.setStatus('ok');
-      entry.cb(docs);
-    } catch (e) {
-      entry.errors++;
-      FBSyncUI.setStatus('error');
-    }
-    if (_polls[collection]) {
-      entry.timer = setTimeout(function () { _poll(collection); }, POLL_MS);
-    }
-  }
-
-  // ── Indicateur visuel ─────────────────────────────────────────
-  // Injecte un point coloré dans l'élément #syncDot si présent
-  // Statuts : ok (vert) | syncing (orange clignotant) | error (rouge)
-  var FBSyncUI = {
-    _status: 'ok',
-    setStatus: function (s) {
-      this._status = s;
-      this._render();
-    },
-    _render: function () {
-      var dot = document.getElementById('syncDot');
-      if (!dot) return;
-      var colors = { ok: '#22c55e', syncing: '#f59e0b', error: '#ef4444' };
-      dot.style.background = colors[this._status] || colors.ok;
-      dot.style.animation  = this._status === 'syncing' ? 'fbPulse 1s infinite' : 'none';
-    }
-  };
-
-  // ── Init : flush queue au démarrage ──────────────────────────
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', _flushQueue);
-  } else {
-    setTimeout(_flushQueue, 500);
-  }
-
-  // ── Export global ─────────────────────────────────────────────
-  global.FBSync = {
-    subscribe:   fbSubscribe,
-    unsubscribe: fbUnsubscribe,
-    write:       fbQueue,
-    delete:      fbDeleteQueue,
-    ui:          FBSyncUI,
-    flush:       _flushQueue
-  };
-
-})(window);
-
-</script>
-
-<script>
 'use strict';
 // ─── CONSTANTES ───────────────────────────────────────────────────────────────
 var SK='lt_v3',FBK='lt_fb',RK='lt_ret',LK='lt_logs',LSK='lt_lsms';
@@ -609,7 +384,6 @@ function purge(){
   if(changed||D.packages.length!==b)saveD(D);
 }
 
-
 // ─── FIREBASE REST ────────────────────────────────────────────────────────────
 function fbU(p){var c=getFB();return'https://firestore.googleapis.com/v1/projects/'+c.projectId+'/databases/(default)/documents/'+p+'?key='+c.apiKey;}
 function toF(o){var f={};Object.entries(o).forEach(function(kv){var k=kv[0],v=kv[1];if(v==null)return;if(typeof v==='string')f[k]={stringValue:v};else if(typeof v==='number')f[k]={doubleValue:v};else if(typeof v==='boolean')f[k]={booleanValue:v};});return f;}
@@ -650,7 +424,7 @@ async function syncFB(){
   }
 }
 
-  // ─── DÉTECTION TRANSPORTEUR ───────────────────────────────────────────────────
+// ─── DÉTECTION TRANSPORTEUR ───────────────────────────────────────────────────
 var CARS=[
   {c:'chronofresh',t:function(f,s,b){return/chronofresh/i.test(f+s+b);}},
   {c:'colissimo',  t:function(f,s,b){return/colissimo/i.test(f+s+b)||/laposte/i.test(f);}},
@@ -1063,12 +837,10 @@ function showToast(m){
   clearTimeout(_tt);_tt=setTimeout(function(){t.classList.remove('show');},3500);
 }
 
-// ─── DISPATCHER GLOBAL (FIX CRITIQUE: plus de TextNode crash) ─────────────────
-// findAction remonte l'arbre DOM en évitant les TextNodes
+// ─── DISPATCHER GLOBAL ────────────────────────────────────────────────────────
 function findAction(elem){
   var el=elem;
   while(el&&el!==document){
-    /* FIX: vérifier nodeType===1 avant getAttribute */
     if(el.nodeType===1&&el.getAttribute&&el.getAttribute('data-action'))return el;
     el=el.parentNode;
   }
@@ -1115,12 +887,10 @@ document.addEventListener('click',function(e){
   }
 },false);
 
-// Fermer sheet sur clic overlay
 document.addEventListener('click',function(e){
   if(e.target&&e.target.classList&&e.target.classList.contains('sov'))closeSheet(e.target.id);
 },false);
 
-// Input handlers (non-click)
 document.addEventListener('input',function(e){
   if(e.target&&e.target.id==='srchIn'){
     srch=e.target.value;render();
@@ -1142,7 +912,6 @@ function clearSearch(){
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 document.querySelectorAll('.sov').forEach(function(el){el.style.display='none';});
 initTheme();purge();renderSS();render();
-// Phase 4: polling temps réel
 FBSync.subscribe('colis', function(docs) {
   var n=0;
   docs.forEach(function(p){
@@ -1206,9 +975,7 @@ DBG.init();
 <script>
 if('serviceWorker'in navigator){
   window.addEventListener('load',function(){
-    navigator.serviceWorker.register('/sw.js')
-      .then(function(r){console.log('SW',r.scope);})
-      .catch(function(e){console.warn('SW',e);});
+    navigator.serviceWorker.register('/sw.js').catch(function(){});
   });
 }
 </script>

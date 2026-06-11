@@ -466,5 +466,518 @@ function xA(t){if(!t)return'';var J=/^(ce message|merci|suivre|téléchargez|pou
 function xL(t){if(!t)return'';var ps=[/https?:\/\/(?:n\.pkup\.fr)[^\s<"')]+/i,/https?:\/\/(?:sms\.laposte\.fr)[^\s<"')]+/i,/https?:\/\/(?:p\.vintedgo\.com)[^\s<"')]+/i,/https?:\/\/(?:moncolis\.gls-france\.com)[^\s<"')]+/i,/https?:\/\/(?:my\.dpd\.fr)[^\s<"')]+/i,/https?:\/\/(?:amzn\.eu)[^\s<"')]+/i,/https?:\/\/(?:www\.chronopost\.fr)[^\s<"')]+/i,/ups\.com\/su\/[^\s<"')]+/i,/https?:\/\/[^\s<"')]{12,60}/];for(var i=0;i<ps.length;i++){var m=t.match(ps[i]);if(m){var u=m[0];if(!u.startsWith('http'))u='https://'+u;return u;}}return'';}
 function xSl(t){if(!t)return'';var m1=t.match(/entre\s+(\d{1,2}[h:]\d{2})\s*[-–et]+\s*(\d{1,2}[h:]\d{2})/i);if(m1)return m1[1].replace('h',':')+' — '+m1[2].replace('h',':');return'';}
 function xEx(t,arr,c){if(!t)return'';var R=getRet();var d=t.match(/(?:disposez?\s+de|pendant)\s+(\d+)\s+jours?/i);if(d){var x=new Date(arr);x.setDate(x.getDate()+parseInt(d[1]));return x.toISOString().split('T')[0];}var i=t.match(/(?:avant le|jusqu['']au)\s+(\d{4}-\d{2}-\d{2})/i);if(i)return i[1];var nm=t.match(/(?:jusqu['']au|avant le)\s+(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/i);if(nm){var y=nm[3]?(nm[3].length===2?'20'+nm[3]:nm[3]):new Date().getFullYear();return y+'-'+nm[2].padStart(2,'0')+'-'+nm[1].padStart(2,'0');}var days=R[c]||14;var def=new Date(arr);def.setDate(def.getDate()+days);return def.toISOString().split('T')[0];}
-function xSd(t){if(!t)return'';var m1=t
-  
+function xSd(t){if(!t)return'';var m1=t.match(/expédié\s+par\s+([A-Z][^\n.]{2,40}?)(?:\n|\.|est)/i);if(m1)return m1[1].trim();return'';}
+
+// ─── DÉDUPLICATION ────────────────────────────────────────────────────────────
+function findDup(pkg){
+  var k=(pkg.trackingNum||'').toUpperCase().trim();
+  var co=(pkg.pickupCode||'').toUpperCase().trim();
+  return D.packages.find(function(p){
+    if(k&&p.trackingNum&&p.trackingNum.toUpperCase().trim()===k)return true;
+    if(co&&p.pickupCode&&p.pickupCode.toUpperCase().trim()===co&&p.carrier===pkg.carrier)return true;
+    return false;
+  });
+}
+function mrg(ex,nw){
+  var O={pending:0,out_for_delivery:1,ready:2,failed:2,delivered:3,expired:4,collected:4};
+  if((O[nw.status]||0)>(O[ex.status]||0))ex.status=nw.status;
+  ex.pickupCode=nw.pickupCode||ex.pickupCode;
+  ex.lockerAddress=nw.lockerAddress||ex.lockerAddress;
+  ex.expiryDate=nw.expiryDate||ex.expiryDate;
+  ex.deliverySlot=nw.deliverySlot||ex.deliverySlot;
+  ex.trackingLink=nw.trackingLink||ex.trackingLink;
+  ex.trackingNum=nw.trackingNum||ex.trackingNum;
+  ex.sender=nw.sender||ex.sender;
+  ex._fbId=ex._fbId||nw._fbId;
+  if(!ex.events)ex.events=[];
+  if(nw.status&&nw.status!==ex.status)ex.events.unshift({date:new Date().toISOString(),status:nw.status,desc:'Mise à jour'});
+  if(ex.events.length>10)ex.events=ex.events.slice(0,10);
+  if(nw.arrivalDate&&(!ex.arrivalDate||new Date(nw.arrivalDate)<new Date(ex.arrivalDate)))ex.arrivalDate=nw.arrivalDate;
+  ex.lastUpdated=new Date().toISOString();
+}
+
+// ─── SMS ──────────────────────────────────────────────────────────────────────
+async function readSMS(silent){
+  silent=silent||false;
+  if(!window.Capacitor||!window.Capacitor.isNativePlatform()){if(!silent)showToast('📱 APK Android uniquement');return;}
+  var P=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.SmsPlugin;
+  if(!P&&window.Capacitor&&window.Capacitor.registerPlugin){try{P=window.Capacitor.registerPlugin('SmsPlugin');}catch(e){}}
+  if(!P){if(!silent)showToast('⚠️ Plugin SMS introuvable');return;}
+  try{
+    if(!silent)showToast('📲 Lecture SMS…');
+    var r=await P.getSMSList({count:500});var msgs=r&&r.messages||[];
+    if(!msgs.length){if(!silent)showToast('Aucun SMS ou permission refusée');return;}
+    var nw=0,up=0;
+    for(var i=0;i<msgs.length;i++){
+      var sms=msgs[i];
+      var body=sms.body||'',sender=sms.address||'',lo=body.toLowerCase();
+      var det=CARS.find(function(d){return d.t(sender.toLowerCase(),lo,lo);});if(!det)continue;
+      var c=det.c;var tr=xT(c,body),co=xC(body),ad=xA(body);if(!tr&&!co&&!ad)continue;
+      var status=detSt(body);
+      var smsDate=sms.date?new Date(parseInt(sms.date)).toISOString():new Date().toISOString();
+      var fbId='sms_'+String(sms.date||Date.now())+'_'+btoa(encodeURIComponent((sender+'|'+(body||'').substring(0,20)))).substring(0,16);
+      var pkg={id:Math.round(D.nextId++),_fbId:fbId,carrier:c,trackingNum:tr,pickupCode:co,lockerAddress:ad,trackingLink:xL(body),deliverySlot:xSl(body),sender:xSd(body)||sender,arrivalDate:smsDate,expiryDate:xEx(body,smsDate,c),status:status,emailSubject:'SMS — '+(sender||'transporteur'),gmailLink:'',account:'Guillaume',source:'sms',gmailMsgId:fbId,note:'',lastUpdated:smsDate,events:[{date:smsDate,status:status,desc:'SMS — '+(sender||'')}]};
+      var dup=findDup(pkg);if(dup){mrg(dup,pkg);up++;}else{D.packages.unshift(pkg);FBSync.write('colis',fbId,pkg);nw++;}
+    }
+    localStorage.setItem(LSK,String(Date.now()));purge();saveD(D);render();
+    var msg=nw>0?'✓ '+nw+' nouveau(x), '+up+' mis à jour':up>0?'✓ '+up+' mis à jour':'✓ Aucun nouveau ('+msgs.length+' SMS)';
+    wlog('sms',msg+' — '+msgs.length+' SMS lus');if(!silent)showToast(msg);
+  }catch(e){if(!silent)showToast('❌ '+(e.message||e));wlog('sms','❌ '+e.message);}
+}
+
+function parseMan(){
+  var t=document.getElementById('smsIn').value.trim();if(!t){showToast('⚠️ Collez un SMS');return;}
+  var lo=t.toLowerCase();var det=CARS.find(function(d){return d.t('',lo,lo);});var c=det&&det.c||'other';
+  var now=new Date().toISOString();var fbId='sms_man_'+Date.now();
+  var pkg={id:D.nextId++,_fbId:fbId,carrier:c,trackingNum:xT(c,t),pickupCode:xC(t),lockerAddress:xA(t),trackingLink:xL(t),deliverySlot:xSl(t),sender:xSd(t),arrivalDate:now,expiryDate:xEx(t,now,c),status:detSt(t),emailSubject:'SMS manuel',gmailLink:'',account:'Guillaume',source:'sms_manual',gmailMsgId:fbId,note:'',lastUpdated:now,events:[{date:now,status:detSt(t),desc:'Manuel'}]};
+  var dup=findDup(pkg);if(dup){mrg(dup,pkg);showToast('↗ Mis à jour');}else{D.packages.unshift(pkg);FBSync.write('colis',fbId,pkg);showToast('✓ Ajouté : '+LB[c]);}
+  purge();saveD(D);render();document.getElementById('smsIn').value='';closeSheet('shSync');
+}
+
+// ─── CARRIER SELECTION ────────────────────────────────────────────────────────
+function selCarrier(c,el){
+  SC=c;
+  document.querySelectorAll('.cb').forEach(function(b){b.classList.remove('sel');});
+  if(el)el.classList.add('sel');
+}
+
+// ─── AJOUT MANUEL COLIS ───────────────────────────────────────────────────────
+function addPkg(){
+  if(!SC){showToast('⚠️ Choisissez un transporteur');return;}
+  var tr=document.getElementById('aT').value.trim().toUpperCase();
+  var co=document.getElementById('aC').value.trim().toUpperCase();
+  var ad=document.getElementById('aA').value.trim();
+  if(!tr&&!co&&!ad){showToast('⚠️ Renseignez au moins un champ');return;}
+  var R=getRet(),now=new Date().toISOString(),fbId='man_'+Date.now();
+  var defExp=new Date();defExp.setDate(defExp.getDate()+(R[SC]||14));
+  var pkg={id:D.nextId++,_fbId:fbId,carrier:SC,trackingNum:tr,pickupCode:co,lockerAddress:ad,trackingLink:'',deliverySlot:'',sender:document.getElementById('aSd').value.trim(),arrivalDate:now,expiryDate:defExp.toISOString().split('T')[0],status:'ready',emailSubject:'Ajout manuel',gmailLink:'',account:document.getElementById('aAc').value,source:'manual',gmailMsgId:fbId,note:document.getElementById('aN').value.trim(),lastUpdated:now,events:[{date:now,status:'ready',desc:'Manuel'}]};
+  D.packages.unshift(pkg);saveD(D);render();FBSync.write('colis',fbId,pkg);
+  closeSheet('shAdd');showToast('✓ Colis ajouté');
+  ['aT','aC','aA','aSd','aN'].forEach(function(id){document.getElementById(id).value='';});
+  SC=null;document.querySelectorAll('.cb').forEach(function(b){b.classList.remove('sel');});
+}
+
+// ─── ACTIONS COLIS ────────────────────────────────────────────────────────────
+function markDone(id){
+  var p=D.packages.find(function(x){return x.id===id;});if(!p)return;
+  p.status='collected';
+  if(!p.events)p.events=[];
+  p.events.unshift({date:new Date().toISOString(),status:'collected',desc:''});
+  saveD(D);render();
+  if(p._fbId)FBSync.write('colis',p._fbId,Object.assign({},p,{status:'collected'}));
+  showToast('✓ Récupéré');
+}
+function delPkg(id){
+  if(!confirm('Supprimer ?'))return;
+  var p=D.packages.find(function(x){return x.id===id;});
+  if(p&&p._fbId)FBSync.delete('colis',p._fbId);
+  D.packages=D.packages.filter(function(x){return x.id!==id;});
+  saveD(D);render();
+}
+function cpT(txt,lbl){
+  if(!txt)return;
+  if(navigator.clipboard)navigator.clipboard.writeText(txt).then(function(){showToast('📋 '+lbl+' copié');});
+  else{var t=document.createElement('textarea');t.value=txt;t.style.cssText='position:fixed;opacity:0';document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);showToast('📋 '+lbl+' copié');}
+}
+function copyAll(id){
+  var p=D.packages.find(function(x){return x.id===id;});if(!p)return;
+  var parts=[LB[p.carrier]||p.carrier,p.trackingNum?'N° : '+p.trackingNum:'',p.pickupCode?'Code : '+p.pickupCode:'',p.lockerAddress?p.lockerAddress:'',p.expiryDate?'Expire le '+fFull(p.expiryDate):'',p.trackingLink||''].filter(Boolean).join('\n');
+  cpT(parts,'Infos colis');
+}
+function shareP(id){
+  var p=D.packages.find(function(x){return x.id===id;});if(!p)return;
+  var lines=['📦 '+LB[p.carrier],p.trackingNum?'N° : '+p.trackingNum:'',p.pickupCode?'Code : '+p.pickupCode:'',p.lockerAddress?'📍 '+p.lockerAddress:'',p.expiryDate?'⏰ Expire le '+fFull(p.expiryDate):'',p.trackingLink?'🔗 '+p.trackingLink:''].filter(Boolean);
+  var text=lines.join('\n');
+  if(navigator.share)navigator.share({title:'Colis',text:text}).catch(function(){});else cpT(text,'Infos');
+}
+
+// ─── FORMATAGE ────────────────────────────────────────────────────────────────
+function sLbl(s){return{ready:'À retirer',pending:'En route',out_for_delivery:'En livraison',delivered:'Récupéré',failed:'Échec livr.',expired:'Expiré',collected:'Récupéré'}[s]||s;}
+function sLblDate(p){
+  var base=sLbl(p.status);
+  if(p.status==='ready'&&p.expiryDate)return base+' avant le '+fShort(p.expiryDate);
+  if(p.status==='expired'&&p.expiryDate)return 'Expiré le '+fShort(p.expiryDate);
+  if((p.status==='delivered'||p.status==='collected')&&p.arrivalDate)return 'Récupéré le '+fShort(p.arrivalDate);
+  return base;
+}
+function sCls(s){return{ready:'sr',pending:'sp',out_for_delivery:'so',delivered:'sd',failed:'sf2',expired:'sx',collected:'sd'}[s]||'sp';}
+function dLeft(e){if(!e)return null;return Math.floor((new Date(e)-Date.now())/86400000);}
+function xCol(d){if(d<0||d<=2)return'var(--cf)';if(d<=5)return'var(--cpd)';return'var(--cr)';}
+function fFull(iso){if(!iso)return'';try{return new Date(iso).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});}catch{return iso;}}
+function fShort(iso){if(!iso)return'';try{return new Date(iso).toLocaleDateString('fr-FR',{day:'numeric',month:'short'});}catch{return iso;}}
+function fmtSlotWithDay(slot,arrDate){if(!slot)return'';var days=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];try{var d=arrDate?new Date(arrDate):new Date();return days[d.getDay()]+' '+d.getDate()+'/'+String(d.getMonth()+1).padStart(2,'0')+' · '+slot;}catch{return slot;}}
+function fSrc(p){return(p.source&&p.source.indexOf('sms')>=0?'📱':'📧')+' '+fShort(p.arrivalDate);}
+
+// ─── FILTRAGE & RENDU ─────────────────────────────────────────────────────────
+function getFilt(){
+  var DIS=getDisabled(),_cut30=Date.now()-30*86400000;
+  var pkgs=D.packages.filter(function(p){
+    if(DIS.has(p.carrier))return false;
+    if(['ready','delivered','collected'].indexOf(p.status)<0){
+      var _lu=new Date(p.arrivalDate||p.lastUpdated||0).getTime();
+      if(_lu>0&&_lu<_cut30)return false;
+    }
+    if(p.status==='out_for_delivery'){var arr=p.arrivalDate?new Date(p.arrivalDate).getTime():0;if(arr>0&&arr<Date.now()-5*86400000)return false;}
+    return true;
+  });
+  if(flt!=='all')pkgs=pkgs.filter(function(p){return p.status===flt||(flt==='delivered'&&p.status==='collected');});
+  if(srch){var q=srch.toLowerCase();pkgs=pkgs.filter(function(p){return(p.carrier||'').toLowerCase().indexOf(q)>=0||(p.trackingNum||'').toLowerCase().indexOf(q)>=0||(p.lockerAddress||'').toLowerCase().indexOf(q)>=0||(p.sender||'').toLowerCase().indexOf(q)>=0||(p.note||'').toLowerCase().indexOf(q)>=0;});}
+  return pkgs.sort(function(a,b){
+    var o={out_for_delivery:0,ready:1,failed:2,pending:3,delivered:4,expired:5,collected:5};
+    var so=(o[a.status]||9)-(o[b.status]||9);if(so!==0)return so;
+    var da=new Date(a.expiryDate||a.arrivalDate||0).getTime();
+    var db=new Date(b.expiryDate||b.arrivalDate||0).getTime();
+    return da-db;
+  });
+}
+
+function updBadges(){
+  var p=D.packages,DIS=getDisabled(),_cut30=Date.now()-30*86400000;
+  function countFilt(fn){return p.filter(function(x){if(DIS.has(x.carrier))return false;if(['ready','delivered','collected'].indexOf(x.status)<0){var _lu=new Date(x.arrivalDate||x.lastUpdated||0).getTime();if(_lu>0&&_lu<_cut30)return false;}if(x.status==='out_for_delivery'){var arr=x.arrivalDate?new Date(x.arrivalDate).getTime():0;if(arr>0&&arr<Date.now()-5*86400000)return false;}return fn(x);}).length;}
+  var tb=document.getElementById('totalBadge');
+  var rCount=countFilt(function(x){return x.status==='ready';});
+  var total=countFilt(function(x){return true;});
+  if(tb)tb.textContent=rCount>0?rCount+' à retirer':total>0?total+' colis':'';
+  var cnts={bA:total,bR:rCount,bO:countFilt(function(x){return x.status==='out_for_delivery';}),bP:countFilt(function(x){return x.status==='pending';}),bF:countFilt(function(x){return x.status==='failed';}),bD:countFilt(function(x){return x.status==='delivered'||x.status==='collected';})};
+  Object.entries(cnts).forEach(function(kv){var el=document.getElementById(kv[0]);if(el)el.textContent=kv[1];});
+  document.querySelectorAll('.chip[data-filter]').forEach(function(chip){
+    var f=chip.getAttribute('data-filter');
+    var span=chip.querySelector('span');if(!span)return;
+    var map={all:cnts.bA,ready:cnts.bR,out_for_delivery:cnts.bO,pending:cnts.bP,failed:cnts.bF,delivered:cnts.bD};
+    if(map[f]!==undefined)span.textContent=map[f];
+  });
+}
+
+function render(){
+  updBadges();
+  var pkgs=getFilt();
+  var el=document.getElementById('PL');
+  if(!pkgs.length){
+    var msgs={ready:'Aucun colis à retirer',pending:'Aucun colis en route',out_for_delivery:'Aucune livraison en cours',failed:'Aucun échec de livraison',delivered:'Aucun colis récupéré',all:'Aucun colis'};
+    el.innerHTML='<div class="empty"><div class="eico">📭</div><div class="etit">'+(msgs[flt]||'Aucun colis')+'</div><div class="esub">'+( flt==='all'?'Appuyez sur + ou synchronisez via ⟳':'Changer de filtre ou synchroniser via ⟳')+'</div></div>';
+    return;
+  }
+  var R=getRet();
+  el.innerHTML=pkgs.map(function(p,i){
+    var color=CL[p.carrier]||'#888';
+    var days=dLeft(p.expiryDate);
+    var showE=p.status==='ready'&&days!==null;
+    var pct=showE?Math.max(0,Math.min(100,(days/(R[p.carrier]||14))*100)):null;
+    var parts=[];
+    if(p.pickupCode)parts.push('🔑 '+esc(p.pickupCode));
+    if(p.trackingNum)parts.push(p.trackingNum.substring(0,16)+(p.trackingNum.length>16?'…':''));
+    var dL=dLeft(p.expiryDate);
+    if(p.status==='ready'&&dL!==null&&dL<=3){var urgency=dL<0?'⚠️ Expiré':dL===0?'⚠️ Auj.':'⚠️ J-'+String(dL);parts.push(urgency);}
+    var sum=parts.join('  ');
+    return '<div class="pcard" id="pc'+p.id+'" data-action="tog" data-id="'+p.id+'" style="animation-delay:'+i*.03+'s">'+
+      '<div class="ptint" style="background:'+color+'"></div>'+
+      '<div class="phdr">'+
+        '<div class="cbadge" style="background:'+color+'18;display:flex;align-items:center;justify-content:center">'+carrierLogo(p.carrier,26)+'</div>'+
+        '<div class="pht">'+
+          '<div class="pcname">'+esc(LB[p.carrier]||p.carrier)+'</div>'+
+          (sum?'<div class="pinline">'+sum+'</div>':'')+
+          '<div class="pmeta">'+fSrc(p)+(p.sender?' · '+esc(p.sender.substring(0,22)):'')+'</div>'+
+        '</div>'+
+        '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'+
+          '<div class="schip '+sCls(p.status)+'">'+esc(sLblDate(p))+'</div>'+
+          '<div style="font-size:12px;color:var(--osv)">'+(p.account==='Michele'?'M':'G')+'</div>'+
+        '</div>'+
+      '</div>'+
+      '<div id="pb'+p.id+'" style="display:none">'+
+        '<div class="pbdy">'+
+          '<div class="div"></div>'+
+          (p.trackingNum?'<div class="flbl">N° de suivi</div><div class="frow"><div class="fval">'+esc(p.trackingNum)+'</div><button class="cfab" data-action="cpT" data-val="'+escAttr(p.trackingNum)+'" data-lbl="N° suivi">📋</button></div>':'')+
+          (p.pickupCode?'<div class="cbox" style="background:var(--pc);border-radius:var(--rm);padding:16px;margin-bottom:12px"><div class="cblbl">Code de retrait</div><div class="cbrow"><div class="cbval">'+esc(p.pickupCode)+'</div><button class="cbcopy" data-action="cpT" data-val="'+escAttr(p.pickupCode)+'" data-lbl="Code">📋</button></div>'+(p.pickupCode.indexOf('/')>=0?'<div style="font-size:11px;color:var(--opc);opacity:.7;margin-top:4px">Saisir les deux codes successivement</div>':'')+'</div>':'')+
+          (p.lockerAddress?'<div style="background:var(--s1);border-radius:var(--rm);padding:12px 14px;margin-bottom:12px"><div style="display:flex;align-items:flex-start;gap:8px"><span style="font-size:16px">📍</span><div style="flex:1;font-size:14px;color:var(--os);line-height:1.5">'+esc(p.lockerAddress)+'</div><button class="cfab" data-action="cpT" data-val="'+escAttr(p.lockerAddress)+'" data-lbl="Adresse">📋</button></div><a style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:8px 16px;border-radius:20px;border:none;background:var(--p);color:var(--op);font-family:\'Plus Jakarta Sans\',sans-serif;font-size:13px;font-weight:500;cursor:pointer;text-decoration:none" href="https://maps'+'.google.com/?q='+encodeURIComponent(p.lockerAddress)+'" target="_blank" rel="noopener" data-action="stopProp">🗺 Ouvrir dans Maps</a></div>':'')+
+          (p.deliverySlot?'<div class="slot">🕐 '+esc(fmtSlotWithDay(p.deliverySlot,p.arrivalDate))+'</div>':'')+
+          (p.trackingLink?'<a class="tlink" href="'+p.trackingLink+'" target="_blank" rel="noopener" data-action="stopProp">🔗 Suivre le colis</a>':'')+
+          (showE&&days!==null?'<div class="xrow"><div class="xlbl">Expire le</div><div class="xval" style="color:'+xCol(days)+'">'+fFull(p.expiryDate)+'</div></div><div class="xbar"><div class="xfill" style="width:'+pct+'%;background:'+xCol(days)+'"></div></div>':'')+
+          (p.note?'<div style="background:var(--s1);border-radius:var(--rs);padding:10px 12px;margin-bottom:12px;font-size:14px;color:var(--osv)">💬 '+esc(p.note)+'</div>':'')+
+          (Array.isArray(p.events)&&p.events.length?'<div class="tl"><div class="tlhd">Historique</div>'+p.events.map(function(ev,j){return'<div class="tli"><div class="tld '+(j===0?'now':'old')+'">'+(j===0?'●':'·')+'</div><div class="tlc"><div class="tlst">'+sLbl(ev.status)+'</div><div class="tldt">'+fShort(ev.date)+'</div></div></div>';}).join('')+'</div>':'')+
+          '<div class="pacts">'+
+            ((p.pickupCode||p.trackingNum)?'<button class="act fl" data-action="showQR" data-id="'+p.id+'">📱 QR</button>':'')+
+            (p.gmailLink?'<a class="act" href="'+p.gmailLink+'" target="_blank" rel="noopener" data-action="stopProp">📧</a>':'')+
+            '<button class="act sh" data-action="shareP" data-id="'+p.id+'">↗ Partager</button>'+
+            '<button class="act" data-action="copyAll" data-id="'+p.id+'">📋 Tout copier</button>'+
+            (p.status!=='collected'&&p.status!=='delivered'?'<button class="act gn" data-action="markDone" data-id="'+p.id+'">✓ Récupéré</button>':'')+
+            '<button class="act rd" data-action="delPkg" data-id="'+p.id+'">🗑</button>'+
+          '</div>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+// ─── TOGGLE CARD ──────────────────────────────────────────────────────────────
+function tog(id){
+  var sid=String(id);
+  var b=document.getElementById('pb'+sid);
+  var card=document.getElementById('pc'+sid);
+  if(!b||!card)return;
+  var isOpen=b.getAttribute('data-open')==='1';
+  b.style.display=isOpen?'none':'block';
+  b.setAttribute('data-open',isOpen?'0':'1');
+  card.classList.toggle('open',!isOpen);
+}
+
+// ─── QR ───────────────────────────────────────────────────────────────────────
+function showQR(id){
+  var p=D.packages.find(function(x){return x.id===id;});if(!p)return;
+  var val=p.pickupCode||p.trackingNum||'';if(!val){showToast('Aucune donnée QR');return;}
+  document.getElementById('qrT').textContent=LB[p.carrier]||p.carrier;
+  document.getElementById('qrV').textContent=val;
+  document.getElementById('qrB').innerHTML='';
+  new QRCode(document.getElementById('qrB'),{text:val,width:200,height:200,colorDark:'#000',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.M});
+  openSheet('shQR');
+}
+
+// ─── SYNC PANEL ───────────────────────────────────────────────────────────────
+function renderSS(){
+  var cfg=getFB();var st=document.getElementById('fbSt');
+  if(st){var custom=localStorage.getItem(FBK);st.textContent=custom?'Configuré':'Par défaut';st.className='sbg '+(custom?'bok':'bwt');}
+  document.getElementById('sd').style.display='block';
+  updLs();
+}
+function updLs(){var el=document.getElementById('fbLs');if(!el||!D.lastSync){if(el)el.textContent='';return;}var d=new Date(D.lastSync);el.textContent='Sync : '+d.toLocaleDateString('fr-FR')+' à '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});}
+
+function renderLogs(){
+  try{var l=JSON.parse(localStorage.getItem(LK)||'{}');document.getElementById('logS').textContent=l.sms||'—';document.getElementById('logF').textContent=l.firebase||'—';document.getElementById('logG').textContent=l.gmail||'—';fetchGmailLog();}catch{}
+}
+async function fetchGmailLog(){
+  try{
+    var c=getFB();if(!c.apiKey){var el=document.getElementById('logG');if(el&&el.textContent==='—')el.textContent='Configurez Firebase pour voir les logs Gmail';return;}
+    var url='https://firestore.googleapis.com/v1/projects/'+c.projectId+'/databases/(default)/documents/meta/lastGmailSync?key='+c.apiKey;
+    var r=await fetch(url,{redirect:'follow'});
+    if(!r.ok){var el=document.getElementById('logG');if(r.status===403)el.textContent='Erreur 403 : Règles Firestore bloquent la lecture.';else if(r.status===404)el.textContent='Pas encore de log — exécutez syncGmailToFirebase() dans Apps Script.';else el.textContent='Erreur '+r.status;return;}
+    var d=await r.json();var v=d.fields&&(d.fields.log&&d.fields.log.stringValue||d.fields.Guillaume&&d.fields.Guillaume.stringValue||d.fields.Michele&&d.fields.Michele.stringValue)||'';
+    if(v){wlog('gmail',v);var el=document.getElementById('logG');if(el)el.textContent=v;}
+    else{var el=document.getElementById('logG');if(el)el.textContent='Document /meta/lastGmailSync vide';}
+  }catch(e){var el=document.getElementById('logG');if(el)el.textContent='Erreur connexion Firebase : '+e.message;}
+}
+
+function renderRetCf(){
+  var R=getRet(),DIS=getDisabled();
+  document.getElementById('retCf').innerHTML=Object.entries(DR).map(function(kv){
+    var c=kv[0],d=kv[1],dis=DIS.has(c);
+    return'<div class="cfgr" style="'+(dis?'opacity:0.45':'')+'">'+
+      '<div class="cfgd" style="background:'+(CL[c]||'#888')+'"></div>'+
+      '<div class="cfgl">'+(LB[c]||c)+'</div>'+
+      '<input class="cfgi" type="number" min="1" max="60" id="r_'+c+'" value="'+(R[c]||d)+'" '+(dis?'disabled':'')+'>'+
+      '<span style="font-size:12px;color:var(--osv)"> j</span>'+
+      '<button data-action="toggleCarrier" data-carrier="'+c+'" class="ci-toggle'+(dis?'':' on')+'" title="'+(dis?'Réactiver':'Désactiver')+'"></button>'+
+    '</div>';
+  }).join('');
+}
+
+function saveRet(){
+  var nr={};
+  Object.keys(DR).forEach(function(c){var e=document.getElementById('r_'+c);if(e)nr[c]=Math.max(1,Math.min(60,parseInt(e.value)||DR[c]));});
+  localStorage.setItem(RK,JSON.stringify(nr));showToast('✓ Délais sauvegardés');
+}
+function savePurgeDays(){
+  var el=document.getElementById('cfgPurgeDays');if(!el)return;
+  var v=parseInt(el.value,10);if(isNaN(v)||v<1){showToast('⚠️ Valeur invalide');return;}
+  setPurgeDays(v);showToast('✓ Purge : '+v+' jours');
+}
+function bindPurgeCfg(){var el=document.getElementById('cfgPurgeDays');if(el)el.value=getPurgeDays();}
+function resetAll(){if(!confirm('Supprimer TOUS les colis ?'))return;D={packages:[],nextId:1,lastSync:null};saveD(D);render();closeSheet('shSync');showToast('✓ Réinitialisé');}
+function toggleCarrier(c){
+  var d=getDisabled();if(d.has(c))d.delete(c);else d.add(c);
+  localStorage.setItem(DK,JSON.stringify([...d]));
+  renderRetCf();render();
+  showToast(d.has(c)?LB[c]+' désactivé':LB[c]+' réactivé');
+}
+
+// ─── THÈME ────────────────────────────────────────────────────────────────────
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  var btn=document.getElementById('thbtn');
+  if(btn)btn.textContent=t==='dark'?'🌙':'☀️';
+}
+function toggleTheme(){
+  var d=document.documentElement.getAttribute('data-theme')==='dark';
+  var n=d?'light':'dark';
+  localStorage.setItem('lt_th',n);applyTheme(n);
+}
+function initTheme(){
+  var s=localStorage.getItem('lt_th');
+  if(s){applyTheme(s);return;}
+  var sys=window.matchMedia('(prefers-color-scheme: dark)');
+  applyTheme(sys.matches?'dark':'light');
+  sys.addEventListener('change',function(e){if(!localStorage.getItem('lt_th'))applyTheme(e.matches?'dark':'light');});
+}
+
+// ─── SHEETS ───────────────────────────────────────────────────────────────────
+function openSheet(id){
+  var el=document.getElementById(id);if(!el)return;
+  el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;';
+  /* FIX: forcer reflow Capacitor WebView */
+  void el.offsetHeight;
+  try{document.body.style.overflow='hidden';}catch(e){}
+}
+function closeSheet(id){
+  var el=document.getElementById(id);if(!el)return;
+  el.style.display='none';
+  try{document.body.style.overflow='';}catch(e){}
+}
+function showTab(tabId,btn){
+  document.querySelectorAll('.tpan').forEach(function(p){p.classList.remove('on');});
+  document.querySelectorAll('.stab').forEach(function(b){b.classList.remove('sel');});
+  var panel=document.getElementById(tabId);if(panel)panel.classList.add('on');
+  if(btn)btn.classList.add('sel');
+  if(tabId==='tCf'){renderRetCf();bindPurgeCfg();}
+  if(tabId==='tLg')renderLogs();
+}
+
+// ─── TOAST ────────────────────────────────────────────────────────────────────
+var _tt;
+function showToast(m){
+  var t=document.getElementById('toast');
+  t.textContent=m;t.classList.add('show');
+  clearTimeout(_tt);_tt=setTimeout(function(){t.classList.remove('show');},3500);
+}
+
+// ─── DISPATCHER GLOBAL ────────────────────────────────────────────────────────
+function findAction(elem){
+  var el=elem;
+  while(el&&el!==document){
+    if(el.nodeType===1&&el.getAttribute&&el.getAttribute('data-action'))return el;
+    el=el.parentNode;
+  }
+  return null;
+}
+
+document.addEventListener('click',function(e){
+  var el=findAction(e.target);
+  if(!el)return;
+  var action=el.getAttribute('data-action');
+  var ds=el.dataset;
+  DBG.dispatch(e,action);
+
+  switch(action){
+    case 'toggleTheme': toggleTheme(); break;
+    case 'openAdd': openSheet('shAdd'); break;
+    case 'openSync': openSheet('shSync');renderSS();renderLogs(); break;
+    case 'closeSheet': closeSheet(ds.target); break;
+    case 'setFilter':
+      flt=ds.filter||'all';
+      document.querySelectorAll('.chip').forEach(function(b){b.classList.remove('sel');});
+      el.classList.add('sel');render();
+      break;
+    case 'selCarrier': e.stopPropagation();selCarrier(ds.carrier,el); break;
+    case 'addPkg': addPkg(); break;
+    case 'syncFB': syncFB(); break;
+    case 'readSMS': readSMS(false); break;
+    case 'parseMan': parseMan(); break;
+    case 'showTab': showTab(ds.tab,el); break;
+    case 'saveRet': saveRet(); break;
+    case 'savePurgeDays': savePurgeDays(); break;
+    case 'toggleDebug': DBG.toggle(); break;
+    case 'resetAll': resetAll(); break;
+    case 'toggleCarrier': e.stopPropagation();toggleCarrier(ds.carrier); break;
+    case 'tog': e.stopPropagation();tog(ds.id); break;
+    case 'cpT': e.stopPropagation();cpT(ds.val,ds.lbl); break;
+    case 'showQR': e.stopPropagation();showQR(ds.id); break;
+    case 'shareP': e.stopPropagation();shareP(ds.id); break;
+    case 'copyAll': e.stopPropagation();copyAll(ds.id); break;
+    case 'markDone': e.stopPropagation();markDone(ds.id); break;
+    case 'delPkg': e.stopPropagation();delPkg(ds.id); break;
+    case 'clearSearch': clearSearch(); break;
+    case 'stopProp': e.stopPropagation(); break;
+  }
+},false);
+
+document.addEventListener('click',function(e){
+  if(e.target&&e.target.classList&&e.target.classList.contains('sov'))closeSheet(e.target.id);
+},false);
+
+document.addEventListener('input',function(e){
+  if(e.target&&e.target.id==='srchIn'){
+    srch=e.target.value;render();
+    var clr=document.getElementById('srchClr');
+    if(clr)clr.style.display=e.target.value?'block':'none';
+  }
+  if(e.target&&e.target.id==='aT')autoDet(e.target.value);
+},false);
+
+function clearSearch(){
+  srch='';
+  var inp=document.getElementById('srchIn');
+  var clr=document.getElementById('srchClr');
+  if(inp)inp.value='';
+  if(clr)clr.style.display='none';
+  render();
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.sov').forEach(function(el){el.style.display='none';});
+initTheme();purge();renderSS();render();
+FBSync.subscribe('colis', function(docs) {
+  var n=0;
+  docs.forEach(function(p){
+    normalizePackage(p);
+    var ex=D.packages.find(function(x){return x._fbId===p._fbId;});
+    if(ex){
+      normalizePackage(ex);
+      if(p.status&&p.status!==ex.status&&ex.status!=='collected')ex.status=p.status;
+      if((p.lastUpdated||'')>(ex.lastUpdated||'')){ex.pickupCode=p.pickupCode||ex.pickupCode;ex.lockerAddress=p.lockerAddress||ex.lockerAddress;ex.deliverySlot=p.deliverySlot||ex.deliverySlot;ex.trackingLink=p.trackingLink||ex.trackingLink;ex.trackingNum=p.trackingNum||ex.trackingNum;if(p.events&&p.events.length)ex.events=p.events;}
+    }else{if(!p.id)p.id=D.nextId++;else p.id=Math.round(Number(p.id));D.packages.unshift(p);n++;}
+  });
+  if(n>0){purge();saveD(D);render();document.getElementById('sd').style.display='block';}
+  updLs();
+});
+setTimeout(function(){
+  var chip=document.querySelector('.chip[data-filter="'+flt+'"]');
+  if(chip){document.querySelectorAll('.chip').forEach(function(b){b.classList.remove('sel');});chip.classList.add('sel');}
+},0);
+</script>
+
+<div id="fh-dbg">
+  <div class="dbg-h">
+    <span class="dbg-ti">🔍 Debug — Suivi Colis</span>
+    <div class="dbg-ac">
+      <button class="dbg-b" data-action="dbgClear">Vider</button>
+      <button class="dbg-b" style="color:#f85149" data-action="toggleDebug">✕</button>
+    </div>
+  </div>
+  <div class="dbg-sc" id="dbg-sc"></div>
+  <div class="dbg-ft" id="dbg-ft">0 entrée</div>
+</div>
+
+<script>
+var DBG=(function(){
+  var CAT={EVENT:{l:'EVENT',c:'#4fc3f7'},BDD:{l:'BDD',c:'#a5d6a7'},PARSE:{l:'PARSE',c:'#fff176'},LIFE:{l:'LIFE',c:'#ce93d8'},ERR:{l:'ERROR',c:'#ef9a9a'},PURGE:{l:'PURGE',c:'#ffb74d'}};
+  var entries=[],MAX=80,on=false,DBK='fh_dbg_on';
+  function _ts(){return new Date().toISOString().slice(11,23);}
+  function log(cat,msg,data){if(!on)return;entries.unshift({t:_ts(),cat:cat,msg:msg,d:data!=null?JSON.stringify(data,null,0):null});if(entries.length>MAX)entries.pop();_render();}
+  function _render(){var sc=document.getElementById('dbg-sc'),ft=document.getElementById('dbg-ft');if(!sc)return;sc.innerHTML=entries.map(function(e){return'<div class="dbg-e"><span class="dbg-t">'+e.t+'</span><span class="dbg-c" style="color:'+e.cat.c+'">'+e.cat.l+'</span><span class="dbg-m">'+e.msg+'</span>'+(e.d?'<span class="dbg-d">'+e.d+'</span>':'')+'</div>';}).join('');if(ft)ft.textContent=entries.length+' entrée'+(entries.length>1?'s':'');}
+  function show(){on=true;localStorage.setItem(DBK,'1');var el=document.getElementById('fh-dbg');if(el)el.style.display='flex';log(CAT.LIFE,'debug panel ouvert');}
+  function hide(){var el=document.getElementById('fh-dbg');if(el)el.style.display='none';on=false;localStorage.setItem(DBK,'0');}
+  function toggle(){on?hide():show();}
+  function clear(){entries=[];_render();}
+  function init(){if(localStorage.getItem(DBK)==='1')show();}
+  function dispatch(e,action){log(CAT.EVENT,'dispatch → "'+action+'"',{tag:e.target&&e.target.tagName,ok:!!action});}
+  function read(col,n){log(CAT.BDD,'read '+col,{docs:n});}
+  function lifecycle(msg,d){log(CAT.LIFE,msg,d||null);}
+  return{init:init,toggle:toggle,show:show,hide:hide,clear:clear,dispatch:dispatch,read:read,lifecycle:lifecycle,log:function(msg,d){log(CAT.EVENT,msg,d);}};
+})();
+// Lier dbgClear dans le dispatcher après init DBG
+document.addEventListener('click',function(e){
+  var el=e.target;
+  while(el&&el!==document){
+    if(el.nodeType===1&&el.getAttribute&&el.getAttribute('data-action')==='dbgClear'){DBG.clear();return;}
+    el=el.parentNode;
+  }
+},false);
+DBG.init();
+</script>
+
+<script>
+if('serviceWorker'in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('/sw.js').catch(function(){});
+  });
+}
+</script>
+</body>
+</html>

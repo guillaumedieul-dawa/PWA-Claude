@@ -192,7 +192,7 @@ function setFbStatus(state, msg) {
 async function testFirebase() {
   const key = getFBKey();
   if (!key) {
-    setFbStatus('err', '❌ Clé API vide (locker-tracker ⟳ BDD)');
+    setFbStatus('err', '❌ Clé API vide (Allez dans Paramètres)');
     return;
   }
   setFbStatus('spin', 'Test…');
@@ -232,8 +232,7 @@ function toFields(obj) {
   }
   return f;
 }
-
-function fromFields(fields) {
+  function fromFields(fields) {
   if (!fields) return {};
   const obj = {};
   for (const k in fields) {
@@ -253,7 +252,7 @@ function makeItemId(id) {
 async function fbWrite(item) {
   const key = getFBKey();
   if (!key) {
-    setFbStatus('err', '❌ Clé API vide (locker-tracker ⟳ BDD)');
+    setFbStatus('err', '❌ Clé API vide (Allez dans Paramètres)');
     return false;
   }
   const docId = item._fbId || makeItemId(item.id);

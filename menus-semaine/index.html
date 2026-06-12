@@ -9,10 +9,10 @@
 <meta name="apple-mobile-web-app-title" content="Menus de la semaine">
 <title>Menus de la semaine</title>
 <link rel="manifest" href="./manifest.json">
+<link rel="stylesheet" href="../themes.css">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fragment+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="../theme.js"></script>
 <style>
-
-
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Plus Jakarta Sans',sans-serif;overflow-x:hidden;transition:background .3s,color .3s}
 #app{max-width:520px;margin:0 auto;min-height:100dvh;padding-bottom:calc(var(--bot)+96px)}
@@ -63,11 +63,9 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Pl
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .sov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center}
 .shtit{font-family:'Bebas Neue',sans-serif!important;font-size:22px!important;letter-spacing:2px!important;color:var(--ob);margin-bottom:14px}
-.fab{position:fixed;bottom:calc(var(--bot) + 80px);right:20px;width:56px;height:56px;border-radius:18px;background:var(--p);color:#fff;border:none;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.2);z-index:99;transition:all .2s}
+.fab{position:fixed;bottom:calc(var(--bot) + 80px);right:20px;width:56px;height:56px;border-radius:18px;background:var(--p);color:#fff;border:none;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,.2);transition:transform .15s;z-index:999}
 .fab:active{transform:scale(.92)}
 </style>
-<link rel="stylesheet" href="../themes.css">
-<script src="../theme.js"></script>
 </head>
 <body>
 <div id="app">
@@ -89,7 +87,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Pl
 
   <button class="suggest-btn" id="btn-suggest">✨ Propositions de repas</button>
   <div class="dlist" id="DL"></div>
-<button class="fab" id="btn-fab" data-action="openSuggest">＋</button>
+  <button class="fab" id="btn-fab" data-action="openSuggest">＋</button>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -274,14 +272,6 @@ function applySuggest(){
   closeSheet('shSuggest');
   render();
   showToast('✓ Repas appliqués pour la semaine');
-}
-
-
-
-
-  const sys=window.matchMedia('(prefers-color-scheme: dark)');
-  applyTheme(sys.matches?'dark':'light');
-  sys.addEventListener('change',e=>{if(!localStorage.getItem('lt_th'))applyTheme(e.matches?'dark':'light');});
 }
 
 function openSheet(id){

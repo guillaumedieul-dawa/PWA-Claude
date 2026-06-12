@@ -12,7 +12,6 @@
 <link rel="stylesheet" href="../themes.css">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fragment+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="../theme.js"></script>
-<script src="../firebaseSync.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Plus Jakarta Sans',sans-serif;overflow-x:hidden;transition:background .3s,color .3s}
@@ -113,22 +112,72 @@ const SK='fh_menus';
 const DAYS=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
 const MONTHS=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
 
-// Initialisation Sync
-const menuSync = fbCreateSyncHandler('menus');
-
 function loadD(){try{const d=JSON.parse(localStorage.getItem(SK));if(d)return d;}catch{}return{};}
-function saveD(d){
-  localStorage.setItem(SK,JSON.stringify(d));
-  // Save global config to Firestore
-  if(fbIsConfigured()){
-      menuSync.write('config', d).catch(e => console.warn('Sync error', e));
-  }
-}
+function saveD(d){localStorage.setItem(SK,JSON.stringify(d));}
 
 let D=loadD();
 let weekOffset=0;
 let openDay=null;
 let _tt;
+
+// ── Firebase REST ──
+const FB_PROJECT='familyhub-colis-8abbd';
+const FB_COLL='meta/menus/jours';
+
+function getFBKey(){try{const s=JSON.parse(localStorage.getItem('lt_fb'));return s&&s.apiKey?s.apiKey:'';}catch{return '';}}
+function fbUrl(path){return 'https://firestore.googleapis.com/v1/projects/'+FB_PROJECT+'/databases/(default)/documents/'+path+'?key='+getFBKey();}
+
+function toFields(obj) {
+  const f = {};
+  for (const k in obj) {
+    const v = obj[k];
+    if (v === null || v === undefined) f[k] = {nullValue: null};
+    else if (typeof v === 'boolean')   f[k] = {booleanValue: v};
+    else if (typeof v === 'number')    f[k] = {integerValue: String(v)};
+    else                               f[k] = {stringValue: String(v)};
+  }
+  return f;
+}
+
+async function fbWrite(dateKey, data){
+  if(!getFBKey())return;
+  try{
+    await fetch(fbUrl(FB_COLL+'/'+dateKey),{
+      method:'PATCH',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({fields: toFields(data)})
+    });
+  }catch(e){console.warn('fbWrite',e);}
+}
+
+async function fbDeleteMenu(dateKey){
+  if(!getFBKey())return;
+  try{
+    await fetch(fbUrl(FB_COLL+'/'+dateKey), {method:'DELETE'});
+  }catch(e){console.warn('fbDeleteMenu',e);}
+}
+
+async function fbLoadAll(){
+  if(!getFBKey())return{};
+  try{
+    const r=await fetch(fbUrl(FB_COLL));
+    if(!r.ok)return{};
+    const data=await r.json();
+    const result={};
+    (data.documents||[]).forEach(function(doc){
+      const parts=doc.name.split('/');
+      const dateKey=parts[parts.length-1];
+      const fields=doc.fields||{};
+      result[dateKey]={};
+      for(const k in fields){
+        if(fields[k].stringValue !== undefined) result[dateKey][k]=fields[k].stringValue;
+        else if(fields[k].integerValue !== undefined) result[dateKey][k]=parseInt(fields[k].integerValue);
+        else if(fields[k].booleanValue !== undefined) result[dateKey][k]=fields[k].booleanValue;
+      }
+    });
+    return result;
+  }catch(e){console.warn('fbLoadAll',e);return{};}
+}
 
 function getWeekDates(offset=0){
   const now=new Date();
@@ -209,8 +258,13 @@ function saveDay(k){
   const midi=(document.getElementById(`midi_${k}`)?.value||'').trim();
   const soir=(document.getElementById(`soir_${k}`)?.value||'').trim();
   const note=(document.getElementById(`note_${k}`)?.value||'').trim();
-  if(midi||soir||note)D[k]={midi,soir,note};
-  else delete D[k];
+  if(midi||soir||note){
+    D[k]={midi,soir,note};
+    fbWrite(k, D[k]).catch(()=>{});
+  }else{
+    delete D[k];
+    fbDeleteMenu(k).catch(()=>{});
+  }
   saveD(D);
   openDay=null;render();showToast('✓ Menu enregistré');
 }
@@ -246,7 +300,9 @@ async function applySuggest(){
   for(let i=0; i<dates.length; i++){
     const d=dates[i];
     const k=dayKey(d);
-    D[k]={midi:m.midi[i%7],soir:m.soir[i%7],note:''};
+    const data={midi:m.midi[i%7],soir:m.soir[i%7],note:''};
+    D[k]=data;
+    await fbWrite(k, data);
   }
   saveD(D);
   closeSheet('shSuggest');
@@ -298,6 +354,7 @@ document.addEventListener('click',function(e){
   }
 });
 
+// Boutons du sheet suggestions (IDs fixes)
 document.getElementById('btn-suggest').addEventListener('click',function(){updateMealPreview();openSheet('shSuggest');});
 document.getElementById('btn-apply-sug').addEventListener('click',function(){applySuggest();});
 document.getElementById('btn-cancel-sug').addEventListener('click',function(){closeSheet('shSuggest');});
@@ -316,19 +373,17 @@ document.querySelectorAll('.sov').forEach(function(sov){
 
 async function init(){
   document.querySelectorAll('.sov').forEach(el=>{el.style.display='none';});
-  
-  // Sync reading
-  if(fbIsConfigured()){
-      try {
-        const remote = await menuSync.readAll();
-        const config = remote.find(d => d.id === 'config');
-        if(config) {
-            D = config;
-            localStorage.setItem(SK, JSON.stringify(D));
-        }
-      } catch(e) { console.warn('Sync load error', e); }
-  }
   render();
+  try{
+    const remote=await fbLoadAll();
+    let changed=false;
+    for(const k in remote){
+      if(!D[k]||JSON.stringify(D[k])!==JSON.stringify(remote[k])){
+        D[k]=Object.assign(D[k]||{},remote[k]);changed=true;
+      }
+    }
+    if(changed){saveD(D);render();}
+  }catch(e){}
 }
 init();
 </script>

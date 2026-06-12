@@ -10,9 +10,9 @@
 <title>Cave à spiritueux</title>
 <link rel="manifest" href="./manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fragment+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../themes.css">
+<script src="../theme.js"></script>
 <style>
-
-
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Plus Jakarta Sans',sans-serif;overflow-x:hidden;transition:background .3s,color .3s}
 #app{max-width:520px;margin:0 auto;min-height:100dvh;padding-bottom:calc(var(--bot)+96px)}
@@ -59,7 +59,7 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Pl
 .qty-btn{width:34px;height:34px;border-radius:50%;border:1px solid var(--olv);background:var(--s1);color:var(--os);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .qty-btn:active{background:var(--s2)}
 .qty-val{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--p);min-width:36px;text-align:center}
-.fab{position:fixed;bottom:calc(var(--bot)+80px);right:20px;width:56px;height:56px;border-radius:18px;background:var(--p);color:#fff;border:none;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,.2);transition:transform .15s;z-index:99}
+.fab{position:fixed;bottom:calc(var(--bot) + 80px);right:20px;width:56px;height:56px;border-radius:18px;background:var(--p);color:#fff;border:none;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px var(--sh);transition:transform .15s;z-index:999}
 .fab:active{transform:scale(.92)}
 .toast{position:fixed;bottom:calc(var(--bot)+160px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--ob);color:var(--bg);padding:12px 20px;border-radius:28px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;max-width:88vw;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -83,8 +83,6 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Pl
 .esub{font-size:13px;color:var(--osv)}
 @keyframes fu{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 </style>
-<link rel="stylesheet" href="../themes.css">
-<script src="../theme.js"></script>
 </head>
 <body>
 <div id="app">
@@ -109,10 +107,9 @@ html,body{min-height:100dvh;background:var(--bg);color:var(--ob);font-family:'Pl
     <button class="chip"     data-filter="autre"  data-action="setFilter">🍾 Autres</button>
   </div>
   <div class="blist" id="BL"></div>
+  <button class="fab" data-action="openAdd">＋</button>
 </div>
-<button class="fab" data-action="openAdd"><span style="pointer-events:none">＋</span></button>
 <div class="toast" id="toast"></div>
-
 <div class="sov" id="shAdd">
   <div style="background:var(--sf);border-radius:20px 20px 0 0;padding:28px 32px calc(var(--bot)+40px);width:100%;max-width:520px;box-sizing:border-box;max-height:92dvh;overflow-y:auto">
     <div style="width:32px;height:4px;background:var(--olv);border-radius:2px;margin:0 auto 20px;cursor:pointer" data-action="closeAdd"></div>
@@ -332,14 +329,6 @@ function render() {
         <div class="bqty-lbl">btl</div>
       </div>
     </div>`).join('');
-}
-
-
-
-
-  const sys = window.matchMedia('(prefers-color-scheme: dark)');
-  applyTheme(sys.matches ? 'dark' : 'light');
-  sys.addEventListener('change', e => { if (!localStorage.getItem('lt_th')) applyTheme(e.matches?'dark':'light'); });
 }
 
 /* FIX: reflow Capacitor WebView */

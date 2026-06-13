@@ -177,6 +177,7 @@ html,body{font-family:'Plus Jakarta Sans',sans-serif;}
       <div class="tlbl">FamilyHub</div>
       <div class="th">📦 Mes colis <span id="totalBadge" style="font-size:14px;font-weight:400;color:var(--osv)"></span></div>
     </div>
+    <button class="ibtn" data-action="forceTrack" id="btn-track" title="Forcer scraping">🔄</button>
     <button id="btn-sync" class="ibtn" data-action="openSync" title="BDD / Sync">⟳<div class="ndot" id="sd" style="display:none"></div><div id="syncDot" style="position:absolute;bottom:6px;right:6px;width:7px;height:7px;border-radius:50%;background:#22c55e;border:1.5px solid var(--bg)"></div></button>
     <button class="ibtn" id="thbtn" data-action="toggleTheme">🌙</button>
   </div>
@@ -296,6 +297,10 @@ html,body{font-family:'Plus Jakarta Sans',sans-serif;}
         <button class="bfill" style="flex:1;margin:0;padding:10px 12px;font-size:13px" data-action="savePurgeDays">✓ OK</button>
       </div>
       <div style="font-size:11px;color:var(--osv);margin-bottom:16px">Défaut : 20 jours. S'applique aux colis avec statut Livré, Récupéré ou Expiré.</div>
+      <div class="slbl" style="margin-top:16px">Tracking automatique</div>
+      <div style="font-size:13px;color:var(--osv);margin-bottom:8px">URL Apps Script (Code-Tracker.gs déployé en Web App)</div>
+      <input class="fin" id="cfgTrackerWh" placeholder="https://script.google.com/macros/s/…/exec" style="font-size:12px;margin-bottom:6px">
+      <button class="bfill" style="margin-top:0;padding:10px;font-size:13px" data-action="saveTrackerWh">✓ Enregistrer URL</button>
       <div class="slbl">Outils développeur</div>
       <button class="bout" style="margin-top:0;display:flex;align-items:center;gap:6px;justify-content:center" data-action="toggleDebug">🔍 Panel debug</button>
       <button class="bdng" data-action="resetAll">🗑 Réinitialiser toutes les données</button>
@@ -329,6 +334,7 @@ html,body{font-family:'Plus Jakarta Sans',sans-serif;}
 // ─── CONSTANTES ───────────────────────────────────────────────────────────────
 var SK='lt_v3',FBK='lt_fb',RK='lt_ret',LK='lt_logs',LSK='lt_lsms';
 var FB0={projectId:'familyhub-colis-8abbd',apiKey:''};
+var TRACKER_WH_KEY='lt_tracker_wh'; // localStorage key pour l'URL webhook Apps Script
 var DR={chronopost:8,chronofresh:5,mondialrelay:5,colissimo:15,laposte:15,vintedgo:14,amazon:3,dpd:14,ups:10,gls:7,relaiscolis:10,other:14};
 var CL={chronopost:'#003087',chronofresh:'#005fa3',mondialrelay:'#e2001a',colissimo:'#f5c400',laposte:'#f5c400',vintedgo:'#09b1ba',amazon:'#ff9900',dpd:'#dc0032',ups:'#6b4226',gls:'#005ca9',relaiscolis:'#e8621a',other:'#888'};
 var LB={chronopost:'Chronopost',chronofresh:'Chronofresh',mondialrelay:'Mondial Relay',colissimo:'Colissimo',laposte:'La Poste',vintedgo:'Vinted Go',amazon:'Amazon',dpd:'DPD',ups:'UPS',gls:'GLS',relaiscolis:'Relais Colis',other:'Autre'};
@@ -787,6 +793,31 @@ function savePurgeDays(){
   setPurgeDays(v);showToast('✓ Purge : '+v+' jours');
 }
 function bindPurgeCfg(){var el=document.getElementById('cfgPurgeDays');if(el)el.value=getPurgeDays();}
+function bindTrackerWh(){var el=document.getElementById('cfgTrackerWh');if(el)el.value=localStorage.getItem(TRACKER_WH_KEY)||'';}
+function forceTrack(){
+  var wh=localStorage.getItem(TRACKER_WH_KEY);
+  if(!wh){showToast('⚠️ URL webhook non configurée (Config → Tracking)');return;}
+  var btn=document.getElementById('btn-track');
+  if(btn)btn.textContent='⏳';
+  showToast('🔄 Scraping en cours…');
+  fetch(wh+'?t='+Date.now())
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(btn)btn.textContent='🔄';
+      showToast('✅ '+d.updated+' mis à jour, '+d.errors+' erreurs');
+      syncFB();
+    })
+    .catch(function(e){
+      if(btn)btn.textContent='🔄';
+      showToast('❌ Webhook error: '+e.message);
+    });
+}
+function saveTrackerWh(){
+  var el=document.getElementById('cfgTrackerWh');if(!el)return;
+  var v=el.value.trim();if(!v){showToast('⚠️ URL vide');return;}
+  localStorage.setItem(TRACKER_WH_KEY,v);
+  showToast('✅ URL webhook enregistrée');
+}
 function resetAll(){if(!confirm('Supprimer TOUS les colis ?'))return;D={packages:[],nextId:1,lastSync:null};saveD(D);render();closeSheet('shSync');showToast('✓ Réinitialisé');}
 function toggleCarrier(c){
   var d=getDisabled();if(d.has(c))d.delete(c);else d.add(c);
@@ -813,7 +844,7 @@ function showTab(tabId,btn){
   document.querySelectorAll('.stab').forEach(function(b){b.classList.remove('sel');});
   var panel=document.getElementById(tabId);if(panel)panel.classList.add('on');
   if(btn)btn.classList.add('sel');
-  if(tabId==='tCf'){renderRetCf();bindPurgeCfg();}
+  if(tabId==='tCf'){renderRetCf();bindPurgeCfg();bindTrackerWh();}
   if(tabId==='tLg')renderLogs();
 }
 
@@ -861,6 +892,8 @@ document.addEventListener('click',function(e){
     case 'saveRet': saveRet(); break;
     case 'savePurgeDays': savePurgeDays(); break;
     case 'toggleDebug': DBG.toggle(); break;
+    case 'forceTrack': forceTrack(); break;
+    case 'saveTrackerWh': saveTrackerWh(); break;
     case 'resetAll': resetAll(); break;
     case 'toggleCarrier': e.stopPropagation();toggleCarrier(ds.carrier); break;
     case 'tog': e.stopPropagation();tog(ds.id); break;

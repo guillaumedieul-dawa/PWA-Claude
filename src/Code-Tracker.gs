@@ -37,7 +37,7 @@ function trackAllPackages() {
       errors++;
       _log('❌ ' + (pkg._fbId||'?') + ' : ' + e.message);
     }
-    Utilities.sleep(800);
+    Utilities.sleep(200);
   });
 
   var summary = { updated: updated, errors: errors, skipped: skipped, total: packages.length, ts: new Date().toISOString() };

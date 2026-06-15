@@ -2,7 +2,7 @@
 //  FamilyHub — Service Worker v7 OPTIMIZED
 // ══════════════════════════════════════════
 
-const VERSION      = '7';
+const VERSION      = '8';
 const CACHE_STATIC = 'fh-static-v' + VERSION;
 const CACHE_DYN    = 'fh-dyn-v'    + VERSION;
 
@@ -117,4 +117,54 @@ self.addEventListener('fetch', event => {
 
 self.addEventListener('message', event => {
   if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
+});
+
+// ── Firebase Cloud Messaging — Push Notifications ─────────────
+importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js');
+
+firebase.initializeApp({
+  apiKey:            'AIzaSyDgjLxRdUP4NzLCCXzaourqOB2_A1vt5aA',
+  projectId:         'familyhub-colis-8abbd',
+  messagingSenderId: '97858140929',
+  appId:             '1:97858140929:web:dce8473f387e48d514b900',
+});
+
+var _messaging = firebase.messaging();
+
+// Notification en background (app fermée ou en arrière-plan)
+_messaging.onBackgroundMessage(function(payload) {
+  var data    = payload.data || {};
+  var title   = data.title   || '📦 FamilyHub';
+  var body    = data.body    || 'Mise à jour colis';
+  var icon    = '/icons/home-192.png';
+  var badge   = '/icons/home-192.png';
+  var tag     = data.tag     || 'fh-notif';
+  var url     = data.url     || '/locker-tracker/index.html';
+
+  self.registration.showNotification(title, {
+    body:  body,
+    icon:  icon,
+    badge: badge,
+    tag:   tag,
+    data:  { url: url },
+    vibrate: [200, 100, 200],
+    requireInteraction: ['ready', 'out_for_delivery'].indexOf(data.status) >= 0,
+  });
+});
+
+// Clic sur la notification → ouvre locker-tracker
+self.addEventListener('notificationclick', function(event) {
+  event.notification.close();
+  var url = (event.notification.data && event.notification.data.url) || '/locker-tracker/index.html';
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(list) {
+      for (var i = 0; i < list.length; i++) {
+        if (list[i].url.indexOf('locker-tracker') >= 0) {
+          return list[i].focus();
+        }
+      }
+      return clients.openWindow(url);
+    })
+  );
 });

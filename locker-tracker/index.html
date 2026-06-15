@@ -12,6 +12,8 @@
 <link rel="stylesheet" href="../themes.css">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fragment+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
 <script src="../fbSync.js"></script>
 <script src="../theme.js"></script>
 <style>
@@ -331,6 +333,38 @@ html,body{font-family:'Plus Jakarta Sans',sans-serif;}
 
 <script>
 'use strict';
+// ─── FIREBASE MESSAGING ────────────────────────────────────────
+var FCM_VAPID_KEY='BKQfdUrjI-nzF7FLwGdx7kpzIwa6W5VwLvEIQBqDgcXVI7TtFQYwwku_drU9hwOgqf1jOPImE5SFjg5IVaO7Q5O';
+function initPush(){
+  if(!('Notification'in window)||!('serviceWorker'in navigator))return;
+  try{
+    if(!firebase.apps.length){
+      firebase.initializeApp({apiKey:'AIzaSyDgjLxRdUP4NzLCCXzaourqOB2_A1vt5aA',projectId:'familyhub-colis-8abbd',messagingSenderId:'97858140929',appId:'1:97858140929:web:dce8473f387e48d514b900'});
+    }
+    var msg=firebase.messaging();
+    Notification.requestPermission().then(function(p){
+      if(p!=='granted'){return;}
+      navigator.serviceWorker.ready.then(function(reg){
+        msg.useServiceWorker(reg);
+        msg.getToken({vapidKey:FCM_VAPID_KEY}).then(function(tok){
+          if(tok)_saveFCMToken(tok);
+        }).catch(function(e){console.warn('FCM token error',e);});
+      });
+    });
+    msg.onMessage(function(payload){
+      var d=payload.data||{};
+      showToast((d.title||'📦 FamilyHub')+' — '+(d.body||''));
+      if(d.status)syncFB();
+    });
+  }catch(e){console.warn('initPush',e);}
+}
+function _saveFCMToken(tok){
+  var cfg=getFB();if(!cfg.apiKey)return;
+  var url='https://firestore.googleapis.com/v1/projects/'+cfg.projectId+'/databases/(default)/documents/meta/fcmTokens?key='+cfg.apiKey;
+  // Utiliser le compte actif
+  var docUrl='https://firestore.googleapis.com/v1/projects/'+cfg.projectId+'/databases/(default)/documents/meta/fcmTokens/Guillaume?key='+cfg.apiKey;
+  fetch(docUrl,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({fields:{token:{stringValue:tok},account:{stringValue:'Guillaume'},updatedAt:{stringValue:new Date().toISOString()},platform:{stringValue:'android'}}})}).catch(function(){});
+}
 // ─── CONSTANTES ───────────────────────────────────────────────────────────────
 var SK='lt_v3',FBK='lt_fb',RK='lt_ret',LK='lt_logs',LSK='lt_lsms';
 var FB0={projectId:'familyhub-colis-8abbd',apiKey:''};
@@ -933,6 +967,7 @@ function clearSearch(){
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 document.querySelectorAll('.sov').forEach(function(el){el.style.display='none';});
 purge();renderSS();render();
+setTimeout(initPush,2000);
 FBSync.subscribe('colis', function(docs) {
   var n=0;
   docs.forEach(function(p){

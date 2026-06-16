@@ -357,8 +357,15 @@ function initPush(){
   });
 }
 function _saveFCMToken(tok,account){
-  var cfg=getFB();if(!cfg.apiKey||!tok)return;
+  if(!tok)return;
   account=account||'Guillaume';
+  localStorage.setItem('fh_fcm_token',tok);
+  localStorage.setItem('fh_fcm_account',account);
+  var cfg=getFB();
+  if(!cfg.apiKey){console.warn('FCM token en cache localStorage');return;}
+  _pushTokenToFirestore(tok,account,cfg);
+}
+function _pushTokenToFirestore(tok,account,cfg){
   var url='https://firestore.googleapis.com/v1/projects/'+cfg.projectId+
     '/databases/(default)/documents/meta/fcmTokens/'+account+'?key='+cfg.apiKey;
   fetch(url,{method:'PATCH',headers:{'Content-Type':'application/json'},
@@ -370,6 +377,13 @@ function _saveFCMToken(tok,account){
     }})
   }).then(function(){showToast('🔔 Notifications activées');})
    .catch(function(e){console.warn('saveFCMToken:',e);});
+}
+function _flushCachedFCMToken(){
+  var tok=localStorage.getItem('fh_fcm_token');
+  var acc=localStorage.getItem('fh_fcm_account')||'Guillaume';
+  if(!tok)return;
+  var cfg=getFB();if(!cfg.apiKey)return;
+  _pushTokenToFirestore(tok,acc,cfg);
 }
 // ─── CONSTANTES ───────────────────────────────────────────────────────────────
 var SK='lt_v3',FBK='lt_fb',RK='lt_ret',LK='lt_logs',LSK='lt_lsms';

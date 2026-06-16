@@ -21,7 +21,7 @@ jobs:
         cache: 'npm'
 
     - name: Install Dependencies
-      run: npm ci --prefer-offline --no-audit --no-fund
+      run: npm install --prefer-offline --no-audit --no-fund
 
     # Étape Java configurée ICI pour que l'environnement soit totalement prêt avant Capacitor et Gradle
     - uses: actions/setup-java@v4

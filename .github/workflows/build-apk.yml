@@ -43,7 +43,7 @@ jobs:
       run: |
         mkdir -p www
         if [ ! -f capacitor.config.json ]; then
-          echo '{"appId":"com.famille.dieulgandet.app","appName":"FamilyHub","webDir":"www","android":{"allowMixedContent":true,"webContentsDebuggingEnabled":false},"plugins":{"SplashScreen":{"launchShowDuration":0}}}' > capacitor.config.json
+          echo '{"appId":"com.famille.dieulgandet","appName":"FamilyHub","webDir":"www","android":{"allowMixedContent":true,"webContentsDebuggingEnabled":false},"plugins":{"SplashScreen":{"launchShowDuration":0},"PushNotifications":{"presentationOptions":["badge","sound","alert"]}}}' > capacitor.config.json
         fi
         
         # Synchronisation dynamique de tous les fichiers utiles
@@ -83,6 +83,11 @@ jobs:
         cp android-src/SmsPlugin.java "$PLUGIN_DIR/SmsPlugin.java"
         cp android-src/MainActivity.java "$PLUGIN_DIR/MainActivity.java"
 
+    - name: Copy google-services.json for FCM
+      run: |
+        cp android-src/google-services.json android/app/google-services.json
+        echo "✓ google-services.json copié"
+
     - name: Add SMS permissions in AndroidManifest (XML-safe)
       run: |
         python3 - << 'PYEOF'
@@ -109,6 +114,8 @@ jobs:
             "android.permission.RECEIVE_SMS",
             "android.permission.INTERNET",
             "android.permission.ACCESS_NETWORK_STATE",
+            "android.permission.POST_NOTIFICATIONS",
+            "android.permission.VIBRATE",
         ]
 
         android_name_attr = f"{{{ANDROID_NS}}}name"
@@ -155,11 +162,9 @@ jobs:
         content = re.sub(r"versionCode\s+\d+", f"versionCode {vc}", content)
         content = re.sub(r'versionName\s+"[^"]+"', f'versionName "{vn}"', content)
    
-        content = re.sub(r'applicationId\s+"[^"]+"', 'applicationId "com.famille.dieulgandet.app"', content)
-
         with open(path, "w", encoding="utf-8") as f:
             f.write(content)
-        print(f"✓ Configuration définitive injectée : Code={vc}, Nom={vn}, ID=com.famille.dieulgandet.app")
+        print(f"✓ Configuration injectée : Code={vc}, Nom={vn}")
         PYEOF
 
     - name: Fix gradlew permissions

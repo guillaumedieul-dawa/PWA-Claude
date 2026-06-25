@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FamilyHub — Push & Fetch APK</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f5;color:#1a1a1a;padding:20px;min-height:100vh}
+.card{background:#fff;border-radius:16px;padding:24px;max-width:500px;margin:0 auto;box-shadow:0 2px 16px rgba(0,0,0,.08)}
+h1{font-size:20px;font-weight:700;margin-bottom:4px}
+.sub{font-size:13px;color:#888;margin-bottom:24px}
+label{font-size:12px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px}
+input[type=text],input[type=password],select{width:100%;padding:12px 14px;border-radius:10px;border:1px solid #ddd;font-size:15px;outline:none;transition:border .2s;margin-bottom:16px;background:#fff;appearance:none;-webkit-appearance:none;}
+input:focus,select:focus{border-color:#2563eb}
+.remember-container{display:flex;align-items:center;gap:8px;margin-top:-10px;margin-bottom:16px;font-size:13px;color:#475569;cursor:pointer}
+.hint{font-size:11px;color:#aaa;margin-top:-10px;margin-bottom:20px;line-height:1.5}
+.row{display:flex;gap:12px}
+.row .field{flex:1}
+.branch-meta{font-size:11px;color:#64748b;margin-top:-12px;margin-bottom:16px;min-height:16px}
+.drop-zone {border:2px dashed #2563eb;border-radius:12px;padding:25px;text-align:center;background:#f8fafc;cursor:pointer;transition:background .2s;margin-bottom:20px}
+.drop-zone:hover, .drop-zone.dragover {background:#f0f7ff}
+.drop-zone p {font-size:14px;color:#475569;margin-bottom:4px}
+.drop-zone span {font-size:12px;color:#94a3b8}
+#fileInput {display:none}
+.file-selected {background:#f0fdf4;border-color:#22c55e;color:#166534}
+.btn{width:100%;padding:14px;border-radius:28px;background:#2563eb;color:#fff;border:none;font-size:16px;font-weight:700;cursor:pointer;transition:opacity .2s;margin-bottom:10px}
+.btn-secondary{background:#0f172a}
+.btn-apk{background:#16a34a} 
+.btn:active{opacity:.85}
+.btn:disabled{background:#aaa;cursor:not-allowed}
+.merge-panel{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:20px;display:none}
+.merge-panel select{padding:10px;font-size:14px;margin-bottom:12px;}
+.merge-panel .btn{margin-bottom:0;padding:12px;font-size:15px;}
+.merge-panel .hint{margin-bottom:6px;margin-top:0;}
+.apk-panel{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-top:16px;display:none}
+.apk-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.btn-refresh{background:none;border:none;color:#2563eb;font-size:12px;font-weight:600;cursor:pointer}
+.apk-status{font-size:13px;margin-bottom:12px;display:flex;align-items:flex-start;gap:8px;line-height:1.4}
+.progress-container {margin-top:20px;display:none}
+.progress-bar-bg {width:100%;height:10px;background:#e2e8f0;border-radius:5px;overflow:hidden;margin-top:6px}
+.progress-bar {width:0%;height:100%;background:#2563eb;transition:width .2s}
+#log{margin-top:20px;border-radius:10px;background:#1e293b;color:#f8fafc;padding:14px;font-family:monospace;font-size:12px;display:none;max-height:350px;overflow-y:auto;line-height:1.6;overflow-x:auto;}
+.log-line {margin-bottom:4px;display:flex;align-items:flex-start;gap:6px}
+.log-ok {color:#4ade80}
+.log-err {color:#f87171}
+.log-info {color:#38bdf8}
+.log-tree {white-space:pre;color:#cbd5e1;padding-left:16px;margin-top:8px;margin-bottom:8px;}
+.done{background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:14px;margin-top:16px;font-size:14px;color:#166534;display:none}
+.done a{color:#15803d;font-weight:600}
+.repo-info{background:#f0f4ff;border-radius:10px;padding:12px 14px;margin-bottom:20px;font-size:13px;color:#3730a3}
+.repo-info strong{display:block;margin-bottom:2px}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+
+<div class="card">
+  <h1>🚀 FamilyHub — Push & Fetch APK</h1>
+  <p class="sub">Gère tes déploiements et récupère tes builds APK</p>
+
+  <div class="repo-info">
+    <strong>📦 Repo cible</strong>
+    guillaumedieul-dawa/PWA-Claude
+  </div>
+
+  <label>Token GitHub</label>
+  <input type="password" id="token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
+  <label class="remember-container">
+    <input type="checkbox" id="rememberToken" onchange="handleTokenStorage()"> Mémoriser le token sur cet appareil
+  </label>
+  <p class="hint">Permissions : <strong>repo</strong> ou <strong>Contents (Write)</strong>.<br><span style="color:#ef4444;font-weight:600;">⚠️ Pour le répertoire .github/workflows/ :</span> coche impérativement l'autorisation <strong>workflow</strong> (Classic) ou <strong>Workflows (Write)</strong> (Fine-grained).</p>
+
+  <div style="border-bottom: 1px solid #eee; padding-bottom: 16px; margin-bottom: 20px;">
+    <label>Déploiement rapide (ZIP)</label>
+    <div class="row">
+      <div class="field">
+        <span class="hint" style="display:block;margin-bottom:6px;margin-top:0;">Branche cible</span>
+        <div id="branchContainer">
+          <select id="branchSelect" disabled>
+            <option value="">Saisir un token d'abord...</option>
+          </select>
+        </div>
+        <div class="branch-meta" id="branchMeta"></div>
+      </div>
+    </div>
+
+    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+      <p id="dropZoneText">📱 Toucher pour sélectionner le fichier .zip</p>
+      <span id="fileDetails">L'intégralité du package sera poussée en un seul commit</span>
+      <input type="file" id="fileInput" accept=".zip">
+    </div>
+
+    <button class="btn" id="pushBtn" onclick="startPush()" disabled>📤 Déployer les fichiers</button>
+  </div>
+
+  <div class="merge-panel" id="mergePanel">
+    <label>🔀 Fusionner des branches</label>
+    <div class="row">
+      <div class="field">
+        <span class="hint" style="display:block;">Source</span>
+        <select id="mergeSource"></select>
+      </div>
+      <div class="field">
+        <span class="hint" style="display:block;">Destination</span>
+        <select id="mergeDest"></select>
+      </div>
+    </div>
+    <button class="btn btn-secondary" id="mergeBtn" onclick="executeMerge()">Fusionner les branches</button>
+  </div>
+
+  <div class="apk-panel" id="apkPanel">
+    <div class="apk-header">
+      <label>🤖 Statut du Build APK</label>
+      <button class="btn-refresh" onclick="resetAndCheckWorkflow()">🔄 Rafraîchir</button>
+    </div>
+    <div class="apk-status" id="apkStatus">Recherche du workflow en cours...</div>
+    <button class="btn btn-apk" id="downloadApkBtn" onclick="downloadLatestAPK()" disabled>📥 Télécharger l'APK</button>
+  </div>
+
+  <div class="progress-container" id="progressContainer">
+    <div style="display: flex; justify-content: space-between; font-size: 13px;">
+      <span id="progressStep">Préparation...</span>
+      <span id="progressPercent">0%</span>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+  </div>
+
+  <div id="log"></div>
+
+  <div class="done" id="done">
+    ✅ <strong id="doneTitle">Opération terminée avec succès !</strong><br><br>
+    <span id="doneBody">L'intégration continue va s'exécuter.</span><br>
+    Suivre → <a id="actionsLink" href="#" target="_blank">Ouvrir GitHub Actions</a>
+  </div>
+</div>
+
+<script>
+const REPO = 'guillaumedieul-dawa/PWA-Claude';
+let selectedFile = null;
+let pollInterval = null;
+let pollingTicks = 0;
+let globalBranches = [];
+
+const tokenInput = document.getElementById('token');
+const rememberToken = document.getElementById('rememberToken');
+const branchContainer = document.getElementById('branchContainer');
+const branchMeta = document.getElementById('branchMeta');
+const fileInput = document.getElementById('fileInput');
+const dropZone = document.getElementById('dropZone');
+const dropZoneText = document.getElementById('dropZoneText');
+const fileDetails = document.getElementById('fileDetails');
+const pushBtn = document.getElementById('pushBtn');
+const mergeBtn = document.getElementById('mergeBtn');
+const apkPanel = document.getElementById('apkPanel');
+const apkStatus = document.getElementById('apkStatus');
+const downloadApkBtn = document.getElementById('downloadApkBtn');
+
+window.addEventListener('DOMContentLoaded', () => {
+  const savedToken = localStorage.getItem('fh_github_token');
+  if (savedToken) {
+    tokenInput.value = savedToken;
+    rememberToken.checked = true;
+    fetchBranches(savedToken);
+  }
+});
+
+tokenInput.addEventListener('input', () => {
+  const token = tokenInput.value.trim();
+  handleTokenStorage();
+  if (token.startsWith('ghp_') || token.startsWith('github_pat_')) {
+    fetchBranches(token);
+  } else {
+    document.getElementById('mergePanel').style.display = 'none';
+    branchMeta.textContent = '';
+    apkPanel.style.display = 'none';
+    clearInterval(pollInterval);
+  }
+});
+
+function handleTokenStorage() {
+  if (rememberToken.checked) {
+    localStorage.setItem('fh_github_token', tokenInput.value.trim());
+  } else {
+    localStorage.removeItem('fh_github_token');
+  }
+}
+
+async function fetchBranches(token) {
+  const select = document.getElementById('branchSelect');
+  if (select) select.innerHTML = '<option value="">⏳ Chargement...</option>';
+  
+  try {
+    const r = await fetch(`https://api.github.com/repos/${REPO}/branches`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!r.ok) throw new Error('Impossible de charger');
+    const branches = await r.json();
+    globalBranches = branches;
+
+    let html = '<select id="branchSelect" onchange="onBranchChange()">';
+    branches.forEach(b => {
+      const selected = b.name === 'v2' || b.name === 'main' ? 'selected' : '';
+      html += `<option value="${b.name}" ${selected}>${b.name}</option>`;
+    });
+    html += '</select>';
+    branchContainer.innerHTML = html;
+    
+    populateMergeSelectors(branches);
+    document.getElementById('mergePanel').style.display = 'block';
+    onBranchChange();
+  } catch (err) {
+    branchContainer.innerHTML = '<input type="text" id="branchSelect" value="v2" placeholder="Ex: v2" oninput="onBranchChange()">';
+    onBranchChange();
+  }
+}
+
+function populateMergeSelectors(branches) {
+  const sourceSelect = document.getElementById('mergeSource');
+  const destSelect = document.getElementById('mergeDest');
+  let options = '';
+  branches.forEach(b => { options += `<option value="${b.name}">${b.name}</option>`; });
+  sourceSelect.innerHTML = options;
+  destSelect.innerHTML = options;
+  if (branches.find(b => b.name === 'v2')) sourceSelect.value = 'v2';
+  if (branches.find(b => b.name === 'main')) destSelect.value = 'main';
+}
+
+function getSelectedBranch() {
+  const el = document.getElementById('branchSelect');
+  return el ? el.value.trim() : 'v2';
+}
+
+async function onBranchChange() {
+  const token = tokenInput.value.trim();
+  const branch = getSelectedBranch();
+  if (!token || !branch) return;
+
+  branchMeta.style.color = '#64748b';
+  branchMeta.textContent = '⏳ Infos de la branche...';
+
+  try {
+    const r = await fetch(`https://api.github.com/repos/${REPO}/commits/${branch}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (r.ok) {
+      const data = await r.json();
+      const d = new Date(data.commit.committer.date);
+      const formattedDate = d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) + 
+                            ' à ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      branchMeta.innerHTML = `📅 Dernier commit : <strong>${formattedDate}</strong>`;
+      showApkPanelIfPossible();
+    } else {
+      branchMeta.textContent = '⚠️ Impossible de lire cette branche.';
+    }
+  } catch (e) { branchMeta.textContent = ''; }
+}
+
+fileInput.addEventListener('change', handleFileSelect);
+dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  if (e.dataTransfer.files.length > 0) {
+    fileInput.files = e.dataTransfer.files;
+    handleFileSelect();
+  }
+});
+
+function handleFileSelect() {
+  const file = fileInput.files[0];
+  if (file && file.name.endsWith('.zip')) {
+    selectedFile = file;
+    dropZone.classList.add('file-selected');
+    dropZoneText.innerHTML = `✅ <strong>${file.name}</strong>`;
+    fileDetails.textContent = `${(file.size / (1024 * 1024)).toFixed(2)} Mo prêt à être synchronisé`;
+    pushBtn.disabled = false;
+  } else { alert("Sélectionnez un fichier .zip valide."); }
+}
+
+function addLog(message, type = 'info') {
+  const logBox = document.getElementById('log');
+  logBox.style.display = 'block';
+  const line = document.createElement('div');
+  line.className = `log-line log-${type}`;
+  line.textContent = `${type === 'ok' ? '✓' : type === 'err' ? '✗' : '•'} ${message}`;
+  logBox.appendChild(line);
+  logBox.scrollTop = logBox.scrollHeight;
+}
+
+// Fonction pour construire l'arborescence visuelle des fichiers
+function buildTreeLog(paths) {
+  const tree = {};
+  paths.forEach(path => {
+    const parts = path.split('/');
+    let current = tree;
+    for (let i = 0; i < parts.length - 1; i++) {
+      if (!current[parts[i]]) current[parts[i]] = {};
+      current = current[parts[i]];
+    }
+    current[parts[parts.length - 1]] = null; // null indique un fichier
+  });
+
+  const logLines = [];
+  function traverse(node, prefix = '') {
+    const keys = Object.keys(node).sort((a, b) => {
+      const aIsDir = node[a] !== null;
+      const bIsDir = node[b] !== null;
+      if (aIsDir && !bIsDir) return -1;
+      if (!aIsDir && bIsDir) return 1;
+      return a.localeCompare(b);
+    });
+
+    keys.forEach((key, index) => {
+      const isLast = index === keys.length - 1;
+      const pointer = isLast ? '└── ' : '├── ';
+      if (node[key] === null) {
+        logLines.push(`${prefix}${pointer}📄 ${key}`);
+      } else {
+        logLines.push(`${prefix}${pointer}📁 ${key}`);
+        traverse(node[key], prefix + (isLast ? '    ' : '│   '));
+      }
+    });
+  }
+  traverse(tree);
+  return logLines;
+}
+
+async function startPush() {
+  const token = tokenInput.value.trim();
+  const branch = getSelectedBranch();
+  if (!token || !branch || !selectedFile) return;
+
+  pushBtn.disabled = true; mergeBtn.disabled = true;
+  pushBtn.textContent = '⏳ Préparation…';
+  document.getElementById('log').innerHTML = '';
+  document.getElementById('done').style.display = 'none';
+  
+  const progContainer = document.getElementById('progressContainer');
+  const progBar = document.getElementById('progressBar');
+  const progPercent = document.getElementById('progressPercent');
+  const progStep = document.getElementById('progressStep');
+  
+  progContainer.style.display = 'block';
+  progBar.style.width = '10%';
+  progPercent.textContent = '10%';
+  progStep.textContent = "Extraction de l'archive...";
+
+  try {
+    addLog(`Lecture et déballage du ZIP...`, 'info');
+    const zip = await JSZip.loadAsync(selectedFile);
+    const treeItems = [];
+    const filePaths = [];
+    let detectWorkflow = false;
+    let detectWrongWorkflowName = false;
+
+    const filePromises = [];
+    zip.forEach((relativePath, fileObj) => {
+      if (!fileObj.dir) {
+        filePaths.push(relativePath);
+        if (relativePath.includes('.github/workflows/')) detectWorkflow = true;
+        if (relativePath.includes('.github/workflow/')) detectWrongWorkflowName = true;
+        
+        filePromises.push(
+          fileObj.async('string').then(content => {
+            treeItems.push({
+              path: relativePath,
+              mode: '100644',
+              type: 'blob',
+              content: content
+            });
+          })
+        );
+      }
+    });
+    
+    await Promise.all(filePromises);
+
+    // Ajout de l'arborescence visuelle dans les logs
+    if (filePaths.length > 0) {
+      addLog(`${filePaths.length} fichier(s) détecté(s) dans l'archive :`, 'info');
+      const treeLines = buildTreeLog(filePaths);
+      const logBox = document.getElementById('log');
+      const treeDiv = document.createElement('div');
+      treeDiv.className = 'log-tree';
+      treeDiv.textContent = treeLines.join('\n');
+      logBox.appendChild(treeDiv);
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    if (detectWrongWorkflowName) {
+      addLog(`⚠️ Dossier ".github/workflow" (singulier) détecté. GitHub requiert ".github/workflows" !`, 'err');
+    }
+    if (detectWorkflow) {
+      addLog(`⚙️ Fichiers de workflow détectés. Droits "workflow" obligatoires sur le token.`, 'info');
+    }
+
+    progBar.style.width = '40%';
+    progPercent.textContent = '40%';
+    progStep.textContent = "Récupération du dernier commit...";
+    addLog(`Récupération du dernier état de la branche [${branch}]...`, 'info');
+
+    const refRes = await fetch(`https://api.github.com/repos/${REPO}/git/ref/heads/${branch}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!refRes.ok) throw new Error("Impossible de joindre la branche cible.");
+    const refData = await refRes.json();
+    const lastCommitSha = refData.object.sha;
+
+    progBar.style.width = '60%';
+    progPercent.textContent = '60%';
+    progStep.textContent = "Génération de l'arbre Git...";
+    addLog(`Création de l'arbre Git avec ${treeItems.length} fichier(s)...`, 'info');
+
+    const treeRes = await fetch(`https://api.github.com/repos/${REPO}/git/trees`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ base_tree: lastCommitSha, tree: treeItems })
+    });
+    if (!treeRes.ok) {
+      const errJson = await treeRes.json();
+      throw new Error(`Échec de l'arbre Git : ${errJson.message}`);
+    }
+    const treeData = await treeRes.json();
+
+    progBar.style.width = '80%';
+    progPercent.textContent = '80%';
+    progStep.textContent = "Signature du commit...";
+    addLog(`Création du commit atomique unique...`, 'info');
+
+    const commitRes = await fetch(`https://api.github.com/repos/${REPO}/git/commits`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: `🛠️ Hub Deployer : push groupé (${treeItems.length} fichiers)`,
+        tree: treeData.sha,
+        parents: [lastCommitSha]
+      })
+    });
+    if (!commitRes.ok) throw new Error("Échec de la validation du commit.");
+    const commitData = await commitRes.json();
+
+    progBar.style.width = '95%';
+    progPercent.textContent = '95%';
+    progStep.textContent = "Poussée vers GitHub...";
+    addLog(`Mise à jour de la référence de branche...`, 'info');
+
+    const pushRes = await fetch(`https://api.github.com/repos/${REPO}/git/refs/heads/${branch}`, {
+      method: 'PATCH',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sha: commitData.sha, force: false })
+    });
+    if (!pushRes.ok) throw new Error("Droits insuffisants ou conflit lors de la mise à jour finale.");
+
+    progBar.style.width = '100%';
+    progPercent.textContent = '100%';
+    progStep.textContent = 'Terminé !';
+    addLog(`Déploiement en 1 commit terminé avec succès !`, 'ok');
+
+    document.getElementById('doneTitle').textContent = `Déploiement sur [${branch}] réussi !`;
+    document.getElementById('doneBody').textContent = "L'arbre Git a été mis à jour de façon atomique.";
+    document.getElementById('actionsLink').href = `https://github.com/guillaumedieul-dawa/PWA-Claude/actions?query=branch%3A${encodeURIComponent(branch)}`;
+    document.getElementById('done').style.display = 'block';
+    
+    resetAndCheckWorkflow();
+  } catch (e) {
+    addLog(`Échec : ${e.message}`, 'err');
+    if (detectWorkflow) {
+      addLog(`💡 Conseil : Si l'erreur mentionne les permissions, vérifie l'accès "Workflows" (Read & Write) sur ton Token.`, 'info');
+    }
+  } finally {
+    pushBtn.disabled = false; mergeBtn.disabled = false; pushBtn.textContent = '📤 Déployer les fichiers';
+  }
+}
+
+async function executeMerge() {
+  const token = tokenInput.value.trim();
+  const source = document.getElementById('mergeSource').value;
+  const dest = document.getElementById('mergeDest').value;
+
+  if (!token || !source || !dest) return;
+  if (source === dest) { alert("Sélectionne des branches différentes."); return; }
+  if (!confirm(`Écraser la branche [${dest}] avec l'état de [${source}] ?`)) return;
+
+  pushBtn.disabled = true; mergeBtn.disabled = true;
+  document.getElementById('log').innerHTML = ''; document.getElementById('done').style.display = 'none';
+
+  try {
+    addLog(`Lecture du dernier état de [${source}]...`, "info");
+    const resSrc = await fetch(`https://api.github.com/repos/${REPO}/git/ref/heads/${source}`, { headers: { 'Authorization': `Bearer ${token}` } });
+    if (!resSrc.ok) throw new Error(`Branche source introuvable.`);
+    const dataSrc = await resSrc.json();
+
+    addLog(`Mise à jour forcée de [${dest}]...`, "info");
+    const resDest = await fetch(`https://api.github.com/repos/${REPO}/git/refs/heads/${dest}`, {
+      method: 'PATCH',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sha: dataSrc.object.sha, force: true })
+    });
+    if (!resDest.ok) throw new Error("Échec de la synchronisation sur GitHub.");
+
+    addLog(`Fusion terminée !`, "ok");
+    document.getElementById('doneTitle').textContent = `Branches synchronisées !`;
+    document.getElementById('doneBody').textContent = `[${dest}] est désormais identique à [${source}].`;
+    document.getElementById('actionsLink').href = `https://github.com/guillaumedieul-dawa/PWA-Claude/actions?query=branch%3A${encodeURIComponent(dest)}`;
+    document.getElementById('done').style.display = 'block';
+    if (getSelectedBranch() === dest) onBranchChange();
+  } catch (err) { addLog(`Erreur : ${err.message}`, "err"); }
+  finally { pushBtn.disabled = false; mergeBtn.disabled = false; }
+}
+
+function showApkPanelIfPossible() {
+  const token = tokenInput.value.trim();
+  const branch = getSelectedBranch();
+  if (token && branch) {
+    apkPanel.style.display = 'block';
+    resetAndCheckWorkflow();
+  }
+}
+
+function resetAndCheckWorkflow() {
+  clearInterval(pollInterval);
+  pollingTicks = 0;
+  checkWorkflowStatus();
+  pollInterval = setInterval(checkWorkflowStatus, 15000);
+}
+
+async function checkWorkflowStatus() {
+  const token = tokenInput.value.trim();
+  const branch = getSelectedBranch();
+  if (!token || !branch) return;
+
+  pollingTicks++;
+  if (pollingTicks > 40) {
+    clearInterval(pollInterval);
+    apkStatus.innerHTML = "⏸️ Suivi automatique en pause (10 min d'inactivité). Cliquez sur Rafraîchir.";
+    return;
+  }
+
+  try {
+    const rRun = await fetch(`https://api.github.com/repos/${REPO}/actions/runs?branch=${branch}&per_page=1`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!rRun.ok) return;
+    const dRun = await rRun.json();
+    if (dRun.workflow_runs.length === 0) {
+      apkStatus.innerHTML = "❔ Aucun build trouvé pour cette branche.";
+      downloadApkBtn.disabled = true;
+      return;
+    }
+
+    const lastRun = dRun.workflow_runs[0];
+    const status = lastRun.status;       
+    const conclusion = lastRun.conclusion; 
+    const runNumber = lastRun.run_number;
+    const runDateObj = new Date(lastRun.updated_at);
+    const runDateStr = runDateObj.toLocaleDateString('fr-FR') + ' à ' + runDateObj.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+    if (status === 'queued' || status === 'in_progress') {
+      apkStatus.innerHTML = `⏳ Build <strong>#${runNumber}</strong> en cours (Statut: <strong>${status}</strong>)...`;
+      downloadApkBtn.disabled = true;
+    } else if (status === 'completed' && conclusion === 'success') {
+      apkStatus.innerHTML = `✅ Build <strong>#${runNumber}</strong> réussi. Recherche du fichier APK...`;
+      checkArtifacts(token, lastRun.id, runNumber, runDateStr);
+    } else {
+      apkStatus.innerHTML = `❌ Build <strong>#${runNumber}</strong> arrêté (Conclusion: <strong>${conclusion}</strong>).`;
+      downloadApkBtn.disabled = true;
+    }
+  } catch (e) { console.error(e); }
+}
+
+async function checkArtifacts(token, runId, runNumber, runDateStr) {
+  try {
+    const rArt = await fetch(`https://api.github.com/repos/${REPO}/actions/runs/${runId}/artifacts`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!rArt.ok) return;
+    const dArt = await rArt.json();
+
+    if (dArt.artifacts.length === 0) {
+      apkStatus.innerHTML = `⚠️ Build <strong>#${runNumber}</strong> validé le ${runDateStr}, mais l'APK n'est pas encore publié.`;
+      downloadApkBtn.disabled = true;
+      return;
+    }
+
+    const artifact = dArt.artifacts[0];
+    const sizeMo = (artifact.size_in_bytes / (1024 * 1024)).toFixed(1);
+    apkStatus.innerHTML = `<div>🎁 Build <strong>#${runNumber}</strong> du <strong>${runDateStr}</strong><br><span style="color:#475569">Package : ${artifact.name} (${sizeMo} Mo)</span></div>`;
+    downloadApkBtn.disabled = false;
+    downloadApkBtn.dataset.artifactId = artifact.id;
+    downloadApkBtn.dataset.artifactName = artifact.name;
+  } catch (e) { console.error(e); }
+}
+
+async function downloadLatestAPK() {
+  const token = tokenInput.value.trim();
+  const artifactId = downloadApkBtn.dataset.artifactId;
+  if (!token || !artifactId) return;
+
+  downloadApkBtn.disabled = true;
+  downloadApkBtn.textContent = '📥 Récupération du ZIP...';
+  addLog("Téléchargement de l'artefact compressé...", "info");
+
+  try {
+    const res = await fetch(`https://api.github.com/repos/${REPO}/actions/artifacts/${artifactId}/zip`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error("Serveur de stockage GitHub inaccessible.");
+    
+    const blob = await res.blob();
+    downloadApkBtn.textContent = '⚙️ Extraction de l\'APK...';
+    addLog("Extraction du package binaire (.apk)...", "info");
+
+    const zip = await JSZip.loadAsync(blob);
+    let apkFileObj = null;
+    zip.forEach((relativePath, fileObj) => { if (relativePath.endsWith('.apk')) apkFileObj = fileObj; });
+
+    if (!apkFileObj) throw new Error("Aucun fichier .apk trouvé à l'intérieur de l'archive d'artefact.");
+
+    const apkBlob = await apkFileObj.async('blob');
+    const url = window.URL.createObjectURL(apkBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = apkFileObj.name;
+    document.body.appendChild(a);
+    a.click();
+    
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    addLog(`Fichier APK [${apkFileObj.name}] téléchargé !`, "ok");
+  } catch (err) {
+    addLog(`Erreur de rapatriement : ${err.message}`, "err");
+    alert(`Erreur : ${err.message}`);
+  } finally {
+    downloadApkBtn.disabled = false;
+    downloadApkBtn.textContent = '📥 Télécharger l\'APK';
+  }
+}
+</script>
+</body>
+</html>

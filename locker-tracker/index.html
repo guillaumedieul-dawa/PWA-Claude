@@ -382,7 +382,7 @@ function loadD(){try{var d=JSON.parse(localStorage.getItem(SK));if(d&&d.packages
 function saveD(d){localStorage.setItem(SK,JSON.stringify(d));}
 function getRet(){try{return Object.assign({},DR,JSON.parse(localStorage.getItem(RK)));}catch{return Object.assign({},DR);}}
 function getFB(){try{var s=JSON.parse(localStorage.getItem(FBK));return s||FB0;}catch{return FB0;}}
-function wlog(t,m){try{var l=JSON.parse(localStorage.getItem(LK)||'{}'});l[t]=new Date().toLocaleString('fr-FR')+' · '+m;localStorage.setItem(LK,JSON.stringify(l));}catch{}}
+function wlog(t,m){try{var l=JSON.parse(localStorage.getItem(LK)||'{}');l[t]=new Date().toLocaleString('fr-FR')+' · '+m;localStorage.setItem(LK,JSON.stringify(l));}catch{}}
 
 // FIX 2: lien de suivi vers le site du transporteur
 function buildTrackingUrl(carrier,num){
@@ -476,7 +476,7 @@ async function syncFB(){
         normalizePackage(ex);
         // FIX 7: ne pas écraser un statut terminal local (expired/collected) avec remote
         if(p.status&&p.status!==ex.status&&['collected','expired'].indexOf(ex.status)<0)ex.status=p.status;
-        if((p.lastUpdated||''')>(ex.lastUpdated||'')){ex.pickupCode=p.pickupCode||ex.pickupCode;ex.lockerAddress=p.lockerAddress||ex.lockerAddress;ex.deliverySlot=p.deliverySlot||ex.deliverySlot;ex.trackingLink=p.trackingLink||ex.trackingLink;ex.trackingNum=p.trackingNum||ex.trackingNum;if(p.events&&p.events.length)ex.events=p.events;}
+        if((p.lastUpdated||'')>(ex.lastUpdated||'')){ex.pickupCode=p.pickupCode||ex.pickupCode;ex.lockerAddress=p.lockerAddress||ex.lockerAddress;ex.deliverySlot=p.deliverySlot||ex.deliverySlot;ex.trackingLink=p.trackingLink||ex.trackingLink;ex.trackingNum=p.trackingNum||ex.trackingNum;if(p.events&&p.events.length)ex.events=p.events;}
       }else{if(!p.id)p.id=D.nextId++;else p.id=Math.round(Number(p.id));D.packages.unshift(p);n++;}
     });
     D.lastSync=new Date().toISOString();purge();saveD(D);render();
@@ -850,7 +850,7 @@ function renderSS(){
 function updLs(){var el=document.getElementById('fbLs');if(!el||!D.lastSync){if(el)el.textContent='';return;}var d=new Date(D.lastSync);el.textContent='Sync : '+d.toLocaleDateString('fr-FR')+' à '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});}
 
 function renderLogs(){
-  try{var l=JSON.parse(localStorage.getItem(LK)||'{}'});document.getElementById('logS').textContent=l.sms||'—';document.getElementById('logF').textContent=l.firebase||'—';document.getElementById('logG').textContent=l.gmail||'—';fetchGmailLog();}catch{}
+  try{var l=JSON.parse(localStorage.getItem(LK)||'{}');document.getElementById('logS').textContent=l.sms||'—';document.getElementById('logF').textContent=l.firebase||'—';document.getElementById('logG').textContent=l.gmail||'—';fetchGmailLog();}catch{}
 }
 async function fetchGmailLog(){
   try{
@@ -871,7 +871,7 @@ function renderRetCf(){
     return'<div class="cfgr" style="'+(dis?'opacity:0.45':'')+'">'+
       '<div class="cfgd" style="background:'+(CL[c]||'#888')+'"></div>'+
       '<div class="cfgl">'+(LB[c]||c)+'</div>'+
-      '<input class="cfgi" type="number" min="1" max="60" id="r_'+c+'" value="'+(R[c]||d)+'" '+(dis?'disabled ':''))+'>'+
+      '<input class="cfgi" type="number" min="1" max="60" id="r_'+c+'" value="'+(R[c]||d)+'" '+(dis?'disabled ':'')+'>'+
       '<span style="font-size:12px;color:var(--osv)"> j</span>'+
       '<button data-action="toggleCarrier" data-carrier="'+c+'" class="ci-toggle'+(dis?'':' on')+'" title="'+(dis?'Réactiver':'Désactiver')+'"></button>'+
     '</div>';
@@ -1038,7 +1038,7 @@ FBSync.subscribe('colis', function(docs) {
       normalizePackage(ex);
       // Ne pas écraser expired/collected avec un statut distant moins avancé
       if(p.status&&p.status!==ex.status&&['collected','expired'].indexOf(ex.status)<0)ex.status=p.status;
-      if((p.lastUpdated||''')>(ex.lastUpdated||'')){ex.pickupCode=p.pickupCode||ex.pickupCode;ex.lockerAddress=p.lockerAddress||ex.lockerAddress;ex.deliverySlot=p.deliverySlot||ex.deliverySlot;ex.trackingLink=p.trackingLink||ex.trackingLink;ex.trackingNum=p.trackingNum||ex.trackingNum;if(p.events&&p.events.length)ex.events=p.events;}
+      if((p.lastUpdated||'')>(ex.lastUpdated||'')){ex.pickupCode=p.pickupCode||ex.pickupCode;ex.lockerAddress=p.lockerAddress||ex.lockerAddress;ex.deliverySlot=p.deliverySlot||ex.deliverySlot;ex.trackingLink=p.trackingLink||ex.trackingLink;ex.trackingNum=p.trackingNum||ex.trackingNum;if(p.events&&p.events.length)ex.events=p.events;}
     }else{if(!p.id)p.id=D.nextId++;else p.id=Math.round(Number(p.id));D.packages.unshift(p);n++;}
   });
   if(n>0){purge();saveD(D);render();document.getElementById('sd').style.display='block';}

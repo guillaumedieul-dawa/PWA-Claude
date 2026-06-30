@@ -1,5 +1,8 @@
 /**
  * firebaseSync.js — Bibliothèque centralisée Firebase pour FamilyHub v2 (Optimisée)
+ * FIX v2 : updateMask.fieldPaths sur fbWrite() — empêche le remplacement
+ * intégral du document par Firestore lors d'une écriture partielle
+ * (cf. doc REST "Updates or inserts a document").
  */
 
 const FB_PROJECT = 'familyhub-colis-8abbd';
@@ -15,6 +18,13 @@ function getFBKey() {
 
 function fbUrl(path) {
   return `https://firestore.googleapis.com/v1/projects/${FB_PROJECT}/databases/(default)/documents/${path}?key=${getFBKey()}`;
+}
+
+// FIX : ajoute updateMask.fieldPaths pour chaque clé de l'objet écrit
+function fbUrlMasked(path, keys) {
+  let u = fbUrl(path);
+  (keys || []).forEach(k => { u += `&updateMask.fieldPaths=${encodeURIComponent(k)}`; });
+  return u;
 }
 
 function toFirestoreFields(obj, numberType = 'integer') {
@@ -98,7 +108,8 @@ async function fbWrite(collection, documentId, data, options = {}) {
   }
   
   try {
-    const response = await fetch(fbUrl(`${collection}/${documentId}`), {
+    // FIX : updateMask.fieldPaths = clés réellement écrites (écriture partielle sûre)
+    const response = await fetch(fbUrlMasked(`${collection}/${documentId}`, Object.keys(dataToWrite)), {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ fields: toFirestoreFields(dataToWrite, numberType) })

@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   FamilyHub — fbSync.js  v4.1 (Debug IHM Edition)
+   FamilyHub — fbSync.js  v4.2 (updateMask fix)
    Phase 4 : Real-time sync via polling REST Firestore
    ───────────────────────────────────────────────────
    - fbSubscribe(collection, onData, opts) : polling toutes les 5s
@@ -7,6 +7,11 @@
    - fbQueue(collection, id, data)         : write avec retry expo
    - fbDeleteQueue(collection, id)         : delete avec retry expo
    - Sync indicateur visuel via FBSyncUI   : point header vert/orange/rouge
+   ───────────────────────────────────────────────────
+   FIX CRITIQUE v4.2 : ajout de updateMask.fieldPaths sur les PATCH.
+   Sans ce paramètre, l'API REST Firestore REMPLACE le document
+   entier par les seuls champs envoyés (perte silencieuse de
+   carrier/trackingNum/pickupCode/etc. sur toute écriture partielle).
    ═══════════════════════════════════════════════════════════════ */
 
 (function (global) {
@@ -25,6 +30,16 @@
   function fbUrl(path) {
     return 'https://firestore.googleapis.com/v1/projects/' + FB_PROJECT +
       '/databases/(default)/documents/' + path + '?key=' + getKey();
+  }
+  // FIX v4.2 : URL de PATCH avec updateMask.fieldPaths (1 par clé écrite)
+  // → empêche Firestore de remplacer tout le document par les seuls
+  //   champs fournis (cf. doc officielle "Updates or inserts a document").
+  function fbUrlMasked(path, keys) {
+    var u = fbUrl(path);
+    (keys || []).forEach(function (k) {
+      u += '&updateMask.fieldPaths=' + encodeURIComponent(k);
+    });
+    return u;
   }
   function toF(o) {
     var f = {};
@@ -108,7 +123,9 @@
           r = await fetch(fbUrl(op.coll + '/' + op.id), { method: 'DELETE', redirect: 'follow' });
           ok = r.ok;
         } else {
-          r = await fetch(fbUrl(op.coll + '/' + op.id), {
+          // FIX v4.2 : updateMask.fieldPaths = clés de op.data uniquement
+          // → écriture réellement partielle, ne touche pas les autres champs.
+          r = await fetch(fbUrlMasked(op.coll + '/' + op.id, Object.keys(op.data || {})), {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ fields: toF(op.data) }),
@@ -250,4 +267,3 @@
   };
 
 })(window);
-     

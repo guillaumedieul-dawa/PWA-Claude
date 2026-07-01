@@ -584,7 +584,7 @@ async function readSMS(silent){
       var c=det.c;var tr=xT(c,body),co=xC(body),ad=xA(body);if(!tr&&!co&&!ad)continue;
       var status=detSt(body);
       var smsDate=sms.date?new Date(parseInt(sms.date)).toISOString():new Date().toISOString();
-      var fbId='sms_'+String(sms.date||Date.now())+'_'+btoa(encodeURIComponent((sender+'|'+(body||'').substring(0,20)))).substring(0,16);
+      var fbId='sms_'+String(sms.date||Date.now())+'_'+btoa(encodeURIComponent((sender+'|'+(body||'').substring(0,20)))).replace(/[^A-Za-z0-9]/g,'').substring(0,12);
       var pkg={id:Math.round(D.nextId++),_fbId:fbId,carrier:c,trackingNum:tr,pickupCode:co,lockerAddress:ad,trackingLink:xL(body),deliverySlot:xSl(body),sender:xSd(body)||sender,arrivalDate:smsDate,expiryDate:xEx(body,smsDate,c),status:status,emailSubject:'SMS — '+(sender||'transporteur'),gmailLink:'',account:'Guillaume',source:'sms',gmailMsgId:fbId,note:'',lastUpdated:smsDate,events:[{date:smsDate,status:status,desc:'SMS — '+(sender||'')}]};
       var dup=findDup(pkg);if(dup){mrg(dup,pkg);up++;}else{D.packages.unshift(pkg);FBSync.write('colis',fbId,pkg);nw++;}
     }

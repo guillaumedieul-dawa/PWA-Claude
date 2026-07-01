@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════
 //  FamilyHub — Sync Gmail → Firebase (Optimisé v2.2)
-//  Compte : Guillaume Dieul
+//  Compte : Guillaume Dieul.
 //  V3
 //  FIX CRITIQUE v2.2 : ajout de updateMask sur les writes batch
 //  (:commit). Sans ce champ, chaque "update" REMPLACE le document

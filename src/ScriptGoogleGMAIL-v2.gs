@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════
-//  FamilyHub — Sync Gmail → Firebase (Optimisé v2.2)
+//  FamilyHub — Sync Gmail → Firebase (Optimisé v2.3)
 //  Compte : Guillaume Dieul.
 //  V3
 //  FIX CRITIQUE v2.2 : ajout de updateMask sur les writes batch
@@ -7,6 +7,8 @@
 //  entier par les seuls champs du batch et efface silencieusement
 //  carrier/trackingNum/pickupCode/note/etc. sur tout colis déjà
 //  enrichi manuellement ou par un autre import.
+//  FIX v2.3 : gmailLink utilise désormais ?ui=2#inbox/{id}
+//  (l'ancienne URL sans ui=2 ne s'ouvrait pas correctement).
 //  Optimisations : Filtre temporel précis (Unix timestamp), suppression de l'appel fbGetExistingIds lourd
 // ═══════════════════════════════════════════════════
 
@@ -281,7 +283,8 @@ function syncGmailToFirebase() {
       expiryDate: expiryDate,
       status: status,
       emailSubject: subject.substring(0, 100).trim().replace(/[\r\n]/g, ''),
-      gmailLink: 'https://mail.google.com/mail/u/0/#inbox/' + msgId,
+      // FIX : ajout de ?ui=2 pour que le lien s'ouvre correctement dans Gmail
+      gmailLink: 'https://mail.google.com/mail/u/0/?ui=2#inbox/' + msgId,
       account: ACCOUNT_NAME,
       source: 'gmail',
       gmailMsgId: msgId,

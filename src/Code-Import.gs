@@ -4,6 +4,8 @@
  * FIX CRITIQUE : _importWriteFirestore() ajoute updateMask.fieldPaths
  *   sur le PATCH (même bug que Code-Tracker.gs — sans ce paramètre,
  *   Firestore remplace tout le document par les seuls champs envoyés).
+ * FIX LIEN GMAIL : gmailLink utilise désormais ?ui=2#inbox/{id}
+ *   (l'ancienne URL sans ui=2 ne s'ouvrait pas correctement).
  *
  * Utilisation :
  *   1. Coller ce fichier dans le projet Apps Script existant
@@ -135,7 +137,8 @@ function _parseEmail(subject, body, from, date, msgId) {
     expiryDate:   _xExpiry(text, dateISO, carrier),
     emailSubject: subject.substring(0, 120),
     gmailMsgId:   msgId,
-    gmailLink:    'https://mail.google.com/mail/u/0/#inbox/' + msgId,
+    // FIX : ajout de ?ui=2 pour que le lien s'ouvre correctement dans Gmail
+    gmailLink:    'https://mail.google.com/mail/u/0/?ui=2#inbox/' + msgId,
     account:      'Guillaume',
     source:       'gmail_import',
     note:         '',

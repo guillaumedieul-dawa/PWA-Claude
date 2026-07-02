@@ -86,8 +86,18 @@
   }
   function enqueue(op) {
     var q = loadQueue();
-    // Dédupliquer : remplacer op existante sur même coll/id
-    q = q.filter(function (x) { return !(x.coll === op.coll && x.id === op.id); });
+    // FIX RACE CONDITION : fusionner avec un WRITE déjà en attente sur le même coll/id
+    // au lieu de le remplacer. Un remplacement pur perdait les champs d'un write complet
+    // (ex: readSMS) si un write partiel (ex: purge() -> status expired) arrivait avant
+    // le flush du premier (fenêtre de 100ms) -> document créé avec 2 champs seulement.
+    var existing = null;
+    q = q.filter(function (x) {
+      if (x.coll === op.coll && x.id === op.id) { existing = x; return false; }
+      return true;
+    });
+    if (existing && existing.type === 'WRITE' && op.type === 'WRITE') {
+      op.data = Object.assign({}, existing.data, op.data);
+    }
     op.retryDelay = 1000;
     op.nextRetry  = Date.now();
     q.push(op);

@@ -376,6 +376,8 @@ function esc(s){if(!s)return'';return String(s).replace(/&/g,'&'+"amp;").replace
 function escAttr(s){if(!s)return'';return String(s).replace(/&/g,'&'+"amp;").replace(/'/g,'&'+"#39;").replace(/"/g,'&'+"quot;").replace(/</g,'&'+"lt;").replace(/>/g,'&'+"gt;").replace(/[\r\n]+/g,' ');}
 // FIX 1: emoji uniquement (fiable dans WebView Android, pas de chargement externe)
 function carrierLogo(c,size){return EM[c]||'📦';}
+// FIX identité carte : clé stable basée sur _fbId (jamais p.id, qui peut être une string Gmail → NaN)
+function pkgKey(p){return String(p&&(p._fbId||p.id)||'x').replace(/[^A-Za-z0-9_\-]/g,'_');}
 
 function getDisabled(){try{if(!localStorage.getItem(DK))localStorage.setItem(DK,JSON.stringify(['amazon']));return new Set(JSON.parse(localStorage.getItem(DK)||'[]'));}catch{return new Set();}}
 function loadD(){try{var d=JSON.parse(localStorage.getItem(SK));if(d&&d.packages){d.packages.forEach(function(p){if(typeof p.id==='number')p.id=Math.round(p.id);if(typeof p.events==='string'){try{p.events=JSON.parse(p.events);}catch(e){p.events=[];}}if(!Array.isArray(p.events))p.events=[];});return d;}}catch(e){}return{packages:[],nextId:1,lastSync:null};}
@@ -425,6 +427,8 @@ function purge(){
     ex.lockerAddress=ex.lockerAddress||p.lockerAddress;
     ex.expiryDate=ex.expiryDate||p.expiryDate;
     ex.sender=ex.sender||p.sender;
+    // FIX boucle refresh : supprimer le doublon côté Firestore pour qu'il ne revienne pas au poll suivant
+    if(p._fbId&&p._fbId!==ex._fbId){try{FBSync.delete('colis',p._fbId);}catch(e){}}
     return false;
   });
   var L=getPurgeDays()*86400000,now=Date.now(),changed=false;
@@ -477,7 +481,13 @@ async function syncFB(){
         // FIX 7: ne pas écraser un statut terminal local (expired/collected) avec remote
         if(p.status&&p.status!==ex.status&&['collected','expired'].indexOf(ex.status)<0)ex.status=p.status;
         if((p.lastUpdated||'')>(ex.lastUpdated||'')){ex.pickupCode=p.pickupCode||ex.pickupCode;ex.lockerAddress=p.lockerAddress||ex.lockerAddress;ex.deliverySlot=p.deliverySlot||ex.deliverySlot;ex.trackingLink=p.trackingLink||ex.trackingLink;ex.trackingNum=p.trackingNum||ex.trackingNum;if(p.events&&p.events.length)ex.events=p.events;}
-      }else{if(!p.id)p.id=D.nextId++;else p.id=Math.round(Number(p.id));D.packages.unshift(p);n++;}
+      }else{
+        var dup=findDup(p);
+        if(dup){
+          dup.pickupCode=dup.pickupCode||p.pickupCode;dup.lockerAddress=dup.lockerAddress||p.lockerAddress;dup.expiryDate=dup.expiryDate||p.expiryDate;
+          if(p._fbId&&p._fbId!==dup._fbId){try{FBSync.delete('colis',p._fbId);}catch(e){}}
+        }else{if(!p.id)p.id=D.nextId++;D.packages.unshift(p);n++;}
+      }
     });
     D.lastSync=new Date().toISOString();purge();saveD(D);render();
     if(pg){pg.style.transition='width 0.3s';pg.style.width='100%';}
@@ -627,7 +637,7 @@ function addPkg(){
 
 // ─── ACTIONS COLIS ─────────────────────────────────────────────────────────────
 function markDone(id){
-  var p=D.packages.find(function(x){return x.id===id;});if(!p)return;
+  var p=D.packages.find(function(x){return pkgKey(x)===id;});if(!p)return;
   p.status='collected';
   if(!p.events)p.events=[];
   p.events.unshift({date:new Date().toISOString(),status:'collected',desc:''});
@@ -638,9 +648,9 @@ function markDone(id){
 function delPkg(id){
   openCardIds.delete(String(id)); // FIX: nettoie le Set
   if(!confirm('Supprimer ?'))return;
-  var p=D.packages.find(function(x){return x.id===id;});
+  var p=D.packages.find(function(x){return pkgKey(x)===id;});
   if(p&&p._fbId)FBSync.delete('colis',p._fbId);
-  D.packages=D.packages.filter(function(x){return x.id!==id;});
+  D.packages=D.packages.filter(function(x){return pkgKey(x)!==id;});
   saveD(D);render();
 }
 function cpT(txt,lbl){
@@ -649,12 +659,12 @@ function cpT(txt,lbl){
   else{var t=document.createElement('textarea');t.value=txt;t.style.cssText='position:fixed;opacity:0';document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);showToast('📋 '+lbl+' copié');}
 }
 function copyAll(id){
-  var p=D.packages.find(function(x){return x.id===id;});if(!p)return;
+  var p=D.packages.find(function(x){return pkgKey(x)===id;});if(!p)return;
   var parts=[LB[p.carrier]||p.carrier,p.trackingNum?'N° : '+p.trackingNum:'',p.pickupCode?'Code : '+p.pickupCode:'',p.lockerAddress?p.lockerAddress:'',p.expiryDate?'Expire le '+fFull(p.expiryDate):'',p.trackingLink||''].filter(Boolean).join('\n');
   cpT(parts,'Infos colis');
 }
 function shareP(id){
-  var p=D.packages.find(function(x){return x.id===id;});if(!p)return;
+  var p=D.packages.find(function(x){return pkgKey(x)===id;});if(!p)return;
   var lines=['📦 '+(LB[p.carrier]||p.carrier||'Colis'),p.trackingNum?'N° : '+p.trackingNum:'',p.pickupCode?'Code : '+p.pickupCode:'',p.lockerAddress?'📍 '+p.lockerAddress:'',p.expiryDate?'⏰ Expire le '+fFull(p.expiryDate):'',p.trackingLink?'🔗 '+p.trackingLink:''].filter(Boolean);
   var text=lines.join('\n');
   if(navigator.share)navigator.share({title:'Colis',text:text}).catch(function(){});else cpT(text,'Infos');
@@ -760,7 +770,7 @@ function render(){
     // ── NOM du transporteur avec fallback ──
     var _carrierName=esc(LB[p.carrier]||p.carrier||'Transporteur');
 
-    return '<div class="pcard" id="pc'+p.id+'" data-action="tog" data-id="'+p.id+'" style="animation-delay:'+i*.03+'s">'+
+    return '<div class="pcard" id="pc'+pkgKey(p)+'" data-action="tog" data-id="'+pkgKey(p)+'" style="animation-delay:'+i*.03+'s">'+
       '<div class="ptint" style="background:'+color+'"></div>'+
       '<div class="phdr">'+
         '<div class="cbadge" style="background:'+color+'18;display:flex;align-items:center;justify-content:center;font-size:22px">'+carrierLogo(p.carrier,26)+'</div>'+
@@ -775,7 +785,7 @@ function render(){
           '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;background:'+_accBg+';color:'+_accCl+'">'+_accLbl+'</span>'+
         '</div>'+
       '</div>'+
-      '<div id="pb'+p.id+'" style="display:none">'+
+      '<div id="pb'+pkgKey(p)+'" style="display:none">'+
         '<div class="pbdy">'+
           '<div class="div"></div>'+
           // FIX 2: objet email affiché quand aucun numéro/code/adresse
@@ -792,12 +802,12 @@ function render(){
           // FIX 4: historique dédupliqué (_evts filtre les statuts consécutifs identiques)
           (_evts.length?'<div class="tl"><div class="tlhd">Historique</div>'+_evts.map(function(ev,j){return'<div class="tli"><div class="tld '+(j===0?'now':'old')+'">'+( j===0?'●':'·')+'</div><div class="tlc"><div class="tlst">'+sLbl(ev.status)+'</div><div class="tldt">'+fShort(ev.date)+'</div></div></div>';}).join('')+'</div>':'')+
           '<div class="pacts">'+
-            ((p.pickupCode||p.trackingNum)?'<button class="act fl" data-action="showQR" data-id="'+p.id+'">📱 QR</button>':'')+
+            ((p.pickupCode||p.trackingNum)?'<button class="act fl" data-action="showQR" data-id="'+pkgKey(p)+'">📱 QR</button>':'')+
             (p.gmailLink?'<a class="act" href="'+p.gmailLink+'" target="_blank" rel="noopener" data-action="stopProp">📧</a>':'')+
-            '<button class="act sh" data-action="shareP" data-id="'+p.id+'">↗ Partager</button>'+
-            '<button class="act" data-action="copyAll" data-id="'+p.id+'">📋 Tout copier</button>'+
-            (p.status!=='collected'&&p.status!=='delivered'?'<button class="act gn" data-action="markDone" data-id="'+p.id+'">✓ Récupéré</button>':'')+
-            '<button class="act rd" data-action="delPkg" data-id="'+p.id+'">🗑</button>'+
+            '<button class="act sh" data-action="shareP" data-id="'+pkgKey(p)+'">↗ Partager</button>'+
+            '<button class="act" data-action="copyAll" data-id="'+pkgKey(p)+'">📋 Tout copier</button>'+
+            (p.status!=='collected'&&p.status!=='delivered'?'<button class="act gn" data-action="markDone" data-id="'+pkgKey(p)+'">✓ Récupéré</button>':'')+
+            '<button class="act rd" data-action="delPkg" data-id="'+pkgKey(p)+'">🗑</button>'+
           '</div>'+
         '</div>'+
       '</div>'+
@@ -831,7 +841,7 @@ function tog(id){
 
 // ─── QR ────────────────────────────────────────────────────────────────────────
 function showQR(id){
-  var p=D.packages.find(function(x){return x.id===id;});if(!p)return;
+  var p=D.packages.find(function(x){return pkgKey(x)===id;});if(!p)return;
   var val=p.pickupCode||p.trackingNum||'';if(!val){showToast('Aucune donnée QR');return;}
   document.getElementById('qrT').textContent=LB[p.carrier]||p.carrier;
   document.getElementById('qrV').textContent=val;
@@ -1039,7 +1049,13 @@ FBSync.subscribe('colis', function(docs) {
       // Ne pas écraser expired/collected avec un statut distant moins avancé
       if(p.status&&p.status!==ex.status&&['collected','expired'].indexOf(ex.status)<0)ex.status=p.status;
       if((p.lastUpdated||'')>(ex.lastUpdated||'')){ex.pickupCode=p.pickupCode||ex.pickupCode;ex.lockerAddress=p.lockerAddress||ex.lockerAddress;ex.deliverySlot=p.deliverySlot||ex.deliverySlot;ex.trackingLink=p.trackingLink||ex.trackingLink;ex.trackingNum=p.trackingNum||ex.trackingNum;if(p.events&&p.events.length)ex.events=p.events;}
-    }else{if(!p.id)p.id=D.nextId++;else p.id=Math.round(Number(p.id));D.packages.unshift(p);n++;}
+    }else{
+      var dup=findDup(p);
+      if(dup){
+        dup.pickupCode=dup.pickupCode||p.pickupCode;dup.lockerAddress=dup.lockerAddress||p.lockerAddress;dup.expiryDate=dup.expiryDate||p.expiryDate;
+        if(p._fbId&&p._fbId!==dup._fbId){try{FBSync.delete('colis',p._fbId);}catch(e){}}
+      }else{if(!p.id)p.id=D.nextId++;D.packages.unshift(p);n++;}
+    }
   });
   if(n>0){purge();saveD(D);render();document.getElementById('sd').style.display='block';}
   updLs();

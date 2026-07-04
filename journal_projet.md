@@ -293,6 +293,18 @@ Code-Tracker.gs (détecte changement statut)
 
 **Validation** : `node --check` OK sur les 3 blocs `<script>` inline.
 
+### Suite — le flash persistait après le fix de dédup seul
+
+Le fix dédup (ci-dessus) réduit les cas de doublon mais ne garantissait pas `n===0` à chaque poll (source exacte non confirmée sans accès aux logs serveur). Plutôt que de continuer à chasser la cause exacte, `render()` est rendu **non destructif** : il ne fait plus jamais table rase de `#PL`.
+
+- `buildCardHtml(p,i,R)` : template d'UNE carte, extrait de `render()` (réutilisable).
+- `cardHash(p)` : signature de contenu d'une carte (statut, code, adresse, notes, events…).
+- `render()` : si la liste/l'ordre des colis (`pkgKey` par colis) est identique au rendu précédent → **aucun rebuild global** ; seules les cartes dont `cardHash` a changé sont remplacées individuellement (`outerHTML` ciblé). Sinon (filtre, tri, ajout/suppression réels) → rebuild complet comme avant.
+- `FBSync.subscribe('colis',...)` : `render()` appelé à **chaque** poll (devenu quasi gratuit si rien n'a changé) au lieu de seulement `si n>0` — corrige aussi un bug latent où un changement de statut distant sur un colis existant n'était jamais affiché tant qu'aucun colis vraiment neuf n'arrivait dans le même cycle.
+- `DBG.log('poll colis',{docs,new,dup})` ajouté à chaque poll → visible dans le panel debug (🔍 Config → Panel debug) pour diagnostiquer si un doublon revient malgré tout.
+
+**Effet attendu** : plus de "tout s'efface puis réapparaît" ; au pire, un flash localisé sur la/les cartes dont le contenu a réellement changé.
+
 ---
 
 **Fin du journal. Dernière modification : 2 juillet 2026**

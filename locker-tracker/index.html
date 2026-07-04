@@ -408,6 +408,7 @@ function buildTrackingUrl(carrier,num){
 
 var D=loadD(),flt='ready',srch='',SC=null;
 var openCardIds=new Set(); // FIX 1: persiste les cartes ouvertes entre les re-renders
+var _lastRenderSig=null,_lastCardHash={}; // FIX refresh: état du dernier rendu pour diff ciblé
 
 // ─── PURGE ────────────────────────────────────────────────────────────────────
 var PKK='lt_purge_days',PURGE_DEF=20;
@@ -728,17 +729,13 @@ function updBadges(){
 }
 
 // ─── RENDU ─────────────────────────────────────────────────────────────────────
-function render(){
-  updBadges();
-  var pkgs=getFilt();
-  var el=document.getElementById('PL');
-  if(!pkgs.length){
-    var msgs={ready:'Aucun colis à retirer',pending:'Aucun colis en route',out_for_delivery:'Aucune livraison en cours',failed:'Aucun échec de livraison',delivered:'Aucun colis récupéré',all:'Aucun colis'};
-    el.innerHTML='<div class="empty"><div class="eico">📭</div><div class="etit">'+(msgs[flt]||'Aucun colis')+'</div><div class="esub">'+( flt==='all'?'Appuyez sur + ou synchronisez via ⟳':'Changer de filtre ou synchroniser via ⟳')+'</div></div>';
-    return;
-  }
-  var R=getRet();
-  el.innerHTML=pkgs.map(function(p,i){
+function cardHash(p){
+  // Concatène les champs qui influencent le HTML d'une carte : si inchangé, on ne retouche pas son DOM
+  return [p.status,p.pickupCode,p.lockerAddress,p.trackingNum,p.deliverySlot,p.note,p.expiryDate,p.sender,p.account,p.emailSubject,p.trackingLink,p.carrier,p.gmailLink,(Array.isArray(p.events)?p.events.map(function(e){return e.status+e.date;}).join(','):'')].join('|');
+}
+
+// Construit le HTML d'UNE carte colis (isolé pour permettre le patch ciblé dans render())
+function buildCardHtml(p,i,R){
     var color=CL[p.carrier]||'#888';
     var days=dLeft(p.expiryDate);
     var showE=p.status==='ready'&&days!==null;
@@ -812,7 +809,47 @@ function render(){
         '</div>'+
       '</div>'+
     '</div>';
-  }).join('');
+}
+
+function render(){
+  updBadges();
+  var pkgs=getFilt();
+  var el=document.getElementById('PL');
+  if(!pkgs.length){
+    var msgs={ready:'Aucun colis à retirer',pending:'Aucun colis en route',out_for_delivery:'Aucune livraison en cours',failed:'Aucun échec de livraison',delivered:'Aucun colis récupéré',all:'Aucun colis'};
+    el.innerHTML='<div class="empty"><div class="eico">📭</div><div class="etit">'+(msgs[flt]||'Aucun colis')+'</div><div class="esub">'+( flt==='all'?'Appuyez sur + ou synchronisez via ⟳':'Changer de filtre ou synchroniser via ⟳')+'</div></div>';
+    _lastRenderSig=null;_lastCardHash={};
+    return;
+  }
+  var R=getRet();
+  var keys=pkgs.map(pkgKey);
+  var sig=flt+'\u0001'+srch+'\u0001'+keys.join(',');
+
+  // FIX refresh (irritant #1) : même liste/même ordre → patch ciblé des cartes dont le contenu a changé, 0 flash
+  if(sig===_lastRenderSig){
+    pkgs.forEach(function(p,i){
+      var k=pkgKey(p),h=cardHash(p);
+      if(_lastCardHash[k]!==h){
+        var oldEl=document.getElementById('pc'+k);
+        if(oldEl){
+          var wasOpen=oldEl.classList.contains('open');
+          oldEl.outerHTML=buildCardHtml(p,i,R);
+          if(wasOpen){
+            var b=document.getElementById('pb'+k),newEl=document.getElementById('pc'+k);
+            if(b&&newEl){b.style.display='block';b.setAttribute('data-open','1');newEl.classList.add('open');}
+          }
+        }
+        _lastCardHash[k]=h;
+      }
+    });
+    return;
+  }
+
+  // Liste/ordre réellement différent (filtre, tri, ajout/suppression) : rebuild complet
+  el.innerHTML=pkgs.map(function(p,i){return buildCardHtml(p,i,R);}).join('');
+  _lastRenderSig=sig;
+  _lastCardHash={};
+  pkgs.forEach(function(p){_lastCardHash[pkgKey(p)]=cardHash(p);});
 
   // FIX 1: restaurer les cartes ouvertes après re-render (résiste au polling 5s)
   openCardIds.forEach(function(sid){
@@ -1040,7 +1077,7 @@ setTimeout(initPush,2000);
 
 // FIX 7: subscriber protège les statuts terminaux locaux (expired/collected)
 FBSync.subscribe('colis', function(docs) {
-  var n=0;
+  var n=0,dupN=0;
   docs.forEach(function(p){
     normalizePackage(p);
     var ex=D.packages.find(function(x){return x._fbId===p._fbId;});
@@ -1054,10 +1091,15 @@ FBSync.subscribe('colis', function(docs) {
       if(dup){
         dup.pickupCode=dup.pickupCode||p.pickupCode;dup.lockerAddress=dup.lockerAddress||p.lockerAddress;dup.expiryDate=dup.expiryDate||p.expiryDate;
         if(p._fbId&&p._fbId!==dup._fbId){try{FBSync.delete('colis',p._fbId);}catch(e){}}
+        dupN++;
       }else{if(!p.id)p.id=D.nextId++;D.packages.unshift(p);n++;}
     }
   });
-  if(n>0){purge();saveD(D);render();document.getElementById('sd').style.display='block';}
+  DBG.log('poll colis',{docs:docs.length,new:n,dup:dupN});
+  // FIX refresh: render() à chaque poll (diffé, donc sans flash) au lieu de "si n>0" — corrige aussi
+  // les statuts distants qui n'apparaissaient pas tant qu'aucun colis vraiment neuf n'arrivait.
+  purge();saveD(D);render();
+  if(n>0)document.getElementById('sd').style.display='block';
   updLs();
 });
 

@@ -4,8 +4,13 @@
  * FIX CRITIQUE : _importWriteFirestore() ajoute updateMask.fieldPaths
  *   sur le PATCH (même bug que Code-Tracker.gs — sans ce paramètre,
  *   Firestore remplace tout le document par les seuls champs envoyés).
- * FIX LIEN GMAIL : gmailLink utilise désormais ?ui=2#inbox/{id}
- *   (l'ancienne URL sans ui=2 ne s'ouvrait pas correctement).
+ * FIX v2 (04/07/2026) : trackingLink extrait de l'email est désormais
+ *   propagé dans le document Firestore — auparavant capturé par _xLink()
+ *   mais jamais assigné au champ final, donc perdu silencieusement.
+ *   Filtre de stabilité : seuls les domaines "stables" (mêmes domaines
+ *   que buildTrackingUrl() côté client) sont conservés ; les domaines
+ *   tokenisés court-terme (sms.*, n.*, p.*) sont ignorés pour forcer
+ *   le fallback vers l'URL générique construite par numéro de suivi.
  *
  * Utilisation :
  *   1. Coller ce fichier dans le projet Apps Script existant
@@ -19,6 +24,32 @@ var IMPORT_FB_API_KEY    = '';
 var IMPORT_FB_COLL       = 'colis';
 var IMPORT_MAX_EMAILS    = 200;   // Max emails à lire par run
 var IMPORT_DAYS_BACK     = 365;   // Chercher sur les 12 derniers mois
+
+// ── Domaines de liens STABLES (dérivés de buildTrackingUrl() côté client) ──
+// Un lien Gmail dont le hostname matche l'un de ces domaines est conservé
+// tel quel dans trackingLink. Tout le reste (sous-domaines tokenisés type
+// sms.laposte.fr, n.pkup.fr, p.vintedgo.com…) est écarté : le fallback
+// _buildTrackingUrl(carrier, num) prendra le relais côté affichage.
+var IMPORT_STABLE_LINK_HOSTS = [
+  'chronopost.fr', 'www.chronopost.fr',
+  'laposte.fr', 'www.laposte.fr',
+  'mondialrelay.fr', 'www.mondialrelay.fr',
+  'dpd.fr', 'www.dpd.fr',
+  'ups.com', 'www.ups.com',
+  'gls-group.com', 'www.gls-group.com',
+  'relaiscolis.com', 'www.relaiscolis.com',
+  'track.amazon.fr',
+];
+
+function _isStableTrackingLink(url) {
+  if (!url) return false;
+  try {
+    var host = url.match(/^https?:\/\/([^\/]+)/i);
+    if (!host || !host[1]) return false;
+    var h = host[1].toLowerCase();
+    return IMPORT_STABLE_LINK_HOSTS.some(function(d) { return h === d || h.indexOf('.' + d) >= 0; });
+  } catch(e) { return false; }
+}
 
 // ── Fonction principale ────────────────────────────────────────
 function importGmailColis() {
@@ -52,6 +83,11 @@ function importGmailColis() {
           var O = {pending:0, out_for_delivery:1, ready:2, failed:2, delivered:3, collected:4};
           if ((O[pkg.status]||0) > (O[seen[key].status]||0)) {
             seen[key].status = pkg.status;
+          }
+          // FIX v2 : propager aussi trackingLink si le doublon en apporte un
+          // stable et que l'entrée gardée n'en a pas encore.
+          if (!seen[key].trackingLink && pkg.trackingLink) {
+            seen[key].trackingLink = pkg.trackingLink;
           }
           skipped++;
           return;
@@ -112,7 +148,11 @@ function _parseEmail(subject, body, from, date, msgId) {
   var trackingNum  = _xTrackingNum(carrier, text);
   var pickupCode   = _xPickupCode(text);
   var lockerAddr   = _xAddress(text);
-  var trackingLink = _xLink(text);
+  var rawLink      = _xLink(text);
+  // FIX v2 : ne conserver le lien capté dans l'email que s'il est stable ;
+  // sinon trackingLink reste vide → le client retombera sur
+  // buildTrackingUrl(carrier, trackingNum) à l'affichage.
+  var trackingLink = _isStableTrackingLink(rawLink) ? rawLink : '';
   var status       = _xStatus(lo);
   var sender       = _xSender(text, from);
 
@@ -137,7 +177,6 @@ function _parseEmail(subject, body, from, date, msgId) {
     expiryDate:   _xExpiry(text, dateISO, carrier),
     emailSubject: subject.substring(0, 120),
     gmailMsgId:   msgId,
-    // FIX : ajout de ?ui=2 pour que le lien s'ouvre correctement dans Gmail
     gmailLink:    'https://mail.google.com/mail/u/0/?ui=2#inbox/' + msgId,
     account:      'Guillaume',
     source:       'gmail_import',
@@ -278,14 +317,24 @@ function _importWriteFirestore(pkg) {
   var check = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
   var isNew = check.getResponseCode() === 404;
 
-  // Si existe avec statut plus avancé → skip
+  // Si existe avec statut plus avancé → skip (mais on tente quand même de
+  // compléter trackingLink si l'existant n'en a pas, cf. bloc ci-dessous)
   if (!isNew) {
     try {
       var existing = JSON.parse(check.getContentText());
       var exFields = existing.fields || {};
       var exStatus = exFields.status && exFields.status.stringValue || '';
+      var exLink   = exFields.trackingLink && exFields.trackingLink.stringValue || '';
       var O = {pending:0,out_for_delivery:1,ready:2,failed:2,delivered:3,collected:4};
-      if ((O[exStatus]||0) >= (O[pkg.status]||0)) return 'skipped';
+      if ((O[exStatus]||0) >= (O[pkg.status]||0)) {
+        // FIX v2 : même si on skip la mise à jour de statut, si le doc
+        // existant n'a pas de trackingLink et que ce pkg en apporte un
+        // stable, on le complète isolément pour éviter de perdre l'info.
+        if (!exLink && pkg.trackingLink) {
+          _importPatchSingleField(url, 'trackingLink', pkg.trackingLink);
+        }
+        return 'skipped';
+      }
     } catch(e) {}
   }
 
@@ -313,6 +362,23 @@ function _importWriteFirestore(pkg) {
   });
 
   return isNew ? 'created' : 'updated';
+}
+
+// FIX v2 : patch ciblé d'un unique champ (évite de dupliquer la logique
+// complète de _importWriteFirestore pour le cas "compléter trackingLink
+// manquant sur un doc déjà à jour").
+function _importPatchSingleField(baseUrl, fieldName, fieldValue) {
+  try {
+    var patchUrl = baseUrl + '&updateMask.fieldPaths=' + encodeURIComponent(fieldName);
+    var fields = {};
+    fields[fieldName] = { stringValue: fieldValue };
+    UrlFetchApp.fetch(patchUrl, {
+      method: 'PATCH',
+      contentType: 'application/json',
+      payload: JSON.stringify({ fields: fields }),
+      muteHttpExceptions: true,
+    });
+  } catch(e) {}
 }
 
 // ── Config & logs ──────────────────────────────────────────────

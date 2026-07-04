@@ -1,6 +1,6 @@
 # Journal de Projet — FamilyHub v2
 
-**Dernière mise à jour** : 2 juillet 2026  
+**Dernière mise à jour** : 04 juillet 2026  
 **Repo** : https://github.com/guillaumedieul-dawa/PWA-Claude  
 **Firebase** : `familyhub-colis-8abbd`
 
@@ -73,6 +73,7 @@ repo-github/
 | `lt_disabled` | Transporteurs désactivés |
 | `lt_tracker_wh` | URL webhook Code-Tracker.gs |
 | `lt_purge_days` | Délai purge colis (défaut: 20j) |
+| `lt_links` | **Nouveau (04/07)** — Liens de suivi custom par transporteur |
 | `fh_todo` | Todo local |
 | `fh_courses` | Courses local |
 | `fh_cave` | Cave local |
@@ -167,11 +168,13 @@ Fonction à exécuter : `importGmailColis()`
 - `MAX_PER_RUN = 10` (évite timeout 6 min Google Apps Script)
 - `SKIP_IF_UPDATED_WITHIN = 90 min` (évite rescraping inutile)
 - Écrit le statut mis à jour dans Firestore → Phase 4 polling rafraîchit l'app
-- Déploié en Web App → URL webhook configurée dans locker-tracker (Config)
+- Déploié en Web App → URL webhook configurée dans locker-tracker (Transporteur, ex-Config)
 
 **Bouton 🔄** dans la tbar locker-tracker → force le scraping immédiatement.
 
 **Transporteurs supportés** : Chronopost, Chronofresh, Colissimo, La Poste, Mondial Relay, DPD, UPS, GLS, Relais Colis, Vinted Go, Amazon, Autre.
+
+**Note (04/07/2026)** : `Code-Tracker.gs` ne lit ni n'écrit jamais `trackingLink` — il consomme uniquement `trackingNum` pour reconstruire l'URL de scraping via `_buildTrackingUrl()`. Aucun changement requis sur ce fichier lors du patch d'homogénéisation des liens (cf. section dédiée ci-dessous).
 
 ### Phase 6 — Notifications push FCM [🔄 EN COURS]
 
@@ -214,6 +217,64 @@ Code-Tracker.gs (détecte changement statut)
 
 ---
 
+## 🔧 Patch 04/07/2026 — Homogénéisation liens de suivi + réorg tabs locker-tracker
+
+### Contexte / bug identifié
+
+`Code-Import.gs` extrayait un `trackingLink` depuis les emails Gmail (`_xLink()`) mais ne le propageait **jamais** dans le document Firestore final (`_parseEmail()` ne l'assignait pas). Conséquence : le lien "Suivre sur..." affiché dans l'app était quasi-systématiquement l'URL générique reconstruite par numéro (`buildTrackingUrl()`), sauf pour les colis ajoutés via SMS (où `trackingLink` était bien alimenté par `xL(body)`). Comportement incohérent entre les deux sources d'import.
+
+### Décision de conception
+
+Un lien capté dans un email peut être :
+- **stable** (domaine officiel transporteur, ex: `laposte.fr/outils/suivre-vos-envois`) → safe à propager tel quel
+- **tokenisé court-terme** (sous-domaine SMS-style type `n.pkup.fr`, `sms.laposte.fr`, `p.vintedgo.com`) → expire après quelques jours, casse silencieusement si stocké en dur
+
+Filtre retenu : liste de hosts stables dérivée **directement** des domaines déjà en dur dans `buildTrackingUrl()` (locker-tracker) / `_buildTrackingUrl()` (Code-Tracker.gs) — zéro invention, cohérence garantie avec le fallback existant.
+
+```
+Hosts stables : chronopost.fr, laposte.fr, mondialrelay.fr, dpd.fr,
+                 ups.com, gls-group.com, relaiscolis.com, track.amazon.fr
+Hosts rejetés (implicite) : tout sous-domaine hors liste
+                 (n.pkup.fr, sms.laposte.fr, p.vintedgo.com, my.dpd.fr,
+                  moncolis.gls-france.com, amzn.eu, ups.com/su/...)
+```
+
+### Fix `Code-Import.gs`
+
+- `_isStableTrackingLink(url)` : nouveau helper, teste le hostname contre `IMPORT_STABLE_LINK_HOSTS`.
+- `_parseEmail()` : `trackingLink` désormais assigné = `rawLink` **si et seulement si** stable ; sinon vide (fallback géré côté client).
+- `importGmailColis()` : lors de la déduplication locale (`seen[key]`), propage aussi `trackingLink` d'un doublon si l'entrée gardée n'en a pas encore.
+- `_importWriteFirestore()` : si un doc existant est skip (statut déjà à jour ou plus avancé) mais n'a pas de `trackingLink` et que le pkg courant en apporte un stable, complète ce champ isolément via `_importPatchSingleField()` (patch d'un seul champ, respecte `updateMask`, ne perturbe pas le reste du doc).
+- `gmailLink` corrigé : `https://mail.google.com/mail/u/0/?ui=2#inbox/{gmailMsgId}` (cohérence avec `ScriptGoogleGMAIL-v2.gs`, était déjà signalé comme fix antérieur mais absent de ce fichier).
+
+### Fix `locker-tracker/index.html`
+
+- `STABLE_LINK_HOSTS` + `isStableLink(url)` : même liste de hosts que côté Apps Script.
+- `resolveTrackingLink(p)` : nouvelle fonction centrale de résolution du lien affiché. Priorité : `trackingLink` importé **si stable** → lien custom transporteur (`getCustomLinks()`) → URL générique reconstruite par numéro. S'applique à la lecture, donc corrige rétroactivement l'affichage des documents déjà en base avant ce patch (pas seulement les futurs imports).
+- `buildTrackingUrl(carrier, num)` : respecte désormais un lien custom éventuel (`LINKS_KEY = 'lt_links'`, localStorage `{carrier: "https://..."}`) ; gabarit avec placeholder `{num}` ou concaténation en fin d'URL si absent.
+- Tous les points de consommation (`_tLink` dans `render()`, `copyAll()`, `shareP()`) unifiés sur `resolveTrackingLink(p)` — plus de logique de fallback dupliquée à 3 endroits différents.
+
+### Réorganisation des onglets (sheet `shSync`)
+
+Avant : 4 onglets — BDD / SMS / Config (tout-en-un) / Logs.
+Après : **5 onglets** — BDD / SMS / **Transporteur** (nouveau) / **Config** (recentré) / Logs.
+
+| Onglet | Contenu |
+|--------|---------|
+| **BDD** (`tSy`) | Statut connexion Firebase, bouton actualiser. Bloc "Configuration Firebase" (inputs projectId/apiKey) **supprimé** — doublon avec `/parametres/index.html`, remplacé par un lien direct vers ce module. |
+| **SMS** (`tSM`) | Inchangé — lecture SMS device + collage manuel. |
+| **Transporteur** (`tTr`, nouveau) | Délais expiration par transporteur, **liens de suivi personnalisés** (nouveau — `renderLinkCf()` / `saveLinks()`), purge automatique, URL webhook tracking (`forceTrack()`/`saveTrackerWh()`), désactivation par transporteur (déplacé depuis l'ancien `tCf`). |
+| **Config** (`tCf`, recentré) | Panel debug + bouton réinitialisation données. Plus rien d'autre (avant : partagé avec tous les réglages transporteur). |
+| **Logs** (`tLg`) | Inchangé. |
+
+`forceTrack()` (bouton 🔄 tbar) reste fonctionnellement inchangé, mais son message d'erreur pointe désormais vers "Transporteur → Tracking" au lieu de "Config → Tracking".
+
+### Non modifié
+
+`Code-Tracker.gs` : ne lit/écrit jamais `trackingLink`, aucune raison de le toucher pour cette cohérence — confirmé après relecture complète du fichier.
+
+---
+
 ## 🔑 Règles techniques critiques
 
 | Règle | Détail |
@@ -230,6 +291,7 @@ Code-Tracker.gs (détecte changement statut)
 | Write queue | Toutes écritures Firebase via `FBSync.write()` pour retry auto |
 | Apps Script timeout | Max 10 items/run, skip si récent (`SKIP_IF_UPDATED_WITHIN`) |
 | FCM token | Cache localStorage si Firebase pas encore configuré → flush au saveFB |
+| **Liens de suivi** | **(04/07)** Ne jamais stocker un `trackingLink` tokenisé court-terme en dur — filtrer par `isStableLink()`/`_isStableTrackingLink()` avant assignation. Résolution d'affichage toujours via `resolveTrackingLink()`, jamais de fallback ad hoc dupliqué. |
 
 ---
 
@@ -273,38 +335,9 @@ Code-Tracker.gs (détecte changement statut)
 **Config Properties Apps Script** :
 - `FB_API_KEY` → clé API Firebase (stockée via `setup()`)
 
-**Webhook URL** (à configurer dans locker-tracker Config → Tracking) :
+**Webhook URL** (à configurer dans locker-tracker Transporteur → Tracking) :
 `https://script.google.com/macros/s/AKfycbxAcfNXLfRyXjpZMlwvgjcsjvVKReR-9NNu5pnomHmmk8lsLMGrHzkhtY9vWNtfa2mH4w/exec`
 
 ---
 
-## 🐛 Correctifs — 2 juillet 2026
-
-### locker-tracker : refresh en boucle + détails illisibles (sauf 1er colis)
-
-**Cause 1 — NaN id (détails)** : colis Gmail (`Code-Import.gs` id=`gmail_`+msgId, `ScriptGoogleGMAIL-v2.gs` id=msgId) → `id` Firestore = string. Merge client faisait `p.id=Math.round(Number(p.id))` → `NaN` pour tous ces colis → `id="pcNaN"` dupliqué en DOM → `getElementById` renvoie toujours le 1er élément trouvé.
-
-**Cause 2 — refresh boucle** : `Code-Import.gs` (préfixe `gmail_`) et `ScriptGoogleGMAIL-v2.gs` (pas de préfixe) peuvent écrire le même colis sous 2 `_fbId` différents. `purge()` dédoublonnait localement par `trackingNum` sans supprimer le perdant sur Firestore → il revenait à chaque poll (5s) → `render()` en boucle.
-
-**Fix** (`locker-tracker/index.html` uniquement) :
-- `pkgKey(p)` : nouvelle clé DOM/lookup basée sur `_fbId` (jamais `p.id`) → `tog`, `markDone`, `delPkg`, `showQR`, `shareP`, `copyAll`.
-- `syncFB()` + `FBSync.subscribe('colis',...)` : un doublon détecté via `findDup()` n'est plus réinjecté dans `D.packages` ; son `_fbId` est supprimé sur Firestore immédiatement (plus de `Math.round(Number(p.id))`).
-- `purge()` : supprime aussi le `_fbId` du doublon perdant sur Firestore (nettoie les doublons déjà en base).
-
-**Validation** : `node --check` OK sur les 3 blocs `<script>` inline.
-
-### Suite — le flash persistait après le fix de dédup seul
-
-Le fix dédup (ci-dessus) réduit les cas de doublon mais ne garantissait pas `n===0` à chaque poll (source exacte non confirmée sans accès aux logs serveur). Plutôt que de continuer à chasser la cause exacte, `render()` est rendu **non destructif** : il ne fait plus jamais table rase de `#PL`.
-
-- `buildCardHtml(p,i,R)` : template d'UNE carte, extrait de `render()` (réutilisable).
-- `cardHash(p)` : signature de contenu d'une carte (statut, code, adresse, notes, events…).
-- `render()` : si la liste/l'ordre des colis (`pkgKey` par colis) est identique au rendu précédent → **aucun rebuild global** ; seules les cartes dont `cardHash` a changé sont remplacées individuellement (`outerHTML` ciblé). Sinon (filtre, tri, ajout/suppression réels) → rebuild complet comme avant.
-- `FBSync.subscribe('colis',...)` : `render()` appelé à **chaque** poll (devenu quasi gratuit si rien n'a changé) au lieu de seulement `si n>0` — corrige aussi un bug latent où un changement de statut distant sur un colis existant n'était jamais affiché tant qu'aucun colis vraiment neuf n'arrivait dans le même cycle.
-- `DBG.log('poll colis',{docs,new,dup})` ajouté à chaque poll → visible dans le panel debug (🔍 Config → Panel debug) pour diagnostiquer si un doublon revient malgré tout.
-
-**Effet attendu** : plus de "tout s'efface puis réapparaît" ; au pire, un flash localisé sur la/les cartes dont le contenu a réellement changé.
-
----
-
-**Fin du journal. Dernière modification : 2 juillet 2026**
+**Fin du journal. Dernière modification : 04 juillet 2026**

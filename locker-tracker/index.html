@@ -121,8 +121,9 @@ html,body{font-family:"Plus Jakarta Sans",sans-serif;}
 .bfill:active{opacity:.85}
 .bout{width:100%;padding:13px;border-radius:var(--rl);background:transparent;border:1px solid var(--olv);color:var(--osv);font-family:"Plus Jakarta Sans",sans-serif;font-size:15px;font-weight:500;cursor:pointer;margin-top:8px;box-sizing:border-box}
 .bdng{width:100%;padding:13px;border-radius:var(--rl);background:transparent;border:1px solid var(--cfb);color:var(--cf);font-family:"Plus Jakarta Sans",sans-serif;font-size:14px;cursor:pointer;margin-top:8px;box-sizing:border-box}
-.stabs{display:flex;background:var(--s1);border-radius:12px;padding:4px;gap:4px;margin-bottom:16px}
-.stab{flex:1;padding:8px;border-radius:8px;border:none;background:transparent;color:var(--osv);font-family:"Plus Jakarta Sans",sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s}
+.stabs{display:flex;background:var(--s1);border-radius:12px;padding:4px;gap:4px;margin-bottom:16px;overflow-x:auto;scrollbar-width:none}
+.stabs::-webkit-scrollbar{display:none}
+.stab{flex:1;min-width:64px;padding:8px 6px;border-radius:8px;border:none;background:transparent;color:var(--osv);font-family:"Plus Jakarta Sans",sans-serif;font-size:11px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap}
 .stab.sel{background:var(--sf);color:var(--p);box-shadow:0 1px 3px var(--sh)}
 .tpan{display:none}
 .tpan.on{display:block}
@@ -150,6 +151,8 @@ html,body{font-family:"Plus Jakarta Sans",sans-serif;}
 .ci-toggle.on{background:var(--p)}
 .ci-toggle::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
 .ci-toggle.on::after{transform:translateX(22px)}
+.clkin{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--olv);background:var(--s1);color:var(--ob);font-family:'Fragment Mono',monospace;font-size:12px;outline:none;box-sizing:border-box;margin-top:6px}
+.clkin:focus{border-color:var(--p)}
 #fh-dbg{position:fixed;bottom:0;left:0;right:0;height:42vh;background:#0d1117;border-top:2px solid #30363d;z-index:9999;flex-direction:column;font-family:'Fragment Mono',monospace;font-size:11px;color:#c9d1d9;display:none}
 .dbg-h{display:flex;justify-content:space-between;align-items:center;padding:4px 10px;background:#161b22;border-bottom:1px solid #30363d;flex-shrink:0}
 .dbg-ti{font-weight:bold;color:#58a6ff;font-size:12px}
@@ -245,9 +248,12 @@ html,body{font-family:"Plus Jakarta Sans",sans-serif;}
     <div class="stabs">
       <button class="stab sel" data-action="showTab" data-tab="tSy">BDD</button>
       <button class="stab" data-action="showTab" data-tab="tSM">SMS</button>
+      <button class="stab" data-action="showTab" data-tab="tTr">Transporteur</button>
       <button class="stab" data-action="showTab" data-tab="tCf">Config</button>
       <button class="stab" data-action="showTab" data-tab="tLg">Logs</button>
     </div>
+
+    <!-- ── ONGLET BDD ── bloc "Configuration Firebase" retiré (doublon /parametres/) ── -->
     <div class="tpan on" id="tSy">
       <div class="srow">
         <div class="sico" style="background:#FFF3E0">🔥</div>
@@ -261,12 +267,12 @@ html,body{font-family:"Plus Jakarta Sans",sans-serif;}
       <div style="font-size:13px;color:var(--osv);margin-bottom:6px" id="fbRes"></div>
       <div style="font-size:12px;color:var(--osv);margin-bottom:14px;font-family:'Fragment Mono',monospace" id="fbLs"></div>
       <button class="bfill" style="margin-top:0" data-action="syncFB">⟳ Actualiser</button>
-      <div class="slbl">Configuration Firebase</div>
-      <div style="background:var(--s1);border-radius:12px;padding:12px;font-size:13px;color:var(--osv);text-align:center">
-        La gestion de la clé API est centralisée.<br>
+      <div style="background:var(--s1);border-radius:12px;padding:12px;font-size:13px;color:var(--osv);text-align:center;margin-top:16px">
+        Clé API gérée dans le module <strong>Paramètres</strong>.<br>
         <a href="../parametres/index.html" style="display:inline-block;margin-top:10px;padding:10px 20px;background:var(--p);color:#fff;border-radius:20px;text-decoration:none;font-weight:bold">⚙️ Ouvrir les Paramètres</a>
       </div>
     </div>
+
     <div class="tpan" id="tSM">
       <div class="ibox">L'app lit les SMS transporteurs de ce téléphone et les partage via Firebase avec l'autre compte.</div>
       <button class="bfill" style="margin-top:0" data-action="readSMS">📲 Lire les SMS</button>
@@ -274,11 +280,19 @@ html,body{font-family:"Plus Jakarta Sans",sans-serif;}
       <textarea class="smsa" id="smsIn" placeholder="Collez un SMS transporteur ici…"></textarea>
       <button class="bfill" data-action="parseMan">Extraire</button>
     </div>
-    <div class="tpan" id="tCf">
+
+    <!-- ── ONGLET TRANSPORTEUR ── ex-contenu de tCf (hors Debug/Reset) + config liens manuels ── -->
+    <div class="tpan" id="tTr">
       <div style="font-size:13px;color:var(--osv);margin-bottom:12px">Délai d'expiration par transporteur (jours)</div>
       <div id="retCf"></div>
-      <button class="bfill" data-action="saveRet">✓ Sauvegarder</button>
-      <div class="slbl" style="margin-top:16px">Purge automatique</div>
+      <button class="bfill" data-action="saveRet">✓ Sauvegarder délais</button>
+
+      <div class="slbl" style="margin-top:20px">Liens de suivi personnalisés</div>
+      <div style="font-size:12px;color:var(--osv);margin-bottom:10px">Remplace l'URL générique par transporteur. Laisser vide pour utiliser le lien par défaut. Le numéro de colis n'est PAS inclus ici — utiliser <code>{num}</code> comme repère si besoin d'un gabarit personnalisé.</div>
+      <div id="linkCf"></div>
+      <button class="bfill" data-action="saveLinks">✓ Sauvegarder liens</button>
+
+      <div class="slbl" style="margin-top:20px">Purge automatique</div>
       <div style="font-size:13px;color:var(--osv);margin-bottom:10px">Supprimer les colis livrés/expirés après :</div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
         <input class="cfgi" type="number" min="1" max="365" id="cfgPurgeDays" value="" inputmode="numeric" style="width:72px;text-align:center">
@@ -286,14 +300,24 @@ html,body{font-family:"Plus Jakarta Sans",sans-serif;}
         <button class="bfill" style="flex:1;margin:0;padding:10px 12px;font-size:13px" data-action="savePurgeDays">✓ OK</button>
       </div>
       <div style="font-size:11px;color:var(--osv);margin-bottom:16px">Défaut : 20 jours. S'applique aux colis Livré, Récupéré ou Expiré.</div>
+
       <div class="slbl" style="margin-top:16px">Tracking automatique</div>
       <div style="font-size:13px;color:var(--osv);margin-bottom:8px">URL Apps Script (Code-Tracker.gs déployé en Web App)</div>
       <input class="fin" id="cfgTrackerWh" placeholder="https://script.google.com/macros/s/…/exec" style="font-size:12px;margin-bottom:6px">
       <button class="bfill" style="margin-top:0;padding:10px;font-size:13px" data-action="saveTrackerWh">✓ Enregistrer URL</button>
-      <div class="slbl">Outils développeur</div>
+
+      <div class="slbl" style="margin-top:16px">Désactiver un transporteur</div>
+      <div id="dsbCf"></div>
+    </div>
+
+    <!-- ── ONGLET CONFIG ── Debug + Reset uniquement ── -->
+    <div class="tpan" id="tCf">
+      <div class="slbl ft">Outils développeur</div>
       <button class="bout" style="margin-top:0;display:flex;align-items:center;gap:6px;justify-content:center" data-action="toggleDebug">🔍 Panel debug</button>
+      <div class="slbl" style="margin-top:20px">Zone de danger</div>
       <button class="bdng" data-action="resetAll">🗑 Réinitialiser toutes les données</button>
     </div>
+
     <div class="tpan" id="tLg">
       <div class="slbl ft">📱 Dernier scan SMS</div>
       <div class="lbox" id="logS">—</div>
@@ -302,6 +326,7 @@ html,body{font-family:"Plus Jakarta Sans",sans-serif;}
       <div class="slbl">📧 Dernier sync Gmail (Apps Script)</div>
       <div class="lbox" id="logG">—</div>
     </div>
+
     <button class="bout" data-action="closeSheet" data-target="shSync">Fermer</button>
   </div>
 </div>
@@ -365,19 +390,31 @@ function _flushCachedFCMToken(){
 var SK='lt_v3',FBK='lt_fb',RK='lt_ret',LK='lt_logs',LSK='lt_lsms';
 var FB0={projectId:'familyhub-colis-8abbd',apiKey:''};
 var TRACKER_WH_KEY='lt_tracker_wh';
+var LINKS_KEY='lt_links'; // FIX v2: liens de suivi personnalisés par transporteur
 var DR={chronopost:8,chronofresh:5,mondialrelay:5,colissimo:15,laposte:15,vintedgo:14,amazon:3,dpd:14,ups:10,gls:7,relaiscolis:10,other:14};
 var CL={chronopost:'#003087',chronofresh:'#005fa3',mondialrelay:'#e2001a',colissimo:'#f5c400',laposte:'#f5c400',vintedgo:'#09b1ba',amazon:'#ff9900',dpd:'#dc0032',ups:'#6b4226',gls:'#005ca9',relaiscolis:'#e8621a',other:'#888'};
 var LB={chronopost:'Chronopost',chronofresh:'Chronofresh',mondialrelay:'Mondial Relay',colissimo:'Colissimo',laposte:'La Poste',vintedgo:'Vinted Go',amazon:'Amazon',dpd:'DPD',ups:'UPS',gls:'GLS',relaiscolis:'Relais Colis',other:'Autre'};
 var EM={chronopost:'🔵',chronofresh:'❄️',mondialrelay:'🔴',colissimo:'🟡',laposte:'🟡',vintedgo:'💚',amazon:'🟠',dpd:'🔶',ups:'🟤',gls:'🟢',relaiscolis:'🟠',other:'📦'};
 var DK='lt_disabled';
 
+// FIX v2: domaines STABLES (dérivés de buildTrackingUrl ci-dessous). Un
+// trackingLink importé (Gmail/SMS) dont le hostname n'est pas dans cette
+// liste est traité comme tokenisé court-terme et ignoré à l'affichage,
+// pour forcer le fallback vers l'URL générique reconstruite par numéro.
+var STABLE_LINK_HOSTS=['chronopost.fr','laposte.fr','mondialrelay.fr','dpd.fr','ups.com','gls-group.com','relaiscolis.com','track.amazon.fr'];
+function isStableLink(url){
+  if(!url)return false;
+  var m=url.match(/^https?:\/\/([^\/]+)/i);
+  if(!m||!m[1])return false;
+  var h=m[1].toLowerCase();
+  return STABLE_LINK_HOSTS.some(function(d){return h===d||h.indexOf('.'+d)>=0;});
+}
+
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 function esc(s){if(!s)return'';return String(s).replace(/&/g,'&'+"amp;").replace(/</g,'&'+"lt;").replace(/>/g,'&'+"gt;").replace(/"/g,'&'+"quot;").replace(/'/g,'&'+"#39;");}
 function escAttr(s){if(!s)return'';return String(s).replace(/&/g,'&'+"amp;").replace(/'/g,'&'+"#39;").replace(/"/g,'&'+"quot;").replace(/</g,'&'+"lt;").replace(/>/g,'&'+"gt;").replace(/[\r\n]+/g,' ');}
 // FIX 1: emoji uniquement (fiable dans WebView Android, pas de chargement externe)
 function carrierLogo(c,size){return EM[c]||'📦';}
-// FIX identité carte : clé stable basée sur _fbId (jamais p.id, qui peut être une string Gmail → NaN)
-function pkgKey(p){return String(p&&(p._fbId||p.id)||'x').replace(/[^A-Za-z0-9_\-]/g,'_');}
 
 function getDisabled(){try{if(!localStorage.getItem(DK))localStorage.setItem(DK,JSON.stringify(['amazon']));return new Set(JSON.parse(localStorage.getItem(DK)||'[]'));}catch{return new Set();}}
 function loadD(){try{var d=JSON.parse(localStorage.getItem(SK));if(d&&d.packages){d.packages.forEach(function(p){if(typeof p.id==='number')p.id=Math.round(p.id);if(typeof p.events==='string'){try{p.events=JSON.parse(p.events);}catch(e){p.events=[];}}if(!Array.isArray(p.events))p.events=[];});return d;}}catch(e){}return{packages:[],nextId:1,lastSync:null};}
@@ -386,9 +423,21 @@ function getRet(){try{return Object.assign({},DR,JSON.parse(localStorage.getItem
 function getFB(){try{var s=JSON.parse(localStorage.getItem(FBK));return s||FB0;}catch{return FB0;}}
 function wlog(t,m){try{var l=JSON.parse(localStorage.getItem(LK)||'{}');l[t]=new Date().toLocaleString('fr-FR')+' · '+m;localStorage.setItem(LK,JSON.stringify(l));}catch{}}
 
+// FIX v2: liens de suivi personnalisés — stockage {carrier: "https://..."}
+function getCustomLinks(){try{return JSON.parse(localStorage.getItem(LINKS_KEY)||'{}');}catch{return{};}}
+function setCustomLinks(o){localStorage.setItem(LINKS_KEY,JSON.stringify(o));}
+
 // FIX 2: lien de suivi vers le site du transporteur
+// FIX v2: priorité — lien custom (si configuré) > URL générique par défaut
 function buildTrackingUrl(carrier,num){
   if(!carrier||!num)return'';
+  var custom=getCustomLinks();
+  if(custom[carrier]){
+    // Gabarit custom : remplace {num} si présent, sinon concatène en fin d'URL
+    return custom[carrier].indexOf('{num}')>=0
+      ? custom[carrier].replace('{num}',encodeURIComponent(num))
+      : custom[carrier]+encodeURIComponent(num);
+  }
   var n=encodeURIComponent(num);
   var URLS={
     chronopost:'https://www.chronopost.fr/tracking-no-cms/suivi-page?listeNumerosLT='+n,
@@ -406,9 +455,18 @@ function buildTrackingUrl(carrier,num){
   return URLS[carrier]||'';
 }
 
+// FIX v2: résout le lien à afficher — un trackingLink capté (email/SMS)
+// n'est utilisé QUE s'il est stable ; sinon on retombe systématiquement
+// sur buildTrackingUrl(), qui elle-même respecte un éventuel lien custom.
+// Ceci aligne le comportement client sur le filtre appliqué côté
+// Code-Import.gs, y compris pour les docs déjà en base avant ce patch.
+function resolveTrackingLink(p){
+  if(p.trackingLink&&isStableLink(p.trackingLink))return p.trackingLink;
+  return buildTrackingUrl(p.carrier,p.trackingNum);
+}
+
 var D=loadD(),flt='ready',srch='',SC=null;
 var openCardIds=new Set(); // FIX 1: persiste les cartes ouvertes entre les re-renders
-var _lastRenderSig=null,_lastCardHash={}; // FIX refresh: état du dernier rendu pour diff ciblé
 
 // ─── PURGE ────────────────────────────────────────────────────────────────────
 var PKK='lt_purge_days',PURGE_DEF=20;
@@ -428,8 +486,6 @@ function purge(){
     ex.lockerAddress=ex.lockerAddress||p.lockerAddress;
     ex.expiryDate=ex.expiryDate||p.expiryDate;
     ex.sender=ex.sender||p.sender;
-    // FIX boucle refresh : supprimer le doublon côté Firestore pour qu'il ne revienne pas au poll suivant
-    if(p._fbId&&p._fbId!==ex._fbId){try{FBSync.delete('colis',p._fbId);}catch(e){}}
     return false;
   });
   var L=getPurgeDays()*86400000,now=Date.now(),changed=false;
@@ -482,13 +538,7 @@ async function syncFB(){
         // FIX 7: ne pas écraser un statut terminal local (expired/collected) avec remote
         if(p.status&&p.status!==ex.status&&['collected','expired'].indexOf(ex.status)<0)ex.status=p.status;
         if((p.lastUpdated||'')>(ex.lastUpdated||'')){ex.pickupCode=p.pickupCode||ex.pickupCode;ex.lockerAddress=p.lockerAddress||ex.lockerAddress;ex.deliverySlot=p.deliverySlot||ex.deliverySlot;ex.trackingLink=p.trackingLink||ex.trackingLink;ex.trackingNum=p.trackingNum||ex.trackingNum;if(p.events&&p.events.length)ex.events=p.events;}
-      }else{
-        var dup=findDup(p);
-        if(dup){
-          dup.pickupCode=dup.pickupCode||p.pickupCode;dup.lockerAddress=dup.lockerAddress||p.lockerAddress;dup.expiryDate=dup.expiryDate||p.expiryDate;
-          if(p._fbId&&p._fbId!==dup._fbId){try{FBSync.delete('colis',p._fbId);}catch(e){}}
-        }else{if(!p.id)p.id=D.nextId++;D.packages.unshift(p);n++;}
-      }
+      }else{if(!p.id)p.id=D.nextId++;else p.id=Math.round(Number(p.id));D.packages.unshift(p);n++;}
     });
     D.lastSync=new Date().toISOString();purge();saveD(D);render();
     if(pg){pg.style.transition='width 0.3s';pg.style.width='100%';}
@@ -638,7 +688,7 @@ function addPkg(){
 
 // ─── ACTIONS COLIS ─────────────────────────────────────────────────────────────
 function markDone(id){
-  var p=D.packages.find(function(x){return pkgKey(x)===id;});if(!p)return;
+  var p=D.packages.find(function(x){return x.id===id;});if(!p)return;
   p.status='collected';
   if(!p.events)p.events=[];
   p.events.unshift({date:new Date().toISOString(),status:'collected',desc:''});
@@ -649,9 +699,9 @@ function markDone(id){
 function delPkg(id){
   openCardIds.delete(String(id)); // FIX: nettoie le Set
   if(!confirm('Supprimer ?'))return;
-  var p=D.packages.find(function(x){return pkgKey(x)===id;});
+  var p=D.packages.find(function(x){return x.id===id;});
   if(p&&p._fbId)FBSync.delete('colis',p._fbId);
-  D.packages=D.packages.filter(function(x){return pkgKey(x)!==id;});
+  D.packages=D.packages.filter(function(x){return x.id!==id;});
   saveD(D);render();
 }
 function cpT(txt,lbl){
@@ -660,13 +710,13 @@ function cpT(txt,lbl){
   else{var t=document.createElement('textarea');t.value=txt;t.style.cssText='position:fixed;opacity:0';document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);showToast('📋 '+lbl+' copié');}
 }
 function copyAll(id){
-  var p=D.packages.find(function(x){return pkgKey(x)===id;});if(!p)return;
-  var parts=[LB[p.carrier]||p.carrier,p.trackingNum?'N° : '+p.trackingNum:'',p.pickupCode?'Code : '+p.pickupCode:'',p.lockerAddress?p.lockerAddress:'',p.expiryDate?'Expire le '+fFull(p.expiryDate):'',p.trackingLink||''].filter(Boolean).join('\n');
+  var p=D.packages.find(function(x){return x.id===id;});if(!p)return;
+  var parts=[LB[p.carrier]||p.carrier,p.trackingNum?'N° : '+p.trackingNum:'',p.pickupCode?'Code : '+p.pickupCode:'',p.lockerAddress?p.lockerAddress:'',p.expiryDate?'Expire le '+fFull(p.expiryDate):'',resolveTrackingLink(p)||''].filter(Boolean).join('\n');
   cpT(parts,'Infos colis');
 }
 function shareP(id){
-  var p=D.packages.find(function(x){return pkgKey(x)===id;});if(!p)return;
-  var lines=['📦 '+(LB[p.carrier]||p.carrier||'Colis'),p.trackingNum?'N° : '+p.trackingNum:'',p.pickupCode?'Code : '+p.pickupCode:'',p.lockerAddress?'📍 '+p.lockerAddress:'',p.expiryDate?'⏰ Expire le '+fFull(p.expiryDate):'',p.trackingLink?'🔗 '+p.trackingLink:''].filter(Boolean);
+  var p=D.packages.find(function(x){return x.id===id;});if(!p)return;
+  var lines=['📦 '+(LB[p.carrier]||p.carrier||'Colis'),p.trackingNum?'N° : '+p.trackingNum:'',p.pickupCode?'Code : '+p.pickupCode:'',p.lockerAddress?'📍 '+p.lockerAddress:'',p.expiryDate?'⏰ Expire le '+fFull(p.expiryDate):'',resolveTrackingLink(p)?'🔗 '+resolveTrackingLink(p):''].filter(Boolean);
   var text=lines.join('\n');
   if(navigator.share)navigator.share({title:'Colis',text:text}).catch(function(){});else cpT(text,'Infos');
 }
@@ -729,13 +779,17 @@ function updBadges(){
 }
 
 // ─── RENDU ─────────────────────────────────────────────────────────────────────
-function cardHash(p){
-  // Concatène les champs qui influencent le HTML d'une carte : si inchangé, on ne retouche pas son DOM
-  return [p.status,p.pickupCode,p.lockerAddress,p.trackingNum,p.deliverySlot,p.note,p.expiryDate,p.sender,p.account,p.emailSubject,p.trackingLink,p.carrier,p.gmailLink,(Array.isArray(p.events)?p.events.map(function(e){return e.status+e.date;}).join(','):'')].join('|');
-}
-
-// Construit le HTML d'UNE carte colis (isolé pour permettre le patch ciblé dans render())
-function buildCardHtml(p,i,R){
+function render(){
+  updBadges();
+  var pkgs=getFilt();
+  var el=document.getElementById('PL');
+  if(!pkgs.length){
+    var msgs={ready:'Aucun colis à retirer',pending:'Aucun colis en route',out_for_delivery:'Aucune livraison en cours',failed:'Aucun échec de livraison',delivered:'Aucun colis récupéré',all:'Aucun colis'};
+    el.innerHTML='<div class="empty"><div class="eico">📭</div><div class="etit">'+(msgs[flt]||'Aucun colis')+'</div><div class="esub">'+( flt==='all'?'Appuyez sur + ou synchronisez via ⟳':'Changer de filtre ou synchroniser via ⟳')+'</div></div>';
+    return;
+  }
+  var R=getRet();
+  el.innerHTML=pkgs.map(function(p,i){
     var color=CL[p.carrier]||'#888';
     var days=dLeft(p.expiryDate);
     var showE=p.status==='ready'&&days!==null;
@@ -751,8 +805,8 @@ function buildCardHtml(p,i,R){
     // FIX 2: fallback sur l'objet email si aucun N° ou code
     if(!sum&&p.emailSubject)sum=esc(p.emailSubject.substring(0,40));
 
-    // FIX 3: lien de suivi (fourni ou construit depuis le N° suivi)
-    var _tLink=p.trackingLink||buildTrackingUrl(p.carrier,p.trackingNum);
+    // FIX v2: lien de suivi résolu de façon homogène (stable importé > custom > générique)
+    var _tLink=resolveTrackingLink(p);
 
     // FIX 4: dédupliquer les événements consécutifs identiques
     var _evts=Array.isArray(p.events)?p.events.filter(function(e,idx,arr){
@@ -767,7 +821,7 @@ function buildCardHtml(p,i,R){
     // ── NOM du transporteur avec fallback ──
     var _carrierName=esc(LB[p.carrier]||p.carrier||'Transporteur');
 
-    return '<div class="pcard" id="pc'+pkgKey(p)+'" data-action="tog" data-id="'+pkgKey(p)+'" style="animation-delay:'+i*.03+'s">'+
+    return '<div class="pcard" id="pc'+p.id+'" data-action="tog" data-id="'+p.id+'" style="animation-delay:'+i*.03+'s">'+
       '<div class="ptint" style="background:'+color+'"></div>'+
       '<div class="phdr">'+
         '<div class="cbadge" style="background:'+color+'18;display:flex;align-items:center;justify-content:center;font-size:22px">'+carrierLogo(p.carrier,26)+'</div>'+
@@ -782,7 +836,7 @@ function buildCardHtml(p,i,R){
           '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;background:'+_accBg+';color:'+_accCl+'">'+_accLbl+'</span>'+
         '</div>'+
       '</div>'+
-      '<div id="pb'+pkgKey(p)+'" style="display:none">'+
+      '<div id="pb'+p.id+'" style="display:none">'+
         '<div class="pbdy">'+
           '<div class="div"></div>'+
           // FIX 2: objet email affiché quand aucun numéro/code/adresse
@@ -792,64 +846,24 @@ function buildCardHtml(p,i,R){
           (p.pickupCode?'<div class="cbox" style="background:var(--pc);border-radius:var(--rm);padding:16px;margin-bottom:12px"><div class="cblbl">Code de retrait</div><div class="cbrow"><div class="cbval">'+esc(p.pickupCode)+'</div><button class="cbcopy" data-action="cpT" data-val="'+escAttr(p.pickupCode)+'" data-lbl="Code">📋</button></div>'+(p.pickupCode.indexOf('/')>=0?'<div style="font-size:11px;color:var(--opc);opacity:.7;margin-top:4px">Saisir les deux codes successivement</div>':'')+'</div>':'')+
           (p.lockerAddress?'<div style="background:var(--s1);border-radius:var(--rm);padding:12px 14px;margin-bottom:12px"><div style="display:flex;align-items:flex-start;gap:8px"><span style="font-size:16px">📍</span><div style="flex:1;font-size:14px;color:var(--os);line-height:1.5">'+esc(p.lockerAddress)+'</div><button class="cfab" data-action="cpT" data-val="'+escAttr(p.lockerAddress)+'" data-lbl="Adresse">📋</button></div><a style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:8px 16px;border-radius:20px;border:none;background:var(--p);color:var(--op);font-family:"Plus Jakarta Sans",sans-serif;font-size:13px;font-weight:500;cursor:pointer;text-decoration:none" href="https://maps'+'.google.com/?q='+encodeURIComponent(p.lockerAddress)+'" target="_blank" rel="noopener" data-action="stopProp">🗺 Ouvrir dans Maps</a></div>':'')+
           (p.deliverySlot?'<div class="slot">🕐 '+esc(fmtSlotWithDay(p.deliverySlot,p.arrivalDate))+'</div>':'')+
-          // FIX 3: lien vers le site du transporteur (URL fournie ou construite)
+          // FIX v2: lien résolu de façon homogène (cf. resolveTrackingLink)
           (_tLink?'<a class="tlink" href="'+_tLink+'" target="_blank" rel="noopener" data-action="stopProp">🔗 Suivre sur '+_carrierName+'</a>':'')+
           (showE&&days!==null?'<div class="xrow"><div class="xlbl">Expire le</div><div class="xval" style="color:'+xCol(days)+'">'+fFull(p.expiryDate)+'</div></div><div class="xbar"><div class="xfill" style="width:'+pct+'%;background:'+xCol(days)+'"></div></div>':'')+
           (p.note?'<div style="background:var(--s1);border-radius:var(--rs);padding:10px 12px;margin-bottom:12px;font-size:14px;color:var(--osv)">💬 '+esc(p.note)+'</div>':'')+
           // FIX 4: historique dédupliqué (_evts filtre les statuts consécutifs identiques)
           (_evts.length?'<div class="tl"><div class="tlhd">Historique</div>'+_evts.map(function(ev,j){return'<div class="tli"><div class="tld '+(j===0?'now':'old')+'">'+( j===0?'●':'·')+'</div><div class="tlc"><div class="tlst">'+sLbl(ev.status)+'</div><div class="tldt">'+fShort(ev.date)+'</div></div></div>';}).join('')+'</div>':'')+
           '<div class="pacts">'+
-            ((p.pickupCode||p.trackingNum)?'<button class="act fl" data-action="showQR" data-id="'+pkgKey(p)+'">📱 QR</button>':'')+
+            ((p.pickupCode||p.trackingNum)?'<button class="act fl" data-action="showQR" data-id="'+p.id+'">📱 QR</button>':'')+
             (p.gmailLink?'<a class="act" href="'+p.gmailLink+'" target="_blank" rel="noopener" data-action="stopProp">📧</a>':'')+
-            '<button class="act sh" data-action="shareP" data-id="'+pkgKey(p)+'">↗ Partager</button>'+
-            '<button class="act" data-action="copyAll" data-id="'+pkgKey(p)+'">📋 Tout copier</button>'+
-            (p.status!=='collected'&&p.status!=='delivered'?'<button class="act gn" data-action="markDone" data-id="'+pkgKey(p)+'">✓ Récupéré</button>':'')+
-            '<button class="act rd" data-action="delPkg" data-id="'+pkgKey(p)+'">🗑</button>'+
+            '<button class="act sh" data-action="shareP" data-id="'+p.id+'">↗ Partager</button>'+
+            '<button class="act" data-action="copyAll" data-id="'+p.id+'">📋 Tout copier</button>'+
+            (p.status!=='collected'&&p.status!=='delivered'?'<button class="act gn" data-action="markDone" data-id="'+p.id+'">✓ Récupéré</button>':'')+
+            '<button class="act rd" data-action="delPkg" data-id="'+p.id+'">🗑</button>'+
           '</div>'+
         '</div>'+
       '</div>'+
     '</div>';
-}
-
-function render(){
-  updBadges();
-  var pkgs=getFilt();
-  var el=document.getElementById('PL');
-  if(!pkgs.length){
-    var msgs={ready:'Aucun colis à retirer',pending:'Aucun colis en route',out_for_delivery:'Aucune livraison en cours',failed:'Aucun échec de livraison',delivered:'Aucun colis récupéré',all:'Aucun colis'};
-    el.innerHTML='<div class="empty"><div class="eico">📭</div><div class="etit">'+(msgs[flt]||'Aucun colis')+'</div><div class="esub">'+( flt==='all'?'Appuyez sur + ou synchronisez via ⟳':'Changer de filtre ou synchroniser via ⟳')+'</div></div>';
-    _lastRenderSig=null;_lastCardHash={};
-    return;
-  }
-  var R=getRet();
-  var keys=pkgs.map(pkgKey);
-  var sig=flt+'\u0001'+srch+'\u0001'+keys.join(',');
-
-  // FIX refresh (irritant #1) : même liste/même ordre → patch ciblé des cartes dont le contenu a changé, 0 flash
-  if(sig===_lastRenderSig){
-    pkgs.forEach(function(p,i){
-      var k=pkgKey(p),h=cardHash(p);
-      if(_lastCardHash[k]!==h){
-        var oldEl=document.getElementById('pc'+k);
-        if(oldEl){
-          var wasOpen=oldEl.classList.contains('open');
-          oldEl.outerHTML=buildCardHtml(p,i,R);
-          if(wasOpen){
-            var b=document.getElementById('pb'+k),newEl=document.getElementById('pc'+k);
-            if(b&&newEl){b.style.display='block';b.setAttribute('data-open','1');newEl.classList.add('open');}
-          }
-        }
-        _lastCardHash[k]=h;
-      }
-    });
-    return;
-  }
-
-  // Liste/ordre réellement différent (filtre, tri, ajout/suppression) : rebuild complet
-  el.innerHTML=pkgs.map(function(p,i){return buildCardHtml(p,i,R);}).join('');
-  _lastRenderSig=sig;
-  _lastCardHash={};
-  pkgs.forEach(function(p){_lastCardHash[pkgKey(p)]=cardHash(p);});
+  }).join('');
 
   // FIX 1: restaurer les cartes ouvertes après re-render (résiste au polling 5s)
   openCardIds.forEach(function(sid){
@@ -878,7 +892,7 @@ function tog(id){
 
 // ─── QR ────────────────────────────────────────────────────────────────────────
 function showQR(id){
-  var p=D.packages.find(function(x){return pkgKey(x)===id;});if(!p)return;
+  var p=D.packages.find(function(x){return x.id===id;});if(!p)return;
   var val=p.pickupCode||p.trackingNum||'';if(!val){showToast('Aucune donnée QR');return;}
   document.getElementById('qrT').textContent=LB[p.carrier]||p.carrier;
   document.getElementById('qrV').textContent=val;
@@ -914,13 +928,36 @@ async function fetchGmailLog(){
 function renderRetCf(){
   var R=getRet(),DIS=getDisabled();
   document.getElementById('retCf').innerHTML=Object.entries(DR).map(function(kv){
-    var c=kv[0],d=kv[1],dis=DIS.has(c);
+    var c=kv[0],d=kv[1];
+    return'<div class="cfgr">'+
+      '<div class="cfgd" style="background:'+(CL[c]||'#888')+'"></div>'+
+      '<div class="cfgl">'+(LB[c]||c)+'</div>'+
+      '<input class="cfgi" type="number" min="1" max="60" id="r_'+c+'" value="'+(R[c]||d)+'">'+
+      '<span style="font-size:12px;color:var(--osv)"> j</span>'+
+    '</div>';
+  }).join('');
+  // FIX v2: liste désactivation transporteur déplacée dans son propre bloc (dsbCf)
+  document.getElementById('dsbCf').innerHTML=Object.entries(DR).map(function(kv){
+    var c=kv[0],dis=DIS.has(c);
     return'<div class="cfgr" style="'+(dis?'opacity:0.45':'')+'">'+
       '<div class="cfgd" style="background:'+(CL[c]||'#888')+'"></div>'+
       '<div class="cfgl">'+(LB[c]||c)+'</div>'+
-      '<input class="cfgi" type="number" min="1" max="60" id="r_'+c+'" value="'+(R[c]||d)+'" '+(dis?'disabled ':'')+'>'+
-      '<span style="font-size:12px;color:var(--osv)"> j</span>'+
       '<button data-action="toggleCarrier" data-carrier="'+c+'" class="ci-toggle'+(dis?'':' on')+'" title="'+(dis?'Réactiver':'Désactiver')+'"></button>'+
+    '</div>';
+  }).join('');
+}
+
+// FIX v2: rendu du bloc liens de suivi personnalisés (onglet Transporteur)
+function renderLinkCf(){
+  var custom=getCustomLinks();
+  document.getElementById('linkCf').innerHTML=Object.entries(DR).map(function(kv){
+    var c=kv[0];
+    return'<div style="margin-bottom:10px">'+
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'+
+        '<div class="cfgd" style="width:8px;height:8px;border-radius:50%;background:'+(CL[c]||'#888')+'"></div>'+
+        '<span style="font-size:13px;color:var(--os);font-weight:500">'+(LB[c]||c)+'</span>'+
+      '</div>'+
+      '<input class="clkin" id="lk_'+c+'" placeholder="https://... (optionnel, {num} ou fin URL)" value="'+escAttr(custom[c]||'')+'">'+
     '</div>';
   }).join('');
 }
@@ -930,6 +967,17 @@ function saveRet(){
   Object.keys(DR).forEach(function(c){var e=document.getElementById('r_'+c);if(e)nr[c]=Math.max(1,Math.min(60,parseInt(e.value)||DR[c]));});
   localStorage.setItem(RK,JSON.stringify(nr));showToast('✓ Délais sauvegardés');
 }
+
+// FIX v2: sauvegarde des liens custom saisis dans l'onglet Transporteur
+function saveLinks(){
+  var nl={};
+  Object.keys(DR).forEach(function(c){
+    var e=document.getElementById('lk_'+c);
+    if(e&&e.value.trim())nl[c]=e.value.trim();
+  });
+  setCustomLinks(nl);render();showToast('✓ Liens sauvegardés');
+}
+
 function savePurgeDays(){
   var el=document.getElementById('cfgPurgeDays');if(!el)return;
   var v=parseInt(el.value,10);if(isNaN(v)||v<1){showToast('⚠️ Valeur invalide');return;}
@@ -939,7 +987,7 @@ function bindPurgeCfg(){var el=document.getElementById('cfgPurgeDays');if(el)el.
 function bindTrackerWh(){var el=document.getElementById('cfgTrackerWh');if(el)el.value=localStorage.getItem(TRACKER_WH_KEY)||'';}
 function forceTrack(){
   var wh=localStorage.getItem(TRACKER_WH_KEY);
-  if(!wh){showToast('⚠️ URL webhook non configurée (Config → Tracking)');return;}
+  if(!wh){showToast('⚠️ URL webhook non configurée (Transporteur → Tracking)');return;}
   var btn=document.getElementById('btn-track');
   if(btn)btn.textContent='⏳';
   showToast('🔄 Scraping en cours…');
@@ -985,7 +1033,7 @@ function showTab(tabId,btn){
   document.querySelectorAll('.stab').forEach(function(b){b.classList.remove('sel');});
   var panel=document.getElementById(tabId);if(panel)panel.classList.add('on');
   if(btn)btn.classList.add('sel');
-  if(tabId==='tCf'){renderRetCf();bindPurgeCfg();bindTrackerWh();}
+  if(tabId==='tTr'){renderRetCf();renderLinkCf();bindPurgeCfg();bindTrackerWh();}
   if(tabId==='tLg')renderLogs();
 }
 
@@ -1030,6 +1078,7 @@ document.addEventListener('click',function(e){
     case 'parseMan': parseMan(); break;
     case 'showTab': showTab(ds.tab,el); break;
     case 'saveRet': saveRet(); break;
+    case 'saveLinks': saveLinks(); break;
     case 'savePurgeDays': savePurgeDays(); break;
     case 'toggleDebug': DBG.toggle(); break;
     case 'forceTrack': forceTrack(); break;
@@ -1077,7 +1126,7 @@ setTimeout(initPush,2000);
 
 // FIX 7: subscriber protège les statuts terminaux locaux (expired/collected)
 FBSync.subscribe('colis', function(docs) {
-  var n=0,dupN=0;
+  var n=0;
   docs.forEach(function(p){
     normalizePackage(p);
     var ex=D.packages.find(function(x){return x._fbId===p._fbId;});
@@ -1086,20 +1135,9 @@ FBSync.subscribe('colis', function(docs) {
       // Ne pas écraser expired/collected avec un statut distant moins avancé
       if(p.status&&p.status!==ex.status&&['collected','expired'].indexOf(ex.status)<0)ex.status=p.status;
       if((p.lastUpdated||'')>(ex.lastUpdated||'')){ex.pickupCode=p.pickupCode||ex.pickupCode;ex.lockerAddress=p.lockerAddress||ex.lockerAddress;ex.deliverySlot=p.deliverySlot||ex.deliverySlot;ex.trackingLink=p.trackingLink||ex.trackingLink;ex.trackingNum=p.trackingNum||ex.trackingNum;if(p.events&&p.events.length)ex.events=p.events;}
-    }else{
-      var dup=findDup(p);
-      if(dup){
-        dup.pickupCode=dup.pickupCode||p.pickupCode;dup.lockerAddress=dup.lockerAddress||p.lockerAddress;dup.expiryDate=dup.expiryDate||p.expiryDate;
-        if(p._fbId&&p._fbId!==dup._fbId){try{FBSync.delete('colis',p._fbId);}catch(e){}}
-        dupN++;
-      }else{if(!p.id)p.id=D.nextId++;D.packages.unshift(p);n++;}
-    }
+    }else{if(!p.id)p.id=D.nextId++;else p.id=Math.round(Number(p.id));D.packages.unshift(p);n++;}
   });
-  DBG.log('poll colis',{docs:docs.length,new:n,dup:dupN});
-  // FIX refresh: render() à chaque poll (diffé, donc sans flash) au lieu de "si n>0" — corrige aussi
-  // les statuts distants qui n'apparaissaient pas tant qu'aucun colis vraiment neuf n'arrivait.
-  purge();saveD(D);render();
-  if(n>0)document.getElementById('sd').style.display='block';
+  if(n>0){purge();saveD(D);render();document.getElementById('sd').style.display='block';}
   updLs();
 });
 

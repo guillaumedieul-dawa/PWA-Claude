@@ -121,9 +121,8 @@ html,body{font-family:"Plus Jakarta Sans",sans-serif;}
 .bfill:active{opacity:.85}
 .bout{width:100%;padding:13px;border-radius:var(--rl);background:transparent;border:1px solid var(--olv);color:var(--osv);font-family:"Plus Jakarta Sans",sans-serif;font-size:15px;font-weight:500;cursor:pointer;margin-top:8px;box-sizing:border-box}
 .bdng{width:100%;padding:13px;border-radius:var(--rl);background:transparent;border:1px solid var(--cfb);color:var(--cf);font-family:"Plus Jakarta Sans",sans-serif;font-size:14px;cursor:pointer;margin-top:8px;box-sizing:border-box}
-.stabs{display:flex;background:var(--s1);border-radius:12px;padding:4px;gap:4px;margin-bottom:16px;overflow-x:auto;scrollbar-width:none}
-.stabs::-webkit-scrollbar{display:none}
-.stab{flex:1;min-width:64px;padding:8px 6px;border-radius:8px;border:none;background:transparent;color:var(--osv);font-family:"Plus Jakarta Sans",sans-serif;font-size:11px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap}
+.stabs{display:flex;background:var(--s1);border-radius:12px;padding:4px;gap:4px;margin-bottom:16px}
+.stab{flex:1;padding:8px;border-radius:8px;border:none;background:transparent;color:var(--osv);font-family:"Plus Jakarta Sans",sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s}
 .stab.sel{background:var(--sf);color:var(--p);box-shadow:0 1px 3px var(--sh)}
 .tpan{display:none}
 .tpan.on{display:block}
@@ -139,21 +138,15 @@ html,body{font-family:"Plus Jakarta Sans",sans-serif;}
 .pfil{height:100%;background:var(--p);border-radius:2px;width:0%;transition:width .3s}
 .lbox{background:var(--s1);border-radius:var(--rs);padding:12px;font-family:'Fragment Mono',monospace;font-size:11px;color:var(--osv);line-height:1.7;max-height:110px;overflow-y:auto;margin-bottom:8px;white-space:pre-wrap}
 .ibox{background:var(--pc);border-radius:var(--rs);padding:12px 14px;font-size:13px;color:var(--opc);line-height:1.6;margin-bottom:12px}
-.smsa{width:100%;padding:12px 14px;border-radius:var(--rs);border:1px solid var(--olv);background:var(--s1);color:var(--ob);font-family:'Fragment Mono',monospace;font-size:12px;min-height:90px;resize:vertical;outline:none;box-sizing:border-box}
-.smsa:focus{border-color:var(--p)}
-.smsa::placeholder{color:var(--osv)}
-.trrow{padding:10px 0;border-bottom:1px solid var(--olv)}
-.trrow-top{display:flex;align-items:center;gap:10px}
+.cfgr{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--olv)}
 .cfgd{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-.cfgl{flex:1;font-size:14px;color:var(--os);font-weight:500}
-.cfgi{width:56px;padding:6px 8px;border-radius:8px;border:1px solid var(--olv);background:var(--s1);color:var(--ob);font-family:'Fragment Mono',monospace;font-size:13px;text-align:center;outline:none;box-sizing:border-box}
+.cfgl{flex:1;font-size:14px;color:var(--os)}
+.cfgi{width:64px;padding:6px 10px;border-radius:8px;border:1px solid var(--olv);background:var(--s1);color:var(--ob);font-family:'Fragment Mono',monospace;font-size:13px;text-align:center;outline:none;box-sizing:border-box}
 .cfgi:focus{border-color:var(--p)}
-.ci-toggle{width:44px;height:24px;border-radius:12px;background:var(--s2);border:none;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;display:inline-block}
+.ci-toggle{width:48px;height:26px;border-radius:13px;background:var(--s2);border:none;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;display:inline-block}
 .ci-toggle.on{background:var(--p)}
-.ci-toggle::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
-.ci-toggle.on::after{transform:translateX(20px)}
-.clkin{width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--olv);background:var(--s1);color:var(--ob);font-family:'Fragment Mono',monospace;font-size:12px;outline:none;box-sizing:border-box;margin-top:6px}
-.clkin:focus{border-color:var(--p)}
+.ci-toggle::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.ci-toggle.on::after{transform:translateX(22px)}
 #fh-dbg{position:fixed;bottom:0;left:0;right:0;height:42vh;background:#0d1117;border-top:2px solid #30363d;z-index:9999;flex-direction:column;font-family:'Fragment Mono',monospace;font-size:11px;color:#c9d1d9;display:none}
 .dbg-h{display:flex;justify-content:space-between;align-items:center;padding:4px 10px;background:#161b22;border-bottom:1px solid #30363d;flex-shrink:0}
 .dbg-ti{font-weight:bold;color:#58a6ff;font-size:12px}
@@ -245,15 +238,12 @@ html,body{font-family:"Plus Jakarta Sans",sans-serif;}
 <div class="sov" id="shSync">
   <div class="sht">
     <div class="shnd" data-action="closeSheet" data-target="shSync"></div>
-    <div class="shtit">BDD & Synchronisation</div>
+    <div class="shtit">Administration</div>
     <div class="stabs">
       <button class="stab sel" data-action="showTab" data-tab="tSy">BDD</button>
-      <button class="stab" data-action="showTab" data-tab="tSM">SMS</button>
-      <button class="stab" data-action="showTab" data-tab="tTr">Transporteur</button>
       <button class="stab" data-action="showTab" data-tab="tCf">Config</button>
       <button class="stab" data-action="showTab" data-tab="tLg">Logs</button>
     </div>
-
     <div class="tpan on" id="tSy">
       <div class="srow">
         <div class="sico" style="background:#FFF3E0">🔥</div>
@@ -267,26 +257,15 @@ html,body{font-family:"Plus Jakarta Sans",sans-serif;}
       <div style="font-size:13px;color:var(--osv);margin-bottom:6px" id="fbRes"></div>
       <div style="font-size:12px;color:var(--osv);margin-bottom:14px;font-family:'Fragment Mono',monospace" id="fbLs"></div>
       <button class="bfill" style="margin-top:0" data-action="syncFB">⟳ Actualiser</button>
-      <div style="background:var(--s1);border-radius:12px;padding:12px;font-size:13px;color:var(--osv);text-align:center;margin-top:16px">
-        Clé API gérée dans le module <strong>Paramètres</strong>.<br>
-        <a href="../parametres/index.html" style="display:inline-block;margin-top:10px;padding:10px 20px;background:var(--p);color:#fff;border-radius:20px;text-decoration:none;font-weight:bold">⚙️ Ouvrir les Paramètres</a>
-      </div>
-    </div>
-
-    <div class="tpan" id="tSM">
+      <div class="slbl">SMS transporteurs</div>
       <div class="ibox">L'app lit les SMS transporteurs de ce téléphone et les partage via Firebase avec l'autre compte.</div>
       <button class="bfill" style="margin-top:0" data-action="readSMS">📲 Lire les SMS</button>
-      <div class="slbl">Ou coller manuellement</div>
-      <textarea class="smsa" id="smsIn" placeholder="Collez un SMS transporteur ici…"></textarea>
-      <button class="bfill" data-action="parseMan">Extraire</button>
     </div>
-
-    <div class="tpan" id="tTr">
-      <div style="font-size:12px;color:var(--osv);margin-bottom:12px" id="trSyncStatus">Chargement config…</div>
-      <div id="trCf"></div>
-      <button class="bfill" data-action="saveTrCf">✓ Sauvegarder</button>
-
-      <div class="slbl" style="margin-top:20px">Purge automatique</div>
+    <div class="tpan" id="tCf">
+      <div style="font-size:13px;color:var(--osv);margin-bottom:12px">Délai d'expiration par transporteur (jours)</div>
+      <div id="retCf"></div>
+      <button class="bfill" data-action="saveRet">✓ Sauvegarder</button>
+      <div class="slbl" style="margin-top:16px">Purge automatique</div>
       <div style="font-size:13px;color:var(--osv);margin-bottom:10px">Supprimer les colis livrés/expirés après :</div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
         <input class="cfgi" type="number" min="1" max="365" id="cfgPurgeDays" value="" inputmode="numeric" style="width:72px;text-align:center">
@@ -294,20 +273,14 @@ html,body{font-family:"Plus Jakarta Sans",sans-serif;}
         <button class="bfill" style="flex:1;margin:0;padding:10px 12px;font-size:13px" data-action="savePurgeDays">✓ OK</button>
       </div>
       <div style="font-size:11px;color:var(--osv);margin-bottom:16px">Défaut : 20 jours. S'applique aux colis Livré, Récupéré ou Expiré.</div>
-
       <div class="slbl" style="margin-top:16px">Tracking automatique</div>
       <div style="font-size:13px;color:var(--osv);margin-bottom:8px">URL Apps Script (Code-Tracker.gs déployé en Web App)</div>
       <input class="fin" id="cfgTrackerWh" placeholder="https://script.google.com/macros/s/…/exec" style="font-size:12px;margin-bottom:6px">
       <button class="bfill" style="margin-top:0;padding:10px;font-size:13px" data-action="saveTrackerWh">✓ Enregistrer URL</button>
-    </div>
-
-    <div class="tpan" id="tCf">
-      <div class="slbl ft">Outils développeur</div>
+      <div class="slbl">Outils développeur</div>
       <button class="bout" style="margin-top:0;display:flex;align-items:center;gap:6px;justify-content:center" data-action="toggleDebug">🔍 Panel debug</button>
-      <div class="slbl" style="margin-top:20px">Zone de danger</div>
       <button class="bdng" data-action="resetAll">🗑 Réinitialiser toutes les données</button>
     </div>
-
     <div class="tpan" id="tLg">
       <div class="slbl ft">📱 Dernier scan SMS</div>
       <div class="lbox" id="logS">—</div>
@@ -316,7 +289,6 @@ html,body{font-family:"Plus Jakarta Sans",sans-serif;}
       <div class="slbl">📧 Dernier sync Gmail (Apps Script)</div>
       <div class="lbox" id="logG">—</div>
     </div>
-
     <button class="bout" data-action="closeSheet" data-target="shSync">Fermer</button>
   </div>
 </div>
@@ -333,6 +305,7 @@ html,body{font-family:"Plus Jakarta Sans",sans-serif;}
 
 <script>
 'use strict';
+// ─── CAPACITOR PUSH NOTIFICATIONS ────────────────────────────────────────────
 function initPush(){
   if(!window.Capacitor||!window.Capacitor.isNativePlatform())return;
   var PP=window.Capacitor.Plugins&&window.Capacitor.Plugins.PushNotifications;
@@ -342,6 +315,7 @@ function initPush(){
     PP.register();
   }).catch(function(e){console.warn('Push requestPermissions:',e);});
   PP.addListener('registration',function(token){
+    console.log('FCM token:',token.value&&token.value.substring(0,20)+'...');
     _saveFCMToken(token.value,'Guillaume');
   });
   PP.addListener('registrationError',function(err){console.warn('Push registrationError:',err);});
@@ -374,85 +348,32 @@ function _flushCachedFCMToken(){
   var cfg=getFB();if(!cfg.apiKey)return;
   _pushTokenToFirestore(tok,acc,cfg);
 }
-var SK='lt_v3',FBK='lt_fb',LK='lt_logs',LSK='lt_lsms';
+// ─── CONSTANTES ────────────────────────────────────────────────────────────────
+var SK='lt_v3',FBK='lt_fb',RK='lt_ret',LK='lt_logs',LSK='lt_lsms';
 var FB0={projectId:'familyhub-colis-8abbd',apiKey:''};
 var TRACKER_WH_KEY='lt_tracker_wh';
 var DR={chronopost:8,chronofresh:5,mondialrelay:5,colissimo:15,laposte:15,vintedgo:14,amazon:3,dpd:14,ups:10,gls:7,relaiscolis:10,other:14};
 var CL={chronopost:'#003087',chronofresh:'#005fa3',mondialrelay:'#e2001a',colissimo:'#f5c400',laposte:'#f5c400',vintedgo:'#09b1ba',amazon:'#ff9900',dpd:'#dc0032',ups:'#6b4226',gls:'#005ca9',relaiscolis:'#e8621a',other:'#888'};
 var LB={chronopost:'Chronopost',chronofresh:'Chronofresh',mondialrelay:'Mondial Relay',colissimo:'Colissimo',laposte:'La Poste',vintedgo:'Vinted Go',amazon:'Amazon',dpd:'DPD',ups:'UPS',gls:'GLS',relaiscolis:'Relais Colis',other:'Autre'};
 var EM={chronopost:'🔵',chronofresh:'❄️',mondialrelay:'🔴',colissimo:'🟡',laposte:'🟡',vintedgo:'💚',amazon:'🟠',dpd:'🔶',ups:'🟤',gls:'🟢',relaiscolis:'🟠',other:'📦'};
+var DK='lt_disabled';
 
-var STABLE_LINK_HOSTS=['chronopost.fr','laposte.fr','mondialrelay.fr','dpd.fr','ups.com','gls-group.com','relaiscolis.com','track.amazon.fr'];
-function isStableLink(url){
-  if(!url)return false;
-  var m=url.match(/^https?:\/\/([^\/]+)/i);
-  if(!m||!m[1])return false;
-  var h=m[1].toLowerCase();
-  return STABLE_LINK_HOSTS.some(function(d){return h===d||h.indexOf('.'+d)>=0;});
-}
-
-function pkgKey(p){
-  if(p&&p._fbId)return String(p._fbId);
-  if(p&&p.id!=null)return 'local_'+String(p.id);
-  return 'unknown_'+Math.random().toString(36).slice(2,10);
-}
-
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
 function esc(s){if(!s)return'';return String(s).replace(/&/g,'&'+"amp;").replace(/</g,'&'+"lt;").replace(/>/g,'&'+"gt;").replace(/"/g,'&'+"quot;").replace(/'/g,'&'+"#39;");}
 function escAttr(s){if(!s)return'';return String(s).replace(/&/g,'&'+"amp;").replace(/'/g,'&'+"#39;").replace(/"/g,'&'+"quot;").replace(/</g,'&'+"lt;").replace(/>/g,'&'+"gt;").replace(/[\r\n]+/g,' ');}
+// FIX 1: emoji uniquement (fiable dans WebView Android, pas de chargement externe)
 function carrierLogo(c,size){return EM[c]||'📦';}
 
+function getDisabled(){try{if(!localStorage.getItem(DK))localStorage.setItem(DK,JSON.stringify(['amazon']));return new Set(JSON.parse(localStorage.getItem(DK)||'[]'));}catch{return new Set();}}
 function loadD(){try{var d=JSON.parse(localStorage.getItem(SK));if(d&&d.packages){d.packages.forEach(function(p){if(typeof p.id==='number')p.id=Math.round(p.id);if(typeof p.events==='string'){try{p.events=JSON.parse(p.events);}catch(e){p.events=[];}}if(!Array.isArray(p.events))p.events=[];});return d;}}catch(e){}return{packages:[],nextId:1,lastSync:null};}
 function saveD(d){localStorage.setItem(SK,JSON.stringify(d));}
+function getRet(){try{return Object.assign({},DR,JSON.parse(localStorage.getItem(RK)));}catch{return Object.assign({},DR);}}
 function getFB(){try{var s=JSON.parse(localStorage.getItem(FBK));return s||FB0;}catch{return FB0;}}
 function wlog(t,m){try{var l=JSON.parse(localStorage.getItem(LK)||'{}');l[t]=new Date().toLocaleString('fr-FR')+' · '+m;localStorage.setItem(LK,JSON.stringify(l));}catch{}}
 
-var TRCFG_CACHE_KEY='lt_trcfg_cache';
-var _trCfg=loadTrCfgCache();
-function loadTrCfgCache(){
-  try{var c=JSON.parse(localStorage.getItem(TRCFG_CACHE_KEY));if(c)return c;}catch(e){}
-  var d={};Object.keys(DR).forEach(function(k){d[k]={days:DR[k],link:'',disabled:k==='amazon'};});
-  return d;
-}
-function saveTrCfgCache(c){_trCfg=c;localStorage.setItem(TRCFG_CACHE_KEY,JSON.stringify(c));}
-function getTrCfg(c){return _trCfg[c]||{days:DR[c]||14,link:'',disabled:false};}
-function getDisabledSet(){var s=new Set();Object.keys(_trCfg).forEach(function(k){if(_trCfg[k].disabled)s.add(k);});return s;}
-
-async function fetchTrCfgFromFirestore(){
-  var cfg=getFB();if(!cfg.apiKey)return null;
-  try{
-    var url='https://firestore.googleapis.com/v1/projects/'+cfg.projectId+'/databases/(default)/documents/meta/carrierConfig?key='+cfg.apiKey;
-    var r=await fetch(url,{redirect:'follow'});
-    if(!r.ok)return null;
-    var d=await r.json();
-    var out={};
-    Object.keys(DR).forEach(function(k){
-      var f=d.fields&&d.fields[k];
-      if(f&&f.stringValue){try{out[k]=JSON.parse(f.stringValue);}catch(e){out[k]={days:DR[k],link:'',disabled:false};}}
-      else out[k]={days:DR[k],link:'',disabled:k==='amazon'};
-    });
-    return out;
-  }catch(e){return null;}
-}
-async function writeTrCfgToFirestore(cfgObj){
-  var cfg=getFB();if(!cfg.apiKey)return false;
-  try{
-    var fields={};var keys=Object.keys(DR);
-    keys.forEach(function(k){fields[k]={stringValue:JSON.stringify(cfgObj[k]||{days:DR[k],link:'',disabled:false})};});
-    var url='https://firestore.googleapis.com/v1/projects/'+cfg.projectId+'/databases/(default)/documents/meta/carrierConfig?key='+cfg.apiKey;
-    keys.forEach(function(k){url+='&updateMask.fieldPaths='+encodeURIComponent(k);});
-    var r=await fetch(url,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({fields:fields})});
-    return r.ok;
-  }catch(e){return false;}
-}
-
+// FIX 2: lien de suivi vers le site du transporteur
 function buildTrackingUrl(carrier,num){
   if(!carrier||!num)return'';
-  var tc=getTrCfg(carrier);
-  if(tc.link){
-    return tc.link.indexOf('{num}')>=0
-      ? tc.link.replace('{num}',encodeURIComponent(num))
-      : tc.link+encodeURIComponent(num);
-  }
   var n=encodeURIComponent(num);
   var URLS={
     chronopost:'https://www.chronopost.fr/tracking-no-cms/suivi-page?listeNumerosLT='+n,
@@ -469,14 +390,11 @@ function buildTrackingUrl(carrier,num){
   };
   return URLS[carrier]||'';
 }
-function resolveTrackingLink(p){
-  if(p.trackingLink&&isStableLink(p.trackingLink))return p.trackingLink;
-  return buildTrackingUrl(p.carrier,p.trackingNum);
-}
 
 var D=loadD(),flt='ready',srch='',SC=null;
-var openCardKeys=new Set();
+var openCardIds=new Set(); // FIX 1: persiste les cartes ouvertes entre les re-renders
 
+// ─── PURGE ────────────────────────────────────────────────────────────────────
 var PKK='lt_purge_days',PURGE_DEF=20;
 function getPurgeDays(){var v=parseInt(localStorage.getItem(PKK),10);return(!isNaN(v)&&v>0)?v:PURGE_DEF;}
 function setPurgeDays(v){var n=parseInt(v,10);if(!isNaN(n)&&n>0)localStorage.setItem(PKK,n);}
@@ -502,10 +420,12 @@ function purge(){
       if(new Date(p.expiryDate).getTime()<now){
         p.status='expired';changed=true;
         if(!p.events)p.events=[];
+        // FIX 4: évite les doublons d'événements "expiré"
         if(!p.events.length||p.events[0].status!=='expired'){
           p.events.unshift({date:new Date().toISOString(),status:'expired',desc:'Délai dépassé'});
           if(p.events.length>10)p.events=p.events.slice(0,10);
         }
+        // Persister le statut expiré dans Firebase (évite reset au prochain polling)
         if(p._fbId){try{FBSync.write('colis',p._fbId,{status:'expired',lastUpdated:new Date().toISOString()});}catch(e){}}
       }
     }
@@ -519,6 +439,7 @@ function purge(){
   if(changed||D.packages.length!==b)saveD(D);
 }
 
+// ─── FIREBASE REST ────────────────────────────────────────────────────────────
 function fbU(p){var c=getFB();return'https://firestore.googleapis.com/v1/projects/'+c.projectId+'/databases/(default)/documents/'+p+'?key='+c.apiKey;}
 function toF(o){var f={};Object.entries(o).forEach(function(kv){var k=kv[0],v=kv[1];if(v==null)return;if(typeof v==='string')f[k]={stringValue:v};else if(typeof v==='number')f[k]={doubleValue:v};else if(typeof v==='boolean')f[k]={booleanValue:v};});return f;}
 function frD(doc){var o={};if(!doc.fields)return o;Object.entries(doc.fields).forEach(function(kv){var k=kv[0],v=kv[1];if(v.stringValue!==undefined)o[k]=v.stringValue;else if(v.doubleValue!==undefined)o[k]=v.doubleValue;else if(v.integerValue!==undefined)o[k]=parseInt(v.integerValue);else if(v.booleanValue!==undefined)o[k]=v.booleanValue;else if(v.arrayValue!==undefined){o[k]=(v.arrayValue.values||[]).map(function(item){if(item.stringValue!==undefined){try{return JSON.parse(item.stringValue);}catch(e){return item.stringValue;}}if(item.mapValue)return frD(item.mapValue);return'';});}else o[k]='';});return o;}
@@ -535,19 +456,15 @@ async function syncFB(){
   try{
     var rem=await fbAll(),n=0;
     DBG.read('colis',rem.length);
-    var byKey={};D.packages.forEach(function(p){byKey[pkgKey(p)]=p;});
     rem.forEach(function(p){
       normalizePackage(p);
-      var k=pkgKey(p);
-      var ex=byKey[k];
+      var ex=D.packages.find(function(x){return x._fbId===p._fbId;});
       if(ex){
         normalizePackage(ex);
+        // FIX 7: ne pas écraser un statut terminal local (expired/collected) avec remote
         if(p.status&&p.status!==ex.status&&['collected','expired'].indexOf(ex.status)<0)ex.status=p.status;
         if((p.lastUpdated||'')>(ex.lastUpdated||'')){ex.pickupCode=p.pickupCode||ex.pickupCode;ex.lockerAddress=p.lockerAddress||ex.lockerAddress;ex.deliverySlot=p.deliverySlot||ex.deliverySlot;ex.trackingLink=p.trackingLink||ex.trackingLink;ex.trackingNum=p.trackingNum||ex.trackingNum;if(p.events&&p.events.length)ex.events=p.events;}
-      }else{
-        if(!p.id)p.id=D.nextId++;
-        D.packages.unshift(p);byKey[k]=p;n++;
-      }
+      }else{if(!p.id)p.id=D.nextId++;else p.id=Math.round(Number(p.id));D.packages.unshift(p);n++;}
     });
     D.lastSync=new Date().toISOString();purge();saveD(D);render();
     if(pg){pg.style.transition='width 0.3s';pg.style.width='100%';}
@@ -563,6 +480,7 @@ async function syncFB(){
   }
 }
 
+// ─── DÉTECTION TRANSPORTEUR ───────────────────────────────────────────────────
 var CARS=[
   {c:'chronofresh',t:function(f,s,b){return/chronofresh/i.test(f+s+b);}},
   {c:'colissimo',  t:function(f,s,b){return/colissimo/i.test(f+s+b)||/laposte/i.test(f);}},
@@ -587,6 +505,7 @@ function autoDet(v){
   if(b){selCarrier(m.c,b);showToast('Transporteur détecté : '+LB[m.c]);}
 }
 
+// ─── EXTRACTION SMS ────────────────────────────────────────────────────────────
 var SM={
   delivered:['votre colis a été livré','a été livré','colis livré','livré à','livraison effectuée','remis à','livraison terminée'],
   expired:['retourné à l\'expéditeur','non récupéré','délai dépassé'],
@@ -602,9 +521,10 @@ function xC(t){if(!t)return'';var _mic=t.match(/identifiant\s*[:\-]\s*(\d{3,6})[
 function xA(t){if(!t)return'';var J=/^(ce message|merci|suivre|téléchargez|pour ne|absent|bonjour)/i;var P=[/consigne\s+pickup\s+(.+?)(?:\.|jusqu|n°|code|\+\s*d)/i,/consigne\s+vinted\s+go\s*:\s*(.+?)(?:\.|suivi)/i,/(?:au\s+)?(?:p\.\s*)?relais\s+([A-Z][A-Z\s]{3,40}?)(?:\.|retirez|avec|$)/i,/disponible\s+au\s+(.+?)(?:\.|retirez|avec|$)/i,/votre\s+point\s+de\s+retrait\s*:\s*\n+(.+?\n.+?\n.+?)(?:\n\n)/is,/sera\s+livré\s+à\s*\n(.+?\n.+?)(?:\n\n|france)/is,/expédier\s+à\s*\n(.+?\n.+?\n.+?)(?:\n\n|ups standard)/is,/informations\s+sur\s+l.adresse\s*\n(.+?\n.+?\n.+?)(?:\n\n)/is];for(var i=0;i<P.length;i++){var m=t.match(P[i]);if(m&&m[1]){var ln=m[1].split('\n').map(function(l){return l.trim();}).filter(function(l){return l.length>2&&!J.test(l);});if(ln.length)return ln.slice(0,3).join(', ').substring(0,150);}}return'';}
 function xL(t){if(!t)return'';var ps=[/https?:\/\/(?:n\.pkup\.fr)[^\s<"')]+/i,/https?:\/\/(?:sms\.laposte\.fr)[^\s<"')]+/i,/https?:\/\/(?:p\.vintedgo\.com)[^\s<"')]+/i,/https?:\/\/(?:moncolis\.gls-france\.com)[^\s<"')]+/i,/https?:\/\/(?:my\.dpd\.fr)[^\s<"')]+/i,/https?:\/\/(?:amzn\.eu)[^\s<"')]+/i,/https?:\/\/(?:www\.chronopost\.fr)[^\s<"')]+/i,/ups\.com\/su\/[^\s<"')]+/i,/https?:\/\/[^\s<"']{12,80}/];for(var i=0;i<ps.length;i++){var m=t.match(ps[i]);if(m){var u=m[0];if(!u.startsWith('http'))u='https://'+u;return u;}}return'';}
 function xSl(t){if(!t)return'';var m1=t.match(/entre\s+(\d{1,2}[h:]\d{2})\s*[-–et]+(\s*\d{1,2}[h:]\d{2})/i);if(m1)return m1[1].replace('h',':')+' — '+m1[2].replace('h',':');return'';}
-function xEx(t,arr,c){if(!t)return'';var d=t.match(/(?:disposez?\s+de|pendant)\s+(\d+)\s+jours?/i);if(d){var x=new Date(arr);x.setDate(x.getDate()+parseInt(d[1]));return x.toISOString().split('T')[0];}var i=t.match(/(?:avant le|jusqu['']au)\s+(\d{4}-\d{2}-\d{2})/i);if(i)return i[1];var nm=t.match(/(?:jusqu['']au|avant le)\s+(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/i);if(nm){var y=nm[3]?(nm[3].length===2?'20'+nm[3]:nm[3]):new Date().getFullYear();return y+'-'+nm[2].padStart(2,'0')+'-'+nm[1].padStart(2,'0');}var days=getTrCfg(c).days||14;var def=new Date(arr);def.setDate(def.getDate()+days);return def.toISOString().split('T')[0];}
+function xEx(t,arr,c){if(!t)return'';var R=getRet();var d=t.match(/(?:disposez?\s+de|pendant)\s+(\d+)\s+jours?/i);if(d){var x=new Date(arr);x.setDate(x.getDate()+parseInt(d[1]));return x.toISOString().split('T')[0];}var i=t.match(/(?:avant le|jusqu['']au)\s+(\d{4}-\d{2}-\d{2})/i);if(i)return i[1];var nm=t.match(/(?:jusqu['']au|avant le)\s+(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/i);if(nm){var y=nm[3]?(nm[3].length===2?'20'+nm[3]:nm[3]):new Date().getFullYear();return y+'-'+nm[2].padStart(2,'0')+'-'+nm[1].padStart(2,'0');}var days=R[c]||14;var def=new Date(arr);def.setDate(def.getDate()+days);return def.toISOString().split('T')[0];}
 function xSd(t){if(!t)return'';var m1=t.match(/expédié\s+par\s+([A-Z][^\n.]{2,40}?)(?:\n|\.|est)/i);if(m1)return m1[1].trim();return'';}
 
+// ─── DÉDUPLICATION ─────────────────────────────────────────────────────────────
 function findDup(pkg){
   var k=(pkg.trackingNum||'').toUpperCase().trim();
   var co=(pkg.pickupCode||'').toUpperCase().trim();
@@ -632,6 +552,7 @@ function mrg(ex,nw){
   ex.lastUpdated=new Date().toISOString();
 }
 
+// ─── SMS ──────────────────────────────────────────────────────────────────────
 async function readSMS(silent){
   silent=silent||false;
   if(!window.Capacitor||!window.Capacitor.isNativePlatform()){if(!silent)showToast('📱 APK Android uniquement');return;}
@@ -660,15 +581,7 @@ async function readSMS(silent){
   }catch(e){if(!silent)showToast('❌ '+(e.message||e));wlog('sms','❌ '+e.message);}
 }
 
-function parseMan(){
-  var t=document.getElementById('smsIn').value.trim();if(!t){showToast('⚠️ Collez un SMS');return;}
-  var lo=t.toLowerCase();var det=CARS.find(function(d){return d.t('',lo,lo);});var c=det&&det.c||'other';
-  var now=new Date().toISOString();var fbId='sms_man_'+Date.now();
-  var pkg={id:D.nextId++,_fbId:fbId,carrier:c,trackingNum:xT(c,t),pickupCode:xC(t),lockerAddress:xA(t),trackingLink:xL(t),deliverySlot:xSl(t),sender:xSd(t),arrivalDate:now,expiryDate:xEx(t,now,c),status:detSt(t),emailSubject:'SMS manuel',gmailLink:'',account:'Guillaume',source:'sms_manual',gmailMsgId:fbId,note:'',lastUpdated:now,events:[{date:now,status:detSt(t),desc:'Manuel'}]};
-  var dup=findDup(pkg);if(dup){mrg(dup,pkg);showToast('↗ Mis à jour');}else{D.packages.unshift(pkg);FBSync.write('colis',fbId,pkg);showToast('✓ Ajouté : '+LB[c]);}
-  purge();saveD(D);render();document.getElementById('smsIn').value='';closeSheet('shSync');
-}
-
+// ─── CARRIER SELECTION + ADD ──────────────────────────────────────────────────
 function selCarrier(c,el){
   SC=c;
   document.querySelectorAll('.cb').forEach(function(b){b.classList.remove('sel');});
@@ -681,8 +594,8 @@ function addPkg(){
   var co=document.getElementById('aC').value.trim().toUpperCase();
   var ad=document.getElementById('aA').value.trim();
   if(!tr&&!co&&!ad){showToast('⚠️ Renseignez au moins un champ');return;}
-  var now=new Date().toISOString(),fbId='man_'+Date.now();
-  var defExp=new Date();defExp.setDate(defExp.getDate()+(getTrCfg(SC).days||14));
+  var R=getRet(),now=new Date().toISOString(),fbId='man_'+Date.now();
+  var defExp=new Date();defExp.setDate(defExp.getDate()+(R[SC]||14));
   var pkg={id:D.nextId++,_fbId:fbId,carrier:SC,trackingNum:tr,pickupCode:co,lockerAddress:ad,trackingLink:'',deliverySlot:'',sender:document.getElementById('aSd').value.trim(),arrivalDate:now,expiryDate:defExp.toISOString().split('T')[0],status:'ready',emailSubject:'Ajout manuel',gmailLink:'',account:document.getElementById('aAc').value,source:'manual',gmailMsgId:fbId,note:document.getElementById('aN').value.trim(),lastUpdated:now,events:[{date:now,status:'ready',desc:'Manuel'}]};
   D.packages.unshift(pkg);saveD(D);render();FBSync.write('colis',fbId,pkg);
   closeSheet('shAdd');showToast('✓ Colis ajouté');
@@ -690,10 +603,9 @@ function addPkg(){
   SC=null;document.querySelectorAll('.cb').forEach(function(b){b.classList.remove('sel');});
 }
 
-function findPkgByKey(key){return D.packages.find(function(x){return pkgKey(x)===key;});}
-
-function markDone(key){
-  var p=findPkgByKey(key);if(!p)return;
+// ─── ACTIONS COLIS ─────────────────────────────────────────────────────────────
+function markDone(id){
+  var p=D.packages.find(function(x){return x.id===id;});if(!p)return;
   p.status='collected';
   if(!p.events)p.events=[];
   p.events.unshift({date:new Date().toISOString(),status:'collected',desc:''});
@@ -701,12 +613,12 @@ function markDone(key){
   if(p._fbId)FBSync.write('colis',p._fbId,Object.assign({},p,{status:'collected'}));
   showToast('✓ Récupéré');
 }
-function delPkg(key){
-  openCardKeys.delete(key);
+function delPkg(id){
+  openCardIds.delete(String(id)); // FIX: nettoie le Set
   if(!confirm('Supprimer ?'))return;
-  var p=findPkgByKey(key);
+  var p=D.packages.find(function(x){return x.id===id;});
   if(p&&p._fbId)FBSync.delete('colis',p._fbId);
-  D.packages=D.packages.filter(function(x){return pkgKey(x)!==key;});
+  D.packages=D.packages.filter(function(x){return x.id!==id;});
   saveD(D);render();
 }
 function cpT(txt,lbl){
@@ -714,18 +626,19 @@ function cpT(txt,lbl){
   if(navigator.clipboard)navigator.clipboard.writeText(txt).then(function(){showToast('📋 '+lbl+' copié');});
   else{var t=document.createElement('textarea');t.value=txt;t.style.cssText='position:fixed;opacity:0';document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);showToast('📋 '+lbl+' copié');}
 }
-function copyAll(key){
-  var p=findPkgByKey(key);if(!p)return;
-  var parts=[LB[p.carrier]||p.carrier,p.trackingNum?'N° : '+p.trackingNum:'',p.pickupCode?'Code : '+p.pickupCode:'',p.lockerAddress?p.lockerAddress:'',p.expiryDate?'Expire le '+fFull(p.expiryDate):'',resolveTrackingLink(p)||''].filter(Boolean).join('\n');
+function copyAll(id){
+  var p=D.packages.find(function(x){return x.id===id;});if(!p)return;
+  var parts=[LB[p.carrier]||p.carrier,p.trackingNum?'N° : '+p.trackingNum:'',p.pickupCode?'Code : '+p.pickupCode:'',p.lockerAddress?p.lockerAddress:'',p.expiryDate?'Expire le '+fFull(p.expiryDate):'',p.trackingLink||''].filter(Boolean).join('\n');
   cpT(parts,'Infos colis');
 }
-function shareP(key){
-  var p=findPkgByKey(key);if(!p)return;
-  var lines=['📦 '+(LB[p.carrier]||p.carrier||'Colis'),p.trackingNum?'N° : '+p.trackingNum:'',p.pickupCode?'Code : '+p.pickupCode:'',p.lockerAddress?'📍 '+p.lockerAddress:'',p.expiryDate?'⏰ Expire le '+fFull(p.expiryDate):'',resolveTrackingLink(p)?'🔗 '+resolveTrackingLink(p):''].filter(Boolean);
+function shareP(id){
+  var p=D.packages.find(function(x){return x.id===id;});if(!p)return;
+  var lines=['📦 '+(LB[p.carrier]||p.carrier||'Colis'),p.trackingNum?'N° : '+p.trackingNum:'',p.pickupCode?'Code : '+p.pickupCode:'',p.lockerAddress?'📍 '+p.lockerAddress:'',p.expiryDate?'⏰ Expire le '+fFull(p.expiryDate):'',p.trackingLink?'🔗 '+p.trackingLink:''].filter(Boolean);
   var text=lines.join('\n');
   if(navigator.share)navigator.share({title:'Colis',text:text}).catch(function(){});else cpT(text,'Infos');
 }
 
+// ─── FORMATAGE ────────────────────────────────────────────────────────────────
 function sLbl(s){return{ready:'À retirer',pending:'En route',out_for_delivery:'En livraison',delivered:'Récupéré',failed:'Échec livr.',expired:'Expiré',collected:'Récupéré'}[s]||s;}
 function sLblDate(p){
   var base=sLbl(p.status);
@@ -742,8 +655,9 @@ function fShort(iso){if(!iso)return'';try{return new Date(iso).toLocaleDateStrin
 function fmtSlotWithDay(slot,arrDate){if(!slot)return'';var days=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];try{var d=arrDate?new Date(arrDate):new Date();return days[d.getDay()]+' '+d.getDate()+'/'+String(d.getMonth()+1).padStart(2,'0')+' · '+slot;}catch{return slot;}}
 function fSrc(p){return(p.source&&p.source.indexOf('sms')>=0?'📱':'📧')+' '+fShort(p.arrivalDate);}
 
+// ─── FILTRAGE ──────────────────────────────────────────────────────────────────
 function getFilt(){
-  var DIS=getDisabledSet(),_cut30=Date.now()-30*86400000;
+  var DIS=getDisabled(),_cut30=Date.now()-30*86400000;
   var pkgs=D.packages.filter(function(p){
     if(DIS.has(p.carrier))return false;
     if(['ready','delivered','collected'].indexOf(p.status)<0){
@@ -765,7 +679,7 @@ function getFilt(){
 }
 
 function updBadges(){
-  var p=D.packages,DIS=getDisabledSet(),_cut30=Date.now()-30*86400000;
+  var p=D.packages,DIS=getDisabled(),_cut30=Date.now()-30*86400000;
   function countFilt(fn){return p.filter(function(x){if(DIS.has(x.carrier))return false;if(['ready','delivered','collected'].indexOf(x.status)<0){var _lu=new Date(x.arrivalDate||x.lastUpdated||0).getTime();if(_lu>0&&_lu<_cut30)return false;}if(x.status==='out_for_delivery'){var arr=x.arrivalDate?new Date(x.arrivalDate).getTime():0;if(arr>0&&arr<Date.now()-5*86400000)return false;}return fn(x);}).length;}
   var tb=document.getElementById('totalBadge');
   var rCount=countFilt(function(x){return x.status==='ready';});
@@ -781,75 +695,7 @@ function updBadges(){
   });
 }
 
-function cardHash(p){
-  return [p.status,p.pickupCode,p.lockerAddress,p.trackingNum,p.expiryDate,p.deliverySlot,p.note,(p.events||[]).length,resolveTrackingLink(p)].join('|');
-}
-var _lastHashes={};
-var _lastOrder=[];
-
-function buildCardHtml(p,i){
-  var color=CL[p.carrier]||'#888';
-  var key=pkgKey(p);
-  var days=dLeft(p.expiryDate);
-  var showE=p.status==='ready'&&days!==null;
-  var pct=showE?Math.max(0,Math.min(100,(days/(getTrCfg(p.carrier).days||14))*100)):null;
-
-  var parts=[];
-  if(p.pickupCode)parts.push('🔑 '+esc(p.pickupCode));
-  if(p.trackingNum)parts.push(p.trackingNum.substring(0,16)+(p.trackingNum.length>16?'…':''));
-  var dL=dLeft(p.expiryDate);
-  if(p.status==='ready'&&dL!==null&&dL<=3){var urgency=dL<0?'⚠️ Expiré':dL===0?'⚠️ Auj.':'⚠️ J-'+String(dL);parts.push(urgency);}
-  var sum=parts.join('  ');
-  if(!sum&&p.emailSubject)sum=esc(p.emailSubject.substring(0,40));
-
-  var _tLink=resolveTrackingLink(p);
-  var _evts=Array.isArray(p.events)?p.events.filter(function(e,idx,arr){return idx===0||arr[idx-1].status!==e.status;}).slice(0,10):[];
-  var _accBg=p.account==='Michele'?'#ECDCFF':'#D7E3FF';
-  var _accCl=p.account==='Michele'?'#1D0160':'#001849';
-  var _accLbl=p.account==='Michele'?'M':'G';
-  var _carrierName=esc(LB[p.carrier]||p.carrier||'Transporteur');
-  var isOpen=openCardKeys.has(key);
-
-  return '<div class="pcard'+(isOpen?' open':'')+'" id="pc_'+escAttr(key)+'" data-action="tog" data-key="'+escAttr(key)+'" style="animation-delay:'+i*.03+'s">'+
-    '<div class="ptint" style="background:'+color+'"></div>'+
-    '<div class="phdr">'+
-      '<div class="cbadge" style="background:'+color+'18;display:flex;align-items:center;justify-content:center;font-size:22px">'+carrierLogo(p.carrier,26)+'</div>'+
-      '<div class="pht">'+
-        '<div class="pcname">'+_carrierName+'</div>'+
-        (sum?'<div class="pinline">'+sum+'</div>':'')+
-        '<div class="pmeta">'+fSrc(p)+(p.sender?' · '+esc(p.sender.substring(0,22)):'')+'</div>'+
-      '</div>'+
-      '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'+
-        '<div class="schip '+sCls(p.status)+'">'+esc(sLblDate(p))+'</div>'+
-        '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;background:'+_accBg+';color:'+_accCl+'">'+_accLbl+'</span>'+
-      '</div>'+
-    '</div>'+
-    '<div id="pb_'+escAttr(key)+'" style="display:'+(isOpen?'block':'none')+'" data-open="'+(isOpen?'1':'0')+'">'+
-      '<div class="pbdy">'+
-        '<div class="div"></div>'+
-        (!p.trackingNum&&!p.pickupCode&&!p.lockerAddress&&p.emailSubject?
-          '<div style="background:var(--s1);border-radius:var(--rs);padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--os)">📧 '+esc(p.emailSubject)+'</div>':'')+
-        (p.trackingNum?'<div class="flbl">N° de suivi</div><div class="frow"><div class="fval">'+esc(p.trackingNum)+'</div><button class="cfab" data-action="cpT" data-val="'+escAttr(p.trackingNum)+'" data-lbl="N° suivi">📋</button></div>':'')+
-        (p.pickupCode?'<div class="cbox" style="background:var(--pc);border-radius:var(--rm);padding:16px;margin-bottom:12px"><div class="cblbl">Code de retrait</div><div class="cbrow"><div class="cbval">'+esc(p.pickupCode)+'</div><button class="cbcopy" data-action="cpT" data-val="'+escAttr(p.pickupCode)+'" data-lbl="Code">📋</button></div>'+(p.pickupCode.indexOf('/')>=0?'<div style="font-size:11px;color:var(--opc);opacity:.7;margin-top:4px">Saisir les deux codes successivement</div>':'')+'</div>':'')+
-        (p.lockerAddress?'<div style="background:var(--s1);border-radius:var(--rm);padding:12px 14px;margin-bottom:12px"><div style="display:flex;align-items:flex-start;gap:8px"><span style="font-size:16px">📍</span><div style="flex:1;font-size:14px;color:var(--os);line-height:1.5">'+esc(p.lockerAddress)+'</div><button class="cfab" data-action="cpT" data-val="'+escAttr(p.lockerAddress)+'" data-lbl="Adresse">📋</button></div><a style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:8px 16px;border-radius:20px;border:none;background:var(--p);color:var(--op);font-family:"Plus Jakarta Sans",sans-serif;font-size:13px;font-weight:500;cursor:pointer;text-decoration:none" href="https://maps'+'.google.com/?q='+encodeURIComponent(p.lockerAddress)+'" target="_blank" rel="noopener" data-action="stopProp">🗺 Ouvrir dans Maps</a></div>':'')+
-        (p.deliverySlot?'<div class="slot">🕐 '+esc(fmtSlotWithDay(p.deliverySlot,p.arrivalDate))+'</div>':'')+
-        (_tLink?'<a class="tlink" href="'+_tLink+'" target="_blank" rel="noopener" data-action="stopProp">🔗 Suivre sur '+_carrierName+'</a>':'')+
-        (showE&&days!==null?'<div class="xrow"><div class="xlbl">Expire le</div><div class="xval" style="color:'+xCol(days)+'">'+fFull(p.expiryDate)+'</div></div><div class="xbar"><div class="xfill" style="width:'+pct+'%;background:'+xCol(days)+'"></div></div>':'')+
-        (p.note?'<div style="background:var(--s1);border-radius:var(--rs);padding:10px 12px;margin-bottom:12px;font-size:14px;color:var(--osv)">💬 '+esc(p.note)+'</div>':'')+
-        (_evts.length?'<div class="tl"><div class="tlhd">Historique</div>'+_evts.map(function(ev,j){return'<div class="tli"><div class="tld '+(j===0?'now':'old')+'">'+( j===0?'●':'·')+'</div><div class="tlc"><div class="tlst">'+sLbl(ev.status)+'</div><div class="tldt">'+fShort(ev.date)+'</div></div></div>';}).join('')+'</div>':'')+
-        '<div class="pacts">'+
-          ((p.pickupCode||p.trackingNum)?'<button class="act fl" data-action="showQR" data-key="'+escAttr(key)+'">📱 QR</button>':'')+
-          (p.gmailLink?'<a class="act" href="'+p.gmailLink+'" target="_blank" rel="noopener" data-action="stopProp">📧</a>':'')+
-          '<button class="act sh" data-action="shareP" data-key="'+escAttr(key)+'">↗ Partager</button>'+
-          '<button class="act" data-action="copyAll" data-key="'+escAttr(key)+'">📋 Tout copier</button>'+
-          (p.status!=='collected'&&p.status!=='delivered'?'<button class="act gn" data-action="markDone" data-key="'+escAttr(key)+'">✓ Récupéré</button>':'')+
-          '<button class="act rd" data-action="delPkg" data-key="'+escAttr(key)+'">🗑</button>'+
-        '</div>'+
-      '</div>'+
-    '</div>'+
-  '</div>';
-}
-
+// ─── RENDU ─────────────────────────────────────────────────────────────────────
 function render(){
   updBadges();
   var pkgs=getFilt();
@@ -857,50 +703,113 @@ function render(){
   if(!pkgs.length){
     var msgs={ready:'Aucun colis à retirer',pending:'Aucun colis en route',out_for_delivery:'Aucune livraison en cours',failed:'Aucun échec de livraison',delivered:'Aucun colis récupéré',all:'Aucun colis'};
     el.innerHTML='<div class="empty"><div class="eico">📭</div><div class="etit">'+(msgs[flt]||'Aucun colis')+'</div><div class="esub">'+( flt==='all'?'Appuyez sur + ou synchronisez via ⟳':'Changer de filtre ou synchroniser via ⟳')+'</div></div>';
-    _lastHashes={};_lastOrder=[];
     return;
   }
+  var R=getRet();
+  el.innerHTML=pkgs.map(function(p,i){
+    var color=CL[p.carrier]||'#888';
+    var days=dLeft(p.expiryDate);
+    var showE=p.status==='ready'&&days!==null;
+    var pct=showE?Math.max(0,Math.min(100,(days/(R[p.carrier]||14))*100)):null;
 
-  var currentKeys=pkgs.map(function(p){return pkgKey(p);});
-  var newHashes={};
-  pkgs.forEach(function(p){newHashes[pkgKey(p)]=cardHash(p);});
+    // ── Ligne de résumé dans la carte ──
+    var parts=[];
+    if(p.pickupCode)parts.push('🔑 '+esc(p.pickupCode));
+    if(p.trackingNum)parts.push(p.trackingNum.substring(0,16)+(p.trackingNum.length>16?'…':''));
+    var dL=dLeft(p.expiryDate);
+    if(p.status==='ready'&&dL!==null&&dL<=3){var urgency=dL<0?'⚠️ Expiré':dL===0?'⚠️ Auj.':'⚠️ J-'+String(dL);parts.push(urgency);}
+    var sum=parts.join('  ');
+    // FIX 2: fallback sur l'objet email si aucun N° ou code
+    if(!sum&&p.emailSubject)sum=esc(p.emailSubject.substring(0,40));
 
-  var orderChanged=currentKeys.length!==_lastOrder.length||currentKeys.some(function(k,i){return _lastOrder[i]!==k;});
-  var anyNewOrRemoved=currentKeys.some(function(k){return !(k in _lastHashes);})||Object.keys(_lastHashes).some(function(k){return currentKeys.indexOf(k)<0;});
+    // FIX 3: lien de suivi (fourni ou construit depuis le N° suivi)
+    var _tLink=p.trackingLink||buildTrackingUrl(p.carrier,p.trackingNum);
 
-  if(orderChanged||anyNewOrRemoved){
-    el.innerHTML=pkgs.map(function(p,i){return buildCardHtml(p,i);}).join('');
-  }else{
-    pkgs.forEach(function(p){
-      var key=pkgKey(p);
-      if(_lastHashes[key]!==newHashes[key]){
-        var oldCard=document.getElementById('pc_'+key);
-        if(oldCard){
-          var tmp=document.createElement('div');
-          tmp.innerHTML=buildCardHtml(p,currentKeys.indexOf(key));
-          oldCard.replaceWith(tmp.firstElementChild);
-        }
-      }
-    });
-  }
-  _lastHashes=newHashes;
-  _lastOrder=currentKeys;
+    // FIX 4: dédupliquer les événements consécutifs identiques
+    var _evts=Array.isArray(p.events)?p.events.filter(function(e,idx,arr){
+      return idx===0||arr[idx-1].status!==e.status;
+    }).slice(0,10):[];
+
+    // FIX 5: badge compte coloré (Guillaume=bleu, Michèle=violet)
+    var _accBg=p.account==='Michele'?'#ECDCFF':'#D7E3FF';
+    var _accCl=p.account==='Michele'?'#1D0160':'#001849';
+    var _accLbl=p.account==='Michele'?'M':'G';
+
+    // ── NOM du transporteur avec fallback ──
+    var _carrierName=esc(LB[p.carrier]||p.carrier||'Transporteur');
+
+    return '<div class="pcard" id="pc'+p.id+'" data-action="tog" data-id="'+p.id+'" style="animation-delay:'+i*.03+'s">'+
+      '<div class="ptint" style="background:'+color+'"></div>'+
+      '<div class="phdr">'+
+        '<div class="cbadge" style="background:'+color+'18;display:flex;align-items:center;justify-content:center;font-size:22px">'+carrierLogo(p.carrier,26)+'</div>'+
+        '<div class="pht">'+
+          '<div class="pcname">'+_carrierName+'</div>'+
+          (sum?'<div class="pinline">'+sum+'</div>':'')+
+          '<div class="pmeta">'+fSrc(p)+(p.sender?' · '+esc(p.sender.substring(0,22)):'')+'</div>'+
+        '</div>'+
+        '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'+
+          '<div class="schip '+sCls(p.status)+'">'+esc(sLblDate(p))+'</div>'+
+          // FIX 5: badge compte visible et coloré
+          '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;background:'+_accBg+';color:'+_accCl+'">'+_accLbl+'</span>'+
+        '</div>'+
+      '</div>'+
+      '<div id="pb'+p.id+'" style="display:none">'+
+        '<div class="pbdy">'+
+          '<div class="div"></div>'+
+          // FIX 2: objet email affiché quand aucun numéro/code/adresse
+          (!p.trackingNum&&!p.pickupCode&&!p.lockerAddress&&p.emailSubject?
+            '<div style="background:var(--s1);border-radius:var(--rs);padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--os)">📧 '+esc(p.emailSubject)+'</div>':'')+
+          (p.trackingNum?'<div class="flbl">N° de suivi</div><div class="frow"><div class="fval">'+esc(p.trackingNum)+'</div><button class="cfab" data-action="cpT" data-val="'+escAttr(p.trackingNum)+'" data-lbl="N° suivi">📋</button></div>':'')+
+          (p.pickupCode?'<div class="cbox" style="background:var(--pc);border-radius:var(--rm);padding:16px;margin-bottom:12px"><div class="cblbl">Code de retrait</div><div class="cbrow"><div class="cbval">'+esc(p.pickupCode)+'</div><button class="cbcopy" data-action="cpT" data-val="'+escAttr(p.pickupCode)+'" data-lbl="Code">📋</button></div>'+(p.pickupCode.indexOf('/')>=0?'<div style="font-size:11px;color:var(--opc);opacity:.7;margin-top:4px">Saisir les deux codes successivement</div>':'')+'</div>':'')+
+          (p.lockerAddress?'<div style="background:var(--s1);border-radius:var(--rm);padding:12px 14px;margin-bottom:12px"><div style="display:flex;align-items:flex-start;gap:8px"><span style="font-size:16px">📍</span><div style="flex:1;font-size:14px;color:var(--os);line-height:1.5">'+esc(p.lockerAddress)+'</div><button class="cfab" data-action="cpT" data-val="'+escAttr(p.lockerAddress)+'" data-lbl="Adresse">📋</button></div><a style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:8px 16px;border-radius:20px;border:none;background:var(--p);color:var(--op);font-family:"Plus Jakarta Sans",sans-serif;font-size:13px;font-weight:500;cursor:pointer;text-decoration:none" href="https://maps'+'.google.com/?q='+encodeURIComponent(p.lockerAddress)+'" target="_blank" rel="noopener" data-action="stopProp">🗺 Ouvrir dans Maps</a></div>':'')+
+          (p.deliverySlot?'<div class="slot">🕐 '+esc(fmtSlotWithDay(p.deliverySlot,p.arrivalDate))+'</div>':'')+
+          // FIX 3: lien vers le site du transporteur (URL fournie ou construite)
+          (_tLink?'<a class="tlink" href="'+_tLink+'" target="_blank" rel="noopener" data-action="stopProp">🔗 Suivre sur '+_carrierName+'</a>':'')+
+          (showE&&days!==null?'<div class="xrow"><div class="xlbl">Expire le</div><div class="xval" style="color:'+xCol(days)+'">'+fFull(p.expiryDate)+'</div></div><div class="xbar"><div class="xfill" style="width:'+pct+'%;background:'+xCol(days)+'"></div></div>':'')+
+          (p.note?'<div style="background:var(--s1);border-radius:var(--rs);padding:10px 12px;margin-bottom:12px;font-size:14px;color:var(--osv)">💬 '+esc(p.note)+'</div>':'')+
+          // FIX 4: historique dédupliqué (_evts filtre les statuts consécutifs identiques)
+          (_evts.length?'<div class="tl"><div class="tlhd">Historique</div>'+_evts.map(function(ev,j){return'<div class="tli"><div class="tld '+(j===0?'now':'old')+'">'+( j===0?'●':'·')+'</div><div class="tlc"><div class="tlst">'+sLbl(ev.status)+'</div><div class="tldt">'+fShort(ev.date)+'</div></div></div>';}).join('')+'</div>':'')+
+          '<div class="pacts">'+
+            ((p.pickupCode||p.trackingNum)?'<button class="act fl" data-action="showQR" data-id="'+p.id+'">📱 QR</button>':'')+
+            (p.gmailLink?'<a class="act" href="'+p.gmailLink+'" target="_blank" rel="noopener" data-action="stopProp">📧</a>':'')+
+            '<button class="act sh" data-action="shareP" data-id="'+p.id+'">↗ Partager</button>'+
+            '<button class="act" data-action="copyAll" data-id="'+p.id+'">📋 Tout copier</button>'+
+            (p.status!=='collected'&&p.status!=='delivered'?'<button class="act gn" data-action="markDone" data-id="'+p.id+'">✓ Récupéré</button>':'')+
+            '<button class="act rd" data-action="delPkg" data-id="'+p.id+'">🗑</button>'+
+          '</div>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+
+  // FIX 1: restaurer les cartes ouvertes après re-render (résiste au polling 5s)
+  openCardIds.forEach(function(sid){
+    var b=document.getElementById('pb'+sid);
+    var card=document.getElementById('pc'+sid);
+    if(b&&card){
+      b.style.display='block';
+      b.setAttribute('data-open','1');
+      card.classList.add('open');
+    }
+  });
 }
 
-function tog(key){
-  var b=document.getElementById('pb_'+key);
-  var card=document.getElementById('pc_'+key);
+// FIX 1: tog() mémorise l'état ouvert dans openCardIds
+function tog(id){
+  var sid=String(id);
+  var b=document.getElementById('pb'+sid);
+  var card=document.getElementById('pc'+sid);
   if(!b||!card)return;
   var isOpen=b.getAttribute('data-open')==='1';
   b.style.display=isOpen?'none':'block';
   b.setAttribute('data-open',isOpen?'0':'1');
   card.classList.toggle('open',!isOpen);
-  if(isOpen)openCardKeys.delete(key);else openCardKeys.add(key);
-  delete _lastHashes[key];
+  if(isOpen)openCardIds.delete(sid);else openCardIds.add(sid);
 }
 
-function showQR(key){
-  var p=findPkgByKey(key);if(!p)return;
+// ─── QR ────────────────────────────────────────────────────────────────────────
+function showQR(id){
+  var p=D.packages.find(function(x){return x.id===id;});if(!p)return;
   var val=p.pickupCode||p.trackingNum||'';if(!val){showToast('Aucune donnée QR');return;}
   document.getElementById('qrT').textContent=LB[p.carrier]||p.carrier;
   document.getElementById('qrV').textContent=val;
@@ -909,6 +818,7 @@ function showQR(key){
   openSheet('shQR');
 }
 
+// ─── SYNC PANEL ───────────────────────────────────────────────────────────────
 function renderSS(){
   var cfg=getFB();var st=document.getElementById('fbSt');
   if(st){var custom=localStorage.getItem(FBK);st.textContent=custom?'Configuré':'Par défaut';st.className='sbg '+(custom?'bok':'bwt');}
@@ -932,50 +842,25 @@ async function fetchGmailLog(){
   }catch(e){var el=document.getElementById('logG');if(el)el.textContent='Erreur connexion Firebase : '+e.message;}
 }
 
-function renderTrCf(){
-  var statusEl=document.getElementById('trSyncStatus');
-  if(statusEl)statusEl.textContent=getFB().apiKey?'Synchronisé via Firestore (meta/carrierConfig)':'Non configuré — stockage local uniquement';
-  document.getElementById('trCf').innerHTML=Object.keys(DR).map(function(c){
-    var tc=getTrCfg(c);
-    return'<div class="trrow">'+
-      '<div class="trrow-top">'+
-        '<div class="cfgd" style="background:'+(CL[c]||'#888')+'"></div>'+
-        '<div class="cfgl">'+(LB[c]||c)+'</div>'+
-        '<input class="cfgi" type="number" min="1" max="60" id="r_'+c+'" value="'+(tc.days||DR[c])+'">'+
-        '<span style="font-size:12px;color:var(--osv)">j</span>'+
-        '<button data-action="toggleCarrier" data-carrier="'+c+'" class="ci-toggle'+(tc.disabled?'':' on')+'" title="'+(tc.disabled?'Réactiver':'Désactiver')+'"></button>'+
-      '</div>'+
-      '<input class="clkin" id="lk_'+c+'" placeholder="Lien de suivi personnalisé (optionnel, {num} ou fin URL)" value="'+escAttr(tc.link||'')+'">'+
+function renderRetCf(){
+  var R=getRet(),DIS=getDisabled();
+  document.getElementById('retCf').innerHTML=Object.entries(DR).map(function(kv){
+    var c=kv[0],d=kv[1],dis=DIS.has(c);
+    return'<div class="cfgr" style="'+(dis?'opacity:0.45':'')+'">'+
+      '<div class="cfgd" style="background:'+(CL[c]||'#888')+'"></div>'+
+      '<div class="cfgl">'+(LB[c]||c)+'</div>'+
+      '<input class="cfgi" type="number" min="1" max="60" id="r_'+c+'" value="'+(R[c]||d)+'" '+(dis?'disabled ':'')+'>'+
+      '<span style="font-size:12px;color:var(--osv)"> j</span>'+
+      '<button data-action="toggleCarrier" data-carrier="'+c+'" class="ci-toggle'+(dis?'':' on')+'" title="'+(dis?'Réactiver':'Désactiver')+'"></button>'+
     '</div>';
   }).join('');
 }
 
-async function saveTrCf(){
-  var nc={};
-  Object.keys(DR).forEach(function(c){
-    var rEl=document.getElementById('r_'+c);
-    var lEl=document.getElementById('lk_'+c);
-    var prev=getTrCfg(c);
-    nc[c]={
-      days:Math.max(1,Math.min(60,parseInt(rEl&&rEl.value)||DR[c])),
-      link:(lEl&&lEl.value.trim())||'',
-      disabled:prev.disabled
-    };
-  });
-  saveTrCfgCache(nc);render();showToast('✓ Sauvegardé');
-  var ok=await writeTrCfgToFirestore(nc);
-  if(!ok&&getFB().apiKey)showToast('⚠️ Sync Firestore échouée (sauvegardé en local)');
+function saveRet(){
+  var nr={};
+  Object.keys(DR).forEach(function(c){var e=document.getElementById('r_'+c);if(e)nr[c]=Math.max(1,Math.min(60,parseInt(e.value)||DR[c]));});
+  localStorage.setItem(RK,JSON.stringify(nr));showToast('✓ Délais sauvegardés');
 }
-
-function toggleCarrier(c){
-  var cur=getTrCfg(c);
-  var nc=Object.assign({},_trCfg);
-  nc[c]=Object.assign({},cur,{disabled:!cur.disabled});
-  saveTrCfgCache(nc);renderTrCf();render();
-  showToast(nc[c].disabled?LB[c]+' désactivé':LB[c]+' réactivé');
-  writeTrCfgToFirestore(nc);
-}
-
 function savePurgeDays(){
   var el=document.getElementById('cfgPurgeDays');if(!el)return;
   var v=parseInt(el.value,10);if(isNaN(v)||v<1){showToast('⚠️ Valeur invalide');return;}
@@ -985,7 +870,7 @@ function bindPurgeCfg(){var el=document.getElementById('cfgPurgeDays');if(el)el.
 function bindTrackerWh(){var el=document.getElementById('cfgTrackerWh');if(el)el.value=localStorage.getItem(TRACKER_WH_KEY)||'';}
 function forceTrack(){
   var wh=localStorage.getItem(TRACKER_WH_KEY);
-  if(!wh){showToast('⚠️ URL webhook non configurée (Transporteur → Tracking)');return;}
+  if(!wh){showToast('⚠️ URL webhook non configurée (Config → Tracking)');return;}
   var btn=document.getElementById('btn-track');
   if(btn)btn.textContent='⏳';
   showToast('🔄 Scraping en cours…');
@@ -1006,8 +891,15 @@ function saveTrackerWh(){
   var v=el.value.trim();if(!v){showToast('⚠️ URL vide');return;}
   localStorage.setItem(TRACKER_WH_KEY,v);showToast('✅ URL webhook enregistrée');
 }
-function resetAll(){if(!confirm('Supprimer TOUS les colis ?'))return;D={packages:[],nextId:1,lastSync:null};openCardKeys.clear();_lastHashes={};_lastOrder=[];saveD(D);render();closeSheet('shSync');showToast('✓ Réinitialisé');}
+function resetAll(){if(!confirm('Supprimer TOUS les colis ?'))return;D={packages:[],nextId:1,lastSync:null};openCardIds.clear();saveD(D);render();closeSheet('shSync');showToast('✓ Réinitialisé');}
+function toggleCarrier(c){
+  var d=getDisabled();if(d.has(c))d.delete(c);else d.add(c);
+  localStorage.setItem(DK,JSON.stringify([...d]));
+  renderRetCf();render();
+  showToast(d.has(c)?LB[c]+' désactivé':LB[c]+' réactivé');
+}
 
+// ─── SHEETS ────────────────────────────────────────────────────────────────────
 function openSheet(id){
   var el=document.getElementById(id);if(!el)return;
   el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;';
@@ -1024,10 +916,11 @@ function showTab(tabId,btn){
   document.querySelectorAll('.stab').forEach(function(b){b.classList.remove('sel');});
   var panel=document.getElementById(tabId);if(panel)panel.classList.add('on');
   if(btn)btn.classList.add('sel');
-  if(tabId==='tTr'){renderTrCf();bindPurgeCfg();bindTrackerWh();}
+  if(tabId==='tCf'){renderRetCf();bindPurgeCfg();bindTrackerWh();}
   if(tabId==='tLg')renderLogs();
 }
 
+// ─── TOAST ─────────────────────────────────────────────────────────────────────
 var _tt;
 function showToast(m){
   var t=document.getElementById('toast');
@@ -1035,6 +928,7 @@ function showToast(m){
   clearTimeout(_tt);_tt=setTimeout(function(){t.classList.remove('show');},3500);
 }
 
+// ─── DISPATCHER ────────────────────────────────────────────────────────────────
 function findAction(elem){
   var el=elem;
   while(el&&el!==document){
@@ -1064,22 +958,21 @@ document.addEventListener('click',function(e){
     case 'addPkg': addPkg(); break;
     case 'syncFB': syncFB(); break;
     case 'readSMS': readSMS(false); break;
-    case 'parseMan': parseMan(); break;
     case 'showTab': showTab(ds.tab,el); break;
-    case 'saveTrCf': saveTrCf(); break;
+    case 'saveRet': saveRet(); break;
     case 'savePurgeDays': savePurgeDays(); break;
     case 'toggleDebug': DBG.toggle(); break;
     case 'forceTrack': forceTrack(); break;
     case 'saveTrackerWh': saveTrackerWh(); break;
     case 'resetAll': resetAll(); break;
     case 'toggleCarrier': e.stopPropagation();toggleCarrier(ds.carrier); break;
-    case 'tog': e.stopPropagation();tog(ds.key); break;
+    case 'tog': e.stopPropagation();tog(ds.id); break;
     case 'cpT': e.stopPropagation();cpT(ds.val,ds.lbl); break;
-    case 'showQR': e.stopPropagation();showQR(ds.key); break;
-    case 'shareP': e.stopPropagation();shareP(ds.key); break;
-    case 'copyAll': e.stopPropagation();copyAll(ds.key); break;
-    case 'markDone': e.stopPropagation();markDone(ds.key); break;
-    case 'delPkg': e.stopPropagation();delPkg(ds.key); break;
+    case 'showQR': e.stopPropagation();showQR(ds.id); break;
+    case 'shareP': e.stopPropagation();shareP(ds.id); break;
+    case 'copyAll': e.stopPropagation();copyAll(ds.id); break;
+    case 'markDone': e.stopPropagation();markDone(ds.id); break;
+    case 'delPkg': e.stopPropagation();delPkg(ds.id); break;
     case 'clearSearch': clearSearch(); break;
     case 'stopProp': e.stopPropagation(); break;
   }
@@ -1107,33 +1000,25 @@ function clearSearch(){
   render();
 }
 
+// ─── INIT ──────────────────────────────────────────────────────────────────────
 document.querySelectorAll('.sov').forEach(function(el){el.style.display='none';});
 purge();renderSS();render();
 setTimeout(initPush,2000);
 
-(async function initTrCfg(){
-  var remote=await fetchTrCfgFromFirestore();
-  if(remote){saveTrCfgCache(remote);render();}
-})();
-
+// FIX 7: subscriber protège les statuts terminaux locaux (expired/collected)
 FBSync.subscribe('colis', function(docs) {
   var n=0;
-  var byKey={};D.packages.forEach(function(p){byKey[pkgKey(p)]=p;});
   docs.forEach(function(p){
     normalizePackage(p);
-    var k=pkgKey(p);
-    var ex=byKey[k];
+    var ex=D.packages.find(function(x){return x._fbId===p._fbId;});
     if(ex){
       normalizePackage(ex);
+      // Ne pas écraser expired/collected avec un statut distant moins avancé
       if(p.status&&p.status!==ex.status&&['collected','expired'].indexOf(ex.status)<0)ex.status=p.status;
       if((p.lastUpdated||'')>(ex.lastUpdated||'')){ex.pickupCode=p.pickupCode||ex.pickupCode;ex.lockerAddress=p.lockerAddress||ex.lockerAddress;ex.deliverySlot=p.deliverySlot||ex.deliverySlot;ex.trackingLink=p.trackingLink||ex.trackingLink;ex.trackingNum=p.trackingNum||ex.trackingNum;if(p.events&&p.events.length)ex.events=p.events;}
-    }else{
-      if(!p.id)p.id=D.nextId++;
-      D.packages.unshift(p);byKey[k]=p;n++;
-    }
+    }else{if(!p.id)p.id=D.nextId++;else p.id=Math.round(Number(p.id));D.packages.unshift(p);n++;}
   });
   if(n>0){purge();saveD(D);render();document.getElementById('sd').style.display='block';}
-  else{render();}
   updLs();
 });
 

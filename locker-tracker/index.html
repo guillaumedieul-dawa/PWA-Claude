@@ -241,7 +241,7 @@ html,body{font-family:"Plus Jakarta Sans",sans-serif;}
     <div class="shtit">Administration</div>
     <div class="stabs">
       <button class="stab sel" data-action="showTab" data-tab="tSy">BDD</button>
-      <button class="stab" data-action="showTab" data-tab="tCf">Config</button>
+      <button class="stab" data-action="showTab" data-tab="tCf">Transporteurs</button>
       <button class="stab" data-action="showTab" data-tab="tLg">Logs</button>
     </div>
     <div class="tpan on" id="tSy">
@@ -260,11 +260,6 @@ html,body{font-family:"Plus Jakarta Sans",sans-serif;}
       <div class="slbl">SMS transporteurs</div>
       <div class="ibox">L'app lit les SMS transporteurs de ce téléphone et les partage via Firebase avec l'autre compte.</div>
       <button class="bfill" style="margin-top:0" data-action="readSMS">📲 Lire les SMS</button>
-    </div>
-    <div class="tpan" id="tCf">
-      <div style="font-size:13px;color:var(--osv);margin-bottom:12px">Délai d'expiration par transporteur (jours)</div>
-      <div id="retCf"></div>
-      <button class="bfill" data-action="saveRet">✓ Sauvegarder</button>
       <div class="slbl" style="margin-top:16px">Purge automatique</div>
       <div style="font-size:13px;color:var(--osv);margin-bottom:10px">Supprimer les colis livrés/expirés après :</div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
@@ -273,13 +268,16 @@ html,body{font-family:"Plus Jakarta Sans",sans-serif;}
         <button class="bfill" style="flex:1;margin:0;padding:10px 12px;font-size:13px" data-action="savePurgeDays">✓ OK</button>
       </div>
       <div style="font-size:11px;color:var(--osv);margin-bottom:16px">Défaut : 20 jours. S'applique aux colis Livré, Récupéré ou Expiré.</div>
+      <button class="bdng" data-action="resetAll">🗑 Réinitialiser toutes les données</button>
+    </div>
+    <div class="tpan" id="tCf">
+      <div style="font-size:13px;color:var(--osv);margin-bottom:12px">Délai d'expiration par transporteur (jours)</div>
+      <div id="retCf"></div>
+      <button class="bfill" data-action="saveRet">✓ Sauvegarder</button>
       <div class="slbl" style="margin-top:16px">Tracking automatique</div>
       <div style="font-size:13px;color:var(--osv);margin-bottom:8px">URL Apps Script (Code-Tracker.gs déployé en Web App)</div>
       <input class="fin" id="cfgTrackerWh" placeholder="https://script.google.com/macros/s/…/exec" style="font-size:12px;margin-bottom:6px">
       <button class="bfill" style="margin-top:0;padding:10px;font-size:13px" data-action="saveTrackerWh">✓ Enregistrer URL</button>
-      <div class="slbl">Outils développeur</div>
-      <button class="bout" style="margin-top:0;display:flex;align-items:center;gap:6px;justify-content:center" data-action="toggleDebug">🔍 Panel debug</button>
-      <button class="bdng" data-action="resetAll">🗑 Réinitialiser toutes les données</button>
     </div>
     <div class="tpan" id="tLg">
       <div class="slbl ft">📱 Dernier scan SMS</div>
@@ -288,6 +286,7 @@ html,body{font-family:"Plus Jakarta Sans",sans-serif;}
       <div class="lbox" id="logF">—</div>
       <div class="slbl">📧 Dernier sync Gmail (Apps Script)</div>
       <div class="lbox" id="logG">—</div>
+      <button class="bout" style="margin-top:0;display:flex;align-items:center;gap:6px;justify-content:center" data-action="toggleDebug">🔍 Panel debug</button>
     </div>
     <button class="bout" data-action="closeSheet" data-target="shSync">Fermer</button>
   </div>
@@ -916,7 +915,8 @@ function showTab(tabId,btn){
   document.querySelectorAll('.stab').forEach(function(b){b.classList.remove('sel');});
   var panel=document.getElementById(tabId);if(panel)panel.classList.add('on');
   if(btn)btn.classList.add('sel');
-  if(tabId==='tCf'){renderRetCf();bindPurgeCfg();bindTrackerWh();}
+  if(tabId==='tSy')bindPurgeCfg();
+  if(tabId==='tCf'){renderRetCf();bindTrackerWh();}
   if(tabId==='tLg')renderLogs();
 }
 
@@ -947,7 +947,7 @@ document.addEventListener('click',function(e){
   switch(action){
     case 'toggleTheme': if(window.toggleTheme) window.toggleTheme(); break;
     case 'openAdd': openSheet('shAdd'); break;
-    case 'openSync': openSheet('shSync');renderSS();renderLogs(); break;
+    case 'openSync': openSheet('shSync');renderSS();renderLogs();bindPurgeCfg(); break;
     case 'closeSheet': closeSheet(ds.target); break;
     case 'setFilter':
       flt=ds.filter||'all';

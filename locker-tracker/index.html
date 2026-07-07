@@ -138,6 +138,10 @@ html,body{font-family:"Plus Jakarta Sans",sans-serif;}
 .pfil{height:100%;background:var(--p);border-radius:2px;width:0%;transition:width .3s}
 .lbox{background:var(--s1);border-radius:var(--rs);padding:12px;font-family:'Fragment Mono',monospace;font-size:11px;color:var(--osv);line-height:1.7;max-height:110px;overflow-y:auto;margin-bottom:8px;white-space:pre-wrap}
 .ibox{background:var(--pc);border-radius:var(--rs);padding:12px 14px;font-size:13px;color:var(--opc);line-height:1.6;margin-bottom:12px}
+.trrow{padding:10px 0;border-bottom:1px solid var(--olv)}
+.trrow-top{display:flex;align-items:center;gap:10px}
+.clkin{width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--olv);background:var(--s1);color:var(--ob);font-family:'Fragment Mono',monospace;font-size:12px;outline:none;box-sizing:border-box;margin-top:6px}
+.clkin:focus{border-color:var(--p)}
 .cfgr{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--olv)}
 .cfgd{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 .cfgl{flex:1;font-size:14px;color:var(--os)}
@@ -271,9 +275,9 @@ html,body{font-family:"Plus Jakarta Sans",sans-serif;}
       <button class="bdng" data-action="resetAll">🗑 Réinitialiser toutes les données</button>
     </div>
     <div class="tpan" id="tCf">
-      <div style="font-size:13px;color:var(--osv);margin-bottom:12px">Délai d'expiration par transporteur (jours)</div>
-      <div id="retCf"></div>
-      <button class="bfill" data-action="saveRet">✓ Sauvegarder</button>
+      <div style="font-size:12px;color:var(--osv);margin-bottom:12px" id="trSyncStatus">Chargement config…</div>
+      <div id="trCf"></div>
+      <button class="bfill" data-action="saveTrCf">✓ Sauvegarder</button>
       <div class="slbl" style="margin-top:16px">Tracking automatique</div>
       <div style="font-size:13px;color:var(--osv);margin-bottom:8px">URL Apps Script (Code-Tracker.gs déployé en Web App)</div>
       <input class="fin" id="cfgTrackerWh" placeholder="https://script.google.com/macros/s/…/exec" style="font-size:12px;margin-bottom:6px">
@@ -348,14 +352,13 @@ function _flushCachedFCMToken(){
   _pushTokenToFirestore(tok,acc,cfg);
 }
 // ─── CONSTANTES ────────────────────────────────────────────────────────────────
-var SK='lt_v3',FBK='lt_fb',RK='lt_ret',LK='lt_logs',LSK='lt_lsms';
+var SK='lt_v3',FBK='lt_fb',LK='lt_logs',LSK='lt_lsms';
 var FB0={projectId:'familyhub-colis-8abbd',apiKey:''};
 var TRACKER_WH_KEY='lt_tracker_wh';
 var DR={chronopost:8,chronofresh:5,mondialrelay:5,colissimo:15,laposte:15,vintedgo:14,amazon:3,dpd:14,ups:10,gls:7,relaiscolis:10,other:14};
 var CL={chronopost:'#003087',chronofresh:'#005fa3',mondialrelay:'#e2001a',colissimo:'#f5c400',laposte:'#f5c400',vintedgo:'#09b1ba',amazon:'#ff9900',dpd:'#dc0032',ups:'#6b4226',gls:'#005ca9',relaiscolis:'#e8621a',other:'#888'};
 var LB={chronopost:'Chronopost',chronofresh:'Chronofresh',mondialrelay:'Mondial Relay',colissimo:'Colissimo',laposte:'La Poste',vintedgo:'Vinted Go',amazon:'Amazon',dpd:'DPD',ups:'UPS',gls:'GLS',relaiscolis:'Relais Colis',other:'Autre'};
 var EM={chronopost:'🔵',chronofresh:'❄️',mondialrelay:'🔴',colissimo:'🟡',laposte:'🟡',vintedgo:'💚',amazon:'🟠',dpd:'🔶',ups:'🟤',gls:'🟢',relaiscolis:'🟠',other:'📦'};
-var DK='lt_disabled';
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 function esc(s){if(!s)return'';return String(s).replace(/&/g,'&'+"amp;").replace(/</g,'&'+"lt;").replace(/>/g,'&'+"gt;").replace(/"/g,'&'+"quot;").replace(/'/g,'&'+"#39;");}
@@ -363,16 +366,60 @@ function escAttr(s){if(!s)return'';return String(s).replace(/&/g,'&'+"amp;").rep
 // FIX 1: emoji uniquement (fiable dans WebView Android, pas de chargement externe)
 function carrierLogo(c,size){return EM[c]||'📦';}
 
-function getDisabled(){try{if(!localStorage.getItem(DK))localStorage.setItem(DK,JSON.stringify(['amazon']));return new Set(JSON.parse(localStorage.getItem(DK)||'[]'));}catch{return new Set();}}
 function loadD(){try{var d=JSON.parse(localStorage.getItem(SK));if(d&&d.packages){d.packages.forEach(function(p){if(typeof p.id==='number')p.id=Math.round(p.id);if(typeof p.events==='string'){try{p.events=JSON.parse(p.events);}catch(e){p.events=[];}}if(!Array.isArray(p.events))p.events=[];});return d;}}catch(e){}return{packages:[],nextId:1,lastSync:null};}
 function saveD(d){localStorage.setItem(SK,JSON.stringify(d));}
-function getRet(){try{return Object.assign({},DR,JSON.parse(localStorage.getItem(RK)));}catch{return Object.assign({},DR);}}
 function getFB(){try{var s=JSON.parse(localStorage.getItem(FBK));return s||FB0;}catch{return FB0;}}
 function wlog(t,m){try{var l=JSON.parse(localStorage.getItem(LK)||'{}');l[t]=new Date().toLocaleString('fr-FR')+' · '+m;localStorage.setItem(LK,JSON.stringify(l));}catch{}}
 
-// FIX 2: lien de suivi vers le site du transporteur
+// ─── CONFIG TRANSPORTEURS (jours + lien perso + actif/inactif) ────────────────
+var TRCFG_CACHE_KEY='lt_trcfg_cache';
+var _trCfg=loadTrCfgCache();
+function loadTrCfgCache(){
+  try{var c=JSON.parse(localStorage.getItem(TRCFG_CACHE_KEY));if(c)return c;}catch(e){}
+  var d={};Object.keys(DR).forEach(function(k){d[k]={days:DR[k],link:'',disabled:k==='amazon'};});
+  return d;
+}
+function saveTrCfgCache(c){_trCfg=c;localStorage.setItem(TRCFG_CACHE_KEY,JSON.stringify(c));}
+function getTrCfg(c){return _trCfg[c]||{days:DR[c]||14,link:'',disabled:false};}
+function getDisabledSet(){var s=new Set();Object.keys(_trCfg).forEach(function(k){if(_trCfg[k].disabled)s.add(k);});return s;}
+
+async function fetchTrCfgFromFirestore(){
+  var cfg=getFB();if(!cfg.apiKey)return null;
+  try{
+    var url='https://firestore.googleapis.com/v1/projects/'+cfg.projectId+'/databases/(default)/documents/meta/carrierConfig?key='+cfg.apiKey;
+    var r=await fetch(url,{redirect:'follow'});
+    if(!r.ok)return null;
+    var d=await r.json();
+    var out={};
+    Object.keys(DR).forEach(function(k){
+      var f=d.fields&&d.fields[k];
+      if(f&&f.stringValue){try{out[k]=JSON.parse(f.stringValue);}catch(e){out[k]={days:DR[k],link:'',disabled:false};}}
+      else out[k]={days:DR[k],link:'',disabled:k==='amazon'};
+    });
+    return out;
+  }catch(e){return null;}
+}
+async function writeTrCfgToFirestore(cfgObj){
+  var cfg=getFB();if(!cfg.apiKey)return false;
+  try{
+    var fields={};var keys=Object.keys(DR);
+    keys.forEach(function(k){fields[k]={stringValue:JSON.stringify(cfgObj[k]||{days:DR[k],link:'',disabled:false})};});
+    var url='https://firestore.googleapis.com/v1/projects/'+cfg.projectId+'/databases/(default)/documents/meta/carrierConfig?key='+cfg.apiKey;
+    keys.forEach(function(k){url+='&updateMask.fieldPaths='+encodeURIComponent(k);});
+    var r=await fetch(url,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({fields:fields})});
+    return r.ok;
+  }catch(e){return false;}
+}
+
+// FIX 2: lien de suivi vers le site du transporteur (override perso en priorité)
 function buildTrackingUrl(carrier,num){
   if(!carrier||!num)return'';
+  var tc=getTrCfg(carrier);
+  if(tc.link){
+    return tc.link.indexOf('{num}')>=0
+      ? tc.link.replace('{num}',encodeURIComponent(num))
+      : tc.link+encodeURIComponent(num);
+  }
   var n=encodeURIComponent(num);
   var URLS={
     chronopost:'https://www.chronopost.fr/tracking-no-cms/suivi-page?listeNumerosLT='+n,
@@ -520,7 +567,7 @@ function xC(t){if(!t)return'';var _mic=t.match(/identifiant\s*[:\-]\s*(\d{3,6})[
 function xA(t){if(!t)return'';var J=/^(ce message|merci|suivre|téléchargez|pour ne|absent|bonjour)/i;var P=[/consigne\s+pickup\s+(.+?)(?:\.|jusqu|n°|code|\+\s*d)/i,/consigne\s+vinted\s+go\s*:\s*(.+?)(?:\.|suivi)/i,/(?:au\s+)?(?:p\.\s*)?relais\s+([A-Z][A-Z\s]{3,40}?)(?:\.|retirez|avec|$)/i,/disponible\s+au\s+(.+?)(?:\.|retirez|avec|$)/i,/votre\s+point\s+de\s+retrait\s*:\s*\n+(.+?\n.+?\n.+?)(?:\n\n)/is,/sera\s+livré\s+à\s*\n(.+?\n.+?)(?:\n\n|france)/is,/expédier\s+à\s*\n(.+?\n.+?\n.+?)(?:\n\n|ups standard)/is,/informations\s+sur\s+l.adresse\s*\n(.+?\n.+?\n.+?)(?:\n\n)/is];for(var i=0;i<P.length;i++){var m=t.match(P[i]);if(m&&m[1]){var ln=m[1].split('\n').map(function(l){return l.trim();}).filter(function(l){return l.length>2&&!J.test(l);});if(ln.length)return ln.slice(0,3).join(', ').substring(0,150);}}return'';}
 function xL(t){if(!t)return'';var ps=[/https?:\/\/(?:n\.pkup\.fr)[^\s<"')]+/i,/https?:\/\/(?:sms\.laposte\.fr)[^\s<"')]+/i,/https?:\/\/(?:p\.vintedgo\.com)[^\s<"')]+/i,/https?:\/\/(?:moncolis\.gls-france\.com)[^\s<"')]+/i,/https?:\/\/(?:my\.dpd\.fr)[^\s<"')]+/i,/https?:\/\/(?:amzn\.eu)[^\s<"')]+/i,/https?:\/\/(?:www\.chronopost\.fr)[^\s<"')]+/i,/ups\.com\/su\/[^\s<"')]+/i,/https?:\/\/[^\s<"']{12,80}/];for(var i=0;i<ps.length;i++){var m=t.match(ps[i]);if(m){var u=m[0];if(!u.startsWith('http'))u='https://'+u;return u;}}return'';}
 function xSl(t){if(!t)return'';var m1=t.match(/entre\s+(\d{1,2}[h:]\d{2})\s*[-–et]+(\s*\d{1,2}[h:]\d{2})/i);if(m1)return m1[1].replace('h',':')+' — '+m1[2].replace('h',':');return'';}
-function xEx(t,arr,c){if(!t)return'';var R=getRet();var d=t.match(/(?:disposez?\s+de|pendant)\s+(\d+)\s+jours?/i);if(d){var x=new Date(arr);x.setDate(x.getDate()+parseInt(d[1]));return x.toISOString().split('T')[0];}var i=t.match(/(?:avant le|jusqu['']au)\s+(\d{4}-\d{2}-\d{2})/i);if(i)return i[1];var nm=t.match(/(?:jusqu['']au|avant le)\s+(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/i);if(nm){var y=nm[3]?(nm[3].length===2?'20'+nm[3]:nm[3]):new Date().getFullYear();return y+'-'+nm[2].padStart(2,'0')+'-'+nm[1].padStart(2,'0');}var days=R[c]||14;var def=new Date(arr);def.setDate(def.getDate()+days);return def.toISOString().split('T')[0];}
+function xEx(t,arr,c){if(!t)return'';var d=t.match(/(?:disposez?\s+de|pendant)\s+(\d+)\s+jours?/i);if(d){var x=new Date(arr);x.setDate(x.getDate()+parseInt(d[1]));return x.toISOString().split('T')[0];}var i=t.match(/(?:avant le|jusqu['']au)\s+(\d{4}-\d{2}-\d{2})/i);if(i)return i[1];var nm=t.match(/(?:jusqu['']au|avant le)\s+(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/i);if(nm){var y=nm[3]?(nm[3].length===2?'20'+nm[3]:nm[3]):new Date().getFullYear();return y+'-'+nm[2].padStart(2,'0')+'-'+nm[1].padStart(2,'0');}var days=getTrCfg(c).days||14;var def=new Date(arr);def.setDate(def.getDate()+days);return def.toISOString().split('T')[0];}
 function xSd(t){if(!t)return'';var m1=t.match(/expédié\s+par\s+([A-Z][^\n.]{2,40}?)(?:\n|\.|est)/i);if(m1)return m1[1].trim();return'';}
 
 // ─── DÉDUPLICATION ─────────────────────────────────────────────────────────────
@@ -593,8 +640,8 @@ function addPkg(){
   var co=document.getElementById('aC').value.trim().toUpperCase();
   var ad=document.getElementById('aA').value.trim();
   if(!tr&&!co&&!ad){showToast('⚠️ Renseignez au moins un champ');return;}
-  var R=getRet(),now=new Date().toISOString(),fbId='man_'+Date.now();
-  var defExp=new Date();defExp.setDate(defExp.getDate()+(R[SC]||14));
+  var now=new Date().toISOString(),fbId='man_'+Date.now();
+  var defExp=new Date();defExp.setDate(defExp.getDate()+(getTrCfg(SC).days||14));
   var pkg={id:D.nextId++,_fbId:fbId,carrier:SC,trackingNum:tr,pickupCode:co,lockerAddress:ad,trackingLink:'',deliverySlot:'',sender:document.getElementById('aSd').value.trim(),arrivalDate:now,expiryDate:defExp.toISOString().split('T')[0],status:'ready',emailSubject:'Ajout manuel',gmailLink:'',account:document.getElementById('aAc').value,source:'manual',gmailMsgId:fbId,note:document.getElementById('aN').value.trim(),lastUpdated:now,events:[{date:now,status:'ready',desc:'Manuel'}]};
   D.packages.unshift(pkg);saveD(D);render();FBSync.write('colis',fbId,pkg);
   closeSheet('shAdd');showToast('✓ Colis ajouté');
@@ -656,7 +703,7 @@ function fSrc(p){return(p.source&&p.source.indexOf('sms')>=0?'📱':'📧')+' '+
 
 // ─── FILTRAGE ──────────────────────────────────────────────────────────────────
 function getFilt(){
-  var DIS=getDisabled(),_cut30=Date.now()-30*86400000;
+  var DIS=getDisabledSet(),_cut30=Date.now()-30*86400000;
   var pkgs=D.packages.filter(function(p){
     if(DIS.has(p.carrier))return false;
     if(['ready','delivered','collected'].indexOf(p.status)<0){
@@ -678,7 +725,7 @@ function getFilt(){
 }
 
 function updBadges(){
-  var p=D.packages,DIS=getDisabled(),_cut30=Date.now()-30*86400000;
+  var p=D.packages,DIS=getDisabledSet(),_cut30=Date.now()-30*86400000;
   function countFilt(fn){return p.filter(function(x){if(DIS.has(x.carrier))return false;if(['ready','delivered','collected'].indexOf(x.status)<0){var _lu=new Date(x.arrivalDate||x.lastUpdated||0).getTime();if(_lu>0&&_lu<_cut30)return false;}if(x.status==='out_for_delivery'){var arr=x.arrivalDate?new Date(x.arrivalDate).getTime():0;if(arr>0&&arr<Date.now()-5*86400000)return false;}return fn(x);}).length;}
   var tb=document.getElementById('totalBadge');
   var rCount=countFilt(function(x){return x.status==='ready';});
@@ -704,12 +751,11 @@ function render(){
     el.innerHTML='<div class="empty"><div class="eico">📭</div><div class="etit">'+(msgs[flt]||'Aucun colis')+'</div><div class="esub">'+( flt==='all'?'Appuyez sur + ou synchronisez via ⟳':'Changer de filtre ou synchroniser via ⟳')+'</div></div>';
     return;
   }
-  var R=getRet();
   el.innerHTML=pkgs.map(function(p,i){
     var color=CL[p.carrier]||'#888';
     var days=dLeft(p.expiryDate);
     var showE=p.status==='ready'&&days!==null;
-    var pct=showE?Math.max(0,Math.min(100,(days/(R[p.carrier]||14))*100)):null;
+    var pct=showE?Math.max(0,Math.min(100,(days/(getTrCfg(p.carrier).days||14))*100)):null;
 
     // ── Ligne de résumé dans la carte ──
     var parts=[];
@@ -841,24 +887,39 @@ async function fetchGmailLog(){
   }catch(e){var el=document.getElementById('logG');if(el)el.textContent='Erreur connexion Firebase : '+e.message;}
 }
 
-function renderRetCf(){
-  var R=getRet(),DIS=getDisabled();
-  document.getElementById('retCf').innerHTML=Object.entries(DR).map(function(kv){
-    var c=kv[0],d=kv[1],dis=DIS.has(c);
-    return'<div class="cfgr" style="'+(dis?'opacity:0.45':'')+'">'+
-      '<div class="cfgd" style="background:'+(CL[c]||'#888')+'"></div>'+
-      '<div class="cfgl">'+(LB[c]||c)+'</div>'+
-      '<input class="cfgi" type="number" min="1" max="60" id="r_'+c+'" value="'+(R[c]||d)+'" '+(dis?'disabled ':'')+'>'+
-      '<span style="font-size:12px;color:var(--osv)"> j</span>'+
-      '<button data-action="toggleCarrier" data-carrier="'+c+'" class="ci-toggle'+(dis?'':' on')+'" title="'+(dis?'Réactiver':'Désactiver')+'"></button>'+
+function renderTrCf(){
+  var statusEl=document.getElementById('trSyncStatus');
+  if(statusEl)statusEl.textContent=getFB().apiKey?'Synchronisé via Firestore (meta/carrierConfig)':'Non configuré — stockage local uniquement';
+  document.getElementById('trCf').innerHTML=Object.keys(DR).map(function(c){
+    var tc=getTrCfg(c);
+    return'<div class="trrow">'+
+      '<div class="trrow-top">'+
+        '<div class="cfgd" style="background:'+(CL[c]||'#888')+'"></div>'+
+        '<div class="cfgl">'+(LB[c]||c)+'</div>'+
+        '<input class="cfgi" type="number" min="1" max="60" id="r_'+c+'" value="'+(tc.days||DR[c])+'">'+
+        '<span style="font-size:12px;color:var(--osv)">j</span>'+
+        '<button data-action="toggleCarrier" data-carrier="'+c+'" class="ci-toggle'+(tc.disabled?'':' on')+'" title="'+(tc.disabled?'Réactiver':'Désactiver')+'"></button>'+
+      '</div>'+
+      '<input class="clkin" id="lk_'+c+'" placeholder="Lien de suivi personnalisé (optionnel, {num} ou fin URL)" value="'+escAttr(tc.link||'')+'">'+
     '</div>';
   }).join('');
 }
 
-function saveRet(){
-  var nr={};
-  Object.keys(DR).forEach(function(c){var e=document.getElementById('r_'+c);if(e)nr[c]=Math.max(1,Math.min(60,parseInt(e.value)||DR[c]));});
-  localStorage.setItem(RK,JSON.stringify(nr));showToast('✓ Délais sauvegardés');
+async function saveTrCf(){
+  var nc={};
+  Object.keys(DR).forEach(function(c){
+    var rEl=document.getElementById('r_'+c);
+    var lEl=document.getElementById('lk_'+c);
+    var prev=getTrCfg(c);
+    nc[c]={
+      days:Math.max(1,Math.min(60,parseInt(rEl&&rEl.value)||DR[c])),
+      link:(lEl&&lEl.value.trim())||'',
+      disabled:prev.disabled
+    };
+  });
+  saveTrCfgCache(nc);render();showToast('✓ Sauvegardé');
+  var ok=await writeTrCfgToFirestore(nc);
+  if(!ok&&getFB().apiKey)showToast('⚠️ Sync Firestore échouée (sauvegardé en local)');
 }
 function savePurgeDays(){
   var el=document.getElementById('cfgPurgeDays');if(!el)return;
@@ -892,10 +953,12 @@ function saveTrackerWh(){
 }
 function resetAll(){if(!confirm('Supprimer TOUS les colis ?'))return;D={packages:[],nextId:1,lastSync:null};openCardIds.clear();saveD(D);render();closeSheet('shSync');showToast('✓ Réinitialisé');}
 function toggleCarrier(c){
-  var d=getDisabled();if(d.has(c))d.delete(c);else d.add(c);
-  localStorage.setItem(DK,JSON.stringify([...d]));
-  renderRetCf();render();
-  showToast(d.has(c)?LB[c]+' désactivé':LB[c]+' réactivé');
+  var cur=getTrCfg(c);
+  var nc=Object.assign({},_trCfg);
+  nc[c]=Object.assign({},cur,{disabled:!cur.disabled});
+  saveTrCfgCache(nc);renderTrCf();render();
+  showToast(nc[c].disabled?LB[c]+' désactivé':LB[c]+' réactivé');
+  writeTrCfgToFirestore(nc);
 }
 
 // ─── SHEETS ────────────────────────────────────────────────────────────────────
@@ -916,7 +979,7 @@ function showTab(tabId,btn){
   var panel=document.getElementById(tabId);if(panel)panel.classList.add('on');
   if(btn)btn.classList.add('sel');
   if(tabId==='tSy')bindPurgeCfg();
-  if(tabId==='tCf'){renderRetCf();bindTrackerWh();}
+  if(tabId==='tCf'){renderTrCf();bindTrackerWh();}
   if(tabId==='tLg')renderLogs();
 }
 
@@ -959,7 +1022,7 @@ document.addEventListener('click',function(e){
     case 'syncFB': syncFB(); break;
     case 'readSMS': readSMS(false); break;
     case 'showTab': showTab(ds.tab,el); break;
-    case 'saveRet': saveRet(); break;
+    case 'saveTrCf': saveTrCf(); break;
     case 'savePurgeDays': savePurgeDays(); break;
     case 'toggleDebug': DBG.toggle(); break;
     case 'forceTrack': forceTrack(); break;
@@ -1004,6 +1067,10 @@ function clearSearch(){
 document.querySelectorAll('.sov').forEach(function(el){el.style.display='none';});
 purge();renderSS();render();
 setTimeout(initPush,2000);
+(async function initTrCfg(){
+  var remote=await fetchTrCfgFromFirestore();
+  if(remote){saveTrCfgCache(remote);render();}
+})();
 
 // FIX 7: subscriber protège les statuts terminaux locaux (expired/collected)
 FBSync.subscribe('colis', function(docs) {

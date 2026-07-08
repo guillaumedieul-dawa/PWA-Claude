@@ -11,6 +11,15 @@
  *   que buildTrackingUrl() côté client) sont conservés ; les domaines
  *   tokenisés court-terme (sms.*, n.*, p.*) sont ignorés pour forcer
  *   le fallback vers l'URL générique construite par numéro de suivi.
+ * FIX v3 (08/07/2026) :
+ *   - DPD : plage 14 → 14-18 chiffres (n° réels observés à 18 chiffres,
+ *     ex. 250076115298177488 — l'ancien pattern \d{14} rejetait ces
+ *     colis faute d'identifiant extrait, donc jamais importés).
+ *   - _xStatus() : suppression du mot-clé générique "relais" du pattern
+ *     "ready". "relais" matche n'importe quel email Mondial Relay
+ *     mentionnant juste "Livraison en Point Relais" (ex. simple
+ *     confirmation de commande), ce qui forçait à tort le statut
+ *     "ready" (À retirer) sur des colis pas encore expédiés.
  *
  * Utilisation :
  *   1. Coller ce fichier dans le projet Apps Script existant
@@ -212,7 +221,8 @@ function _xTrackingNum(carrier, text) {
     laposte:      [/\b(6[A-Z]\d{11})\b/, /\b(8[A-Z]\d{11})\b/],
     mondialrelay: [/\b(\d{8})\b/],
     vintedgo:     [/\b(1UW[A-Z0-9]{9,})\b/i, /\b(\d{13,19})\b/],
-    dpd:          [/\b(\d{14})\b/],
+    // FIX v3 (08/07/2026) : 14 → 14-18 chiffres (n° DPD réel observé : 18 chiffres)
+    dpd:          [/\b(\d{14,18})\b/],
     gls:          [/colis\s+([0-9A-Z]{6,10})\b/i],
     relaiscolis:  [/\b(VD[A-Z0-9]{8,})\b/i],
     amazon:       [/\b(\d{3}-\d{7}-\d{7})\b/],
@@ -273,10 +283,17 @@ function _xLink(text) {
 }
 
 // ── Détection statut ───────────────────────────────────────────
+// FIX v3 (08/07/2026) : retrait du mot-clé générique "relais" du pattern
+// "ready". "relais" apparaît dans TOUT email Mondial Relay mentionnant
+// "Livraison en Point Relais" (y compris une simple confirmation de
+// commande), ce qui forçait à tort le statut "ready" (À retirer) sur des
+// colis simplement commandés/pas encore expédiés. Les mots-clés restants
+// (disponible / à retirer / en attente de retrait / consigne) suffisent
+// à détecter un vrai statut "prêt au retrait".
 function _xStatus(lo) {
   if (/livré|remis au destinataire|distribué|delivered|boîte aux lettres/.test(lo)) return 'delivered';
   if (/en cours de livraison|en livraison|out for delivery/.test(lo)) return 'out_for_delivery';
-  if (/disponible|à retirer|en attente de retrait|consigne|relais/.test(lo)) return 'ready';
+  if (/disponible|à retirer|en attente de retrait|consigne/.test(lo)) return 'ready';
   if (/incident|échec|avis de passage|absent|failed/.test(lo)) return 'failed';
   return 'pending';
 }

@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════
-//  FamilyHub — Sync Gmail → Firebase (Optimisé v2.3)
+//  FamilyHub — Sync Gmail → Firebase (Optimisé v2.4)
 //  Compte : Guillaume Dieul.
 //  V3
 //  FIX CRITIQUE v2.2 : ajout de updateMask sur les writes batch
@@ -9,6 +9,14 @@
 //  enrichi manuellement ou par un autre import.
 //  FIX v2.3 : gmailLink utilise désormais ?ui=2#inbox/{id}
 //  (l'ancienne URL sans ui=2 ne s'ouvrait pas correctement).
+//  FIX v2.4 (08/07/2026) :
+//  - Requête Gmail : ajout des mots-clés sujet 'suivi', 'expédié',
+//    'retrait', 'livré' — manquants par rapport à Code-Import.gs,
+//    ce qui faisait que ce script ratait des emails (ex. sujets du
+//    type "Suivi de votre commande - XXXX") que Code-Import.gs seul
+//    récupérait. Les deux scripts doivent couvrir le même périmètre.
+//  - DPD : plage regex 14 → 14-18 chiffres (cohérence avec
+//    Code-Import.gs ; n° réels observés à 18 chiffres).
 //  Optimisations : Filtre temporel précis (Unix timestamp), suppression de l'appel fbGetExistingIds lourd
 // ═══════════════════════════════════════════════════
 
@@ -66,7 +74,8 @@ function extractTracking(c, t) {
     colissimo: [/\b(6[A-Z]\d{11})\b/, /\b(8[A-Z]\d{11})\b/, /\b(9V\d{11})\b/, /\b(7M\d{11})\b/, /\b(\d{13})\b/, /\bn[°o]\s*([A-Z0-9]{9,15})\b/i],
     mondialrelay: [/\b(\d{8})\b/, /\b(\d{5,7})\b/],
     vintedgo: [/\b(1UW[A-Z0-9]{9,})\b/i, /\b(\d{13,19})\b/],
-    dpd: [/\b(\d{14})\b/, /colis n[°o]\s*(\d{10,})/i],
+    // FIX v2.4 (08/07/2026) : 14 → 14-18 chiffres (n° DPD réel observé : 18 chiffres)
+    dpd: [/\b(\d{14,18})\b/, /colis n[°o]\s*(\d{10,})/i],
     gls: [/colis\s+([0-9A-Z]{6,10})\b/i],
     relaiscolis: [/\b(VD[A-Z0-9]{8,})\b/i],
     laposte: [/\b(6[A-Z]\d{11})\b/, /\b(8[A-Z]\d{11})\b/, /\b(\d{13})\b/],
@@ -233,7 +242,10 @@ function syncGmailToFirebase() {
     dateFilter = ` after:${afterSeconds}`;
   }
   
-  const query = 'subject:(colis OR pickup OR livraison OR disponible OR tracking)' + dateFilter;
+  // FIX v2.4 (08/07/2026) : ajout 'suivi', 'expédié', 'retrait', 'livré' —
+  // alignement avec la liste de mots-clés sujet de Code-Import.gs, qui
+  // seul récupérait certains emails (ex. "Suivi de votre commande - XXXX").
+  const query = 'subject:(colis OR pickup OR suivi OR livraison OR disponible OR tracking OR expédié OR retrait OR livré)' + dateFilter;
   const threads = GmailApp.search(query, 0, 40);
   
   let newCount = 0;

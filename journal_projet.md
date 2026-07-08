@@ -1,6 +1,6 @@
 # Journal de Projet — FamilyHub v2
 
-**Dernière mise à jour** : 04 juillet 2026  
+**Dernière mise à jour** : 08 juillet 2026  
 **Repo** : https://github.com/guillaumedieul-dawa/PWA-Claude  
 **Firebase** : `familyhub-colis-8abbd`
 
@@ -73,7 +73,7 @@ repo-github/
 | `lt_disabled` | Transporteurs désactivés |
 | `lt_tracker_wh` | URL webhook Code-Tracker.gs |
 | `lt_purge_days` | Délai purge colis (défaut: 20j) |
-| `lt_links` | **Nouveau (04/07)** — Liens de suivi custom par transporteur |
+| `lt_links` | Liens de suivi custom par transporteur |
 | `fh_todo` | Todo local |
 | `fh_courses` | Courses local |
 | `fh_cave` | Cave local |
@@ -174,7 +174,7 @@ Fonction à exécuter : `importGmailColis()`
 
 **Transporteurs supportés** : Chronopost, Chronofresh, Colissimo, La Poste, Mondial Relay, DPD, UPS, GLS, Relais Colis, Vinted Go, Amazon, Autre.
 
-**Note (04/07/2026)** : `Code-Tracker.gs` ne lit ni n'écrit jamais `trackingLink` — il consomme uniquement `trackingNum` pour reconstruire l'URL de scraping via `_buildTrackingUrl()`. Aucun changement requis sur ce fichier lors du patch d'homogénéisation des liens (cf. section dédiée ci-dessous).
+**Note (04/07/2026)** : `Code-Tracker.gs` ne lit ni n'écrit jamais `trackingLink` — il consomme uniquement `trackingNum` pour reconstruire l'URL de scraping via `_buildTrackingUrl()`. Aucun changement requis sur ce fichier lors du patch d'homogénéisation des liens.
 
 ### Phase 6 — Notifications push FCM [🔄 EN COURS]
 
@@ -191,24 +191,6 @@ Code-Tracker.gs (détecte changement statut)
   → notification native sur les 2 téléphones
 ```
 
-**Fichiers** :
-- `@capacitor/push-notifications: 8.0.0` dans `package.json`
-- `PushNotifications` plugin configuré dans `capacitor.config.json`
-- `android-src/google-services.json` → **GitHub Secret `GOOGLE_SERVICES_JSON`** (base64)
-- `Code-Notif.gs` : envoi FCM V1, lecture tokens Firestore, templates par statut
-- `Code-Tracker.gs` : patché pour appeler `sendStatusNotification(pkg, newStatus)`
-- `appsscript.json` : scope `firebase.messaging` ajouté
-- `sw.js v8` : handler `pushNotificationReceived` pour foreground
-- `locker-tracker/index.html` : `initPush()` → `PushNotifications.requestPermissions()` + `register()` + `_saveFCMToken()`
-
-**Problèmes rencontrés et solutions** :
-- Organisation Google bloque `iam.disableServiceAccountKeyCreation` → pas de clé de service → utilisation `ScriptApp.getOAuthToken()` (FCM V1)
-- Ancienne API FCM désactivée → FCM V1 obligatoire
-- Web Push / VAPID ne fonctionne pas dans Android WebView Capacitor → plugin natif obligatoire
-- `applicationId` incohérent (`.app` suffix dans workflow) → supprimé, uniformisé à `com.famille.dieulgandet`
-- `google-services.json` committé public → alerte GitHub Secret Scanning → migré en GitHub Secret base64
-- Token FCM non sauvegardé si Firebase pas configuré au moment du register → fix : cache localStorage `fh_fcm_token` + flush via `_flushCachedFCMToken()` quand Firebase configuré
-
 **État actuel** :
 - ✅ APK buildé avec plugin natif
 - ✅ Permission notification accordée sur le téléphone
@@ -219,59 +201,70 @@ Code-Tracker.gs (détecte changement statut)
 
 ## 🔧 Patch 04/07/2026 — Homogénéisation liens de suivi + réorg tabs locker-tracker
 
-### Contexte / bug identifié
-
-`Code-Import.gs` extrayait un `trackingLink` depuis les emails Gmail (`_xLink()`) mais ne le propageait **jamais** dans le document Firestore final (`_parseEmail()` ne l'assignait pas). Conséquence : le lien "Suivre sur..." affiché dans l'app était quasi-systématiquement l'URL générique reconstruite par numéro (`buildTrackingUrl()`), sauf pour les colis ajoutés via SMS (où `trackingLink` était bien alimenté par `xL(body)`). Comportement incohérent entre les deux sources d'import.
-
-### Décision de conception
-
-Un lien capté dans un email peut être :
-- **stable** (domaine officiel transporteur, ex: `laposte.fr/outils/suivre-vos-envois`) → safe à propager tel quel
-- **tokenisé court-terme** (sous-domaine SMS-style type `n.pkup.fr`, `sms.laposte.fr`, `p.vintedgo.com`) → expire après quelques jours, casse silencieusement si stocké en dur
-
-Filtre retenu : liste de hosts stables dérivée **directement** des domaines déjà en dur dans `buildTrackingUrl()` (locker-tracker) / `_buildTrackingUrl()` (Code-Tracker.gs) — zéro invention, cohérence garantie avec le fallback existant.
-
-```
-Hosts stables : chronopost.fr, laposte.fr, mondialrelay.fr, dpd.fr,
-                 ups.com, gls-group.com, relaiscolis.com, track.amazon.fr
-Hosts rejetés (implicite) : tout sous-domaine hors liste
-                 (n.pkup.fr, sms.laposte.fr, p.vintedgo.com, my.dpd.fr,
-                  moncolis.gls-france.com, amzn.eu, ups.com/su/...)
-```
-
 ### Fix `Code-Import.gs`
-
 - `_isStableTrackingLink(url)` : nouveau helper, teste le hostname contre `IMPORT_STABLE_LINK_HOSTS`.
-- `_parseEmail()` : `trackingLink` désormais assigné = `rawLink` **si et seulement si** stable ; sinon vide (fallback géré côté client).
-- `importGmailColis()` : lors de la déduplication locale (`seen[key]`), propage aussi `trackingLink` d'un doublon si l'entrée gardée n'en a pas encore.
-- `_importWriteFirestore()` : si un doc existant est skip (statut déjà à jour ou plus avancé) mais n'a pas de `trackingLink` et que le pkg courant en apporte un stable, complète ce champ isolément via `_importPatchSingleField()` (patch d'un seul champ, respecte `updateMask`, ne perturbe pas le reste du doc).
-- `gmailLink` corrigé : `https://mail.google.com/mail/u/0/?ui=2#inbox/{gmailMsgId}` (cohérence avec `ScriptGoogleGMAIL-v2.gs`, était déjà signalé comme fix antérieur mais absent de ce fichier).
+- `trackingLink` assigné = `rawLink` **si et seulement si** stable ; sinon vide (fallback côté client).
+- Déduplication : propage `trackingLink` d'un doublon si l'entrée gardée n'en a pas encore.
+- `gmailLink` corrigé : `https://mail.google.com/mail/u/0/?ui=2#inbox/{gmailMsgId}`.
 
 ### Fix `locker-tracker/index.html`
-
-- `STABLE_LINK_HOSTS` + `isStableLink(url)` : même liste de hosts que côté Apps Script.
-- `resolveTrackingLink(p)` : nouvelle fonction centrale de résolution du lien affiché. Priorité : `trackingLink` importé **si stable** → lien custom transporteur (`getCustomLinks()`) → URL générique reconstruite par numéro. S'applique à la lecture, donc corrige rétroactivement l'affichage des documents déjà en base avant ce patch (pas seulement les futurs imports).
-- `buildTrackingUrl(carrier, num)` : respecte désormais un lien custom éventuel (`LINKS_KEY = 'lt_links'`, localStorage `{carrier: "https://..."}`) ; gabarit avec placeholder `{num}` ou concaténation en fin d'URL si absent.
-- Tous les points de consommation (`_tLink` dans `render()`, `copyAll()`, `shareP()`) unifiés sur `resolveTrackingLink(p)` — plus de logique de fallback dupliquée à 3 endroits différents.
+- `buildTrackingUrl(carrier, num)` : respecte un lien custom éventuel (`LINKS_KEY = 'lt_links'`).
 
 ### Réorganisation des onglets (sheet `shSync`)
-
-Avant : 4 onglets — BDD / SMS / Config (tout-en-un) / Logs.
-Après : **5 onglets** — BDD / SMS / **Transporteur** (nouveau) / **Config** (recentré) / Logs.
-
-| Onglet | Contenu |
-|--------|---------|
-| **BDD** (`tSy`) | Statut connexion Firebase, bouton actualiser. Bloc "Configuration Firebase" (inputs projectId/apiKey) **supprimé** — doublon avec `/parametres/index.html`, remplacé par un lien direct vers ce module. |
-| **SMS** (`tSM`) | Inchangé — lecture SMS device + collage manuel. |
-| **Transporteur** (`tTr`, nouveau) | Délais expiration par transporteur, **liens de suivi personnalisés** (nouveau — `renderLinkCf()` / `saveLinks()`), purge automatique, URL webhook tracking (`forceTrack()`/`saveTrackerWh()`), désactivation par transporteur (déplacé depuis l'ancien `tCf`). |
-| **Config** (`tCf`, recentré) | Panel debug + bouton réinitialisation données. Plus rien d'autre (avant : partagé avec tous les réglages transporteur). |
-| **Logs** (`tLg`) | Inchangé. |
-
-`forceTrack()` (bouton 🔄 tbar) reste fonctionnellement inchangé, mais son message d'erreur pointe désormais vers "Transporteur → Tracking" au lieu de "Config → Tracking".
+5 onglets : BDD / SMS / **Transporteur** (nouveau) / **Config** (recentré) / Logs.
 
 ### Non modifié
+`Code-Tracker.gs` : ne lit/écrit jamais `trackingLink`, confirmé après relecture complète du fichier.
 
-`Code-Tracker.gs` : ne lit/écrit jamais `trackingLink`, aucune raison de le toucher pour cette cohérence — confirmé après relecture complète du fichier.
+---
+
+## 🔧 Patch 08/07/2026 — Fix carte colis (clic croisé), import DPD 18 chiffres, faux statut Mondial Relay, requête Gmail incomplète
+
+**Fichiers modifiés** : `locker-tracker/index.html`, `src/Code-Import.gs`, `src/ScriptGoogleGMAIL-v2.gs`.
+
+### Bug 1 — Clic sur une carte colis ouvre/ferme la mauvaise carte (1ère de la liste)
+
+**Cause racine** : `render()` utilisait `p.id` comme identifiant DOM (`id="pc"+p.id`, `data-id`). Pour tout colis importé via Gmail, `id` est une **chaîne** (`gmail_xxx`). Dans `syncFB()` et `FBSync.subscribe()`, la ligne `p.id=Math.round(Number(p.id))` convertissait cette chaîne en `NaN` — **tous** les colis Gmail se retrouvaient avec le même id DOM `id="pcNaN"`/`id="pbNaN"` (dupliqué, invalide). `getElementById('pbNaN')` renvoyait alors systématiquement le **premier** élément portant cet id, quel que soit le colis cliqué.
+
+**Fix** :
+- Nouvelle fonction `pkgKey(p){return String(p._fbId||p.id||'');}` — identité unique par colis (SMS/manuel ont aussi un `_fbId` propre : `sms_xxx`, `man_xxx`).
+- `render()`, `tog()`, `markDone()`, `delPkg()`, `copyAll()`, `shareP()`, `showQR()` : identité DOM + recherche dans `D.packages` basées sur `pkgKey()`, plus jamais sur `p.id` brut.
+- Suppression du cast `Math.round(Number(p.id))` dans `syncFB()` et `FBSync.subscribe()` (source du NaN).
+
+Confiance : **95%**.
+
+### Bug 2 — Colis DPD "FRANKLIN" invisible malgré email + SMS + réimport complet
+
+**Cause email** (`Code-Import.gs` + `ScriptGoogleGMAIL-v2.gs`) : n° de suivi réel = 18 chiffres (`250076115298177488`), regex DPD limitée à exactement 14 (`\d{14}`) → aucun identifiant extrait → email rejeté.
+**Fix** : `dpd:[/\b(\d{14,18})\b/]` dans les deux scripts.
+
+**Cause SMS** (`locker-tracker`, `xT()`/`xL()`) : le SMS ne contient ni n° de suivi ni code, seulement un lien court `my.dpd.fr/749wwmfc` **sans** `https://`. `xL()` exigeait le protocole → rien capturé ; `xT()` n'avait aucun fallback shortlink → SMS rejeté.
+**Fix** : `xT()` ajoute `/my\.dpd\.fr\/(\w{5,15})/i` (token du lien = pseudo-identifiant) ; `xL()` rend `https://` optionnel devant `my.dpd.fr/`.
+
+⚠️ **Effet de bord** : colis email (n° 18 chiffres) et colis SMS (token shortlink) ne partagent aucun identifiant → 2 entrées distinctes pour le même colis physique. Fusion automatique non implémentée (nécessiterait un matching approximatif expéditeur+date).
+
+Confiance : **90%** (email) / **80%** (SMS).
+
+### Bug 3 — Statut "À retirer" affiché à tort pour un colis Mondial Relay encore en transit
+
+**Cause** (`Code-Import.gs` `_xStatus()`) : le pattern "ready" incluait le mot-clé générique `relais`, qui matche tout email mentionnant "Livraison en Point Relais" — y compris une simple **confirmation de commande** sans aucune info de statut réelle. Effet : statut forcé à `ready` alors que le vrai statut (page Mondial Relay officielle) est "Colis pris en charge" (transit).
+
+**Fix** : retrait de `|relais` du pattern ready (les mots-clés disponible/à retirer/en attente de retrait/consigne suffisent, sans faux positif).
+
+⚠️ Nécessite un nouveau `importGmailColis()` pour corriger le doc déjà en base (`_importWriteFirestore()` ne rétrograde jamais un statut déjà plus avancé) — repurger ou corriger le champ `status` manuellement si besoin.
+
+Confiance : **90%**.
+
+### Bug 4 — Ce colis Mondial Relay remonte via Code-Import.gs mais pas via ScriptGoogleGMAIL-v2.gs
+
+**Cause** : sujet = "Suivi de votre commande - EAFSFBMAQ". La requête Gmail de `ScriptGoogleGMAIL-v2.gs` ne contenait pas "suivi" dans sa liste de mots-clés sujet (contrairement à `Code-Import.gs`) → email jamais recherché par ce script.
+
+**Fix** : requête alignée sur `Code-Import.gs` — ajout de `suivi`, `expédié`, `retrait`, `livré`.
+
+Confiance : **95%**.
+
+### Note opérationnelle (non corrigée, hors scope)
+`syncGmailToFirebase()` utilise `LAST_SYNC_TIMESTAMP` (Apps Script Properties), **non réinitialisé** par une purge Firestore. Un ré-exécution manuelle après purge peut ignorer des emails antérieurs au dernier checkpoint. Pour un test propre : `PropertiesService.getScriptProperties().deleteProperty('LAST_SYNC_TIMESTAMP')` avant de relancer.
 
 ---
 
@@ -284,6 +277,7 @@ Après : **5 onglets** — BDD / SMS / **Transporteur** (nouveau) / **Config** (
 | Event delegation | `data-action` + `findAction()`, jamais `onclick=` inline |
 | TextNode guard | `el.nodeType===1` avant tout `getAttribute` dans `findAction()` |
 | Firebase IDs | Toujours `String(id)`, jamais `Number()` / `Math.round()` |
+| **Identité DOM colis** | **(08/07)** Toujours `pkgKey(p)=String(p._fbId\|\|p.id)`, jamais `p.id` brut — les id Gmail sont des chaînes ; `Math.round(Number(id))` produit `NaN` et fait collisionner tous les DOM id entre eux |
 | Champs Firestore | Toujours `toFields()` avec encodage explicite booléens |
 | Champs internes | Exclure les champs `_`-préfixés des payloads Firestore |
 | Scripts externes | Jamais en `<head>` sans `defer`. Inliner les modules critiques |
@@ -291,7 +285,9 @@ Après : **5 onglets** — BDD / SMS / **Transporteur** (nouveau) / **Config** (
 | Write queue | Toutes écritures Firebase via `FBSync.write()` pour retry auto |
 | Apps Script timeout | Max 10 items/run, skip si récent (`SKIP_IF_UPDATED_WITHIN`) |
 | FCM token | Cache localStorage si Firebase pas encore configuré → flush au saveFB |
-| **Liens de suivi** | **(04/07)** Ne jamais stocker un `trackingLink` tokenisé court-terme en dur — filtrer par `isStableLink()`/`_isStableTrackingLink()` avant assignation. Résolution d'affichage toujours via `resolveTrackingLink()`, jamais de fallback ad hoc dupliqué. |
+| Liens de suivi | Ne jamais stocker un `trackingLink` tokenisé court-terme en dur — filtrer par `isStableLink()`/`_isStableTrackingLink()` avant assignation |
+| **Détection statut email** | **(08/07)** Éviter les mots-clés génériques (ex. "relais") qui matchent le nom du mode de livraison plutôt qu'un vrai événement de statut → faux positifs sur confirmations de commande |
+| **Cohérence multi-scripts** | **(08/07)** `Code-Import.gs` et `ScriptGoogleGMAIL-v2.gs` doivent couvrir le même périmètre de mots-clés sujet Gmail, sous peine de divergence silencieuse (un colis visible dans un seul des deux imports) |
 
 ---
 
@@ -329,7 +325,7 @@ Après : **5 onglets** — BDD / SMS / **Transporteur** (nouveau) / **Config** (
 | `Code-Tracker.gs` | `setup()` | Manuel (une fois) |
 | `Code-Notif.gs` | `sendStatusNotification(pkg, status)` | Appelé par Code-Tracker |
 | `Code-Notif.gs` | `testNotification()` | Manuel (test) |
-| `Code-Import.gs` | `importGmailColis()` | Manuel (une fois) |
+| `Code-Import.gs` | `importGmailColis()` | Manuel (une fois / après ce patch pour corriger statuts) |
 | `ScriptGoogleGMAIL-v2.gs` | `syncGmailToFirebase()` | Trigger horaire |
 
 **Config Properties Apps Script** :
@@ -340,4 +336,4 @@ Après : **5 onglets** — BDD / SMS / **Transporteur** (nouveau) / **Config** (
 
 ---
 
-**Fin du journal. Dernière modification : 04 juillet 2026**
+**Fin du journal. Dernière modification : 08 juillet 2026**

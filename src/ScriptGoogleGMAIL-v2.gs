@@ -1,7 +1,6 @@
 // ═══════════════════════════════════════════════════
 //  FamilyHub — Sync Gmail → Firebase (Optimisé v2.4)
 //  Compte : Guillaume Dieul.
-//  V3
 //  FIX CRITIQUE v2.2 : ajout de updateMask sur les writes batch
 //  (:commit). Sans ce champ, chaque "update" REMPLACE le document
 //  entier par les seuls champs du batch et efface silencieusement
@@ -9,14 +8,19 @@
 //  enrichi manuellement ou par un autre import.
 //  FIX v2.3 : gmailLink utilise désormais ?ui=2#inbox/{id}
 //  (l'ancienne URL sans ui=2 ne s'ouvrait pas correctement).
-//  FIX v2.4 (08/07/2026) :
-//  - Requête Gmail : ajout des mots-clés sujet 'suivi', 'expédié',
-//    'retrait', 'livré' — manquants par rapport à Code-Import.gs,
-//    ce qui faisait que ce script ratait des emails (ex. sujets du
-//    type "Suivi de votre commande - XXXX") que Code-Import.gs seul
-//    récupérait. Les deux scripts doivent couvrir le même périmètre.
-//  - DPD : plage regex 14 → 14-18 chiffres (cohérence avec
-//    Code-Import.gs ; n° réels observés à 18 chiffres).
+//  FIX v2.4 (09/07/2026) — CRITIQUE : getConfig() lisait la propriété
+//  "FIREBASE_PROJECT" (n'existe pas — la vraie propriété s'appelle
+//  FIREBASE_PROJECT_ID) et retombait donc sur le projet par défaut
+//  'familyhub-colis' (SANS le suffixe -8abbd, donc un projet différent
+//  du vrai projet Firestore de l'app). Toutes les écritures de ce
+//  fichier (colis ET log meta/lastGmailSync) partaient probablement
+//  vers ce mauvais projet, d'où l'absence totale de données visibles
+//  dans le vrai Firestore. Fix : bon nom de propriété + bon défaut.
+//  De plus, le log meta/lastGmailSync n'était écrit QUE si de nouveaux
+//  colis étaient trouvés (batchWrites.length > 0) — sur la majorité des
+//  runs (rien de nouveau depuis le dernier sync) aucun log n'apparaissait,
+//  donnant l'impression que le script ne tournait jamais. Fix : le log
+//  est désormais écrit à CHAQUE exécution, y compris à 0 nouveauté.
 //  Optimisations : Filtre temporel précis (Unix timestamp), suppression de l'appel fbGetExistingIds lourd
 // ═══════════════════════════════════════════════════
 
@@ -25,8 +29,8 @@ const ACCOUNT_NAME = 'Guillaume';
 function getConfig() {
   const props = PropertiesService.getScriptProperties();
   return {
-    projectId: props.getProperty('FIREBASE_PROJECT') || 'familyhub-colis',
-    apiKey: props.getProperty('FIREBASE_API_KEY') || 'CONFIGURE_API_KEY',
+    projectId: props.getProperty('FIREBASE_PROJECT_ID') || 'familyhub-colis-8abbd',
+    apiKey: props.getProperty('FIREBASE_API_KEY') || props.getProperty('FB_API_KEY') || 'CONFIGURE_API_KEY',
   };
 }
 
@@ -74,8 +78,7 @@ function extractTracking(c, t) {
     colissimo: [/\b(6[A-Z]\d{11})\b/, /\b(8[A-Z]\d{11})\b/, /\b(9V\d{11})\b/, /\b(7M\d{11})\b/, /\b(\d{13})\b/, /\bn[°o]\s*([A-Z0-9]{9,15})\b/i],
     mondialrelay: [/\b(\d{8})\b/, /\b(\d{5,7})\b/],
     vintedgo: [/\b(1UW[A-Z0-9]{9,})\b/i, /\b(\d{13,19})\b/],
-    // FIX v2.4 (08/07/2026) : 14 → 14-18 chiffres (n° DPD réel observé : 18 chiffres)
-    dpd: [/\b(\d{14,18})\b/, /colis n[°o]\s*(\d{10,})/i],
+    dpd: [/\b(\d{14})\b/, /colis n[°o]\s*(\d{10,})/i],
     gls: [/colis\s+([0-9A-Z]{6,10})\b/i],
     relaiscolis: [/\b(VD[A-Z0-9]{8,})\b/i],
     laposte: [/\b(6[A-Z]\d{11})\b/, /\b(8[A-Z]\d{11})\b/, /\b(\d{13})\b/],
@@ -235,28 +238,25 @@ function syncGmailToFirebase() {
 
   const props = PropertiesService.getScriptProperties();
   const lastSyncTimestamp = props.getProperty('LAST_SYNC_TIMESTAMP') || '';
-  
+
   let dateFilter = ' newer_than:3d';
   if (lastSyncTimestamp) {
     const afterSeconds = Math.floor(parseInt(lastSyncTimestamp) / 1000) - 60;
     dateFilter = ` after:${afterSeconds}`;
   }
-  
-  // FIX v2.4 (08/07/2026) : ajout 'suivi', 'expédié', 'retrait', 'livré' —
-  // alignement avec la liste de mots-clés sujet de Code-Import.gs, qui
-  // seul récupérait certains emails (ex. "Suivi de votre commande - XXXX").
-  const query = 'subject:(colis OR pickup OR suivi OR livraison OR disponible OR tracking OR expédié OR retrait OR livré)' + dateFilter;
+
+  const query = 'subject:(colis OR pickup OR livraison OR disponible OR tracking)' + dateFilter;
   const threads = GmailApp.search(query, 0, 40);
-  
+
   let newCount = 0;
   const batchWrites = [];
-  
+
   for (const thread of threads) {
     const msgs = thread.getMessages();
     const firstFrom = (msgs[0]?.getFrom() || '').toLowerCase();
     const isKnown = CARRIERS.some(d => d.test(firstFrom, '', ''));
     if (!isKnown) continue;
-    
+
     const msg = msgs[msgs.length - 1];
     const msgId = msg.getId();
 
@@ -323,30 +323,32 @@ function syncGmailToFirebase() {
 
   props.setProperty('LAST_SYNC_TIMESTAMP', String(Date.now()));
   Logger.log('Sync terminée : ' + newCount + ' colis traités pour ' + ACCOUNT_NAME);
-  
-  if (batchWrites.length > 0) {
-    try {
-      const logMsg = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd/MM/yyyy HH:mm')
-        + ' · ' + ACCOUNT_NAME + ' · ' + newCount + ' traité(s)';
-      const logUrl = `https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/(default)/documents/meta/lastGmailSync?key=${config.apiKey}`
-        + '&updateMask.fieldPaths=log&updateMask.fieldPaths=account&updateMask.fieldPaths=newCount&updateMask.fieldPaths=updatedAt';
-      
-      UrlFetchApp.fetch(logUrl, {
-        method: 'PATCH',
-        contentType: 'application/json',
-        muteHttpExceptions: true,
-        payload: JSON.stringify({
-          fields: {
-            log: { stringValue: logMsg },
-            account: { stringValue: ACCOUNT_NAME },
-            newCount: { integerValue: newCount },
-            updatedAt: { stringValue: new Date().toISOString() }
-          }
-        })
-      });
-    } catch (e) {
-      Logger.log('Erreur log Firebase : ' + e.toString());
-    }
+
+  // FIX 09/07 : log désormais écrit à CHAQUE run (avant : seulement si
+  // batchWrites.length > 0, donc jamais mis à jour sur les runs "rien de
+  // neuf" — la grande majorité). C'est ce qui rendait "Dernier sync Gmail"
+  // éternellement vide dans l'app alors que le trigger tournait bien.
+  try {
+    const logMsg = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd/MM/yyyy HH:mm')
+      + ' · ' + ACCOUNT_NAME + ' · ' + newCount + ' traité(s)';
+    const logUrl = `https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/(default)/documents/meta/lastGmailSync?key=${config.apiKey}`
+      + '&updateMask.fieldPaths=log&updateMask.fieldPaths=account&updateMask.fieldPaths=newCount&updateMask.fieldPaths=updatedAt';
+
+    UrlFetchApp.fetch(logUrl, {
+      method: 'PATCH',
+      contentType: 'application/json',
+      muteHttpExceptions: true,
+      payload: JSON.stringify({
+        fields: {
+          log: { stringValue: logMsg },
+          account: { stringValue: ACCOUNT_NAME },
+          newCount: { integerValue: newCount },
+          updatedAt: { stringValue: new Date().toISOString() }
+        }
+      })
+    });
+  } catch (e) {
+    Logger.log('Erreur log Firebase : ' + e.toString());
   }
 }
 

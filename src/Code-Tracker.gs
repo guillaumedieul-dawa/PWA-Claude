@@ -7,17 +7,25 @@
  *   EFFACE carrier/trackingNum/pickupCode/lockerAddress/sender/account.
  *   → c'est la cause des colis "Transporteur" vides en Échec/Expiré.
  *
+ * FIX 09/07/2026 : _loadConfig() ne lisait QUE la propriété
+ *   TRACKER_FB_API_KEY — restée à sa valeur placeholder d'origine
+ *   ("REMPLACER_PAR_VOTRE_CLE", jamais éditée) depuis le setup() initial.
+ *   Toutes les requêtes Firestore de trackAllPackages() échouaient donc
+ *   silencieusement (clé API invalide). Fix : priorité à la propriété
+ *   partagée FIREBASE_API_KEY (Config.gs), TRACKER_FB_API_KEY en repli
+ *   uniquement si elle contient une vraie valeur.
+ *
  * Déploiement :
  *   1. Copier ce fichier dans un nouveau projet Apps Script
- *   2. Renseigner FB_PROJECT_ID et TRACKER_FB_API_KEY ci-dessous
+ *   2. Renseigner FIREBASE_API_KEY (propriété partagée, cf Config.gs)
  *   3. Déployer en tant que Web App (accès : "Moi uniquement")
  *   4. Créer un déclencheur horaire sur trackAllPackages()
- *   5. Copier l'URL de déploiement dans locker-tracker (champ TRACKER_WEBHOOK_URL)
+ *   5. Copier l'URL de déploiement dans locker-tracker (onglet Transporteurs)
  */
 
 // ── Configuration ──────────────────────────────────────────────
 var TRACKER_FB_PROJECT_ID = 'familyhub-colis-8abbd';
-var TRACKER_FB_API_KEY    = '';  // Renseigner depuis Apps Script Properties
+var TRACKER_FB_API_KEY    = '';  // Résolu dynamiquement par _loadConfig()
 var TRACKER_FB_COLL       = 'colis';
 
 // ── Point d'entrée Web App (appel depuis l'APK) ────────────────
@@ -60,9 +68,13 @@ function trackAllPackages() {
 }
 
 // ── Chargement config depuis Properties ───────────────────────
+// FIX 09/07 : FIREBASE_API_KEY (propriété partagée, Config.gs) prioritaire.
+// TRACKER_FB_API_KEY n'est gardée qu'en repli si FIREBASE_API_KEY est absente,
+// ce qui neutralise le placeholder "REMPLACER_PAR_VOTRE_CLE" jamais remplacé.
 function _loadConfig() {
   var props = PropertiesService.getScriptProperties();
-  TRACKER_FB_API_KEY = props.getProperty('TRACKER_FB_API_KEY') || TRACKER_FB_API_KEY;
+  TRACKER_FB_PROJECT_ID = props.getProperty('FIREBASE_PROJECT_ID') || TRACKER_FB_PROJECT_ID;
+  TRACKER_FB_API_KEY = props.getProperty('FIREBASE_API_KEY') || props.getProperty('TRACKER_FB_API_KEY') || TRACKER_FB_API_KEY;
 }
 
 // ── Lire les colis actifs depuis Firestore ────────────────────
@@ -241,8 +253,11 @@ function _fetchPage(url) {
 }
 
 // ── Firestore helpers ─────────────────────────────────────────
+// FIX 09/07 : utilise directement les propriétés résolues par _loadConfig()
+// (TRACKER_FB_PROJECT_ID / TRACKER_FB_API_KEY), qui priorisent désormais
+// FIREBASE_PROJECT_ID / FIREBASE_API_KEY (propriétés partagées correctes).
 function _fbUrl(path) {
-  return 'https://firestore.googleapis.com/v1/projects/' + FB_PROJECT_ID +
+  return 'https://firestore.googleapis.com/v1/projects/' + TRACKER_FB_PROJECT_ID +
     '/databases/(default)/documents/' + path + '?key=' + TRACKER_FB_API_KEY;
 }
 
@@ -322,10 +337,12 @@ function _contains(str, keywords) {
 }
 
 // ── Setup initial (à exécuter une fois manuellement) ──────────
+// NOTE 09/07 : conservé pour compat, mais devenu optionnel — _loadConfig()
+// utilise désormais FIREBASE_API_KEY en priorité (déjà configurée).
 function setup() {
-  // 1. Stocker l'API Key Firebase
+  // 1. Stocker l'API Key Firebase (legacy — préférer FIREBASE_API_KEY)
   PropertiesService.getScriptProperties().setProperty('TRACKER_FB_API_KEY', 'REMPLACER_PAR_VOTRE_CLE');
-  
+
   // 2. Créer le déclencheur horaire
   ScriptApp.getProjectTriggers().forEach(function(t) {
     if (t.getHandlerFunction() === 'trackAllPackages') ScriptApp.deleteTrigger(t);

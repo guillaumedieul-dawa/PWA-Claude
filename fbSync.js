@@ -1,8 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════
-   FamilyHub — fbSync.js  v4.2 (updateMask fix)
+   FamilyHub — fbSync.js  v4.3 (poll 30s)
    Phase 4 : Real-time sync via polling REST Firestore
    ───────────────────────────────────────────────────
-   - fbSubscribe(collection, onData, opts) : polling toutes les 5s
+   - fbSubscribe(collection, onData, opts) : polling toutes les 30s
    - fbUnsubscribe(collection)             : arrêt du polling
    - fbQueue(collection, id, data)         : write avec retry expo
    - fbDeleteQueue(collection, id)         : delete avec retry expo
@@ -12,6 +12,10 @@
    Sans ce paramètre, l'API REST Firestore REMPLACE le document
    entier par les seuls champs envoyés (perte silencieuse de
    carrier/trackingNum/pickupCode/etc. sur toute écriture partielle).
+   FIX v4.3 (09/07) : POLL_MS 5000 → 30000 (réduit la charge réseau/
+   batterie mobile ; le scraping horaire Code-Tracker.gs reste la
+   source de vérité pour le temps réel, ce polling ne fait que
+   propager ses écritures + celles de l'autre compte).
    ═══════════════════════════════════════════════════════════════ */
 
 (function (global) {
@@ -19,7 +23,7 @@
 
   // ── Config ────────────────────────────────────────────────────
   var FB_PROJECT = 'familyhub-colis-8abbd';
-  var POLL_MS    = 5000;   // intervalle polling
+  var POLL_MS    = 30000;  // intervalle polling
   var RETRY_MAX  = 30000;  // retry max 30s
   var QUEUE_KEY  = 'fb_wq'; // localStorage write queue
 
@@ -112,7 +116,7 @@
   }
   async function _doFlush() {
     _flushTimer = null;
-    
+
     // VERROU : Arrêt silencieux intercepté pour le debug
     if (!getKey()) {
         notifyError("🚨 BLOQUÉ : Clé API Firebase introuvable dans le localStorage (lt_fb). Configurez l'application.");
@@ -143,7 +147,7 @@
           });
           ok = r.ok;
         }
-        
+
         if (!ok) {
             var errTxt = await r.text();
             // Analyse fine de l'erreur JSON Firestore pour extraction

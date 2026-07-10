@@ -1,7 +1,7 @@
 # Journal de Projet — FamilyHub v2
 
-**Dernière mise à jour** : 09 juillet 2026
-**Repo** : https://github.com/guillaumedieul-dawa/PWA-Claude
+**Dernière mise à jour** : 09 juillet 2026  
+**Repo** : https://github.com/guillaumedieul-dawa/PWA-Claude  
 **Firebase** : `familyhub-colis-8abbd`
 
 ---
@@ -30,7 +30,6 @@ repo-github/
 ├── manifest.json
 ├── capacitor.config.json
 ├── package.json
-├── icons/carriers/                ← (nouveau) logos transporteurs optionnels, cf Patch 09/07
 ├── locker-tracker/index.html     ← Module colis (principal)
 ├── todo-partage/index.html
 ├── liste-courses/index.html
@@ -42,11 +41,10 @@ repo-github/
 │   └── (google-services.json → GitHub Secret GOOGLE_SERVICES_JSON)
 ├── .github/workflows/
 │   └── build-apk.yml
-├── src/Config.gs                  ← Apps Script : config centralisée (FIREBASE_API_KEY/PROJECT_ID)
-├── src/Code-Tracker.gs           ← Apps Script : scraping transporteurs
-├── src/Code-Notif.gs             ← Apps Script : notifications FCM V1
-├── src/Code-Import.gs            ← Apps Script : import emails Gmail
-├── src/ScriptGoogleGMAIL-v2.gs    ← Apps Script : parsing Gmail (existant)
+├── Code-Tracker.gs               ← Apps Script : scraping transporteurs
+├── Code-Notif.gs                 ← Apps Script : notifications FCM V1
+├── Code-Import.gs                ← Apps Script : import emails Gmail
+├── ScriptGoogleGMAIL-v2.gs       ← Apps Script : parsing Gmail (existant)
 └── push-familyhub.html           ← Outil deploy ZIP → GitHub → APK
 ```
 
@@ -61,11 +59,8 @@ repo-github/
   - `meta/cave/bottles/{id}` — cave à spiritueux
   - `meta/menus/{dateKey}` — menus semaine
   - `meta/fcmTokens/{account}` — tokens FCM push (Guillaume/Michele)
-  - `meta/carrierConfig` — config transporteurs (jours/lien perso/actif), synced
-  - `meta/appSettings` — **(nouveau 09/07)** purgeDays + trackerWh, synced entre comptes
   - `meta/lastTrackerSync` — log scraping auto
-  - `meta/lastGmailImport` — log import Gmail (one-shot)
-  - `meta/lastGmailSync` — log sync Gmail récurrent (`ScriptGoogleGMAIL-v2.gs`)
+  - `meta/lastGmailImport` — log import Gmail
 
 ### Clés localStorage
 
@@ -76,9 +71,9 @@ repo-github/
 | `lt_ret` | Délais expiration par transporteur |
 | `lt_logs` | Logs SMS/Firebase/Gmail |
 | `lt_disabled` | Transporteurs désactivés |
-| `lt_tracker_wh` | URL webhook Code-Tracker.gs (miroir local de `meta/appSettings.trackerWh`) |
-| `lt_purge_days` | Délai purge colis (défaut: 20j) (miroir local de `meta/appSettings.purgeDays`) |
-| `lt_links` | Liens de suivi custom par transporteur |
+| `lt_tracker_wh` | URL webhook Code-Tracker.gs |
+| `lt_purge_days` | Délai purge colis (défaut: 20j) |
+| `lt_links` | **Nouveau (04/07)** — Liens de suivi custom par transporteur |
 | `fh_todo` | Todo local |
 | `fh_courses` | Courses local |
 | `fh_cave` | Cave local |
@@ -98,7 +93,7 @@ repo-github/
 - Plugin SmsPlugin Capacitor intégré
 
 ### Phase 2 — 5 Modules fonctionnels [✅ TERMINÉ]
-- `locker-tracker` : suivi colis avec SMS parsing, Firebase sync
+- `locker-tracker` : suivi colis avec SMS parsing, QR, Firebase sync
 - `todo-partage` : tâches communes G+M avec priorités et échéances
 - `liste-courses` : liste partagée par magasin
 - `cave-spiritueux` : inventaire vins/spiritueux
@@ -145,14 +140,14 @@ function openSheet(id) {
 - Détection auto 12 transporteurs
 - Extraction: numéro suivi, code retrait, adresse, lien, statut
 - Déduplication par numéro de suivi
-- Résultat historique : **41 colis importés, 0 erreurs, 96 fils traités en 53 secondes**
+- Résultat: **41 colis importés, 0 erreurs, 96 fils traités en 53 secondes**
 
 Fonction à exécuter : `importGmailColis()`
 
 ### Phase 4 — Real-time Sync Firebase [✅ TERMINÉ]
 
 **`fbSync.js`** (externe, chargé via `<script src>`) :
-- Polling REST Firestore toutes les **30 secondes** (`fbSubscribe()`) — *(30s depuis Patch 09/07, était 5s)*
+- Polling REST Firestore toutes les **5 secondes** (`fbSubscribe()`)
 - Pause automatique sur `visibilitychange` (app en arrière-plan)
 - Write queue persistée en localStorage (`fb_wq`) avec retry exponentiel
 - `FBSync.write()` / `FBSync.delete()` / `FBSync.subscribe()` / `FBSync.ui`
@@ -173,13 +168,13 @@ Fonction à exécuter : `importGmailColis()`
 - `MAX_PER_RUN = 10` (évite timeout 6 min Google Apps Script)
 - `SKIP_IF_UPDATED_WITHIN = 90 min` (évite rescraping inutile)
 - Écrit le statut mis à jour dans Firestore → Phase 4 polling rafraîchit l'app
-- Déployé en Web App → URL webhook configurée dans locker-tracker (onglet Transporteurs), **synchronisée Firestore depuis Patch 09/07**
+- Déploié en Web App → URL webhook configurée dans locker-tracker (Transporteur, ex-Config)
 
 **Bouton 🔄** dans la tbar locker-tracker → force le scraping immédiatement.
 
 **Transporteurs supportés** : Chronopost, Chronofresh, Colissimo, La Poste, Mondial Relay, DPD, UPS, GLS, Relais Colis, Vinted Go, Amazon, Autre.
 
-**⚠️ Bug critique corrigé le 09/07** : `TRACKER_FB_API_KEY` (propriété Apps Script dédiée) est restée à son placeholder d'origine `"REMPLACER_PAR_VOTRE_CLE"` depuis le `setup()` initial — jamais remplacée. Toutes les requêtes Firestore de `trackAllPackages()` échouaient donc silencieusement (clé API invalide). Cf. section Patch 09/07 ci-dessous.
+**Note (04/07/2026)** : `Code-Tracker.gs` ne lit ni n'écrit jamais `trackingLink` — il consomme uniquement `trackingNum` pour reconstruire l'URL de scraping via `_buildTrackingUrl()`. Aucun changement requis sur ce fichier lors du patch d'homogénéisation des liens (cf. section dédiée ci-dessous).
 
 ### Phase 6 — Notifications push FCM [🔄 EN COURS]
 
@@ -200,7 +195,7 @@ Code-Tracker.gs (détecte changement statut)
 - `@capacitor/push-notifications: 8.0.0` dans `package.json`
 - `PushNotifications` plugin configuré dans `capacitor.config.json`
 - `android-src/google-services.json` → **GitHub Secret `GOOGLE_SERVICES_JSON`** (base64)
-- `Code-Notif.gs` : envoi FCM V1, lecture tokens Firestore, templates par statut (déjà sur `_loadGlobalConfig()`, aucune modification requise)
+- `Code-Notif.gs` : envoi FCM V1, lecture tokens Firestore, templates par statut
 - `Code-Tracker.gs` : patché pour appeler `sendStatusNotification(pkg, newStatus)`
 - `appsscript.json` : scope `firebase.messaging` ajouté
 - `sw.js v8` : handler `pushNotificationReceived` pour foreground
@@ -224,56 +219,93 @@ Code-Tracker.gs (détecte changement statut)
 
 ## 🔧 Patch 04/07/2026 — Homogénéisation liens de suivi + réorg tabs locker-tracker
 
-*(résumé, cf. commits — non modifié par le patch du 09/07)*
+### Contexte / bug identifié
 
-- `Code-Import.gs` : `trackingLink` extrait des emails désormais propagé vers Firestore (filtré par liste de hosts "stables").
-- `locker-tracker/index.html` : `resolveTrackingLink(p)` centralise la résolution du lien affiché (trackingLink stable → lien custom transporteur → URL générique reconstruite).
-- Réorganisation onglets sheet Administration : BDD / SMS / Transporteur / Config / Logs → consolidé depuis en **BDD / Transporteurs / Logs** (cf. Patch 09/07, les onglets SMS et Config ont été fusionnés dans BDD/Transporteurs entre-temps).
+`Code-Import.gs` extrayait un `trackingLink` depuis les emails Gmail (`_xLink()`) mais ne le propageait **jamais** dans le document Firestore final (`_parseEmail()` ne l'assignait pas). Conséquence : le lien "Suivre sur..." affiché dans l'app était quasi-systématiquement l'URL générique reconstruite par numéro (`buildTrackingUrl()`), sauf pour les colis ajoutés via SMS (où `trackingLink` était bien alimenté par `xL(body)`). Comportement incohérent entre les deux sources d'import.
+
+### Décision de conception
+
+Un lien capté dans un email peut être :
+- **stable** (domaine officiel transporteur, ex: `laposte.fr/outils/suivre-vos-envois`) → safe à propager tel quel
+- **tokenisé court-terme** (sous-domaine SMS-style type `n.pkup.fr`, `sms.laposte.fr`, `p.vintedgo.com`) → expire après quelques jours, casse silencieusement si stocké en dur
+
+Filtre retenu : liste de hosts stables dérivée **directement** des domaines déjà en dur dans `buildTrackingUrl()` (locker-tracker) / `_buildTrackingUrl()` (Code-Tracker.gs) — zéro invention, cohérence garantie avec le fallback existant.
+
+```
+Hosts stables : chronopost.fr, laposte.fr, mondialrelay.fr, dpd.fr,
+                 ups.com, gls-group.com, relaiscolis.com, track.amazon.fr
+Hosts rejetés (implicite) : tout sous-domaine hors liste
+                 (n.pkup.fr, sms.laposte.fr, p.vintedgo.com, my.dpd.fr,
+                  moncolis.gls-france.com, amzn.eu, ups.com/su/...)
+```
+
+### Fix `Code-Import.gs`
+
+- `_isStableTrackingLink(url)` : nouveau helper, teste le hostname contre `IMPORT_STABLE_LINK_HOSTS`.
+- `_parseEmail()` : `trackingLink` désormais assigné = `rawLink` **si et seulement si** stable ; sinon vide (fallback géré côté client).
+- `importGmailColis()` : lors de la déduplication locale (`seen[key]`), propage aussi `trackingLink` d'un doublon si l'entrée gardée n'en a pas encore.
+- `_importWriteFirestore()` : si un doc existant est skip (statut déjà à jour ou plus avancé) mais n'a pas de `trackingLink` et que le pkg courant en apporte un stable, complète ce champ isolément via `_importPatchSingleField()` (patch d'un seul champ, respecte `updateMask`, ne perturbe pas le reste du doc).
+- `gmailLink` corrigé : `https://mail.google.com/mail/u/0/?ui=2#inbox/{gmailMsgId}` (cohérence avec `ScriptGoogleGMAIL-v2.gs`, était déjà signalé comme fix antérieur mais absent de ce fichier).
+
+### Fix `locker-tracker/index.html`
+
+- `STABLE_LINK_HOSTS` + `isStableLink(url)` : même liste de hosts que côté Apps Script.
+- `resolveTrackingLink(p)` : nouvelle fonction centrale de résolution du lien affiché. Priorité : `trackingLink` importé **si stable** → lien custom transporteur (`getCustomLinks()`) → URL générique reconstruite par numéro. S'applique à la lecture, donc corrige rétroactivement l'affichage des documents déjà en base avant ce patch (pas seulement les futurs imports).
+- `buildTrackingUrl(carrier, num)` : respecte désormais un lien custom éventuel (`LINKS_KEY = 'lt_links'`, localStorage `{carrier: "https://..."}`) ; gabarit avec placeholder `{num}` ou concaténation en fin d'URL si absent.
+- Tous les points de consommation (`_tLink` dans `render()`, `copyAll()`, `shareP()`) unifiés sur `resolveTrackingLink(p)` — plus de logique de fallback dupliquée à 3 endroits différents.
+
+### Réorganisation des onglets (sheet `shSync`)
+
+Avant : 4 onglets — BDD / SMS / Config (tout-en-un) / Logs.
+Après : **5 onglets** — BDD / SMS / **Transporteur** (nouveau) / **Config** (recentré) / Logs.
+
+| Onglet | Contenu |
+|--------|---------|
+| **BDD** (`tSy`) | Statut connexion Firebase, bouton actualiser. Bloc "Configuration Firebase" (inputs projectId/apiKey) **supprimé** — doublon avec `/parametres/index.html`, remplacé par un lien direct vers ce module. |
+| **SMS** (`tSM`) | Inchangé — lecture SMS device + collage manuel. |
+| **Transporteur** (`tTr`, nouveau) | Délais expiration par transporteur, **liens de suivi personnalisés** (nouveau — `renderLinkCf()` / `saveLinks()`), purge automatique, URL webhook tracking (`forceTrack()`/`saveTrackerWh()`), désactivation par transporteur (déplacé depuis l'ancien `tCf`). |
+| **Config** (`tCf`, recentré) | Panel debug + bouton réinitialisation données. Plus rien d'autre (avant : partagé avec tous les réglages transporteur). |
+| **Logs** (`tLg`) | Inchangé. |
+
+`forceTrack()` (bouton 🔄 tbar) reste fonctionnellement inchangé, mais son message d'erreur pointe désormais vers "Transporteur → Tracking" au lieu de "Config → Tracking".
+
+### Non modifié
+
+`Code-Tracker.gs` : ne lit/écrit jamais `trackingLink`, aucune raison de le toucher pour cette cohérence — confirmé après relecture complète du fichier.
 
 ---
 
-## 🔧 Patch 09/07/2026 — Bugs colis + config Apps Script + UI + évolutions
+## 🔧 Patch 09/07/2026 — Fix collision ID cartes colis (getElementById doublons)
 
-### Bugs corrigés
+### Bug rapporté
 
-**1. Bouton "Tout copier" muet.** `copyAll(id)` comparait `D.packages.find(x => x.id === id)` avec `id` = `ds.id`. Or `dataset.id` renvoie **toujours une string**, alors que `p.id` est un **number** (`Math.round`, `D.nextId++`). `===` échouait systématiquement → `find()` retournait `undefined` → sortie silencieuse, rien ne se passait.
-**Même bug latent trouvé et corrigé (non signalés mais cause identique) sur `markDone`, `delPkg`, `shareP`.**
-Fix : `id = Number(id);` en première ligne de chacune de ces 4 fonctions.
+Clic sur les colis Colissimo/Chronofresh (tous sauf le 1er Mondial Relay, Amazon, et les 2 derniers Chronopost avec codes) ouvrait systématiquement le détail du colis **Amazon** au lieu du leur.
 
-**2. "Dernier sync Gmail (Apps Script)" jamais daté**, alors que le trigger horaire tourne bien. Double cause dans `ScriptGoogleGMAIL-v2.gs` :
-- `getConfig()` lisait la propriété `FIREBASE_PROJECT` — **cette propriété n'existe pas** (la vraie s'appelle `FIREBASE_PROJECT_ID`). Résultat : fallback silencieux sur le projet par défaut `'familyhub-colis'`, **sans le suffixe `-8abbd`** — un projet Firestore différent de celui utilisé par toute l'app. C'est très probablement la raison pour laquelle aucune donnée n'apparaissait dans le vrai Firestore pour ce fichier précis.
-- Le document `meta/lastGmailSync` n'était réécrit que si `batchWrites.length > 0` (au moins un nouveau colis trouvé). Sur la quasi-totalité des runs (rien de neuf depuis le dernier passage), **aucun log n'était donc jamais écrit**, donnant l'impression trompeuse que le script ne s'exécutait jamais.
+### Root cause
 
-Fix : `getConfig()` corrigé (bon nom de propriété + bon projet par défaut) ; log désormais écrit à **chaque** run, y compris à 0 nouveauté (`newCount: 0`).
+Dans `syncFB()` et le callback `FBSync.subscribe('colis', …)`, l'attribution d'ID pour un colis distant nouvellement vu :
 
-### Réponses aux questions
+```js
+if(!p.id)p.id=D.nextId++;else p.id=Math.round(Number(p.id));
+```
 
-**Propriétés Apps Script (Properties du projet) :**
+Les colis importés Gmail (`Code-Import.gs` : `id: 'gmail_'+msgId` ; `ScriptGoogleGMAIL-v2.gs` : `id: msgId` brut hexadécimal) stockent un champ Firestore `id` non-numérique. `Number("gmail_195abc…")` → `NaN` → `Math.round(NaN)` → `NaN`. **Tous** ces colis récupéraient donc le même `p.id = NaN`, donc le même DOM id `pcNaN`/`pbNaN` en rendu (`render()`). `getElementById` renvoie toujours le **premier** match dans le DOM → le premier colis NaN affiché (Amazon, trié en premier car date la plus ancienne parmi le groupe "Récupéré") captait tous les clics des autres colis NaN.
 
-| Propriété | Rôle | Statut après audit |
-|---|---|---|
-| `FIREBASE_API_KEY` | Clé API Firebase partagée, lue par `Config.gs` (`_loadGlobalConfig()`) | ✅ OK, correcte — c'est la clé "maître" à conserver |
-| `FIREBASE_PROJECT_ID` | ID du projet Firestore (`familyhub-colis-8abbd`) | ✅ OK, correcte |
-| `LAST_SYNC_TIMESTAMP` | Timestamp en **millisecondes epoch** du dernier `syncGmailToFirebase()` réussi. Sert de borne `after:` pour la requête Gmail (ne relit que les mails plus récents que ce sync). Valeur observée `1783528739021` ≈ **8 juillet 2026, ~16h38 (heure de Paris)** — cohérent avec "hier" par rapport à aujourd'hui, preuve que le script tourne bien. **Ne jamais éditer cette valeur à la main** (un timestamp trop ancien relit inutilement du mail déjà traité ; trop récent risque de sauter des mails). | ✅ OK, fonctionne comme prévu |
-| `TRACKER_FB_API_KEY` | Résidu du `setup()` de `Code-Tracker.gs`, jamais remplacée : valeur littérale `"REMPLACER_PAR_VOTRE_CLE"` (placeholder d'origine). | ❌ Cassait silencieusement toutes les requêtes Firestore de `trackAllPackages()` (clé API invalide → 400). **Fixé** aujourd'hui : `Code-Tracker.gs` priorise désormais `FIREBASE_API_KEY` et ignore ce placeholder. **Cette propriété est supprimable** après déploiement du patch (plus lue en priorité, gardée seulement en repli inoffensif). |
+Root cause identique au bug déjà repéré « Tout copier ne copie rien » (et `markDone`/`delPkg`/`shareP`/`showQR` silencieusement inopérants sur tout colis à `id` numérique) : `D.packages.find(x=>x.id===id)` compare un `p.id` **number** (ou `NaN`) à un `dataset.id` **string** — toujours `false` en égalité stricte JS.
 
-**Bouton QR (détail colis) — comment il fonctionnait :** générait un QR **fabriqué côté client** (librairie JS `qrcodejs`) encodant le **texte brut** du code retrait ou du numéro de suivi. Ce n'était **jamais** le QR officiel émis par le transporteur (qui embarque des données signées/propriétaires propres à chaque casier). Un tel QR auto-généré n'est pas reconnu par les scanners de consigne/locker physiques.
-→ **Supprimé** conformément à la demande : bouton, sheet `#shQR`, fonction `showQR()`, librairie externe `qrcode.min.js`.
+### Fix — `locker-tracker/index.html` uniquement
 
-### Évolutions livrées
+Nouvelle fonction `pkgKey(p)` : identité stable = `_fbId` (toujours présent — c'est l'ID du document Firestore — et toujours unique), fallback `String(p.id)`.
 
-1. **Logos transporteurs** : `carrierLogo()` réécrit. Chaque badge tente de charger `../icons/carriers/{carrier}.png` ; en cas d'échec (404, aucun fichier fourni pour l'instant — question de droits de marque, pas de blocage technique), bascule automatiquement (`onerror`) sur un badge texte 2-3 lettres coloré (`CBADGE`, ex. `UPS`, `DPD`, `MR`…). **Pour activer les vrais logos** : déposer des PNG carrés dans `icons/carriers/` avec le nom exact de la clé transporteur (`chronopost.png`, `colissimo.png`, `mondialrelay.png`, `dpd.png`, `ups.png`, `gls.png`, `relaiscolis.png`, `vintedgo.png`, `laposte.png`, `amazon.png`, `chronofresh.png`, `other.png`) — aucun changement de code nécessaire, le fallback bascule automatiquement dès que le fichier existe.
-2. **`POLL_MS` 5s → 30s** dans `fbSync.js` (réduit la charge réseau/batterie ; le scraping horaire + les writes explicites restent immédiats côté écriture, seul le polling de lecture est ralenti).
-3. **Purge auto synchronisée entre comptes** : nouveau doc Firestore `meta/appSettings` (champ `purgeDays`), écrit par `savePurgeDays()`, relu au démarrage de l'app (`initAppSettings()`).
-4. **URL webhook tracker synchronisée entre comptes** : même doc `meta/appSettings` (champ `trackerWh`), écrit par `saveTrackerWh()`, relu au démarrage. **Sécurité** : pas de surface d'attaque nouvelle — la clé API Firebase est déjà, dans l'architecture actuelle, le point d'accès unique à l'ensemble des données de l'app (pas de couche Auth utilisateur) ; stocker cette URL à côté n'élargit rien pour quelqu'un qui n'a pas déjà cette clé.
-5. **"Réinitialiser toutes les données"** (`resetAll()`) : supprime désormais aussi tous les documents Firestore de la collection `colis` (récupérés via `fbAll()`, supprimés via `fbDel()`), en plus du localStorage local. Portée volontairement limitée à `colis` (pas `carrierConfig`/`appSettings`/logs).
-6. **Header illisible ("À retirer" sur 2 lignes)** : le compteur était concaténé dans le titre `.th` (Bebas Neue 26px), provoquant un retour à la ligne sur écrans étroits. Déplacé en **pastille compacte** (`#totalBadge.cnt-pill`) séparée, visible uniquement s'il y a des colis à retirer (masquée sinon, comme un badge de notification).
+- `render()` : tous les `id`/`data-id` liés à une carte colis (`pc`/`pb`, `tog`, `showQR`, `shareP`, `copyAll`, `markDone`, `delPkg`) utilisent désormais `pkgKey(p)` au lieu de `p.id`.
+- `markDone()`, `delPkg()`, `copyAll()`, `shareP()`, `showQR()` : lookup `pkgKey(x)===id` au lieu de `x.id===id`.
+- `syncFB()` + `FBSync.subscribe` : `p.id` n'est plus jamais forcé via `Math.round(Number(...))` (source du `NaN`) — assigné uniquement si absent ou déjà invalide (`typeof p.id!=='number'||isNaN(p.id)` → `D.nextId++`), donc toujours un entier local propre même en fallback.
 
-**Fichiers modifiés** : `locker-tracker/index.html`, `fbSync.js`, `src/Code-Tracker.gs`, `src/Code-Import.gs`, `src/ScriptGoogleGMAIL-v2.gs`, `journal_projet.md`.
+**Validation** : `node --check` OK sur les 3 blocs `<script>` inline. Vérification grep post-patch : 0 résidu `x.id===id`, 0 résidu `Math.round(Number(p.id))`, 8 usages `pkgKey(`.
 
-**Non modifiés (vérifiés, pas de bug trouvé)** : `src/Config.gs` (déjà correct — sert désormais de référence pour les 3 autres fichiers), `src/Code-Notif.gs` (utilise déjà `_loadGlobalConfig()`).
+**Non modifié** : `Code-Tracker.gs`, `Code-Import.gs`, `ScriptGoogleGMAIL-v2.gs` — bug 100% côté client (attribution locale de `p.id` lors de la première synchronisation d'un doc distant), aucun changement nécessaire côté Apps Script pour ce fix précis.
 
-**Note ménage** : `DATA-IMPORT-EMAILS.md` documente une phase (3.5) terminée depuis longtemps — obsolète, supprimable manuellement du repo (le tool de déploiement ZIP n'efface pas les fichiers absents du ZIP, suppression à faire côté GitHub directement si souhaité).
+**Toujours en attente** (hors-sujet de ce rapport, non traité ici) : `FIREBASE_PROJECT` vs `FIREBASE_PROJECT_ID` dans `ScriptGoogleGMAIL-v2.gs::getConfig()` — logs Gmail admin potentiellement invisibles ; log écrit uniquement si `newCount>0`.
 
 ---
 
@@ -281,12 +313,11 @@ Fix : `getConfig()` corrigé (bon nom de propriété + bon projet par défaut) ;
 
 | Règle | Détail |
 |-------|--------|
-| `node --check` | Obligatoire après tout patch regex sur un `<script>` (copier les `.gs` en `.js` pour les vérifier, node refuse l'extension `.gs`) |
+| `node --check` | Obligatoire après tout patch regex sur un `<script>` |
 | Reflow Capacitor | `void el.offsetHeight` après changement style/classList sur overlay |
 | Event delegation | `data-action` + `findAction()`, jamais `onclick=` inline |
 | TextNode guard | `el.nodeType===1` avant tout `getAttribute` dans `findAction()` |
-| Firebase IDs (`_fbId`) | Toujours `String(id)`, jamais `Number()` / `Math.round()` |
-| **ID locaux (`p.id`)** | **(09/07)** À l'inverse de `_fbId` : `p.id` est un compteur local **numérique**. `dataset.id` renvoie toujours une **string** → toute comparaison `x.id === ds.id` échoue silencieusement sans `Number(ds.id)` en entrée de fonction. |
+| Firebase IDs | Toujours `String(id)`, jamais `Number()` / `Math.round()` |
 | Champs Firestore | Toujours `toFields()` avec encodage explicite booléens |
 | Champs internes | Exclure les champs `_`-préfixés des payloads Firestore |
 | Scripts externes | Jamais en `<head>` sans `defer`. Inliner les modules critiques |
@@ -294,14 +325,14 @@ Fix : `getConfig()` corrigé (bon nom de propriété + bon projet par défaut) ;
 | Write queue | Toutes écritures Firebase via `FBSync.write()` pour retry auto |
 | Apps Script timeout | Max 10 items/run, skip si récent (`SKIP_IF_UPDATED_WITHIN`) |
 | FCM token | Cache localStorage si Firebase pas encore configuré → flush au saveFB |
-| Liens de suivi | Ne jamais stocker un `trackingLink` tokenisé court-terme en dur — filtrer par `isStableLink()`/`_isStableTrackingLink()` avant assignation |
-| **Config Apps Script** | **(09/07)** Toujours résoudre `FIREBASE_API_KEY` / `FIREBASE_PROJECT_ID` en priorité dans chaque `.gs` (propriétés réellement renseignées) ; ne jamais dupliquer une logique de lecture de propriété différente par fichier — source de bugs de config divergente silencieux (cf. `TRACKER_FB_API_KEY` placeholder, `FIREBASE_PROJECT` mal orthographié) |
+| **Liens de suivi** | **(04/07)** Ne jamais stocker un `trackingLink` tokenisé court-terme en dur — filtrer par `isStableLink()`/`_isStableTrackingLink()` avant assignation. Résolution d'affichage toujours via `resolveTrackingLink()`, jamais de fallback ad hoc dupliqué. |
+| **Identité colis (DOM)** | **(09/07)** Ne jamais utiliser `p.id` brut pour l'identité DOM/lookup d'un colis Firestore — toujours `pkgKey(p)` (= `_fbId`, fallback `String(p.id)`). `p.id` n'est qu'un compteur local interne, jamais garanti unique/non-`NaN` pour des docs importés (Gmail `msgId` non-numérique). |
 
 ---
 
 ## 📦 Gestion des livrables
 
-**Format** : fichier ZIP horodaté UTC, arborescence GitHub complète.
+**Format** : fichier ZIP horodaté UTC, arborescence GitHub complète.  
 **Déploiement** : `push-familyhub.html` → ZIP drop → push GitHub → trigger GitHub Actions.
 
 **Règle patch** : appliquer sur le fichier GitHub actuel (`curl` depuis `raw.githubusercontent.com`), pas depuis un cache local.
@@ -316,7 +347,7 @@ Fix : `getConfig()` corrigé (bon nom de propriété + bon projet par défaut) ;
 | Phase 2 | ✅ | 5 modules fonctionnels |
 | Phase 3 | ✅ | APK WebView refactor (21 bugs) |
 | Phase 3.5 | ✅ | Import 41 colis Gmail |
-| Phase 4 | ✅ | Real-time sync polling (30s depuis 09/07) |
+| Phase 4 | ✅ | Real-time sync polling 5s |
 | Phase 5 | ✅ | Tracking auto scraping horaire |
 | Phase 6 | 🔄 | Push notifications FCM natif Android |
 | Phase 7 | ⏳ | Michèle : config compte + token FCM |
@@ -330,19 +361,16 @@ Fix : `getConfig()` corrigé (bon nom de propriété + bon projet par défaut) ;
 |---------|----------|-------------|
 | `Code-Tracker.gs` | `trackAllPackages()` | Trigger horaire 1h |
 | `Code-Tracker.gs` | `doGet(e)` | Webhook bouton 🔄 APK |
-| `Code-Tracker.gs` | `setup()` | Manuel (une fois, legacy — clé prioritaire désormais `FIREBASE_API_KEY`) |
+| `Code-Tracker.gs` | `setup()` | Manuel (une fois) |
 | `Code-Notif.gs` | `sendStatusNotification(pkg, status)` | Appelé par Code-Tracker |
 | `Code-Notif.gs` | `testNotification()` | Manuel (test) |
 | `Code-Import.gs` | `importGmailColis()` | Manuel (une fois) |
 | `ScriptGoogleGMAIL-v2.gs` | `syncGmailToFirebase()` | Trigger horaire |
 
-**Config Properties Apps Script (état au 09/07/2026)** :
-- `FIREBASE_API_KEY` → clé API Firebase (source de vérité, utilisée par tous les fichiers `.gs`)
-- `FIREBASE_PROJECT_ID` → `familyhub-colis-8abbd` (source de vérité)
-- `LAST_SYNC_TIMESTAMP` → géré automatiquement par `syncGmailToFirebase()`, ne pas éditer
-- `TRACKER_FB_API_KEY` → legacy, non prioritaire depuis le 09/07, supprimable
+**Config Properties Apps Script** :
+- `FB_API_KEY` → clé API Firebase (stockée via `setup()`)
 
-**Webhook URL** (configurable dans locker-tracker → Administration → Transporteurs, synchronisée Firestore depuis le 09/07) :
+**Webhook URL** (à configurer dans locker-tracker Transporteur → Tracking) :
 `https://script.google.com/macros/s/AKfycbxAcfNXLfRyXjpZMlwvgjcsjvVKReR-9NNu5pnomHmmk8lsLMGrHzkhtY9vWNtfa2mH4w/exec`
 
 ---

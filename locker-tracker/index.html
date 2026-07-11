@@ -11,7 +11,6 @@
 <link rel="manifest" href="./manifest.json">
 <link rel="stylesheet" href="../themes.css">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fragment+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="../fbSync.js"></script>
 <script src="../theme.js"></script>
 <style>
@@ -22,7 +21,10 @@ html,body{font-family:"Plus Jakarta Sans",sans-serif;}
 .ihome:active{background:var(--s2)}
 .ttl{flex:1;min-width:0}
 .tlbl{font-size:10px;color:var(--osv);letter-spacing:.3px;font-weight:500}
-.th{font-family:'Bebas Neue',sans-serif!important;font-size:26px!important;letter-spacing:2px!important;color:var(--ob);line-height:1}
+.th{font-family:'Bebas Neue',sans-serif!important;font-size:26px!important;letter-spacing:2px!important;color:var(--ob);line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cnt-pill{flex-shrink:0;display:none;align-items:center;justify-content:center;font-family:"Plus Jakarta Sans",sans-serif;font-size:12px;font-weight:800;color:var(--opc);background:var(--pc);padding:0 9px;height:22px;border-radius:11px;white-space:nowrap}
+.cnt-pill.show{display:inline-flex}
+.cbadge-txt{width:100%;height:100%;align-items:center;justify-content:center;font-family:"Plus Jakarta Sans",sans-serif;font-size:15px;font-weight:800;color:#fff;letter-spacing:.2px}
 .ibtn{width:40px;height:40px;border-radius:50%;border:none;background:var(--s1);color:var(--os);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background .2s;position:relative;padding:0}
 .ibtn:active{background:var(--s2)}
 .ndot{position:absolute;top:7px;right:7px;width:8px;height:8px;border-radius:50%;background:#059669;border:2px solid var(--bg)}
@@ -175,8 +177,9 @@ html,body{font-family:"Plus Jakarta Sans",sans-serif;}
     <a href="../index.html" class="ihome">🏠</a>
     <div class="ttl">
       <div class="tlbl">FamilyHub</div>
-      <div class="th">📦 Mes colis <span id="totalBadge" style="font-size:14px;font-weight:400;color:var(--osv)"></span></div>
+      <div class="th">📦 Mes colis</div>
     </div>
+    <span id="totalBadge" class="cnt-pill"></span>
     <button class="ibtn" data-action="forceTrack" id="btn-track" title="Forcer scraping">🔄</button>
     <button id="btn-sync" class="ibtn" data-action="openSync" title="BDD / Sync">⟳<div class="ndot" id="sd" style="display:none"></div><div id="syncDot" style="position:absolute;bottom:6px;right:6px;width:7px;height:7px;border-radius:50%;background:#22c55e;border:1.5px solid var(--bg)"></div></button>
     <button class="ibtn" id="thbtn" data-action="toggleTheme">🌙</button>
@@ -296,16 +299,6 @@ html,body{font-family:"Plus Jakarta Sans",sans-serif;}
   </div>
 </div>
 
-<div class="sov" id="shQR">
-  <div class="sht" style="text-align:center">
-    <div class="shnd" data-action="closeSheet" data-target="shQR"></div>
-    <div class="shtit" id="qrT">QR Code</div>
-    <div id="qrB" style="padding:8px 0"></div>
-    <div style="font-family:'Fragment Mono',monospace;font-size:14px;color:var(--osv);margin-bottom:16px" id="qrV"></div>
-    <button class="bout" data-action="closeSheet" data-target="shQR">Fermer</button>
-  </div>
-</div>
-
 <script>
 'use strict';
 // ─── CAPACITOR PUSH NOTIFICATIONS ────────────────────────────────────────────
@@ -364,7 +357,13 @@ var EM={chronopost:'🔵',chronofresh:'❄️',mondialrelay:'🔴',colissimo:'�
 function esc(s){if(!s)return'';return String(s).replace(/&/g,'&'+"amp;").replace(/</g,'&'+"lt;").replace(/>/g,'&'+"gt;").replace(/"/g,'&'+"quot;").replace(/'/g,'&'+"#39;");}
 function escAttr(s){if(!s)return'';return String(s).replace(/&/g,'&'+"amp;").replace(/'/g,'&'+"#39;").replace(/"/g,'&'+"quot;").replace(/</g,'&'+"lt;").replace(/>/g,'&'+"gt;").replace(/[\r\n]+/g,' ');}
 // FIX 1: emoji uniquement (fiable dans WebView Android, pas de chargement externe)
-function carrierLogo(c,size){return EM[c]||'📦';}
+var CBADGE={chronopost:'CP',chronofresh:'CF',mondialrelay:'MR',colissimo:'CO',laposte:'LP',vintedgo:'VG',amazon:'AMZ',dpd:'DPD',ups:'UPS',gls:'GLS',relaiscolis:'RC',other:'?'};
+function carrierLogo(c){
+  var k=c||'other';
+  var txt=esc(CBADGE[k]||k.substring(0,3).toUpperCase());
+  return '<img src="../icons/carriers/'+k+'.png" alt="" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'" style="width:100%;height:100%;object-fit:contain;border-radius:inherit">'+
+    '<span class="cbadge-txt" style="display:none">'+txt+'</span>';
+}
 
 function loadD(){try{var d=JSON.parse(localStorage.getItem(SK));if(d&&d.packages){d.packages.forEach(function(p){if(typeof p.id==='number')p.id=Math.round(p.id);if(typeof p.events==='string'){try{p.events=JSON.parse(p.events);}catch(e){p.events=[];}}if(!Array.isArray(p.events))p.events=[];});return d;}}catch(e){}return{packages:[],nextId:1,lastSync:null};}
 function saveD(d){localStorage.setItem(SK,JSON.stringify(d));}
@@ -490,7 +489,7 @@ function fbU(p){var c=getFB();return'https://firestore.googleapis.com/v1/project
 function toF(o){var f={};Object.entries(o).forEach(function(kv){var k=kv[0],v=kv[1];if(v==null)return;if(typeof v==='string')f[k]={stringValue:v};else if(typeof v==='number')f[k]={doubleValue:v};else if(typeof v==='boolean')f[k]={booleanValue:v};});return f;}
 function frD(doc){var o={};if(!doc.fields)return o;Object.entries(doc.fields).forEach(function(kv){var k=kv[0],v=kv[1];if(v.stringValue!==undefined)o[k]=v.stringValue;else if(v.doubleValue!==undefined)o[k]=v.doubleValue;else if(v.integerValue!==undefined)o[k]=parseInt(v.integerValue);else if(v.booleanValue!==undefined)o[k]=v.booleanValue;else if(v.arrayValue!==undefined){o[k]=(v.arrayValue.values||[]).map(function(item){if(item.stringValue!==undefined){try{return JSON.parse(item.stringValue);}catch(e){return item.stringValue;}}if(item.mapValue)return frD(item.mapValue);return'';});}else o[k]='';});return o;}
 function normalizePackage(p){if(typeof p.id==='number')p.id=Math.round(p.id);if(typeof p.events==='string'){try{p.events=JSON.parse(p.events);}catch(e){p.events=[];}}if(!Array.isArray(p.events))p.events=[];return p;}
-// FIX 8: identite stable anti-collision - _fbId est toujours unique (ID doc Firestore), jamais NaN contrairement a p.id sur import Gmail
+// FIX 9: identite stable anti-collision - _fbId est toujours unique (ID doc Firestore), jamais NaN contrairement a p.id sur import Gmail
 function pkgKey(p){return(p&&p._fbId!=null&&p._fbId!=='')?String(p._fbId):String(p&&p.id);}
 async function fbW(id,obj){var u=fbU('colis/'+id);var w=Object.assign({},obj);delete w.photo;await fetch(u,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({fields:toF(w)}),redirect:'follow'}).catch(function(){});}
 async function fbDel(id){await fetch(fbU('colis/'+id),{method:'DELETE',redirect:'follow'}).catch(function(){});}
@@ -732,7 +731,10 @@ function updBadges(){
   var tb=document.getElementById('totalBadge');
   var rCount=countFilt(function(x){return x.status==='ready';});
   var total=countFilt(function(x){return true;});
-  if(tb)tb.textContent=rCount>0?rCount+' à retirer':total>0?total+' colis':'';
+  if(tb){
+    if(rCount>0){tb.textContent=rCount;tb.classList.add('show');tb.title=rCount+' à retirer';}
+    else{tb.textContent='';tb.classList.remove('show');tb.removeAttribute('title');}
+  }
   var cnts={bA:total,bR:rCount,bO:countFilt(function(x){return x.status==='out_for_delivery';}),bP:countFilt(function(x){return x.status==='pending';}),bF:countFilt(function(x){return x.status==='failed';}),bD:countFilt(function(x){return x.status==='delivered'||x.status==='collected';})};
   Object.entries(cnts).forEach(function(kv){var el=document.getElementById(kv[0]);if(el)el.textContent=kv[1];});
   document.querySelectorAll('.chip[data-filter]').forEach(function(chip){
@@ -784,13 +786,13 @@ function render(){
 
     // ── NOM du transporteur avec fallback ──
     var _carrierName=esc(LB[p.carrier]||p.carrier||'Transporteur');
-    // FIX 8: cle DOM stable anti-collision (remplace p.id, source de doublons NaN)
+    // FIX 9: cle DOM stable anti-collision (remplace p.id, source de doublons NaN)
     var _pk=pkgKey(p);
 
     return '<div class="pcard" id="pc'+_pk+'" data-action="tog" data-id="'+_pk+'" style="animation-delay:'+i*.03+'s">'+
       '<div class="ptint" style="background:'+color+'"></div>'+
       '<div class="phdr">'+
-        '<div class="cbadge" style="background:'+color+'18;display:flex;align-items:center;justify-content:center;font-size:22px">'+carrierLogo(p.carrier,26)+'</div>'+
+        '<div class="cbadge" style="background:'+color+'18">'+carrierLogo(p.carrier)+'</div>'+
         '<div class="pht">'+
           '<div class="pcname">'+_carrierName+'</div>'+
           (sum?'<div class="pinline">'+sum+'</div>':'')+
@@ -819,7 +821,6 @@ function render(){
           // FIX 4: historique dédupliqué (_evts filtre les statuts consécutifs identiques)
           (_evts.length?'<div class="tl"><div class="tlhd">Historique</div>'+_evts.map(function(ev,j){return'<div class="tli"><div class="tld '+(j===0?'now':'old')+'">'+( j===0?'●':'·')+'</div><div class="tlc"><div class="tlst">'+sLbl(ev.status)+'</div><div class="tldt">'+fShort(ev.date)+'</div></div></div>';}).join('')+'</div>':'')+
           '<div class="pacts">'+
-            ((p.pickupCode||p.trackingNum)?'<button class="act fl" data-action="showQR" data-id="'+_pk+'">📱 QR</button>':'')+
             (p.gmailLink?'<a class="act" href="'+p.gmailLink+'" target="_blank" rel="noopener" data-action="stopProp">📧</a>':'')+
             '<button class="act sh" data-action="shareP" data-id="'+_pk+'">↗ Partager</button>'+
             '<button class="act" data-action="copyAll" data-id="'+_pk+'">📋 Tout copier</button>'+
@@ -854,17 +855,6 @@ function tog(id){
   b.setAttribute('data-open',isOpen?'0':'1');
   card.classList.toggle('open',!isOpen);
   if(isOpen)openCardIds.delete(sid);else openCardIds.add(sid);
-}
-
-// ─── QR ────────────────────────────────────────────────────────────────────────
-function showQR(id){
-  var p=D.packages.find(function(x){return pkgKey(x)===id;});if(!p)return;
-  var val=p.pickupCode||p.trackingNum||'';if(!val){showToast('Aucune donnée QR');return;}
-  document.getElementById('qrT').textContent=LB[p.carrier]||p.carrier;
-  document.getElementById('qrV').textContent=val;
-  document.getElementById('qrB').innerHTML='';
-  new QRCode(document.getElementById('qrB'),{text:val,width:200,height:200,colorDark:'#000',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.M});
-  openSheet('shQR');
 }
 
 // ─── SYNC PANEL ───────────────────────────────────────────────────────────────
@@ -925,10 +915,39 @@ async function saveTrCf(){
   var ok=await writeTrCfgToFirestore(nc);
   if(!ok&&getFB().apiKey)showToast('⚠️ Sync Firestore échouée (sauvegardé en local)');
 }
+// ─── APP SETTINGS SYNC (purge + webhook, partagé Firestore meta/appSettings) ──
+var APPCFG_PATH='meta/appSettings';
+async function fetchAppSettingsFromFirestore(){
+  var cfg=getFB();if(!cfg.apiKey)return null;
+  try{
+    var url='https://firestore.googleapis.com/v1/projects/'+cfg.projectId+'/databases/(default)/documents/'+APPCFG_PATH+'?key='+cfg.apiKey;
+    var r=await fetch(url,{redirect:'follow'});
+    if(!r.ok)return null;
+    var d=await r.json();var f=d.fields||{};
+    return{
+      purgeDays:(f.purgeDays&&f.purgeDays.integerValue!==undefined)?parseInt(f.purgeDays.integerValue):null,
+      trackerWh:(f.trackerWh&&f.trackerWh.stringValue)||null
+    };
+  }catch(e){return null;}
+}
+async function writeAppSettingsToFirestore(obj){
+  var cfg=getFB();if(!cfg.apiKey)return false;
+  try{
+    var fields={};
+    if(obj.purgeDays!==undefined)fields.purgeDays={integerValue:String(obj.purgeDays)};
+    if(obj.trackerWh!==undefined)fields.trackerWh={stringValue:obj.trackerWh};
+    if(!Object.keys(fields).length)return false;
+    var url='https://firestore.googleapis.com/v1/projects/'+cfg.projectId+'/databases/(default)/documents/'+APPCFG_PATH+'?key='+cfg.apiKey;
+    Object.keys(fields).forEach(function(k){url+='&updateMask.fieldPaths='+encodeURIComponent(k);});
+    var r=await fetch(url,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({fields:fields})});
+    return r.ok;
+  }catch(e){return false;}
+}
 function savePurgeDays(){
   var el=document.getElementById('cfgPurgeDays');if(!el)return;
   var v=parseInt(el.value,10);if(isNaN(v)||v<1){showToast('⚠️ Valeur invalide');return;}
   setPurgeDays(v);showToast('✓ Purge : '+v+' jours');
+  writeAppSettingsToFirestore({purgeDays:v}).then(function(ok){if(!ok&&getFB().apiKey)showToast('⚠️ Sync Firestore échouée (local OK)');});
 }
 function bindPurgeCfg(){var el=document.getElementById('cfgPurgeDays');if(el)el.value=getPurgeDays();}
 function bindTrackerWh(){var el=document.getElementById('cfgTrackerWh');if(el)el.value=localStorage.getItem(TRACKER_WH_KEY)||'';}
@@ -954,8 +973,18 @@ function saveTrackerWh(){
   var el=document.getElementById('cfgTrackerWh');if(!el)return;
   var v=el.value.trim();if(!v){showToast('⚠️ URL vide');return;}
   localStorage.setItem(TRACKER_WH_KEY,v);showToast('✅ URL webhook enregistrée');
+  writeAppSettingsToFirestore({trackerWh:v}).then(function(ok){if(!ok&&getFB().apiKey)showToast('⚠️ Sync Firestore échouée (local OK)');});
 }
-function resetAll(){if(!confirm('Supprimer TOUS les colis ?'))return;D={packages:[],nextId:1,lastSync:null};openCardIds.clear();saveD(D);render();closeSheet('shSync');showToast('✓ Réinitialisé');}
+async function resetAll(){
+  if(!confirm('Supprimer TOUS les colis (local + Firebase) ?'))return;
+  showToast('⏳ Suppression en cours…');
+  try{
+    var remote=await fbAll();
+    await Promise.all(remote.map(function(p){return fbDel(p._fbId);}));
+  }catch(e){}
+  D={packages:[],nextId:1,lastSync:null};openCardIds.clear();saveD(D);render();closeSheet('shSync');
+  showToast('✓ Réinitialisé (local + Firebase)');
+}
 function toggleCarrier(c){
   var cur=getTrCfg(c);
   var nc=Object.assign({},_trCfg);
@@ -1035,7 +1064,6 @@ document.addEventListener('click',function(e){
     case 'toggleCarrier': e.stopPropagation();toggleCarrier(ds.carrier); break;
     case 'tog': e.stopPropagation();tog(ds.id); break;
     case 'cpT': e.stopPropagation();cpT(ds.val,ds.lbl); break;
-    case 'showQR': e.stopPropagation();showQR(ds.id); break;
     case 'shareP': e.stopPropagation();shareP(ds.id); break;
     case 'copyAll': e.stopPropagation();copyAll(ds.id); break;
     case 'markDone': e.stopPropagation();markDone(ds.id); break;
@@ -1074,6 +1102,12 @@ setTimeout(initPush,2000);
 (async function initTrCfg(){
   var remote=await fetchTrCfgFromFirestore();
   if(remote){saveTrCfgCache(remote);render();}
+})();
+(async function initAppSettings(){
+  var remote=await fetchAppSettingsFromFirestore();
+  if(!remote)return;
+  if(remote.purgeDays){setPurgeDays(remote.purgeDays);var el=document.getElementById('cfgPurgeDays');if(el)el.value=remote.purgeDays;}
+  if(remote.trackerWh){localStorage.setItem(TRACKER_WH_KEY,remote.trackerWh);var el2=document.getElementById('cfgTrackerWh');if(el2)el2.value=remote.trackerWh;}
 })();
 
 // FIX 7: subscriber protège les statuts terminaux locaux (expired/collected)

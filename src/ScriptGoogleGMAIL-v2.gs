@@ -1,6 +1,7 @@
 // ═══════════════════════════════════════════════════
 //  FamilyHub — Sync Gmail → Firebase (Optimisé v2.4)
 //  Compte : Guillaume Dieul.
+//  V4 — FIX 12/07/2026 (bug "Dernier sync Gmail" toujours vide)
 //  FIX CRITIQUE v2.2 : ajout de updateMask sur les writes batch
 //  (:commit). Sans ce champ, chaque "update" REMPLACE le document
 //  entier par les seuls champs du batch et efface silencieusement
@@ -8,19 +9,22 @@
 //  enrichi manuellement ou par un autre import.
 //  FIX v2.3 : gmailLink utilise désormais ?ui=2#inbox/{id}
 //  (l'ancienne URL sans ui=2 ne s'ouvrait pas correctement).
-//  FIX v2.4 (09/07/2026) — CRITIQUE : getConfig() lisait la propriété
-//  "FIREBASE_PROJECT" (n'existe pas — la vraie propriété s'appelle
-//  FIREBASE_PROJECT_ID) et retombait donc sur le projet par défaut
-//  'familyhub-colis' (SANS le suffixe -8abbd, donc un projet différent
-//  du vrai projet Firestore de l'app). Toutes les écritures de ce
-//  fichier (colis ET log meta/lastGmailSync) partaient probablement
-//  vers ce mauvais projet, d'où l'absence totale de données visibles
-//  dans le vrai Firestore. Fix : bon nom de propriété + bon défaut.
-//  De plus, le log meta/lastGmailSync n'était écrit QUE si de nouveaux
-//  colis étaient trouvés (batchWrites.length > 0) — sur la majorité des
-//  runs (rien de nouveau depuis le dernier sync) aucun log n'apparaissait,
-//  donnant l'impression que le script ne tournait jamais. Fix : le log
-//  est désormais écrit à CHAQUE exécution, y compris à 0 nouveauté.
+//  FIX v2.4 (12/07) — DEUX causes cumulées identifiées pour le bug
+//  "Dernier sync Gmail (Apps Script)" toujours vide côté app + rien
+//  en Firestore malgré des exécutions réelles (trigger + manuel) :
+//   1) getConfig() lisait la Property 'FIREBASE_PROJECT' (SANS _ID).
+//      Aucun autre script du projet Apps Script partagé n'utilise ce
+//      nom (Config.gs/_loadGlobalConfig lit 'FIREBASE_PROJECT_ID').
+//      Si la Property n'existe que sous le nom canonique, fallback
+//      silencieux vers 'familyhub-colis' (projet INEXISTANT, au lieu
+//      de 'familyhub-colis-8abbd') → toutes les écritures (colis ET
+//      log meta/lastGmailSync) partent dans le vide.
+//   2) Le log meta/lastGmailSync n'était écrit QUE si batchWrites
+//      avait au moins 1 élément. Un run sans nouveau colis (cas
+//      fréquent en horaire) n'écrivait donc jamais aucun log, même
+//      si le script tournait correctement.
+//  → getConfig() fallback multi-clés + projet par défaut correct ;
+//    log écrit à CHAQUE exécution, avec ou sans nouveau colis.
 //  Optimisations : Filtre temporel précis (Unix timestamp), suppression de l'appel fbGetExistingIds lourd
 // ═══════════════════════════════════════════════════
 
@@ -29,8 +33,12 @@ const ACCOUNT_NAME = 'Guillaume';
 function getConfig() {
   const props = PropertiesService.getScriptProperties();
   return {
-    projectId: props.getProperty('FIREBASE_PROJECT_ID') || 'familyhub-colis-8abbd',
-    apiKey: props.getProperty('FIREBASE_API_KEY') || props.getProperty('FB_API_KEY') || 'CONFIGURE_API_KEY',
+    // FIX v2.4 : 'FIREBASE_PROJECT_ID' est le nom canonique utilisé par
+    // Config.gs (_loadGlobalConfig) et partagé par les autres scripts du
+    // projet. 'FIREBASE_PROJECT' (legacy, sans _ID) gardé en 2e fallback
+    // pour compat. Défaut corrigé vers le vrai project ID.
+    projectId: props.getProperty('FIREBASE_PROJECT_ID') || props.getProperty('FIREBASE_PROJECT') || 'familyhub-colis-8abbd',
+    apiKey: props.getProperty('FIREBASE_API_KEY') || props.getProperty('TRACKER_FB_API_KEY') || props.getProperty('FB_API_KEY') || '',
   };
 }
 
@@ -234,29 +242,36 @@ function extractSender(subject, body) {
 
 function syncGmailToFirebase() {
   const config = getConfig();
-  Logger.log('Démarrage sync Gmail → Firebase pour ' + ACCOUNT_NAME);
+  // FIX v2.4 : abort explicite + log clair si la clé API est absente,
+  // au lieu de laisser chaque UrlFetchApp échouer silencieusement
+  // (muteHttpExceptions:true) sans qu'aucune trace ne soit visible.
+  if (!config.apiKey) {
+    Logger.log('❌ FIREBASE_API_KEY introuvable dans Script Properties — sync annulée. Vérifier PropertiesService (clé FIREBASE_API_KEY / TRACKER_FB_API_KEY / FB_API_KEY).');
+    return;
+  }
+  Logger.log('Démarrage sync Gmail → Firebase pour ' + ACCOUNT_NAME + ' (projet: ' + config.projectId + ')');
 
   const props = PropertiesService.getScriptProperties();
   const lastSyncTimestamp = props.getProperty('LAST_SYNC_TIMESTAMP') || '';
-
+  
   let dateFilter = ' newer_than:3d';
   if (lastSyncTimestamp) {
     const afterSeconds = Math.floor(parseInt(lastSyncTimestamp) / 1000) - 60;
     dateFilter = ` after:${afterSeconds}`;
   }
-
+  
   const query = 'subject:(colis OR pickup OR livraison OR disponible OR tracking)' + dateFilter;
   const threads = GmailApp.search(query, 0, 40);
-
+  
   let newCount = 0;
   const batchWrites = [];
-
+  
   for (const thread of threads) {
     const msgs = thread.getMessages();
     const firstFrom = (msgs[0]?.getFrom() || '').toLowerCase();
     const isKnown = CARRIERS.some(d => d.test(firstFrom, '', ''));
     if (!isKnown) continue;
-
+    
     const msg = msgs[msgs.length - 1];
     const msgId = msg.getId();
 
@@ -324,17 +339,18 @@ function syncGmailToFirebase() {
   props.setProperty('LAST_SYNC_TIMESTAMP', String(Date.now()));
   Logger.log('Sync terminée : ' + newCount + ' colis traités pour ' + ACCOUNT_NAME);
 
-  // FIX 09/07 : log désormais écrit à CHAQUE run (avant : seulement si
-  // batchWrites.length > 0, donc jamais mis à jour sur les runs "rien de
-  // neuf" — la grande majorité). C'est ce qui rendait "Dernier sync Gmail"
-  // éternellement vide dans l'app alors que le trigger tournait bien.
+  // FIX v2.4 (12/07) : le log meta/lastGmailSync était écrit UNIQUEMENT si
+  // batchWrites.length>0. Un run qui ne trouve aucun nouveau colis (cas
+  // fréquent en horaire) n'écrivait donc jamais rien → "Pas encore de log"
+  // permanent côté app malgré des exécutions réelles. Écrit désormais à
+  // CHAQUE exécution, avec ou sans nouveau colis.
   try {
     const logMsg = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd/MM/yyyy HH:mm')
-      + ' · ' + ACCOUNT_NAME + ' · ' + newCount + ' traité(s)';
+      + ' · ' + ACCOUNT_NAME + ' · ' + newCount + ' traité(s) / ' + threads.length + ' fil(s)';
     const logUrl = `https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/(default)/documents/meta/lastGmailSync?key=${config.apiKey}`
       + '&updateMask.fieldPaths=log&updateMask.fieldPaths=account&updateMask.fieldPaths=newCount&updateMask.fieldPaths=updatedAt';
 
-    UrlFetchApp.fetch(logUrl, {
+    const logResp = UrlFetchApp.fetch(logUrl, {
       method: 'PATCH',
       contentType: 'application/json',
       muteHttpExceptions: true,
@@ -347,6 +363,12 @@ function syncGmailToFirebase() {
         }
       })
     });
+    const logCode = logResp.getResponseCode();
+    if (logCode >= 400) {
+      Logger.log('❌ Écriture log meta/lastGmailSync ÉCHEC (HTTP ' + logCode + ') : ' + logResp.getContentText().slice(0, 200));
+    } else {
+      Logger.log('✅ Log meta/lastGmailSync écrit : ' + logMsg);
+    }
   } catch (e) {
     Logger.log('Erreur log Firebase : ' + e.toString());
   }

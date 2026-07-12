@@ -11,7 +11,6 @@
 <link rel="manifest" href="./manifest.json">
 <link rel="stylesheet" href="../themes.css">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fragment+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="../fbSync.js"></script>
 <script src="../theme.js"></script>
 <style>
@@ -23,6 +22,7 @@ html,body{font-family:"Plus Jakarta Sans",sans-serif;}
 .ttl{flex:1;min-width:0}
 .tlbl{font-size:10px;color:var(--osv);letter-spacing:.3px;font-weight:500}
 .th{font-family:'Bebas Neue',sans-serif!important;font-size:26px!important;letter-spacing:2px!important;color:var(--ob);line-height:1}
+.tcnt{font-size:12px;font-weight:600;color:var(--p);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ibtn{width:40px;height:40px;border-radius:50%;border:none;background:var(--s1);color:var(--os);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background .2s;position:relative;padding:0}
 .ibtn:active{background:var(--s2)}
 .ndot{position:absolute;top:7px;right:7px;width:8px;height:8px;border-radius:50%;background:#059669;border:2px solid var(--bg)}
@@ -175,7 +175,8 @@ html,body{font-family:"Plus Jakarta Sans",sans-serif;}
     <a href="../index.html" class="ihome">🏠</a>
     <div class="ttl">
       <div class="tlbl">FamilyHub</div>
-      <div class="th">📦 Mes colis <span id="totalBadge" style="font-size:14px;font-weight:400;color:var(--osv)"></span></div>
+      <div class="th">📦 Mes colis</div>
+      <div class="tcnt" id="totalBadge"></div>
     </div>
     <button class="ibtn" data-action="forceTrack" id="btn-track" title="Forcer scraping">🔄</button>
     <button id="btn-sync" class="ibtn" data-action="openSync" title="BDD / Sync">⟳<div class="ndot" id="sd" style="display:none"></div><div id="syncDot" style="position:absolute;bottom:6px;right:6px;width:7px;height:7px;border-radius:50%;background:#22c55e;border:1.5px solid var(--bg)"></div></button>
@@ -296,16 +297,6 @@ html,body{font-family:"Plus Jakarta Sans",sans-serif;}
   </div>
 </div>
 
-<div class="sov" id="shQR">
-  <div class="sht" style="text-align:center">
-    <div class="shnd" data-action="closeSheet" data-target="shQR"></div>
-    <div class="shtit" id="qrT">QR Code</div>
-    <div id="qrB" style="padding:8px 0"></div>
-    <div style="font-family:'Fragment Mono',monospace;font-size:14px;color:var(--osv);margin-bottom:16px" id="qrV"></div>
-    <button class="bout" data-action="closeSheet" data-target="shQR">Fermer</button>
-  </div>
-</div>
-
 <script>
 'use strict';
 // ─── CAPACITOR PUSH NOTIFICATIONS ────────────────────────────────────────────
@@ -363,8 +354,19 @@ var EM={chronopost:'🔵',chronofresh:'❄️',mondialrelay:'🔴',colissimo:'�
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 function esc(s){if(!s)return'';return String(s).replace(/&/g,'&'+"amp;").replace(/</g,'&'+"lt;").replace(/>/g,'&'+"gt;").replace(/"/g,'&'+"quot;").replace(/'/g,'&'+"#39;");}
 function escAttr(s){if(!s)return'';return String(s).replace(/&/g,'&'+"amp;").replace(/'/g,'&'+"#39;").replace(/"/g,'&'+"quot;").replace(/</g,'&'+"lt;").replace(/>/g,'&'+"gt;").replace(/[\r\n]+/g,' ');}
-// FIX 1: emoji uniquement (fiable dans WebView Android, pas de chargement externe)
-function carrierLogo(c,size){return EM[c]||'📦';}
+// FIX 12/07: logo transporteur PNG local + fallback emoji si absent/échec chargement
+// Placer 12 PNG dans /icons/carriers/{carrier}.png (mêmes clés que EM ci-dessus)
+function carrierLogo(c,size){
+  size=size||26;
+  var emoji=EM[c]||'📦';
+  return '<img src="../icons/carriers/'+c+'.png" alt="" style="width:'+size+'px;height:'+size+'px;object-fit:contain;display:block" onerror="this.outerHTML=&#39;'+emoji+'&#39;">';
+}
+// FIX 12/07 (régression bug1): clé stable pour data-id/lookups. _fbId est TOUJOURS
+// une string stable (id doc Firestore) contrairement à p.id, qui peut valoir NaN
+// pour les colis Gmail ("gmail_xxx" passé dans Math.round(Number(...))). Comme
+// dataset renvoie toujours une string, x.id===id (number/NaN vs string) ne
+// matchait jamais → copyAll/shareP/markDone/delPkg silencieusement cassés.
+function pkgKey(p){return p&&p._fbId?String(p._fbId):String(p&&p.id);}
 
 function loadD(){try{var d=JSON.parse(localStorage.getItem(SK));if(d&&d.packages){d.packages.forEach(function(p){if(typeof p.id==='number')p.id=Math.round(p.id);if(typeof p.events==='string'){try{p.events=JSON.parse(p.events);}catch(e){p.events=[];}}if(!Array.isArray(p.events))p.events=[];});return d;}}catch(e){}return{packages:[],nextId:1,lastSync:null};}
 function saveD(d){localStorage.setItem(SK,JSON.stringify(d));}
@@ -411,23 +413,32 @@ async function writeTrCfgToFirestore(cfgObj){
   }catch(e){return false;}
 }
 
-// ─── CONFIG APP PARTAGÉE (webhook tracker, etc. — meta/appSettings) ───────────
-async function fetchTrackerWhFromFirestore(){
+// ─── APP SETTINGS (purge jours + webhook tracker) synced Firestore meta/appSettings ──
+var APPSET_DOC='meta/appSettings';
+async function fetchAppSettingsFromFirestore(){
   var cfg=getFB();if(!cfg.apiKey)return null;
   try{
-    var url='https://firestore.googleapis.com/v1/projects/'+cfg.projectId+'/databases/(default)/documents/meta/appSettings?key='+cfg.apiKey;
+    var url='https://firestore.googleapis.com/v1/projects/'+cfg.projectId+'/databases/(default)/documents/'+APPSET_DOC+'?key='+cfg.apiKey;
     var r=await fetch(url,{redirect:'follow'});
     if(!r.ok)return null;
     var d=await r.json();
-    var f=d.fields&&d.fields.trackerWebhook;
-    return(f&&f.stringValue)?f.stringValue:null;
+    var out={};
+    if(d.fields&&d.fields.purgeDays&&d.fields.purgeDays.integerValue!==undefined)out.purgeDays=parseInt(d.fields.purgeDays.integerValue);
+    if(d.fields&&d.fields.trackerWebhookUrl&&d.fields.trackerWebhookUrl.stringValue)out.trackerWebhookUrl=d.fields.trackerWebhookUrl.stringValue;
+    return out;
   }catch(e){return null;}
 }
-async function writeTrackerWhToFirestore(wh){
+async function writeAppSettingsToFirestore(fields){
   var cfg=getFB();if(!cfg.apiKey)return false;
   try{
-    var url='https://firestore.googleapis.com/v1/projects/'+cfg.projectId+'/databases/(default)/documents/meta/appSettings?key='+cfg.apiKey+'&updateMask.fieldPaths=trackerWebhook';
-    var r=await fetch(url,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({fields:{trackerWebhook:{stringValue:wh}}})});
+    var f={};
+    Object.keys(fields).forEach(function(k){
+      var v=fields[k];
+      f[k]=(typeof v==='number')?{integerValue:String(Math.round(v))}:{stringValue:String(v)};
+    });
+    var url='https://firestore.googleapis.com/v1/projects/'+cfg.projectId+'/databases/(default)/documents/'+APPSET_DOC+'?key='+cfg.apiKey;
+    Object.keys(f).forEach(function(k){url+='&updateMask.fieldPaths='+encodeURIComponent(k);});
+    var r=await fetch(url,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({fields:f})});
     return r.ok;
   }catch(e){return false;}
 }
@@ -531,7 +542,7 @@ async function syncFB(){
         // FIX 7: ne pas écraser un statut terminal local (expired/collected) avec remote
         if(p.status&&p.status!==ex.status&&['collected','expired'].indexOf(ex.status)<0)ex.status=p.status;
         if((p.lastUpdated||'')>(ex.lastUpdated||'')){ex.pickupCode=p.pickupCode||ex.pickupCode;ex.lockerAddress=p.lockerAddress||ex.lockerAddress;ex.deliverySlot=p.deliverySlot||ex.deliverySlot;ex.trackingLink=p.trackingLink||ex.trackingLink;ex.trackingNum=p.trackingNum||ex.trackingNum;if(p.events&&p.events.length)ex.events=p.events;}
-      }else{if(!p.id)p.id=D.nextId++;else p.id=Math.round(Number(p.id));D.packages.unshift(p);n++;}
+      }else{if(!p.id)p.id=D.nextId++;else{var _n=Math.round(Number(p.id));p.id=isNaN(_n)?D.nextId++:_n;}D.packages.unshift(p);n++;}
     });
     D.lastSync=new Date().toISOString();purge();saveD(D);render();
     if(pg){pg.style.transition='width 0.3s';pg.style.width='100%';}
@@ -672,7 +683,7 @@ function addPkg(){
 
 // ─── ACTIONS COLIS ─────────────────────────────────────────────────────────────
 function markDone(id){
-  var p=D.packages.find(function(x){return x.id===id;});if(!p)return;
+  var p=D.packages.find(function(x){return pkgKey(x)===id;});if(!p)return;
   p.status='collected';
   if(!p.events)p.events=[];
   p.events.unshift({date:new Date().toISOString(),status:'collected',desc:''});
@@ -681,11 +692,11 @@ function markDone(id){
   showToast('✓ Récupéré');
 }
 function delPkg(id){
-  openCardIds.delete(String(id)); // FIX: nettoie le Set
+  openCardIds.delete(id);
   if(!confirm('Supprimer ?'))return;
-  var p=D.packages.find(function(x){return x.id===id;});
+  var p=D.packages.find(function(x){return pkgKey(x)===id;});
   if(p&&p._fbId)FBSync.delete('colis',p._fbId);
-  D.packages=D.packages.filter(function(x){return x.id!==id;});
+  D.packages=D.packages.filter(function(x){return pkgKey(x)!==id;});
   saveD(D);render();
 }
 function cpT(txt,lbl){
@@ -694,13 +705,15 @@ function cpT(txt,lbl){
   else{var t=document.createElement('textarea');t.value=txt;t.style.cssText='position:fixed;opacity:0';document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);showToast('📋 '+lbl+' copié');}
 }
 function copyAll(id){
-  var p=D.packages.find(function(x){return x.id===id;});if(!p)return;
-  var parts=[LB[p.carrier]||p.carrier,p.trackingNum?'N° : '+p.trackingNum:'',p.pickupCode?'Code : '+p.pickupCode:'',p.lockerAddress?p.lockerAddress:'',p.expiryDate?'Expire le '+fFull(p.expiryDate):'',p.trackingLink||''].filter(Boolean).join('\n');
+  var p=D.packages.find(function(x){return pkgKey(x)===id;});if(!p)return;
+  var _tLink=p.trackingLink||buildTrackingUrl(p.carrier,p.trackingNum);
+  var parts=[LB[p.carrier]||p.carrier,p.trackingNum?'N° : '+p.trackingNum:'',p.pickupCode?'Code : '+p.pickupCode:'',p.lockerAddress?p.lockerAddress:'',p.expiryDate?'Expire le '+fFull(p.expiryDate):'',_tLink||''].filter(Boolean).join('\n');
   cpT(parts,'Infos colis');
 }
 function shareP(id){
-  var p=D.packages.find(function(x){return x.id===id;});if(!p)return;
-  var lines=['📦 '+(LB[p.carrier]||p.carrier||'Colis'),p.trackingNum?'N° : '+p.trackingNum:'',p.pickupCode?'Code : '+p.pickupCode:'',p.lockerAddress?'📍 '+p.lockerAddress:'',p.expiryDate?'⏰ Expire le '+fFull(p.expiryDate):'',p.trackingLink?'🔗 '+p.trackingLink:''].filter(Boolean);
+  var p=D.packages.find(function(x){return pkgKey(x)===id;});if(!p)return;
+  var _tLink=p.trackingLink||buildTrackingUrl(p.carrier,p.trackingNum);
+  var lines=['📦 '+(LB[p.carrier]||p.carrier||'Colis'),p.trackingNum?'N° : '+p.trackingNum:'',p.pickupCode?'Code : '+p.pickupCode:'',p.lockerAddress?'📍 '+p.lockerAddress:'',p.expiryDate?'⏰ Expire le '+fFull(p.expiryDate):'',_tLink?'🔗 '+_tLink:''].filter(Boolean);
   var text=lines.join('\n');
   if(navigator.share)navigator.share({title:'Colis',text:text}).catch(function(){});else cpT(text,'Infos');
 }
@@ -803,8 +816,9 @@ function render(){
 
     // ── NOM du transporteur avec fallback ──
     var _carrierName=esc(LB[p.carrier]||p.carrier||'Transporteur');
+    var _pk=pkgKey(p);
 
-    return '<div class="pcard" id="pc'+p.id+'" data-action="tog" data-id="'+p.id+'" style="animation-delay:'+i*.03+'s">'+
+    return '<div class="pcard" id="pc-'+_pk+'" data-action="tog" data-id="'+_pk+'" style="animation-delay:'+i*.03+'s">'+
       '<div class="ptint" style="background:'+color+'"></div>'+
       '<div class="phdr">'+
         '<div class="cbadge" style="background:'+color+'18;display:flex;align-items:center;justify-content:center;font-size:22px">'+carrierLogo(p.carrier,26)+'</div>'+
@@ -819,7 +833,7 @@ function render(){
           '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;background:'+_accBg+';color:'+_accCl+'">'+_accLbl+'</span>'+
         '</div>'+
       '</div>'+
-      '<div id="pb'+p.id+'" style="display:none">'+
+      '<div id="pb-'+_pk+'" style="display:none">'+
         '<div class="pbdy">'+
           '<div class="div"></div>'+
           // FIX 2: objet email affiché quand aucun numéro/code/adresse
@@ -836,22 +850,21 @@ function render(){
           // FIX 4: historique dédupliqué (_evts filtre les statuts consécutifs identiques)
           (_evts.length?'<div class="tl"><div class="tlhd">Historique</div>'+_evts.map(function(ev,j){return'<div class="tli"><div class="tld '+(j===0?'now':'old')+'">'+( j===0?'●':'·')+'</div><div class="tlc"><div class="tlst">'+sLbl(ev.status)+'</div><div class="tldt">'+fShort(ev.date)+'</div></div></div>';}).join('')+'</div>':'')+
           '<div class="pacts">'+
-            ((p.pickupCode||p.trackingNum)?'<button class="act fl" data-action="showQR" data-id="'+p.id+'">📱 QR</button>':'')+
             (p.gmailLink?'<a class="act" href="'+p.gmailLink+'" target="_blank" rel="noopener" data-action="stopProp">📧</a>':'')+
-            '<button class="act sh" data-action="shareP" data-id="'+p.id+'">↗ Partager</button>'+
-            '<button class="act" data-action="copyAll" data-id="'+p.id+'">📋 Tout copier</button>'+
-            (p.status!=='collected'&&p.status!=='delivered'?'<button class="act gn" data-action="markDone" data-id="'+p.id+'">✓ Récupéré</button>':'')+
-            '<button class="act rd" data-action="delPkg" data-id="'+p.id+'">🗑</button>'+
+            '<button class="act sh" data-action="shareP" data-id="'+_pk+'">↗ Partager</button>'+
+            '<button class="act" data-action="copyAll" data-id="'+_pk+'">📋 Tout copier</button>'+
+            (p.status!=='collected'&&p.status!=='delivered'?'<button class="act gn" data-action="markDone" data-id="'+_pk+'">✓ Récupéré</button>':'')+
+            '<button class="act rd" data-action="delPkg" data-id="'+_pk+'">🗑</button>'+
           '</div>'+
         '</div>'+
       '</div>'+
     '</div>';
   }).join('');
 
-  // FIX 1: restaurer les cartes ouvertes après re-render (résiste au polling 5s)
+  // FIX 1: restaurer les cartes ouvertes après re-render (résiste au polling)
   openCardIds.forEach(function(sid){
-    var b=document.getElementById('pb'+sid);
-    var card=document.getElementById('pc'+sid);
+    var b=document.getElementById('pb-'+sid);
+    var card=document.getElementById('pc-'+sid);
     if(b&&card){
       b.style.display='block';
       b.setAttribute('data-open','1');
@@ -863,25 +876,14 @@ function render(){
 // FIX 1: tog() mémorise l'état ouvert dans openCardIds
 function tog(id){
   var sid=String(id);
-  var b=document.getElementById('pb'+sid);
-  var card=document.getElementById('pc'+sid);
+  var b=document.getElementById('pb-'+sid);
+  var card=document.getElementById('pc-'+sid);
   if(!b||!card)return;
   var isOpen=b.getAttribute('data-open')==='1';
   b.style.display=isOpen?'none':'block';
   b.setAttribute('data-open',isOpen?'0':'1');
   card.classList.toggle('open',!isOpen);
   if(isOpen)openCardIds.delete(sid);else openCardIds.add(sid);
-}
-
-// ─── QR ────────────────────────────────────────────────────────────────────────
-function showQR(id){
-  var p=D.packages.find(function(x){return x.id===id;});if(!p)return;
-  var val=p.pickupCode||p.trackingNum||'';if(!val){showToast('Aucune donnée QR');return;}
-  document.getElementById('qrT').textContent=LB[p.carrier]||p.carrier;
-  document.getElementById('qrV').textContent=val;
-  document.getElementById('qrB').innerHTML='';
-  new QRCode(document.getElementById('qrB'),{text:val,width:200,height:200,colorDark:'#000',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.M});
-  openSheet('shQR');
 }
 
 // ─── SYNC PANEL ───────────────────────────────────────────────────────────────
@@ -946,18 +948,10 @@ function savePurgeDays(){
   var el=document.getElementById('cfgPurgeDays');if(!el)return;
   var v=parseInt(el.value,10);if(isNaN(v)||v<1){showToast('⚠️ Valeur invalide');return;}
   setPurgeDays(v);showToast('✓ Purge : '+v+' jours');
+  writeAppSettingsToFirestore({purgeDays:v}).then(function(ok){if(!ok&&getFB().apiKey)showToast('⚠️ Sync Firestore échouée (local OK)');});
 }
 function bindPurgeCfg(){var el=document.getElementById('cfgPurgeDays');if(el)el.value=getPurgeDays();}
-function bindTrackerWh(){
-  var el=document.getElementById('cfgTrackerWh');
-  if(el)el.value=localStorage.getItem(TRACKER_WH_KEY)||'';
-  fetchTrackerWhFromFirestore().then(function(remote){
-    if(!remote)return;
-    localStorage.setItem(TRACKER_WH_KEY,remote);
-    var el2=document.getElementById('cfgTrackerWh');
-    if(el2&&document.activeElement!==el2)el2.value=remote;
-  });
-}
+function bindTrackerWh(){var el=document.getElementById('cfgTrackerWh');if(el)el.value=localStorage.getItem(TRACKER_WH_KEY)||'';}
 function forceTrack(){
   var wh=localStorage.getItem(TRACKER_WH_KEY);
   if(!wh){showToast('⚠️ URL webhook non configurée (Config → Tracking)');return;}
@@ -976,16 +970,26 @@ function forceTrack(){
       showToast('❌ Webhook error: '+e.message);
     });
 }
-async function saveTrackerWh(){
+function saveTrackerWh(){
   var el=document.getElementById('cfgTrackerWh');if(!el)return;
   var v=el.value.trim();if(!v){showToast('⚠️ URL vide');return;}
-  localStorage.setItem(TRACKER_WH_KEY,v);
-  showToast('✅ URL enregistrée (local)');
-  var ok=await writeTrackerWhToFirestore(v);
-  if(ok)showToast('☁️ Synchronisé Firestore');
-  else if(getFB().apiKey)showToast('⚠️ Sync Firestore échouée (local OK)');
+  localStorage.setItem(TRACKER_WH_KEY,v);showToast('✅ URL webhook enregistrée');
+  writeAppSettingsToFirestore({trackerWebhookUrl:v}).then(function(ok){if(!ok&&getFB().apiKey)showToast('⚠️ Sync Firestore échouée (local OK)');});
 }
-function resetAll(){if(!confirm('Supprimer TOUS les colis ?'))return;D={packages:[],nextId:1,lastSync:null};openCardIds.clear();saveD(D);render();closeSheet('shSync');showToast('✓ Réinitialisé');}
+async function resetAll(){
+  if(!confirm('Supprimer TOUS les colis, y compris dans Firestore ? Action irréversible.'))return;
+  showToast('⏳ Suppression en cours…');
+  try{
+    var remote=await fbAll().catch(function(){return [];});
+    var ids={};
+    remote.forEach(function(p){if(p._fbId)ids[p._fbId]=1;});
+    D.packages.forEach(function(p){if(p._fbId)ids[p._fbId]=1;});
+    var keys=Object.keys(ids);
+    await Promise.all(keys.map(function(k){return fbDel(k);}));
+    D={packages:[],nextId:1,lastSync:null};openCardIds.clear();saveD(D);render();closeSheet('shSync');
+    showToast('✓ Réinitialisé ('+keys.length+' supprimé(s) Firestore)');
+  }catch(e){showToast('❌ Erreur: '+(e.message||e));}
+}
 function toggleCarrier(c){
   var cur=getTrCfg(c);
   var nc=Object.assign({},_trCfg);
@@ -1065,7 +1069,6 @@ document.addEventListener('click',function(e){
     case 'toggleCarrier': e.stopPropagation();toggleCarrier(ds.carrier); break;
     case 'tog': e.stopPropagation();tog(ds.id); break;
     case 'cpT': e.stopPropagation();cpT(ds.val,ds.lbl); break;
-    case 'showQR': e.stopPropagation();showQR(ds.id); break;
     case 'shareP': e.stopPropagation();shareP(ds.id); break;
     case 'copyAll': e.stopPropagation();copyAll(ds.id); break;
     case 'markDone': e.stopPropagation();markDone(ds.id); break;
@@ -1105,9 +1108,11 @@ setTimeout(initPush,2000);
   var remote=await fetchTrCfgFromFirestore();
   if(remote){saveTrCfgCache(remote);render();}
 })();
-(async function initTrackerWh(){
-  var remote=await fetchTrackerWhFromFirestore();
-  if(remote)localStorage.setItem(TRACKER_WH_KEY,remote);
+(async function initAppSettings(){
+  var remote=await fetchAppSettingsFromFirestore();
+  if(!remote)return;
+  if(remote.purgeDays){setPurgeDays(remote.purgeDays);bindPurgeCfg();}
+  if(remote.trackerWebhookUrl){localStorage.setItem(TRACKER_WH_KEY,remote.trackerWebhookUrl);bindTrackerWh();}
 })();
 
 // FIX 7: subscriber protège les statuts terminaux locaux (expired/collected)
@@ -1121,7 +1126,7 @@ FBSync.subscribe('colis', function(docs) {
       // Ne pas écraser expired/collected avec un statut distant moins avancé
       if(p.status&&p.status!==ex.status&&['collected','expired'].indexOf(ex.status)<0)ex.status=p.status;
       if((p.lastUpdated||'')>(ex.lastUpdated||'')){ex.pickupCode=p.pickupCode||ex.pickupCode;ex.lockerAddress=p.lockerAddress||ex.lockerAddress;ex.deliverySlot=p.deliverySlot||ex.deliverySlot;ex.trackingLink=p.trackingLink||ex.trackingLink;ex.trackingNum=p.trackingNum||ex.trackingNum;if(p.events&&p.events.length)ex.events=p.events;}
-    }else{if(!p.id)p.id=D.nextId++;else p.id=Math.round(Number(p.id));D.packages.unshift(p);n++;}
+    }else{if(!p.id)p.id=D.nextId++;else{var _n=Math.round(Number(p.id));p.id=isNaN(_n)?D.nextId++:_n;}D.packages.unshift(p);n++;}
   });
   if(n>0){purge();saveD(D);render();document.getElementById('sd').style.display='block';}
   updLs();

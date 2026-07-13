@@ -1,6 +1,6 @@
 # Journal de Projet — FamilyHub v2
 
-**Dernière mise à jour** : 04 juillet 2026  
+**Dernière mise à jour** : 13 juillet 2026  
 **Repo** : https://github.com/guillaumedieul-dawa/PWA-Claude  
 **Firebase** : `familyhub-colis-8abbd`
 
@@ -290,6 +290,26 @@ Deux causes cumulées dans `ScriptGoogleGMAIL-v2.gs` :
 
 ---
 
+## 🔧 Patch 13/07/2026 — Logos transporteurs mutualisés dans la sheet "Nouveau colis"
+
+### Bug corrigé
+
+Le patch du 12/07 avait introduit `carrierLogo()` (PNG + fallback emoji) uniquement dans le rendu des cartes colis (`.cbadge`). La sheet d'ajout (`shAdd` → grid `.cgrid`) restait en dur avec les 12 emoji couleur d'origine — jamais mise à jour, donc incohérente avec la liste.
+
+**Fix** : `.cgrid` n'est plus généré en HTML statique. Conteneur vide `<div class="cgrid" id="carrierGrid">`, peuplé par `renderCarrierGrid()` qui appelle **le même** `carrierLogo()` que les cartes (mutualisation totale, aucune duplication du couple PNG/emoji). Ordre d'affichage et libellés préservés via deux nouvelles constantes : `CGO` (ordre des 12 transporteurs) et `LBS` (libellé court, ex. "M. Relay" au lieu de "Mondial Relay" pour tenir dans la grille 3 colonnes — dérivé de `LB` via `Object.assign`).
+
+`.cb span` passé de `display:block` à `display:flex;justify-content:center;align-items:center;min-height:26px` : l'ancien emoji texte était centré par `text-align` du parent, mais un `<img display:block>` ne l'est pas — centrage refait en flex.
+
+`renderCarrierGrid()` appelé une fois à l'init (grid statique, pas de dépendance aux données colis).
+
+### Fichiers modifiés
+`locker-tracker/index.html`
+
+### Non modifié / vérifié sans impact
+Aucun autre fichier ne référence `.cgrid` ou `carrierLogo()`.
+
+---
+
 ## 🔑 Règles techniques critiques
 
 | Règle | Détail |
@@ -309,6 +329,7 @@ Deux causes cumulées dans `ScriptGoogleGMAIL-v2.gs` :
 | Liens de suivi | Ne jamais stocker un `trackingLink` tokenisé court-terme en dur — filtrer par `isStableLink()`/`_isStableTrackingLink()`. Résolution toujours via `resolveTrackingLink()`/fallback `buildTrackingUrl()`. |
 | **Properties Apps Script partagées** | Un seul jeu de noms canonique à travers tous les `.gs` du projet partagé : `FIREBASE_PROJECT_ID` (pas `FIREBASE_PROJECT`) + `FIREBASE_API_KEY`. Chaque script doit fallback sur les variantes legacy (`TRACKER_FB_API_KEY`, `FB_API_KEY`) mais ne doit **jamais** introduire un nouveau nom de Property sans vérifier les autres fichiers du projet. Cause du bug log Gmail vide le 12/07. |
 | **Baseline patch** | Toujours confirmer la source des fichiers avant patch (ZIP joint vs project knowledge) — écart déjà constaté le 12/07 entre mémoire long-terme et fichiers réels. |
+| **Icônes transporteur** | Un seul point de vérité : `carrierLogo(carrier,size)`. Tout nouveau badge/pastille transporteur (liste, formulaires, futurs écrans) doit l'appeler — jamais d'emoji ou de couleur hardcodée en HTML. Oubli déjà constaté une fois (grid `shAdd` non mise à jour lors de l'introduction des PNG le 12/07, corrigé le 13/07). |
 
 ---
 
@@ -359,4 +380,4 @@ Deux causes cumulées dans `ScriptGoogleGMAIL-v2.gs` :
 
 ---
 
-**Fin du journal. Dernière modification : 12 juillet 2026**
+**Fin du journal. Dernière modification : 13 juillet 2026**

@@ -112,7 +112,7 @@ html,body{font-family:"Plus Jakarta Sans",sans-serif;}
 .row2>*{flex:1}
 .cgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}
 .cb{padding:12px 6px;border-radius:var(--rm);border:1px solid var(--olv);background:var(--s1);cursor:pointer;text-align:center;transition:all .2s}
-.cb span{font-size:22px;display:block;margin-bottom:4px}
+.cb span{font-size:22px;display:flex;align-items:center;justify-content:center;min-height:26px;margin-bottom:4px}
 .cb p{font-family:"Plus Jakarta Sans",sans-serif;font-size:11px;font-weight:500;color:var(--osv)}
 .cb.sel{background:var(--pc);border-color:var(--p)}
 .cb.sel p{color:var(--opc)}
@@ -209,20 +209,7 @@ html,body{font-family:"Plus Jakarta Sans",sans-serif;}
     <div class="shnd" data-action="closeSheet" data-target="shAdd"></div>
     <div class="shtit">Nouveau colis</div>
     <div class="slbl ft">Transporteur</div>
-    <div class="cgrid">
-      <div class="cb" data-action="selCarrier" data-carrier="chronopost"><span>🔵</span><p>Chronopost</p></div>
-      <div class="cb" data-action="selCarrier" data-carrier="colissimo"><span>🟡</span><p>Colissimo</p></div>
-      <div class="cb" data-action="selCarrier" data-carrier="mondialrelay"><span>🔴</span><p>M. Relay</p></div>
-      <div class="cb" data-action="selCarrier" data-carrier="dpd"><span>🔶</span><p>DPD</p></div>
-      <div class="cb" data-action="selCarrier" data-carrier="ups"><span>🟤</span><p>UPS</p></div>
-      <div class="cb" data-action="selCarrier" data-carrier="gls"><span>🟢</span><p>GLS</p></div>
-      <div class="cb" data-action="selCarrier" data-carrier="relaiscolis"><span>🟠</span><p>Relais Colis</p></div>
-      <div class="cb" data-action="selCarrier" data-carrier="vintedgo"><span>💚</span><p>Vinted Go</p></div>
-      <div class="cb" data-action="selCarrier" data-carrier="laposte"><span>🟡</span><p>La Poste</p></div>
-      <div class="cb" data-action="selCarrier" data-carrier="amazon"><span>🟠</span><p>Amazon</p></div>
-      <div class="cb" data-action="selCarrier" data-carrier="chronofresh"><span>❄️</span><p>Chronofresh</p></div>
-      <div class="cb" data-action="selCarrier" data-carrier="other"><span>📦</span><p>Autre</p></div>
-    </div>
+    <div class="cgrid" id="carrierGrid"></div>
     <div class="row2">
       <div><div class="slbl ft">N° suivi</div><input class="fin" id="aT" placeholder="1ZA2E708…"></div>
       <div><div class="slbl ft">Code retrait</div><input class="fin" id="aC" placeholder="6684"></div>
@@ -350,6 +337,8 @@ var DR={chronopost:8,chronofresh:5,mondialrelay:5,colissimo:15,laposte:15,vinted
 var CL={chronopost:'#003087',chronofresh:'#005fa3',mondialrelay:'#e2001a',colissimo:'#f5c400',laposte:'#f5c400',vintedgo:'#09b1ba',amazon:'#ff9900',dpd:'#dc0032',ups:'#6b4226',gls:'#005ca9',relaiscolis:'#e8621a',other:'#888'};
 var LB={chronopost:'Chronopost',chronofresh:'Chronofresh',mondialrelay:'Mondial Relay',colissimo:'Colissimo',laposte:'La Poste',vintedgo:'Vinted Go',amazon:'Amazon',dpd:'DPD',ups:'UPS',gls:'GLS',relaiscolis:'Relais Colis',other:'Autre'};
 var EM={chronopost:'🔵',chronofresh:'❄️',mondialrelay:'🔴',colissimo:'🟡',laposte:'🟡',vintedgo:'💚',amazon:'🟠',dpd:'🔶',ups:'🟤',gls:'🟢',relaiscolis:'🟠',other:'📦'};
+var CGO=['chronopost','colissimo','mondialrelay','dpd','ups','gls','relaiscolis','vintedgo','laposte','amazon','chronofresh','other'];
+var LBS=Object.assign({},LB,{mondialrelay:'M. Relay'});
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 function esc(s){if(!s)return'';return String(s).replace(/&/g,'&'+"amp;").replace(/</g,'&'+"lt;").replace(/>/g,'&'+"gt;").replace(/"/g,'&'+"quot;").replace(/'/g,'&'+"#39;");}
@@ -360,6 +349,14 @@ function carrierLogo(c,size){
   size=size||26;
   var emoji=EM[c]||'📦';
   return '<img src="../icons/carriers/'+c+'.png" alt="" style="width:'+size+'px;height:'+size+'px;object-fit:contain;display:block" onerror="this.outerHTML=&#39;'+emoji+'&#39;">';
+}
+// FIX 13/07: grid "Nouveau colis" mutualisé sur carrierLogo() — mêmes PNG/fallback emoji que les cartes colis
+function renderCarrierGrid(){
+  var el=document.getElementById('carrierGrid');
+  if(!el)return;
+  el.innerHTML=CGO.map(function(c){
+    return '<div class="cb" data-action="selCarrier" data-carrier="'+c+'"><span>'+carrierLogo(c,26)+'</span><p>'+(LBS[c]||c)+'</p></div>';
+  }).join('');
 }
 // FIX 12/07 (régression bug1): clé stable pour data-id/lookups. _fbId est TOUJOURS
 // une string stable (id doc Firestore) contrairement à p.id, qui peut valoir NaN
@@ -1102,7 +1099,7 @@ function clearSearch(){
 
 // ─── INIT ──────────────────────────────────────────────────────────────────────
 document.querySelectorAll('.sov').forEach(function(el){el.style.display='none';});
-purge();renderSS();render();
+purge();renderSS();render();renderCarrierGrid();
 setTimeout(initPush,2000);
 (async function initTrCfg(){
   var remote=await fetchTrCfgFromFirestore();

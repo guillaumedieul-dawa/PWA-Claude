@@ -310,6 +310,21 @@ Aucun autre fichier ne référence `.cgrid` ou `carrierLogo()`.
 
 ---
 
+## 🔧 Patch 13/07/2026 (2) — Suppression bouton "Tout copier" (doublon Partager)
+
+### Changement demandé
+`copyAll` (📋 Tout copier, presse-papier) faisait doublon avec `shareP` (↗ Partager, partage natif) dans le détail colis — mêmes champs copiés.
+
+**Fix** : bouton retiré de `.pacts` ; fonction `copyAll()` + son `case` dispatcher supprimés (code mort, plus aucune référence). `.pacts` conservée en `flex-wrap:wrap` (déjà en place) : un bouton en moins → les actions restantes (📧 optionnel, ↗ Partager, ✓ Récupéré optionnel, 🗑) tiennent nativement sur une seule ligne sur la quasi-totalité des écrans ; le wrap existant sert de filet de sécurité sur écrans très étroits.
+
+### Fichiers modifiés
+`locker-tracker/index.html`
+
+### Non modifié / vérifié sans impact
+CSS `.pacts` inchangée. Aucun autre module ne référence `copyAll`.
+
+---
+
 ## 🔑 Règles techniques critiques
 
 | Règle | Détail |

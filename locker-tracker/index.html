@@ -701,12 +701,6 @@ function cpT(txt,lbl){
   if(navigator.clipboard)navigator.clipboard.writeText(txt).then(function(){showToast('📋 '+lbl+' copié');});
   else{var t=document.createElement('textarea');t.value=txt;t.style.cssText='position:fixed;opacity:0';document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);showToast('📋 '+lbl+' copié');}
 }
-function copyAll(id){
-  var p=D.packages.find(function(x){return pkgKey(x)===id;});if(!p)return;
-  var _tLink=p.trackingLink||buildTrackingUrl(p.carrier,p.trackingNum);
-  var parts=[LB[p.carrier]||p.carrier,p.trackingNum?'N° : '+p.trackingNum:'',p.pickupCode?'Code : '+p.pickupCode:'',p.lockerAddress?p.lockerAddress:'',p.expiryDate?'Expire le '+fFull(p.expiryDate):'',_tLink||''].filter(Boolean).join('\n');
-  cpT(parts,'Infos colis');
-}
 function shareP(id){
   var p=D.packages.find(function(x){return pkgKey(x)===id;});if(!p)return;
   var _tLink=p.trackingLink||buildTrackingUrl(p.carrier,p.trackingNum);
@@ -849,7 +843,6 @@ function render(){
           '<div class="pacts">'+
             (p.gmailLink?'<a class="act" href="'+p.gmailLink+'" target="_blank" rel="noopener" data-action="stopProp">📧</a>':'')+
             '<button class="act sh" data-action="shareP" data-id="'+_pk+'">↗ Partager</button>'+
-            '<button class="act" data-action="copyAll" data-id="'+_pk+'">📋 Tout copier</button>'+
             (p.status!=='collected'&&p.status!=='delivered'?'<button class="act gn" data-action="markDone" data-id="'+_pk+'">✓ Récupéré</button>':'')+
             '<button class="act rd" data-action="delPkg" data-id="'+_pk+'">🗑</button>'+
           '</div>'+
@@ -1067,7 +1060,6 @@ document.addEventListener('click',function(e){
     case 'tog': e.stopPropagation();tog(ds.id); break;
     case 'cpT': e.stopPropagation();cpT(ds.val,ds.lbl); break;
     case 'shareP': e.stopPropagation();shareP(ds.id); break;
-    case 'copyAll': e.stopPropagation();copyAll(ds.id); break;
     case 'markDone': e.stopPropagation();markDone(ds.id); break;
     case 'delPkg': e.stopPropagation();delPkg(ds.id); break;
     case 'clearSearch': clearSearch(); break;

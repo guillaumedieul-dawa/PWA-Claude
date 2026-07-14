@@ -1,6 +1,6 @@
 # Journal de Projet — FamilyHub v2
 
-**Dernière mise à jour** : 13 juillet 2026  
+**Dernière mise à jour** : 14 juillet 2026  
 **Repo** : https://github.com/guillaumedieul-dawa/PWA-Claude  
 **Firebase** : `familyhub-colis-8abbd`
 
@@ -325,7 +325,34 @@ CSS `.pacts` inchangée. Aucun autre module ne référence `copyAll`.
 
 ---
 
-## 🔑 Règles techniques critiques
+---
+
+## 🔧 Patch 14/07/2026 — Fix colis Gmail invisible malgré relance manuelle (curseur LAST_SYNC_TIMESTAMP)
+
+### Bug signalé
+Colis Colissimo n°6M22614877588 (BESSON CHAUSSURES, reçu 13/07 19:37, statut attendu "En route") invisible dans l'app sous tous les filtres. Relance manuelle de `syncGmailToFirebase()` sans effet.
+
+### Cause racine
+`LAST_SYNC_TIMESTAMP` avance à **chaque** exécution (`props.setProperty` en fin de fonction, inconditionnel), même si l'email visé n'a pas été capté ce run-là (retard d'indexation Gmail, quota, erreur transitoire...). La recherche suivante utilise `after:(LAST_SYNC_TIMESTAMP - 60s)` : la fenêtre ne fait qu'avancer, jamais reculer. Un email manqué une seule fois sort donc **définitivement** du scope de recherche pour toutes les exécutions futures — automatiques ET manuelles, puisque la relance manuelle réutilise le même curseur déjà passé devant la date de l'email. C'est le bug déjà pressenti mais jamais corrigé (cf. règle historique sur les emails sautés en re-run).
+
+### Fix `src/ScriptGoogleGMAIL-v2.gs` (v2.5)
+- Suppression totale du curseur incrémental `LAST_SYNC_TIMESTAMP` (plus de lecture ni d'écriture de cette Property).
+- Requête Gmail remplacée par une **fenêtre fixe glissante** : `newer_than:4d` (constante `GMAIL_LOOKBACK_DAYS`) à chaque exécution, horaire ou manuelle. Auto-cicatrisant : un run raté est automatiquement rattrapé par le suivant, aucun email ne peut plus être exclu définitivement.
+- `GMAIL_MAX_THREADS` porté de 40 à 80 (marge de sécurité, fenêtre élargie).
+- Sans risque de doublon/duplication : écritures déjà idempotentes (doc Firestore ID = `msgId`, PATCH avec `updateMask.fieldPaths`) — re-scanner la fenêtre ré-écrit simplement les mêmes documents à l'identique.
+
+### Action utilisateur
+Aucune côté Firestore (la Property `LAST_SYNC_TIMESTAMP` devient orpheline, sans effet — pas besoin de la supprimer manuellement). Prochaine exécution (trigger horaire ou manuelle) doit faire remonter le colis.
+
+### Fichiers modifiés
+`src/ScriptGoogleGMAIL-v2.gs`
+
+### Non modifié / vérifié sans impact
+`Code-Tracker.gs`, `Code-Import.gs`, `Code-Notif.gs`, `Config.gs`, `locker-tracker/index.html` : aucun ne lit/écrit `LAST_SYNC_TIMESTAMP` ni ne dépend de la requête Gmail de ce fichier.
+
+---
+
+
 
 | Règle | Détail |
 |-------|--------|
@@ -345,6 +372,7 @@ CSS `.pacts` inchangée. Aucun autre module ne référence `copyAll`.
 | **Properties Apps Script partagées** | Un seul jeu de noms canonique à travers tous les `.gs` du projet partagé : `FIREBASE_PROJECT_ID` (pas `FIREBASE_PROJECT`) + `FIREBASE_API_KEY`. Chaque script doit fallback sur les variantes legacy (`TRACKER_FB_API_KEY`, `FB_API_KEY`) mais ne doit **jamais** introduire un nouveau nom de Property sans vérifier les autres fichiers du projet. Cause du bug log Gmail vide le 12/07. |
 | **Baseline patch** | Toujours confirmer la source des fichiers avant patch (ZIP joint vs project knowledge) — écart déjà constaté le 12/07 entre mémoire long-terme et fichiers réels. |
 | **Icônes transporteur** | Un seul point de vérité : `carrierLogo(carrier,size)`. Tout nouveau badge/pastille transporteur (liste, formulaires, futurs écrans) doit l'appeler — jamais d'emoji ou de couleur hardcodée en HTML. Oubli déjà constaté une fois (grid `shAdd` non mise à jour lors de l'introduction des PNG le 12/07, corrigé le 13/07). |
+| **Curseurs incrémentaux Apps Script** | Jamais de curseur type `after:(dernierRun-marge)` qui avance inconditionnellement même en cas d'échec de capture — un item manqué une fois sort définitivement du scope, relance manuelle incluse. Préférer une fenêtre fixe glissante (`newer_than:Nj`) si les écritures cibles sont idempotentes (doc ID stable + updateMask). Cause du bug colis Gmail invisible du 14/07 (`ScriptGoogleGMAIL-v2.gs`, `LAST_SYNC_TIMESTAMP` supprimé). |
 
 ---
 
@@ -383,7 +411,7 @@ CSS `.pacts` inchangée. Aucun autre module ne référence `copyAll`.
 | `Code-Notif.gs` | `sendStatusNotification(pkg, status)` | Appelé par Code-Tracker |
 | `Code-Notif.gs` | `testNotification()` | Manuel (test) |
 | `Code-Import.gs` | `importGmailColis()` | Manuel (une fois) |
-| `ScriptGoogleGMAIL-v2.gs` | `syncGmailToFirebase()` | Trigger horaire — log désormais systématique (`meta/lastGmailSync`) |
+| `ScriptGoogleGMAIL-v2.gs` | `syncGmailToFirebase()` | Trigger horaire — fenêtre fixe `newer_than:4j` (plus de curseur, cf. patch 14/07) |
 
 **Config Properties Apps Script** (nom canonique à privilégier) :
 - `FIREBASE_PROJECT_ID` → project ID Firestore
@@ -395,4 +423,4 @@ CSS `.pacts` inchangée. Aucun autre module ne référence `copyAll`.
 
 ---
 
-**Fin du journal. Dernière modification : 13 juillet 2026**
+**Fin du journal. Dernière modification : 14 juillet 2026**

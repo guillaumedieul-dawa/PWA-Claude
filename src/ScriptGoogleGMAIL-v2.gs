@@ -1,6 +1,21 @@
 // ═══════════════════════════════════════════════════
-//  FamilyHub — Sync Gmail → Firebase (Optimisé v2.4)
+//  FamilyHub — Sync Gmail → Firebase (Optimisé v2.5)
 //  Compte : Guillaume Dieul.
+//  FIX v2.5 (14/07/2026) — colis Colissimo invisible dans l'app
+//  malgré relance manuelle (n°6M22614877588, reçu 13/07 19:37).
+//  CAUSE : LAST_SYNC_TIMESTAMP avance à CHAQUE exécution, même si
+//  l'email n'a pas été capté (indexation Gmail en retard, quota,
+//  erreur transitoire...). La fenêtre after:X ne fait qu'avancer :
+//  un email manqué UNE SEULE FOIS sort définitivement du scope de
+//  recherche pour TOUTES les exécutions futures, y compris les
+//  relances manuelles (le curseur a déjà dépassé sa date).
+//  FIX : abandon du curseur incrémental LAST_SYNC_TIMESTAMP. Fenêtre
+//  glissante FIXE (GMAIL_LOOKBACK_DAYS) à chaque exécution — un run
+//  manqué est automatiquement rattrapé par le suivant, aucun email
+//  ne peut plus jamais être exclu définitivement. Sans risque de
+//  doublon : écritures déjà idempotentes (doc ID = msgId + PATCH
+//  updateMask), re-scanner la fenêtre ne fait que ré-écrire les
+//  mêmes documents à l'identique.
 //  V4 — FIX 12/07/2026 (bug "Dernier sync Gmail" toujours vide)
 //  FIX CRITIQUE v2.2 : ajout de updateMask sur les writes batch
 //  (:commit). Sans ce champ, chaque "update" REMPLACE le document
@@ -29,6 +44,8 @@
 // ═══════════════════════════════════════════════════
 
 const ACCOUNT_NAME = 'Guillaume';
+const GMAIL_LOOKBACK_DAYS = 4;   // fenêtre fixe auto-cicatrisante (remplace le curseur LAST_SYNC_TIMESTAMP)
+const GMAIL_MAX_THREADS   = 80;  // marge de sécurité (était 40, fenêtre élargie)
 
 function getConfig() {
   const props = PropertiesService.getScriptProperties();
@@ -251,17 +268,10 @@ function syncGmailToFirebase() {
   }
   Logger.log('Démarrage sync Gmail → Firebase pour ' + ACCOUNT_NAME + ' (projet: ' + config.projectId + ')');
 
-  const props = PropertiesService.getScriptProperties();
-  const lastSyncTimestamp = props.getProperty('LAST_SYNC_TIMESTAMP') || '';
-  
-  let dateFilter = ' newer_than:3d';
-  if (lastSyncTimestamp) {
-    const afterSeconds = Math.floor(parseInt(lastSyncTimestamp) / 1000) - 60;
-    dateFilter = ` after:${afterSeconds}`;
-  }
-  
-  const query = 'subject:(colis OR pickup OR livraison OR disponible OR tracking)' + dateFilter;
-  const threads = GmailApp.search(query, 0, 40);
+  // FIX v2.5 : fenêtre fixe glissante, plus de curseur LAST_SYNC_TIMESTAMP
+  // (cf. en-tête — un email manqué une fois ne peut plus jamais être exclu).
+  const query = 'subject:(colis OR pickup OR livraison OR disponible OR tracking) newer_than:' + GMAIL_LOOKBACK_DAYS + 'd';
+  const threads = GmailApp.search(query, 0, GMAIL_MAX_THREADS);
   
   let newCount = 0;
   const batchWrites = [];
@@ -336,8 +346,7 @@ function syncGmailToFirebase() {
     fbBatchWrite(batchWrites, config);
   }
 
-  props.setProperty('LAST_SYNC_TIMESTAMP', String(Date.now()));
-  Logger.log('Sync terminée : ' + newCount + ' colis traités pour ' + ACCOUNT_NAME);
+  Logger.log('Sync terminée : ' + newCount + ' colis traités pour ' + ACCOUNT_NAME + ' (fenêtre ' + GMAIL_LOOKBACK_DAYS + 'j, ' + threads.length + ' fil(s) scannés)');
 
   // FIX v2.4 (12/07) : le log meta/lastGmailSync était écrit UNIQUEMENT si
   // batchWrites.length>0. Un run qui ne trouve aucun nouveau colis (cas
